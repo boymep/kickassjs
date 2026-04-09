@@ -2,7 +2,7 @@
   "name": "algorithms",
   "private": true,
   "scripts": {
-    "test": "for f in ./*.js; do node \"$f\"; done",
+    "test": "node 01-binary-search.js && node 02-two-pointers.js && node 03-sliding-window.js && node 04-hash-map.js && node 05-stacks-queues.js && node 06-linked-lists.js && node 07-trees-graphs.js && node 08-dynamic-programming.js && node 09-sorting.js && node 10-big-o.js",
     "test:1": "node 01-binary-search.js",
     "test:2": "node 02-two-pointers.js",
     "test:3": "node 03-sliding-window.js",

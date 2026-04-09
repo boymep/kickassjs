@@ -23,14 +23,14 @@ function assertDeepEqual(a, b, message) {
 }
 
 // =====================================================
-// КАК РАБОТАЕТ БИНАРНЫЙ ПОИСК
+// * КАК РАБОТАЕТ БИНАРНЫЙ ПОИСК
 // =====================================================
 //
 // Идея: если пространство поиска упорядочено (или обладает
 // монотонным свойством), можно каждый раз отбрасывать половину,
 // сравнивая средний элемент с целевым.
 //
-// Базовый шаблон:
+// * Базовый шаблон:
 //   let left = 0, right = arr.length - 1;
 //   while (left <= right) {
 //     const mid = Math.floor((left + right) / 2);
@@ -39,18 +39,18 @@ function assertDeepEqual(a, b, message) {
 //     else right = mid - 1;
 //   }
 //
-// Два ключевых варианта:
+// * Два ключевых варианта:
 //   1. Точный поиск — ищем конкретное значение.
 //   2. Поиск границы — ищем первое/последнее вхождение
 //      (не возвращаемся сразу при arr[mid] === target,
 //       а продолжаем сужать одну из сторон).
 //
-// Бинарный поиск работает не только на массивах!
-// Если есть монотонная функция f(x) и нужно найти точку перехода
-// (например, "минимальное x, при котором f(x) = true"),
-// можно искать по пространству ответов.
+// ? Бинарный поиск работает не только на массивах!
+// ? Если есть монотонная функция f(x) и нужно найти точку перехода
+// ? (например, "минимальное x, при котором f(x) = true"),
+// ? можно искать по пространству ответов.
 //
-// Сложность: O(log n) по времени, O(1) по памяти.
+// ! Сложность: O(log n) по времени, O(1) по памяти.
 // =====================================================
 
 // ===== ЗАДАЧА 1: Классический бинарный поиск (Easy) =====
@@ -306,17 +306,30 @@ function assertDeepEqual(a, b, message) {
 // isPerfectSquare(14) → false
 // isPerfectSquare(1)  → true
 
-function isPerfectSquare(n) {
-  // ваш код
-}
+// function isPerfectSquare(n) {
+//   let left = 0;
+//   let right = n;
+//
+//   while (left <= right) {
+//     const middle = Math.floor((left + right) / 2);
+//     if (middle * middle === n) return true;
+//     else if (middle * middle < n) left = middle + 1;
+//     else right = middle - 1;
+//   }
+//
+//   return false;
+// }
 
 // --- Тесты задача 2.5d ---
-assert(isPerfectSquare(16) === true, "isPerfectSquare(16) = true");
-assert(isPerfectSquare(14) === false, "isPerfectSquare(14) = false");
-assert(isPerfectSquare(1) === true, "isPerfectSquare(1) = true");
-assert(isPerfectSquare(25) === true, "isPerfectSquare(25) = true");
-assert(isPerfectSquare(26) === false, "isPerfectSquare(26) = false");
-assert(isPerfectSquare(100000000) === true, "isPerfectSquare(100000000) = true");
+// assert(isPerfectSquare(16) === true, "isPerfectSquare(16) = true");
+// assert(isPerfectSquare(14) === false, "isPerfectSquare(14) = false");
+// assert(isPerfectSquare(1) === true, "isPerfectSquare(1) = true");
+// assert(isPerfectSquare(25) === true, "isPerfectSquare(25) = true");
+// assert(isPerfectSquare(26) === false, "isPerfectSquare(26) = false");
+// assert(
+//   isPerfectSquare(100000000) === true,
+//   "isPerfectSquare(100000000) = true",
+// );
 
 // ===== ЗАДАЧА 2.5e: Ближайшее число (Easy) =====
 // Дан отсортированный массив уникальных целых чисел и target.
@@ -328,17 +341,37 @@ assert(isPerfectSquare(100000000) === true, "isPerfectSquare(100000000) = true")
 // findClosest([1, 3, 5, 8, 12], 3) → 3
 // findClosest([1, 3, 5, 8, 12], 0) → 1
 
-function findClosest(nums, target) {
-  // ваш код
-}
+// function findClosest(nums, target) {
+//   let left = 0;
+//   let right = nums.length - 1;
+//
+//   if (target > nums[right]) return nums[right];
+//   if (target < nums[left]) return nums[left];
+//
+//   while (left <= right) {
+//     const middle = Math.floor((left + right) / 2);
+//     if (nums[middle] === target) return nums[middle];
+//     if (nums[middle] < target) left = middle + 1;
+//     else right = middle - 1;
+//   }
+//
+//   if (target - nums[right] <= nums[left] - target) return nums[right];
+//   return nums[left];
+// }
 
 // --- Тесты задача 2.5e ---
-assert(findClosest([1, 3, 5, 8, 12], 6) === 5, "findClosest: 6 → 5");
-assert(findClosest([1, 3, 5, 8, 12], 3) === 3, "findClosest: точное совпадение");
-assert(findClosest([1, 3, 5, 8, 12], 0) === 1, "findClosest: левее всех");
-assert(findClosest([1, 3, 5, 8, 12], 20) === 12, "findClosest: правее всех");
-assert(findClosest([1, 3, 5, 8, 12], 4) === 3, "findClosest: одинаково близки → меньший");
-assert(findClosest([10], 5) === 10, "findClosest: один элемент");
+// assert(findClosest([1, 3, 5, 8, 12], 6) === 5, "findClosest: 6 → 5");
+// assert(
+//   findClosest([1, 3, 5, 8, 12], 3) === 3,
+//   "findClosest: точное совпадение",
+// );
+// assert(findClosest([1, 3, 5, 8, 12], 0) === 1, "findClosest: левее всех");
+// assert(findClosest([1, 3, 5, 8, 12], 20) === 12, "findClosest: правее всех");
+// assert(
+//   findClosest([1, 3, 5, 8, 12], 4) === 3,
+//   "findClosest: одинаково близки → меньший",
+// );
+// assert(findClosest([10], 5) === 10, "findClosest: один элемент");
 
 // ===== ЗАДАЧА 2.5f: Подсчёт отрицательных чисел (Easy) =====
 // Дан массив целых чисел, отсортированный по убыванию.
@@ -349,17 +382,32 @@ assert(findClosest([10], 5) === 10, "findClosest: один элемент");
 // countNegatives([5, 3, 1]) → 0
 // countNegatives([-1, -2, -3]) → 3
 
-function countNegatives(nums) {
-  // ваш код
-}
+// function countNegatives(nums) {
+//   let left = 0;
+//   let right = nums.length - 1;
+//
+//   if (nums[right] >= 0) return 0;
+//   if (nums[left] < 0) return nums.length;
+//
+//   while (left <= right) {
+//     const mid = Math.floor((left + right) / 2);
+//     if (nums[mid] < 0) {
+//       if (nums[mid - 1] >= 0) return nums.length - mid;
+//       else right = mid - 1;
+//     } else left = mid + 1;
+//   }
+// }
 
 // --- Тесты задача 2.5f ---
-assert(countNegatives([5, 3, 1, -2, -4]) === 2, "countNeg: [5,3,1,-2,-4] → 2");
-assert(countNegatives([5, 3, 1]) === 0, "countNeg: нет отрицательных");
-assert(countNegatives([-1, -2, -3]) === 3, "countNeg: все отрицательные");
-assert(countNegatives([0]) === 0, "countNeg: один ноль");
-assert(countNegatives([-1]) === 1, "countNeg: один отрицательный");
-assert(countNegatives([3, 2, 1, 0, -1, -2, -3, -4]) === 4, "countNeg: половина отрицательных");
+// assert(countNegatives([5, 3, 1, -2, -4]) === 2, "countNeg: [5,3,1,-2,-4] → 2");
+// assert(countNegatives([5, 3, 1]) === 0, "countNeg: нет отрицательных");
+// assert(countNegatives([-1, -2, -3]) === 3, "countNeg: все отрицательные");
+// assert(countNegatives([0]) === 0, "countNeg: один ноль");
+// assert(countNegatives([-1]) === 1, "countNeg: один отрицательный");
+// assert(
+//   countNegatives([3, 2, 1, 0, -1, -2, -3, -4]) === 4,
+//   "countNeg: половина отрицательных",
+// );
 
 // ===== ЗАДАЧА 3: Пик в массиве (Medium) =====
 // Дан массив целых чисел. Элемент является «пиком», если он
@@ -472,7 +520,34 @@ assert(countNegatives([3, 2, 1, 0, -1, -2, -3, -4]) === 4, "countNeg: полов
 // Оцените сложность по времени и памяти.
 
 // function searchRotated(nums, target) {
-//   // ваш код
+//   let left = 0;
+//   let right = nums.length - 1;
+//
+//   while (left <= right) {
+//     const middle = Math.floor((left + right) / 2);
+//     if (nums[middle] === target) return middle;
+//
+//     // Левая половина [left..middle] отсортирована
+//     if (nums[left] <= nums[middle]) {
+//       // target попадает в диапазон левой половины?
+//       if (target >= nums[left] && target < nums[middle]) {
+//         right = middle - 1;
+//       } else {
+//         left = middle + 1;
+//       }
+//     }
+//     // Правая половина [middle..right] отсортирована
+//     else {
+//       // target попадает в диапазон правой половины?
+//       if (target > nums[middle] && target <= nums[right]) {
+//         left = middle + 1;
+//       } else {
+//         right = middle - 1;
+//       }
+//     }
+//   }
+//
+//   return -1;
 // }
 
 // --- Тесты задача 5 ---
