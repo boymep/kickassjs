@@ -14,7 +14,11 @@ function assert(condition, message) {
 function assertDeepEqual(a, b, message) {
   assert(
     JSON.stringify(a) === JSON.stringify(b),
-    message + " | got: " + JSON.stringify(a) + ", expected: " + JSON.stringify(b),
+    message +
+      " | got: " +
+      JSON.stringify(a) +
+      ", expected: " +
+      JSON.stringify(b),
   );
 }
 
@@ -171,7 +175,6 @@ function assertDeepEqual(a, b, message) {
 //    - массив из одного элемента
 // =====================================================
 
-
 // ===== ЗАДАЧА 1: Максимальная сумма подмассива длины k (Easy) =====
 // Дан массив целых чисел и число k. Найдите максимальную сумму
 // среди всех непрерывных подмассивов длины k.
@@ -183,16 +186,37 @@ function assertDeepEqual(a, b, message) {
 // Оцените сложность по времени и памяти.
 
 // function maxSumSubarray(arr, k) {
-//   // ваш код
+//   if (arr.length === 0) return 0;
+//   if (arr.length === 1) return arr[0];
+//   let sum = 0;
+
+//   for (let i = 0; i < k; i++) {
+//     sum += arr[i];
+//   }
+
+//   let = maxSum = sum;
+
+//   for (let i = k; i < arr.length; i++) {
+//     sum = sum + arr[i] - arr[i - k];
+
+//     if (sum > maxSum) maxSum = sum;
+//   }
+
+//   return maxSum;
 // }
 
 // --- Тесты задача 1 ---
-// assert(maxSumSubarray([2, 1, 5, 1, 3, 2], 3) === 9, "maxSum: [2,1,5,1,3,2] k=3 → 9");
+// assert(
+//   maxSumSubarray([2, 1, 5, 1, 3, 2], 3) === 9,
+//   "maxSum: [2,1,5,1,3,2] k=3 → 9",
+// );
 // assert(maxSumSubarray([2, 3, 4, 1, 5], 2) === 7, "maxSum: [2,3,4,1,5] k=2 → 7");
 // assert(maxSumSubarray([1, 1, 1, 1, 1], 3) === 3, "maxSum: все единицы k=3 → 3");
 // assert(maxSumSubarray([5], 1) === 5, "maxSum: один элемент → 5");
-// assert(maxSumSubarray([-1, -2, -3, -4], 2) === -3, "maxSum: отрицательные k=2 → -3");
-
+// assert(
+//   maxSumSubarray([-1, -2, -3, -4], 2) === -3,
+//   "maxSum: отрицательные k=2 → -3",
+// );
 
 // ===== ЗАДАЧА 2: Средние значения подмассивов длины k (Easy) =====
 // Дан массив чисел и число k. Верните массив средних значений
@@ -204,15 +228,35 @@ function assertDeepEqual(a, b, message) {
 // Оцените сложность по времени и памяти.
 
 // function avgSubarrays(arr, k) {
-//   // ваш код
+//   const result = [];
+//   let sum = 0;
+
+//   for (let i = 0; i < k; i++) {
+//     sum += arr[i];
+//   }
+//   result.push(sum / k);
+
+//   for (let i = k; i < arr.length; i++) {
+//     sum = sum + arr[i] - arr[i - k];
+//     result.push(sum / k);
+//   }
+
+//   return result;
 // }
 
 // --- Тесты задача 2 ---
-// assertDeepEqual(avgSubarrays([1, 3, 2, 6, -1, 4, 1, 8, 2], 5), [2.2, 2.8, 2.4, 3.6, 2.8], "avg: основной пример");
-// assertDeepEqual(avgSubarrays([1, 2, 3, 4], 2), [1.5, 2.5, 3.5], "avg: [1,2,3,4] k=2");
+// assertDeepEqual(
+//   avgSubarrays([1, 3, 2, 6, -1, 4, 1, 8, 2], 5),
+//   [2.2, 2.8, 2.4, 3.6, 2.8],
+//   "avg: основной пример",
+// );
+// assertDeepEqual(
+//   avgSubarrays([1, 2, 3, 4], 2),
+//   [1.5, 2.5, 3.5],
+//   "avg: [1,2,3,4] k=2",
+// );
 // assertDeepEqual(avgSubarrays([10], 1), [10], "avg: один элемент");
 // assertDeepEqual(avgSubarrays([4, 4, 4, 4], 4), [4], "avg: все одинаковые");
-
 
 // ===== ЗАДАЧА 3: Наименьший подмассив с суммой ≥ target (Medium) =====
 // Дан массив положительных целых чисел и число target.
@@ -230,18 +274,34 @@ function assertDeepEqual(a, b, message) {
 //
 // Оцените сложность по времени и памяти.
 
-// function minSubarrayLen(target, nums) {
-//   // ваш код
-// }
+function minSubarrayLen(target, nums) {
+  let minLength = Infinity; // Infinity, чтобы любая найденная длина была меньше
+  let left = 0;
+  let sum = 0;
+
+  for (let right = 0; right < nums.length; right++) {
+    sum += nums[right]; // расширяем окно — добавляем правый элемент
+
+    while (sum >= target) { // пока окно удовлетворяет условию — сужаем
+      minLength = Math.min(minLength, right - left + 1); // обновляем минимум
+      sum -= nums[left]; // убираем левый элемент
+      left++;
+    }
+  }
+
+  return minLength === Infinity ? 0 : minLength;
+}
 
 // --- Тесты задача 3 ---
-// assert(minSubarrayLen(7, [2, 3, 1, 2, 4, 3]) === 2, "minSubLen: target=7 → 2");
-// assert(minSubarrayLen(4, [1, 4, 4]) === 1, "minSubLen: target=4 → 1");
-// assert(minSubarrayLen(11, [1, 1, 1, 1]) === 0, "minSubLen: невозможно → 0");
-// assert(minSubarrayLen(15, [1, 2, 3, 4, 5]) === 5, "minSubLen: весь массив → 5");
-// assert(minSubarrayLen(5, [5]) === 1, "minSubLen: один элемент равен target → 1");
-// assert(minSubarrayLen(3, [1, 1, 1, 1, 1]) === 3, "minSubLen: target=3 → 3");
-
+assert(minSubarrayLen(7, [2, 3, 1, 2, 4, 3]) === 2, "minSubLen: target=7 → 2");
+assert(minSubarrayLen(4, [1, 4, 4]) === 1, "minSubLen: target=4 → 1");
+assert(minSubarrayLen(11, [1, 1, 1, 1]) === 0, "minSubLen: невозможно → 0");
+assert(minSubarrayLen(15, [1, 2, 3, 4, 5]) === 5, "minSubLen: весь массив → 5");
+assert(
+  minSubarrayLen(5, [5]) === 1,
+  "minSubLen: один элемент равен target → 1",
+);
+assert(minSubarrayLen(3, [1, 1, 1, 1, 1]) === 3, "minSubLen: target=3 → 3");
 
 // ===== ЗАДАЧА 4: Длиннейшая подстрока без повторов (Medium) =====
 // Дана строка s. Найдите длину самой длинной подстроки
@@ -270,7 +330,6 @@ function assertDeepEqual(a, b, message) {
 // assert(lengthOfLongestSubstring("aab") === 2, "longest: aab → 2");
 // assert(lengthOfLongestSubstring("dvdf") === 3, "longest: dvdf → 3");
 
-
 // ===== ЗАДАЧА 5: Длиннейшая подстрока с не более k уникальными символами (Medium) =====
 // Дана строка s и число k. Найдите длину самой длинной подстроки,
 // содержащей не более k различных символов.
@@ -297,7 +356,6 @@ function assertDeepEqual(a, b, message) {
 // assert(longestKDistinct("a", 0) === 0, "longestK: k=0 → 0");
 // assert(longestKDistinct("abcdef", 6) === 6, "longestK: k=6 все уникальные → 6");
 // assert(longestKDistinct("aaabbbccc", 2) === 6, "longestK: aaabbbccc k=2 → 6");
-
 
 // ===== ЗАДАЧА 6: Наименьшее окно, содержащее все символы (Hard) =====
 // Даны две строки s и t. Найдите минимальную подстроку s,
