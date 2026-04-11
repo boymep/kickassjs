@@ -212,4 +212,151 @@ export const twoPointersProblems: Problem[] = [
   return bestPair;
 }`,
   },
+  {
+    id: 'tp-p4',
+    topicId: 'two-pointers',
+    title: 'Подбор размеров одежды',
+    difficulty: 'easy',
+    isContextual: true,
+    description: `В интернет-магазине есть отсортированный массив доступных размеров одежды sizes. Покупатель хочет размер target. Если точного размера нет, нужно вернуть два ближайших размера (меньший и больший). Если точный есть — вернуть его дважды [target, target].
+
+Крайние случаи:
+- Если нет размера меньше target, вернуть [ближайший больший, ближайший больший].
+- Если нет размера больше target, вернуть [ближайший меньший, ближайший меньший].
+
+Примеры:
+- findClosestSizes([36, 38, 40, 42, 44], 41) => [40, 42]
+- findClosestSizes([36, 38, 40, 42], 40) => [40, 40]
+- findClosestSizes([38, 42, 46], 35) => [38, 38]`,
+    functionName: 'findClosestSizes',
+    starterCode: `function findClosestSizes(sizes, target) {
+  // ваш код
+}`,
+    testCases: [
+      {
+        id: 'tp-p4-t1',
+        inputDisplay: 'findClosestSizes([36, 38, 40, 42, 44], 41)',
+        inputArgs: [[36, 38, 40, 42, 44], 41],
+        expected: [40, 42],
+      },
+      {
+        id: 'tp-p4-t2',
+        inputDisplay: 'findClosestSizes([36, 38, 40, 42], 40)',
+        inputArgs: [[36, 38, 40, 42], 40],
+        expected: [40, 40],
+      },
+      {
+        id: 'tp-p4-t3',
+        inputDisplay: 'findClosestSizes([38, 42, 46], 35)',
+        inputArgs: [[38, 42, 46], 35],
+        expected: [38, 38],
+      },
+      {
+        id: 'tp-p4-t4',
+        inputDisplay: 'findClosestSizes([38, 42, 46], 50)',
+        inputArgs: [[38, 42, 46], 50],
+        expected: [46, 46],
+      },
+      {
+        id: 'tp-p4-t5',
+        inputDisplay: 'findClosestSizes([36, 38, 40, 42, 44, 46], 43)',
+        inputArgs: [[36, 38, 40, 42, 44, 46], 43],
+        expected: [42, 44],
+      },
+    ],
+    hints: [
+      'Найдите позицию вставки target в отсортированном массиве',
+      'Сравните arr[pos-1] и arr[pos] с target',
+    ],
+    solutionCode: `function findClosestSizes(sizes, target) {
+  // Бинарный поиск позиции вставки
+  let left = 0;
+  let right = sizes.length - 1;
+
+  while (left <= right) {
+    const mid = Math.floor((left + right) / 2);
+
+    if (sizes[mid] === target) {
+      return [target, target];
+    } else if (sizes[mid] < target) {
+      left = mid + 1;
+    } else {
+      right = mid - 1;
+    }
+  }
+
+  // left — позиция вставки (первый элемент > target)
+  // right — последний элемент < target
+  if (right < 0) return [sizes[left], sizes[left]];
+  if (left >= sizes.length) return [sizes[right], sizes[right]];
+
+  return [sizes[right], sizes[left]];
+}`,
+  },
+  {
+    id: 'tp-p5',
+    topicId: 'two-pointers',
+    title: 'Фильтрация дубликатов в ленте',
+    difficulty: 'medium',
+    isContextual: true,
+    description: `В ленте объявлений массив отсортирован по цене, но есть дубликаты. Нужно вернуть новый массив без дубликатов (не мутировать исходный). Решите за O(n) времени.
+
+Примеры:
+- removeDuplicates([1, 1, 2, 3, 3, 4]) => [1, 2, 3, 4]
+- removeDuplicates([1, 1, 1]) => [1]
+- removeDuplicates([1, 2, 3]) => [1, 2, 3]`,
+    functionName: 'removeDuplicates',
+    starterCode: `function removeDuplicates(arr) {
+  // ваш код
+}`,
+    testCases: [
+      {
+        id: 'tp-p5-t1',
+        inputDisplay: 'removeDuplicates([1, 1, 2, 3, 3, 4])',
+        inputArgs: [[1, 1, 2, 3, 3, 4]],
+        expected: [1, 2, 3, 4],
+      },
+      {
+        id: 'tp-p5-t2',
+        inputDisplay: 'removeDuplicates([1, 1, 1])',
+        inputArgs: [[1, 1, 1]],
+        expected: [1],
+      },
+      {
+        id: 'tp-p5-t3',
+        inputDisplay: 'removeDuplicates([1, 2, 3])',
+        inputArgs: [[1, 2, 3]],
+        expected: [1, 2, 3],
+      },
+      {
+        id: 'tp-p5-t4',
+        inputDisplay: 'removeDuplicates([])',
+        inputArgs: [[]],
+        expected: [],
+      },
+      {
+        id: 'tp-p5-t5',
+        inputDisplay: 'removeDuplicates([5])',
+        inputArgs: [[5]],
+        expected: [5],
+      },
+    ],
+    hints: [
+      'Два указателя: slow для записи, fast для чтения',
+      'Если arr[fast] !== arr[fast-1], записываем',
+    ],
+    solutionCode: `function removeDuplicates(arr) {
+  if (arr.length === 0) return [];
+
+  const result = [arr[0]];
+
+  for (let fast = 1; fast < arr.length; fast++) {
+    if (arr[fast] !== arr[fast - 1]) {
+      result.push(arr[fast]);
+    }
+  }
+
+  return result;
+}`,
+  },
 ];

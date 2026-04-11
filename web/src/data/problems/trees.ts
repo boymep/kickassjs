@@ -442,4 +442,129 @@ flattenCategories(categories) → [
   return result;
 }`,
   },
+  {
+    id: 'tree-p5',
+    topicId: 'trees',
+    title: 'Поиск по вложенным фильтрам',
+    difficulty: 'medium',
+    isContextual: true,
+    description: `В системе фильтрации данных фильтр представлен деревом. Каждый узел — это либо условие \`{ type: "condition", field: string, value: any }\`, либо группа \`{ type: "and" | "or", children: [...] }\`.
+
+Дан объект (одна запись) и дерево фильтров. Проверьте, проходит ли объект фильтр.
+
+Для "condition": obj[field] === value.
+Для "and": все children должны быть true.
+Для "or": хотя бы один child должен быть true.
+
+Пример:
+const filter = {
+  type: "and",
+  children: [
+    { type: "condition", field: "city", value: "Moscow" },
+    { type: "condition", field: "age", value: 25 },
+  ],
+};
+matchesFilter({ city: "Moscow", age: 25 }, filter) → true
+matchesFilter({ city: "Moscow", age: 30 }, filter) → false`,
+    functionName: 'matchesFilter',
+    starterCode: `function matchesFilter(obj, filter) {
+  // ваш код
+}`,
+    testCases: [
+      {
+        id: 'tree-p5-t1',
+        inputDisplay: 'matchesFilter — and: оба условия true',
+        inputArgs: [
+          { city: 'Moscow', age: 25 },
+          {
+            type: 'and',
+            children: [
+              { type: 'condition', field: 'city', value: 'Moscow' },
+              { type: 'condition', field: 'age', value: 25 },
+            ],
+          },
+        ],
+        expected: true,
+      },
+      {
+        id: 'tree-p5-t2',
+        inputDisplay: 'matchesFilter — and: одно условие false',
+        inputArgs: [
+          { city: 'Moscow', age: 30 },
+          {
+            type: 'and',
+            children: [
+              { type: 'condition', field: 'city', value: 'Moscow' },
+              { type: 'condition', field: 'age', value: 25 },
+            ],
+          },
+        ],
+        expected: false,
+      },
+      {
+        id: 'tree-p5-t3',
+        inputDisplay: 'matchesFilter — or: одно условие true',
+        inputArgs: [
+          { status: 'active', role: 'user' },
+          {
+            type: 'or',
+            children: [
+              { type: 'condition', field: 'role', value: 'admin' },
+              { type: 'condition', field: 'status', value: 'active' },
+            ],
+          },
+        ],
+        expected: true,
+      },
+      {
+        id: 'tree-p5-t4',
+        inputDisplay: 'matchesFilter — вложенные группы',
+        inputArgs: [
+          { city: 'SPb', age: 20, premium: true },
+          {
+            type: 'and',
+            children: [
+              { type: 'condition', field: 'premium', value: true },
+              {
+                type: 'or',
+                children: [
+                  { type: 'condition', field: 'city', value: 'Moscow' },
+                  { type: 'condition', field: 'city', value: 'SPb' },
+                ],
+              },
+            ],
+          },
+        ],
+        expected: true,
+      },
+      {
+        id: 'tree-p5-t5',
+        inputDisplay: 'matchesFilter — одиночное condition',
+        inputArgs: [
+          { name: 'Alice' },
+          { type: 'condition', field: 'name', value: 'Alice' },
+        ],
+        expected: true,
+      },
+    ],
+    hints: [
+      'Рекурсия: для condition — проверить obj[field] === value',
+      'Для and — every(), для or — some()',
+    ],
+    solutionCode: `function matchesFilter(obj, filter) {
+  if (filter.type === "condition") {
+    return obj[filter.field] === filter.value;
+  }
+
+  if (filter.type === "and") {
+    return filter.children.every(child => matchesFilter(obj, child));
+  }
+
+  if (filter.type === "or") {
+    return filter.children.some(child => matchesFilter(obj, child));
+  }
+
+  return false;
+}`,
+  },
 ];

@@ -209,4 +209,137 @@ export const slidingWindowProblems: Problem[] = [
   return maxCount;
 }`,
   },
+  {
+    id: 'sw-p4',
+    topicId: 'sliding-window',
+    title: 'Средний рейтинг за последние K отзывов',
+    difficulty: 'easy',
+    isContextual: true,
+    description:
+      'На маркетплейсе для каждого продавца ведётся массив оценок от покупателей (от 1 до 5). Для аналитики нужно вычислить средний рейтинг для каждого "окна" из последних k отзывов. Верните массив средних значений (округлять не нужно).',
+    functionName: 'averageRatings',
+    starterCode: `function averageRatings(ratings, k) {
+  // ваш код
+}`,
+    testCases: [
+      {
+        id: 'sw-p4-t1',
+        inputDisplay: 'averageRatings([5, 4, 3, 5, 4, 3, 5], 3)',
+        inputArgs: [[5, 4, 3, 5, 4, 3, 5], 3],
+        expected: [4, 4, 4, 4, 4],
+      },
+      {
+        id: 'sw-p4-t2',
+        inputDisplay: 'averageRatings([1, 2, 3, 4, 5], 2)',
+        inputArgs: [[1, 2, 3, 4, 5], 2],
+        expected: [1.5, 2.5, 3.5, 4.5],
+      },
+      {
+        id: 'sw-p4-t3',
+        inputDisplay: 'averageRatings([5], 1)',
+        inputArgs: [[5], 1],
+        expected: [5],
+      },
+      {
+        id: 'sw-p4-t4',
+        inputDisplay: 'averageRatings([3, 3, 3, 3], 4)',
+        inputArgs: [[3, 3, 3, 3], 4],
+        expected: [3],
+      },
+      {
+        id: 'sw-p4-t5',
+        inputDisplay: 'averageRatings([1, 5, 1, 5, 1], 3)',
+        inputArgs: [[1, 5, 1, 5, 1], 3],
+        expected: [2.3333333333333335, 3.6666666666666665, 2.3333333333333335],
+      },
+    ],
+    hints: [
+      'Фиксированное окно размера k',
+      'Набрать сумму первых k элементов, затем скользить',
+    ],
+    solutionCode: `function averageRatings(ratings, k) {
+  const result = [];
+  let sum = 0;
+
+  for (let i = 0; i < k; i++) {
+    sum += ratings[i];
+  }
+  result.push(sum / k);
+
+  for (let i = k; i < ratings.length; i++) {
+    sum = sum + ratings[i] - ratings[i - k];
+    result.push(sum / k);
+  }
+
+  return result;
+}`,
+  },
+  {
+    id: 'sw-p5',
+    topicId: 'sliding-window',
+    title: 'Максимальная выручка за период',
+    difficulty: 'medium',
+    isContextual: true,
+    description:
+      'Дан массив ежедневной выручки магазина и число days — длина отчётного периода. Найдите максимальную суммарную выручку за любой непрерывный период в days дней. Верните объект { startDay: number, total: number }, где startDay — индекс первого дня лучшего периода (0-based).',
+    functionName: 'bestPeriod',
+    starterCode: `function bestPeriod(revenue, days) {
+  // ваш код
+}`,
+    testCases: [
+      {
+        id: 'sw-p5-t1',
+        inputDisplay: 'bestPeriod([100, 200, 150, 300, 250, 100], 3)',
+        inputArgs: [[100, 200, 150, 300, 250, 100], 3],
+        expected: { startDay: 2, total: 700 },
+      },
+      {
+        id: 'sw-p5-t2',
+        inputDisplay: 'bestPeriod([500], 1)',
+        inputArgs: [[500], 1],
+        expected: { startDay: 0, total: 500 },
+      },
+      {
+        id: 'sw-p5-t3',
+        inputDisplay: 'bestPeriod([10, 20, 30, 40], 2)',
+        inputArgs: [[10, 20, 30, 40], 2],
+        expected: { startDay: 2, total: 70 },
+      },
+      {
+        id: 'sw-p5-t4',
+        inputDisplay: 'bestPeriod([1, 1, 1, 1, 1], 5)',
+        inputArgs: [[1, 1, 1, 1, 1], 5],
+        expected: { startDay: 0, total: 5 },
+      },
+      {
+        id: 'sw-p5-t5',
+        inputDisplay: 'bestPeriod([50, 100, 50, 100, 50, 100], 4)',
+        inputArgs: [[50, 100, 50, 100, 50, 100], 4],
+        expected: { startDay: 1, total: 300 },
+      },
+    ],
+    hints: [
+      'Фиксированное окно размера days',
+      'Отслеживайте не только maxSum но и startDay лучшего окна',
+    ],
+    solutionCode: `function bestPeriod(revenue, days) {
+  let sum = 0;
+  for (let i = 0; i < days; i++) {
+    sum += revenue[i];
+  }
+
+  let maxSum = sum;
+  let startDay = 0;
+
+  for (let i = days; i < revenue.length; i++) {
+    sum = sum + revenue[i] - revenue[i - days];
+    if (sum > maxSum) {
+      maxSum = sum;
+      startDay = i - days + 1;
+    }
+  }
+
+  return { startDay, total: maxSum };
+}`,
+  },
 ];

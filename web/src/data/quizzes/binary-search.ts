@@ -285,7 +285,7 @@ searchLeftBound([1, 3, 5, 5, 5, 8, 10], 5);`,
     {
       type: 'fill-blank',
       id: 'bs-q10',
-      description: 'Поиск в повёрнутом отсортированном массиве: какое условие определяет, что левая половина отсортирована?',
+      description: 'Повёрнутый (rotated) массив — это отсортированный массив, сдвинутый циклически. Например: [1,2,3,4,5,6,7] → [4,5,6,7,0,1,2] (сдвиг на 3). Одна из двух половин всегда остаётся отсортированной. Какое условие определяет, что левая половина отсортирована?',
       codeWithBlanks: `function searchRotated(nums, target) {
   let left = 0;
   let right = nums.length - 1;
@@ -327,7 +327,7 @@ searchLeftBound([1, 3, 5, 5, 5, 8, 10], 5);`,
     {
       type: 'output',
       id: 'bs-q11',
-      description: 'Что вернёт вызов searchRotated([4, 5, 6, 7, 0, 1, 2], 0)?',
+      description: 'Массив [4, 5, 6, 7, 0, 1, 2] — это отсортированный [0,1,2,4,5,6,7], циклически сдвинутый. Что вернёт searchRotated при поиске 0?',
       code: `function searchRotated(nums, target) {
   let left = 0;
   let right = nums.length - 1;
@@ -441,31 +441,34 @@ console.log(searchRotated([4, 5, 6, 7, 0, 1, 2], 0));`,
         'Если daysNeeded <= days, значит грузоподъёмности mid достаточно (или даже с запасом), и мы пробуем уменьшить её: right = mid. Если daysNeeded > days — грузоподъёмности не хватает, нужно увеличить: left = mid + 1. Мы ищем минимальную подходящую грузоподъёмность.',
     },
     {
-      type: 'output',
+      type: 'fill-blank',
       id: 'bs-q14',
-      description: 'Что вернёт вызов findPeakElement([1, 2, 3, 1])?',
-      code: `function findPeakElement(nums) {
+      description: 'Дан массив, в котором элемент считается "пиком", если он больше соседей. Бинарный поиск находит пик за O(log n). Какое условие определяет, что пик находится слева (включая mid)?',
+      codeWithBlanks: `function findPeak(nums) {
   let left = 0;
   let right = nums.length - 1;
 
   while (left < right) {
     const mid = Math.floor((left + right) / 2);
 
-    if (nums[mid] > nums[mid + 1]) {
-      right = mid;
+    if (___BLANK___) {
+      right = mid;   // пик слева или в mid
     } else {
-      left = mid + 1;
+      left = mid + 1; // пик справа
     }
   }
 
   return left;
-}
-
-console.log(findPeakElement([1, 2, 3, 1]));`,
-      options: ['0', '1', '2', '3'],
-      correctIndex: 2,
+}`,
+      options: [
+        'nums[mid] > nums[mid + 1]',
+        'nums[mid] < nums[mid + 1]',
+        'nums[mid] > nums[mid - 1]',
+        'nums[left] > nums[right]',
+      ],
+      correctIndex: 0,
       explanation:
-        'Итерация 1: left=0, right=3, mid=1, nums[1]=2 < nums[2]=3, идём вправо: left=2. Итерация 2: left=2, right=3, mid=2, nums[2]=3 > nums[3]=1, идём влево: right=2. Цикл завершается (left === right === 2). Пик — элемент 3 по индексу 2.',
+        'Если nums[mid] > nums[mid + 1], значит мы на "спуске" — пик либо в mid, либо левее. Поэтому right = mid (не mid-1, так как mid сам может быть пиком). Если nums[mid] <= nums[mid + 1], мы на "подъёме" — пик точно правее, поэтому left = mid + 1.',
     },
     {
       type: 'tracing',
@@ -563,31 +566,34 @@ shipWithinDays([1, 2, 3, 4, 5], 3);`,
         'Бинарный поиск работает по диапазону [max(weights), sum(weights)], то есть выполняет O(log S) итераций. На каждой итерации мы проходим по всем n посылкам для подсчёта дней — O(n). Итого: O(n log S), где S — суммарный вес всех посылок.',
     },
     {
-      type: 'output',
+      type: 'fill-blank',
       id: 'bs-q17',
-      description: 'Что вернёт вызов findMin([3, 4, 5, 1, 2]) — поиск минимума в повёрнутом массиве?',
-      code: `function findMin(nums) {
+      description: 'Поиск минимума в повёрнутом массиве [3,4,5,1,2]. Если nums[mid] больше правого края, минимум точно правее mid. Какое условие стоит в if?',
+      codeWithBlanks: `function findMin(nums) {
   let left = 0;
   let right = nums.length - 1;
 
   while (left < right) {
     const mid = Math.floor((left + right) / 2);
 
-    if (nums[mid] > nums[right]) {
-      left = mid + 1;
+    if (___BLANK___) {
+      left = mid + 1;  // минимум правее mid
     } else {
-      right = mid;
+      right = mid;     // минимум в mid или левее
     }
   }
 
   return nums[left];
-}
-
-console.log(findMin([3, 4, 5, 1, 2]));`,
-      options: ['3', '1', '5', '2'],
-      correctIndex: 1,
+}`,
+      options: [
+        'nums[mid] > nums[right]',
+        'nums[mid] < nums[right]',
+        'nums[mid] > nums[left]',
+        'nums[left] > nums[right]',
+      ],
+      correctIndex: 0,
       explanation:
-        'Итерация 1: left=0, right=4, mid=2, nums[2]=5 > nums[4]=2, left=3. Итерация 2: left=3, right=4, mid=3, nums[3]=1 <= nums[4]=2, right=3. Цикл завершается (left === right === 3). nums[3] = 1 — минимальный элемент массива.',
+        'Сравниваем mid с правым краем: если nums[mid] > nums[right], значит "излом" (место сдвига) находится правее mid — минимум там. Иначе правая часть уже отсортирована, и минимум в mid или левее. Сравнение с left не работает, потому что left может быть частью отсортированного участка.',
     },
     {
       type: 'tracing',

@@ -47,7 +47,7 @@ export default function ProblemView() {
           )}
         </Box>
         <Typography variant="body1" sx={{ whiteSpace: 'pre-line' }}>
-          {problem.description}
+          {problem.description.replace(/ -- /g, ' — ')}
         </Typography>
       </Paper>
 

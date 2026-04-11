@@ -275,4 +275,155 @@ export const binarySearchProblems: Problem[] = [
   return totalDissatisfaction;
 }`,
   },
+  {
+    id: 'bs-p4',
+    topicId: 'binary-search',
+    title: 'Поиск версии с багом',
+    difficulty: 'medium',
+    isContextual: true,
+    description: `В системе CI/CD каждый коммит получает порядковый номер (от 1 до n). Начиная с какого-то коммита в проде появился баг. Дана функция isBuggy(version), которая возвращает true если версия содержит баг. Все версии после первой багованной тоже багованные.
+
+Для простоты: дан отсортированный boolean-массив versions, где false — версия без бага, true — с багом (например [false, false, true, true, true]). Найдите индекс первой true (первой багованной версии). Если багов нет, верните -1.
+
+Примеры:
+- findFirstBuggy([false, false, true, true, true]) => 2
+- findFirstBuggy([true, true, true]) => 0
+- findFirstBuggy([false, false, false]) => -1`,
+    functionName: 'findFirstBuggy',
+    starterCode: `function findFirstBuggy(versions) {
+  // ваш код
+}`,
+    testCases: [
+      {
+        id: 'bs-p4-t1',
+        inputDisplay: 'findFirstBuggy([false, false, true, true, true])',
+        inputArgs: [[false, false, true, true, true]],
+        expected: 2,
+      },
+      {
+        id: 'bs-p4-t2',
+        inputDisplay: 'findFirstBuggy([true, true, true])',
+        inputArgs: [[true, true, true]],
+        expected: 0,
+      },
+      {
+        id: 'bs-p4-t3',
+        inputDisplay: 'findFirstBuggy([false, false, false])',
+        inputArgs: [[false, false, false]],
+        expected: -1,
+      },
+      {
+        id: 'bs-p4-t4',
+        inputDisplay: 'findFirstBuggy([false, true])',
+        inputArgs: [[false, true]],
+        expected: 1,
+      },
+      {
+        id: 'bs-p4-t5',
+        inputDisplay: 'findFirstBuggy([false, false, false, false, true])',
+        inputArgs: [[false, false, false, false, true]],
+        expected: 4,
+      },
+    ],
+    hints: [
+      'Это задача на поиск левой границы',
+      'Используйте бинарный поиск — если versions[mid] === true, ищите левее',
+    ],
+    solutionCode: `function findFirstBuggy(versions) {
+  let left = 0;
+  let right = versions.length - 1;
+  let result = -1;
+
+  while (left <= right) {
+    const mid = Math.floor((left + right) / 2);
+
+    if (versions[mid] === true) {
+      result = mid;
+      right = mid - 1;
+    } else {
+      left = mid + 1;
+    }
+  }
+
+  return result;
+}`,
+  },
+  {
+    id: 'bs-p5',
+    topicId: 'binary-search',
+    title: 'Минимальная скорость доставки',
+    difficulty: 'medium',
+    isContextual: true,
+    description: `Курьер должен доставить все заказы за hours часов. Массив orders содержит количество посылок на каждой точке. За час курьер может обработать до speed посылок на одной точке (если посылок меньше speed, он всё равно тратит целый час на эту точку). Найдите минимальную скорость speed, при которой курьер успеет обработать все точки за hours часов.
+
+Примеры:
+- minDeliverySpeed([3, 6, 7, 11], 8) => 4
+  При speed=4: ceil(3/4)+ceil(6/4)+ceil(7/4)+ceil(11/4) = 1+2+2+3 = 8 <= 8 ✓
+- minDeliverySpeed([30, 11, 23, 4, 20], 5) => 30
+- minDeliverySpeed([1, 1, 1, 1], 4) => 1`,
+    functionName: 'minDeliverySpeed',
+    starterCode: `function minDeliverySpeed(orders, hours) {
+  // ваш код
+}`,
+    testCases: [
+      {
+        id: 'bs-p5-t1',
+        inputDisplay: 'minDeliverySpeed([3, 6, 7, 11], 8)',
+        inputArgs: [[3, 6, 7, 11], 8],
+        expected: 4,
+      },
+      {
+        id: 'bs-p5-t2',
+        inputDisplay: 'minDeliverySpeed([30, 11, 23, 4, 20], 5)',
+        inputArgs: [[30, 11, 23, 4, 20], 5],
+        expected: 30,
+      },
+      {
+        id: 'bs-p5-t3',
+        inputDisplay: 'minDeliverySpeed([1, 1, 1, 1], 4)',
+        inputArgs: [[1, 1, 1, 1], 4],
+        expected: 1,
+      },
+      {
+        id: 'bs-p5-t4',
+        inputDisplay: 'minDeliverySpeed([10], 1)',
+        inputArgs: [[10], 1],
+        expected: 10,
+      },
+      {
+        id: 'bs-p5-t5',
+        inputDisplay: 'minDeliverySpeed([3, 6, 7, 11], 4)',
+        inputArgs: [[3, 6, 7, 11], 4],
+        expected: 11,
+      },
+    ],
+    hints: [
+      'Бинарный поиск по ответу',
+      'Ищите минимальную speed в диапазоне [1, max(orders)]',
+      'Для каждой speed считайте Math.ceil(orders[i] / speed) часов на точку',
+    ],
+    solutionCode: `function minDeliverySpeed(orders, hours) {
+  let left = 1;
+  let right = Math.max(...orders);
+  let result = right;
+
+  while (left <= right) {
+    const mid = Math.floor((left + right) / 2);
+
+    let totalHours = 0;
+    for (const order of orders) {
+      totalHours += Math.ceil(order / mid);
+    }
+
+    if (totalHours <= hours) {
+      result = mid;
+      right = mid - 1;
+    } else {
+      left = mid + 1;
+    }
+  }
+
+  return result;
+}`,
+  },
 ];

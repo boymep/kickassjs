@@ -247,4 +247,164 @@ export const stacksQueuesProblems: Problem[] = [
   return stack[stack.length - 1];
 }`,
   },
+  {
+    id: 'sq-p4',
+    topicId: 'stacks-queues',
+    title: 'Валидация вложенных тегов',
+    difficulty: 'medium',
+    isContextual: true,
+    description:
+      'В простом HTML-подобном шаблоне есть открывающие теги вида `<div>` и закрывающие `</div>`. Дана строка с тегами. Проверьте, правильно ли они вложены (каждый открывающий тег закрыт соответствующим, порядок вложенности корректен). Вернуть true/false.\n\nТеги — только из латинских букв в нижнем регистре. Текст между тегами игнорируется.\n\nПример:\n`"<div><span></span></div>"` → true\n`"<div><span></div></span>"` → false',
+    functionName: 'validateTags',
+    starterCode: `function validateTags(html) {
+  // ваш код
+}`,
+    testCases: [
+      {
+        id: 'sq-p4-t1',
+        inputDisplay: 'validateTags("<div><span></span></div>")',
+        inputArgs: ['<div><span></span></div>'],
+        expected: true,
+      },
+      {
+        id: 'sq-p4-t2',
+        inputDisplay: 'validateTags("<div><span></div></span>")',
+        inputArgs: ['<div><span></div></span>'],
+        expected: false,
+      },
+      {
+        id: 'sq-p4-t3',
+        inputDisplay: 'validateTags("<a></a><b></b>")',
+        inputArgs: ['<a></a><b></b>'],
+        expected: true,
+      },
+      {
+        id: 'sq-p4-t4',
+        inputDisplay: 'validateTags("<div>")',
+        inputArgs: ['<div>'],
+        expected: false,
+      },
+      {
+        id: 'sq-p4-t5',
+        inputDisplay: 'validateTags("")',
+        inputArgs: [''],
+        expected: true,
+      },
+    ],
+    hints: [
+      'Используйте regex /<\\/?([a-z]+)>/g для извлечения тегов',
+      'Стек: открывающий тег — push, закрывающий — pop и сравнить',
+    ],
+    solutionCode: `function validateTags(html) {
+  const stack = [];
+  const regex = /<\\/?([a-z]+)>/g;
+  let match;
+
+  while ((match = regex.exec(html)) !== null) {
+    const fullTag = match[0];
+    const tagName = match[1];
+
+    if (fullTag.startsWith('</')) {
+      // Закрывающий тег
+      if (stack.length === 0 || stack.pop() !== tagName) {
+        return false;
+      }
+    } else {
+      // Открывающий тег
+      stack.push(tagName);
+    }
+  }
+
+  return stack.length === 0;
+}`,
+  },
+  {
+    id: 'sq-p5',
+    topicId: 'stacks-queues',
+    title: 'Отмена действий (Undo)',
+    difficulty: 'easy',
+    isContextual: true,
+    description:
+      'В текстовом редакторе пользователь выполняет действия. Каждое действие — это либо `{ type: "write", text: string }` (добавить текст в конец), либо `{ type: "undo" }` (отменить последнее write). Верните итоговую строку после выполнения всех действий.\n\nЕсли undo вызвано когда нечего отменять — игнорируется.',
+    functionName: 'applyActions',
+    starterCode: `function applyActions(actions) {
+  // ваш код
+}`,
+    testCases: [
+      {
+        id: 'sq-p5-t1',
+        inputDisplay:
+          'applyActions([{type:"write",text:"hello"},{type:"write",text:" world"},{type:"undo"}])',
+        inputArgs: [
+          [
+            { type: 'write', text: 'hello' },
+            { type: 'write', text: ' world' },
+            { type: 'undo' },
+          ],
+        ],
+        expected: 'hello',
+      },
+      {
+        id: 'sq-p5-t2',
+        inputDisplay:
+          'applyActions([{type:"write",text:"a"},{type:"write",text:"b"},{type:"write",text:"c"},{type:"undo"},{type:"undo"}])',
+        inputArgs: [
+          [
+            { type: 'write', text: 'a' },
+            { type: 'write', text: 'b' },
+            { type: 'write', text: 'c' },
+            { type: 'undo' },
+            { type: 'undo' },
+          ],
+        ],
+        expected: 'a',
+      },
+      {
+        id: 'sq-p5-t3',
+        inputDisplay: 'applyActions([{type:"undo"}])',
+        inputArgs: [[{ type: 'undo' }]],
+        expected: '',
+      },
+      {
+        id: 'sq-p5-t4',
+        inputDisplay: 'applyActions([{type:"write",text:"test"}])',
+        inputArgs: [[{ type: 'write', text: 'test' }]],
+        expected: 'test',
+      },
+      {
+        id: 'sq-p5-t5',
+        inputDisplay:
+          'applyActions([{type:"write",text:"x"},{type:"undo"},{type:"undo"},{type:"write",text:"y"}])',
+        inputArgs: [
+          [
+            { type: 'write', text: 'x' },
+            { type: 'undo' },
+            { type: 'undo' },
+            { type: 'write', text: 'y' },
+          ],
+        ],
+        expected: 'y',
+      },
+    ],
+    hints: [
+      'Стек: каждый write добавляет новое состояние строки',
+      'undo — pop последнее состояние',
+    ],
+    solutionCode: `function applyActions(actions) {
+  const stack = [""]; // начальное состояние — пустая строка
+
+  for (const action of actions) {
+    if (action.type === "write") {
+      const current = stack[stack.length - 1];
+      stack.push(current + action.text);
+    } else if (action.type === "undo") {
+      if (stack.length > 1) {
+        stack.pop();
+      }
+    }
+  }
+
+  return stack[stack.length - 1];
+}`,
+  },
 ];

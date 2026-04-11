@@ -1,6 +1,6 @@
 import type { TestCase, TestResult } from '../types/problem';
 
-const TIMEOUT_MS = 5000;
+const TIMEOUT_MS = 3000;
 
 export function runCode(
   userCode: string,
@@ -32,7 +32,7 @@ export function runCode(
             passed: false,
             actual: null,
             expected: tc.expected,
-            error: 'Превышено время выполнения (5 сек). Возможен бесконечный цикл.',
+            error: 'Превышено время выполнения (3 сек). Возможен бесконечный цикл.',
           })),
         );
       }

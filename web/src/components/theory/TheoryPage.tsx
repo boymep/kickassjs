@@ -14,16 +14,17 @@ const vizComponents: Record<string, React.LazyExoticComponent<React.ComponentTyp
   'trees': lazy(() => import('../visualizations/TreeViz')),
 };
 
-/** Parse simple inline markdown: **bold** and `code` */
+/** Parse simple inline markdown: **bold**, `code`, and -- → — */
 function renderInline(text: string): React.ReactNode[] {
+  const normalized = text.replace(/ -- /g, ' — ');
   const parts: React.ReactNode[] = [];
   const regex = /(\*\*(.+?)\*\*|`([^`]+?)`)/g;
   let lastIndex = 0;
   let match;
 
-  while ((match = regex.exec(text)) !== null) {
+  while ((match = regex.exec(normalized)) !== null) {
     if (match.index > lastIndex) {
-      parts.push(text.slice(lastIndex, match.index));
+      parts.push(normalized.slice(lastIndex, match.index));
     }
     if (match[2]) {
       parts.push(<strong key={match.index}>{match[2]}</strong>);
@@ -46,11 +47,11 @@ function renderInline(text: string): React.ReactNode[] {
     lastIndex = match.index + match[0].length;
   }
 
-  if (lastIndex < text.length) {
-    parts.push(text.slice(lastIndex));
+  if (lastIndex < normalized.length) {
+    parts.push(normalized.slice(lastIndex));
   }
 
-  return parts.length > 0 ? parts : [text];
+  return parts.length > 0 ? parts : [normalized];
 }
 
 function stripListPrefix(item: string): string {

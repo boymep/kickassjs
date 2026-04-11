@@ -267,4 +267,141 @@ export const hashMapProblems: Problem[] = [
   return { userIds: champions.sort((a, b) => a - b), steps: maxSteps };
 }`,
   },
+  {
+    id: 'hm-p4',
+    topicId: 'hash-map',
+    title: 'Подсчёт уникальных посетителей',
+    difficulty: 'easy',
+    isContextual: true,
+    description:
+      'Дан массив логов визитов — каждый элемент это userId (число). Один пользователь может посетить сайт несколько раз. Верните количество уникальных посетителей.',
+    functionName: 'countUnique',
+    starterCode: `function countUnique(visits) {
+  // ваш код
+}`,
+    testCases: [
+      {
+        id: 'hm-p4-t1',
+        inputDisplay: 'countUnique([1, 2, 3, 1, 2])',
+        inputArgs: [[1, 2, 3, 1, 2]],
+        expected: 3,
+      },
+      {
+        id: 'hm-p4-t2',
+        inputDisplay: 'countUnique([1, 1, 1])',
+        inputArgs: [[1, 1, 1]],
+        expected: 1,
+      },
+      {
+        id: 'hm-p4-t3',
+        inputDisplay: 'countUnique([])',
+        inputArgs: [[]],
+        expected: 0,
+      },
+      {
+        id: 'hm-p4-t4',
+        inputDisplay: 'countUnique([5])',
+        inputArgs: [[5]],
+        expected: 1,
+      },
+      {
+        id: 'hm-p4-t5',
+        inputDisplay: 'countUnique([1, 2, 3, 4, 5])',
+        inputArgs: [[1, 2, 3, 4, 5]],
+        expected: 5,
+      },
+    ],
+    hints: [
+      'Set хранит только уникальные значения',
+      'Можно использовать Set или Map',
+    ],
+    solutionCode: `function countUnique(visits) {
+  return new Set(visits).size;
+}`,
+  },
+  {
+    id: 'hm-p5',
+    topicId: 'hash-map',
+    title: 'Группировка объявлений по категориям',
+    difficulty: 'medium',
+    isContextual: true,
+    description:
+      'Дан массив объявлений, каждое — объект { id: number, category: string }. Сгруппируйте объявления по категориям. Верните объект, где ключ — категория, значение — массив id объявлений этой категории (в порядке появления).',
+    functionName: 'groupByCategory',
+    starterCode: `function groupByCategory(ads) {
+  // ваш код
+}`,
+    testCases: [
+      {
+        id: 'hm-p5-t1',
+        inputDisplay:
+          'groupByCategory([{id:1,category:"авто"},{id:2,category:"недвижимость"},{id:3,category:"авто"}])',
+        inputArgs: [
+          [
+            { id: 1, category: 'авто' },
+            { id: 2, category: 'недвижимость' },
+            { id: 3, category: 'авто' },
+          ],
+        ],
+        expected: { 'авто': [1, 3], 'недвижимость': [2] },
+      },
+      {
+        id: 'hm-p5-t2',
+        inputDisplay: 'groupByCategory([])',
+        inputArgs: [[]],
+        expected: {},
+      },
+      {
+        id: 'hm-p5-t3',
+        inputDisplay:
+          'groupByCategory([{id:10,category:"электроника"}])',
+        inputArgs: [[{ id: 10, category: 'электроника' }]],
+        expected: { 'электроника': [10] },
+      },
+      {
+        id: 'hm-p5-t4',
+        inputDisplay:
+          'groupByCategory([{id:1,category:"а"},{id:2,category:"б"},{id:3,category:"в"},{id:4,category:"а"},{id:5,category:"б"}])',
+        inputArgs: [
+          [
+            { id: 1, category: 'а' },
+            { id: 2, category: 'б' },
+            { id: 3, category: 'в' },
+            { id: 4, category: 'а' },
+            { id: 5, category: 'б' },
+          ],
+        ],
+        expected: { 'а': [1, 4], 'б': [2, 5], 'в': [3] },
+      },
+      {
+        id: 'hm-p5-t5',
+        inputDisplay:
+          'groupByCategory([{id:1,category:"x"},{id:2,category:"x"},{id:3,category:"x"}])',
+        inputArgs: [
+          [
+            { id: 1, category: 'x' },
+            { id: 2, category: 'x' },
+            { id: 3, category: 'x' },
+          ],
+        ],
+        expected: { x: [1, 2, 3] },
+      },
+    ],
+    hints: [
+      'Создайте Map или объект для группировки',
+      'Для каждого объявления добавляйте id в массив соответствующей категории',
+    ],
+    solutionCode: `function groupByCategory(ads) {
+  const groups = {};
+
+  for (const ad of ads) {
+    if (!groups[ad.category]) {
+      groups[ad.category] = [];
+    }
+    groups[ad.category].push(ad.id);
+  }
+
+  return groups;
+}`,
+  },
 ];
