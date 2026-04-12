@@ -52,6 +52,11 @@ const isEmpty = stack.length === 0; // false`,
       title: 'Очередь: FIFO (First In, First Out)',
       blocks: [
         {
+          type: 'visualization',
+          content: '',
+          vizId: 'queue',
+        },
+        {
           type: 'text',
           content:
             'Очередь — это структура данных, работающая по принципу «первым пришёл — первым вышел» (FIFO). Представьте обычную очередь в магазине: кто пришёл первым, тот первым и обслуживается.',
@@ -85,6 +90,11 @@ queue.shift();    // 2, queue: [3]`,
     {
       title: 'Монотонный стек',
       blocks: [
+        {
+          type: 'visualization',
+          content: '',
+          vizId: 'monotonic-stack',
+        },
         {
           type: 'text',
           content:

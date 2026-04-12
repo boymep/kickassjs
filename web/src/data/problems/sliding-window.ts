@@ -1,54 +1,54 @@
-import type { Problem } from '../../types/problem';
+import type { Problem } from "../../types/problem";
 
 export const slidingWindowProblems: Problem[] = [
   {
-    id: 'sw-p1',
-    topicId: 'sliding-window',
-    title: 'Максимальная сумма подмассива длины k',
-    difficulty: 'easy',
+    id: "sw-p1",
+    topicId: "sliding-window",
+    title: "Максимальная сумма подмассива длины k",
+    difficulty: "easy",
     isContextual: false,
     description:
-      'Дан массив целых чисел `arr` и число `k`. Найдите максимальную сумму среди всех подмассивов длины `k`.\n\nЕсли длина массива меньше `k`, верните 0.',
-    functionName: 'maxSumSubarray',
+      "Дан массив целых чисел `arr` и число `k`. Найдите максимальную сумму среди всех подмассивов длины `k`.\n\nЕсли длина массива меньше `k`, верните 0.",
+    functionName: "maxSumSubarray",
     starterCode: `function maxSumSubarray(arr, k) {
   // Ваш код здесь
 }`,
     testCases: [
       {
-        id: 'sw-p1-t1',
-        inputDisplay: 'maxSumSubarray([2, 1, 5, 1, 3, 2], 3)',
+        id: "sw-p1-t1",
+        inputDisplay: "maxSumSubarray([2, 1, 5, 1, 3, 2], 3)",
         inputArgs: [[2, 1, 5, 1, 3, 2], 3],
         expected: 9,
       },
       {
-        id: 'sw-p1-t2',
-        inputDisplay: 'maxSumSubarray([1, 2, 3, 4, 5], 2)',
+        id: "sw-p1-t2",
+        inputDisplay: "maxSumSubarray([1, 2, 3, 4, 5], 2)",
         inputArgs: [[1, 2, 3, 4, 5], 2],
         expected: 9,
       },
       {
-        id: 'sw-p1-t3',
-        inputDisplay: 'maxSumSubarray([5, 5, 5, 5], 1)',
+        id: "sw-p1-t3",
+        inputDisplay: "maxSumSubarray([5, 5, 5, 5], 1)",
         inputArgs: [[5, 5, 5, 5], 1],
         expected: 5,
       },
       {
-        id: 'sw-p1-t4',
-        inputDisplay: 'maxSumSubarray([1, 2], 3)',
+        id: "sw-p1-t4",
+        inputDisplay: "maxSumSubarray([1, 2], 3)",
         inputArgs: [[1, 2], 3],
         expected: 0,
       },
       {
-        id: 'sw-p1-t5',
-        inputDisplay: 'maxSumSubarray([10, -3, 4, 7, 2, -1], 4)',
+        id: "sw-p1-t5",
+        inputDisplay: "maxSumSubarray([10, -3, 4, 7, 2, -1], 4)",
         inputArgs: [[10, -3, 4, 7, 2, -1], 4],
         expected: 18,
       },
     ],
     hints: [
-      'Сначала посчитайте сумму первых k элементов.',
-      'Затем на каждом шаге добавляйте новый элемент и убирайте самый левый элемент предыдущего окна.',
-      'Не забудьте обработать случай, когда arr.length < k.',
+      "Сначала посчитайте сумму первых k элементов.",
+      "Затем на каждом шаге добавляйте новый элемент и убирайте самый левый элемент предыдущего окна.",
+      "Не забудьте обработать случай, когда arr.length < k.",
     ],
     solutionCode: `function maxSumSubarray(arr, k) {
   if (arr.length < k) return 0;
@@ -68,60 +68,60 @@ export const slidingWindowProblems: Problem[] = [
 }`,
   },
   {
-    id: 'sw-p2',
-    topicId: 'sliding-window',
-    title: 'Наименьший подмассив с суммой >= target',
-    difficulty: 'medium',
+    id: "sw-p2",
+    topicId: "sliding-window",
+    title: "Наименьший подмассив с суммой >= target",
+    difficulty: "medium",
     isContextual: false,
     description:
-      'Дано положительное целое число `target` и массив положительных целых чисел `nums`. Найдите длину наименьшего подмассива, сумма элементов которого больше или равна `target`.\n\nЕсли такого подмассива не существует, верните 0.',
-    functionName: 'minSubarrayLen',
+      "Дано положительное целое число `target` и массив положительных целых чисел `nums`. Найдите длину наименьшего подмассива, сумма элементов которого больше или равна `target`.\n\nЕсли такого подмассива не существует, верните 0.",
+    functionName: "minSubarrayLen",
     starterCode: `function minSubarrayLen(target, nums) {
   // Ваш код здесь
 }`,
     testCases: [
       {
-        id: 'sw-p2-t1',
-        inputDisplay: 'minSubarrayLen(7, [2, 3, 1, 2, 4, 3])',
+        id: "sw-p2-t1",
+        inputDisplay: "minSubarrayLen(7, [2, 3, 1, 2, 4, 3])",
         inputArgs: [7, [2, 3, 1, 2, 4, 3]],
         expected: 2,
       },
       {
-        id: 'sw-p2-t2',
-        inputDisplay: 'minSubarrayLen(4, [1, 4, 4])',
+        id: "sw-p2-t2",
+        inputDisplay: "minSubarrayLen(4, [1, 4, 4])",
         inputArgs: [4, [1, 4, 4]],
         expected: 1,
       },
       {
-        id: 'sw-p2-t3',
-        inputDisplay: 'minSubarrayLen(11, [1, 1, 1, 1, 1])',
+        id: "sw-p2-t3",
+        inputDisplay: "minSubarrayLen(11, [1, 1, 1, 1, 1])",
         inputArgs: [11, [1, 1, 1, 1, 1]],
         expected: 0,
       },
       {
-        id: 'sw-p2-t4',
-        inputDisplay: 'minSubarrayLen(15, [5, 1, 3, 5, 10, 7, 4, 9, 2, 8])',
+        id: "sw-p2-t4",
+        inputDisplay: "minSubarrayLen(15, [5, 1, 3, 5, 10, 7, 4, 9, 2, 8])",
         inputArgs: [15, [5, 1, 3, 5, 10, 7, 4, 9, 2, 8]],
         expected: 2,
       },
       {
-        id: 'sw-p2-t5',
-        inputDisplay: 'minSubarrayLen(3, [1, 1, 1, 1])',
+        id: "sw-p2-t5",
+        inputDisplay: "minSubarrayLen(3, [1, 1, 1, 1])",
         inputArgs: [3, [1, 1, 1, 1]],
         expected: 3,
       },
       {
-        id: 'sw-p2-t6',
-        inputDisplay: 'minSubarrayLen(100, [100])',
+        id: "sw-p2-t6",
+        inputDisplay: "minSubarrayLen(100, [100])",
         inputArgs: [100, [100]],
         expected: 1,
       },
     ],
     hints: [
-      'Используйте два указателя (left и right), которые определяют границы окна.',
-      'Расширяйте окно вправо, пока сумма не станет >= target.',
-      'Как только сумма >= target, пробуйте сужать окно слева, фиксируя минимальную длину.',
-      'Каждый элемент добавляется и убирается максимум один раз — сложность O(n).',
+      "Используйте два указателя (left и right), которые определяют границы окна.",
+      "Расширяйте окно вправо, пока сумма не станет >= target.",
+      "Как только сумма >= target, пробуйте сужать окно слева, фиксируя минимальную длину.",
+      "Каждый элемент добавляется и убирается максимум один раз — сложность O(n).",
     ],
     solutionCode: `function minSubarrayLen(target, nums) {
   let left = 0;
@@ -142,64 +142,64 @@ export const slidingWindowProblems: Problem[] = [
 }`,
   },
   {
-    id: 'sw-p3',
-    topicId: 'sliding-window',
-    title: 'Пиковая нагрузка на сервис',
-    difficulty: 'medium',
+    id: "sw-p3",
+    topicId: "sliding-window",
+    title: "Самый загруженный час в кофейне",
+    difficulty: "medium",
     isContextual: true,
     description:
-      'Команда мониторинга анализирует нагрузку на сервис объявлений. У них есть отсортированный массив `timestamps` — временные метки (в секундах) каждого входящего запроса, и число `windowSize` — размер окна наблюдения в секундах.\n\nНужно определить максимальное количество запросов, которые приходят в любом непрерывном интервале длиной `windowSize` секунд. Это поможет определить пиковую нагрузку и правильно настроить автоскейлинг.\n\nМассив `timestamps` отсортирован по возрастанию. Временные метки могут повторяться (несколько запросов в одну секунду). Если массив пуст, верните 0.',
-    functionName: 'maxRequestsInWindow',
-    starterCode: `function maxRequestsInWindow(timestamps, windowSize) {
+      "В кофейне у входа стоит датчик, который записывает минуту прихода каждого посетителя. За день получился отсортированный массив `arrivals` — например, `[10, 23, 24, 29, 31, 58, 59]` означает, что первый гость пришёл на 10-й минуте, второй — на 23-й, и т.д.\n\nМенеджер хочет узнать: **какое максимальное число гостей приходило в пределах любых `minutes` минут подряд?** Это поможет понять, сколько бариста ставить на смену.\n\nВажно: `minutes` — это не количество гостей, а **длительность отрезка времени**. Количество гостей внутри этого отрезка может быть любым. Два указателя двигаются не с фиксированным шагом, а в зависимости от значений в массиве.\n\nПример: `arrivals = [10, 23, 24, 29, 31, 58, 59]`, `minutes = 10`. Отрезок с 23-й по 31-ю минуту — это 4 гостя за менее чем 10 минут. Это максимум.\n\nМассив отсортирован. Время может повторяться (несколько гостей в одну минуту). Если массив пуст, верните 0.",
+    functionName: "maxGuestsInPeriod",
+    starterCode: `function maxGuestsInPeriod(arrivals, minutes) {
   // Ваш код здесь
 }`,
     testCases: [
       {
-        id: 'sw-p3-t1',
-        inputDisplay: 'maxRequestsInWindow([1, 2, 3, 5, 7, 8, 9], 3)',
-        inputArgs: [[1, 2, 3, 5, 7, 8, 9], 3],
-        expected: 3,
+        id: "sw-p3-t1",
+        inputDisplay: "maxGuestsInPeriod([10, 23, 24, 29, 31, 58, 59], 10)",
+        inputArgs: [[10, 23, 24, 29, 31, 58, 59], 10],
+        expected: 4,
       },
       {
-        id: 'sw-p3-t2',
-        inputDisplay: 'maxRequestsInWindow([1, 1, 1, 2, 2, 3], 2)',
+        id: "sw-p3-t2",
+        inputDisplay: "maxGuestsInPeriod([1, 1, 1, 2, 2, 3], 2)",
         inputArgs: [[1, 1, 1, 2, 2, 3], 2],
         expected: 5,
       },
       {
-        id: 'sw-p3-t3',
-        inputDisplay: 'maxRequestsInWindow([100, 200, 300, 400, 500], 50)',
+        id: "sw-p3-t3",
+        inputDisplay: "maxGuestsInPeriod([100, 200, 300, 400, 500], 50)",
         inputArgs: [[100, 200, 300, 400, 500], 50],
         expected: 1,
       },
       {
-        id: 'sw-p3-t4',
-        inputDisplay: 'maxRequestsInWindow([], 10)',
+        id: "sw-p3-t4",
+        inputDisplay: "maxGuestsInPeriod([], 10)",
         inputArgs: [[], 10],
         expected: 0,
       },
       {
-        id: 'sw-p3-t5',
-        inputDisplay: 'maxRequestsInWindow([5, 5, 5, 5, 5], 1)',
+        id: "sw-p3-t5",
+        inputDisplay: "maxGuestsInPeriod([5, 5, 5, 5, 5], 1)",
         inputArgs: [[5, 5, 5, 5, 5], 1],
         expected: 5,
       },
     ],
     hints: [
-      'Это задача на динамическое скользящее окно, но условие сужения основано на разнице временных меток, а не на сумме.',
-      'Используйте два указателя: left и right. Двигайте right вправо, и если timestamps[right] - timestamps[left] >= windowSize, сдвигайте left.',
-      'На каждом шаге количество запросов в текущем окне = right - left + 1.',
-      'Не забудьте обработать пустой массив.',
+      "Размер окна определяется не количеством элементов, а разницей значений: `arrivals[right] - arrivals[left] < minutes`.",
+      "Используйте два указателя. Двигайте `right` вправо, а `left` подтягивайте, когда разница значений `>= minutes`.",
+      "На каждом шаге количество гостей в текущем окне = `right - left + 1`.",
+      "Не забудьте обработать пустой массив.",
     ],
-    solutionCode: `function maxRequestsInWindow(timestamps, windowSize) {
-  if (timestamps.length === 0) return 0;
+    solutionCode: `function maxGuestsInPeriod(arrivals, minutes) {
+  if (arrivals.length === 0) return 0;
 
   let left = 0;
   let maxCount = 0;
 
-  for (let right = 0; right < timestamps.length; right++) {
-    // Сужаем окно, пока разница >= windowSize
-    while (timestamps[right] - timestamps[left] >= windowSize) {
+  for (let right = 0; right < arrivals.length; right++) {
+    // Сужаем окно, пока разница >= minutes
+    while (arrivals[right] - arrivals[left] >= minutes) {
       left++;
     }
 
@@ -210,52 +210,52 @@ export const slidingWindowProblems: Problem[] = [
 }`,
   },
   {
-    id: 'sw-p4',
-    topicId: 'sliding-window',
-    title: 'Средний рейтинг за последние K отзывов',
-    difficulty: 'easy',
+    id: "sw-p4",
+    topicId: "sliding-window",
+    title: "Средний рейтинг за последние K отзывов",
+    difficulty: "easy",
     isContextual: true,
     description:
-      'На маркетплейсе для каждого продавца ведётся массив оценок от покупателей (от 1 до 5). Для аналитики нужно вычислить средний рейтинг для каждого "окна" из последних k отзывов. Верните массив средних значений (округлять не нужно).',
-    functionName: 'averageRatings',
+      'На маркетплейсе для каждого продавца ведётся массив оценок от покупателей (от 1 до 5). Для аналитики нужно вычислить средний рейтинг для каждого "окна" из последних `k` отзывов. Верните массив средних значений, округлённых до целого числа.',
+    functionName: "averageRatings",
     starterCode: `function averageRatings(ratings, k) {
   // ваш код
 }`,
     testCases: [
       {
-        id: 'sw-p4-t1',
-        inputDisplay: 'averageRatings([5, 4, 3, 5, 4, 3, 5], 3)',
+        id: "sw-p4-t1",
+        inputDisplay: "averageRatings([5, 4, 3, 5, 4, 3, 5], 3)",
         inputArgs: [[5, 4, 3, 5, 4, 3, 5], 3],
         expected: [4, 4, 4, 4, 4],
       },
       {
-        id: 'sw-p4-t2',
-        inputDisplay: 'averageRatings([1, 2, 3, 4, 5], 2)',
+        id: "sw-p4-t2",
+        inputDisplay: "averageRatings([1, 2, 3, 4, 5], 2)",
         inputArgs: [[1, 2, 3, 4, 5], 2],
-        expected: [1.5, 2.5, 3.5, 4.5],
+        expected: [2, 3, 4, 5],
       },
       {
-        id: 'sw-p4-t3',
-        inputDisplay: 'averageRatings([5], 1)',
+        id: "sw-p4-t3",
+        inputDisplay: "averageRatings([5], 1)",
         inputArgs: [[5], 1],
         expected: [5],
       },
       {
-        id: 'sw-p4-t4',
-        inputDisplay: 'averageRatings([3, 3, 3, 3], 4)',
+        id: "sw-p4-t4",
+        inputDisplay: "averageRatings([3, 3, 3, 3], 4)",
         inputArgs: [[3, 3, 3, 3], 4],
         expected: [3],
       },
       {
-        id: 'sw-p4-t5',
-        inputDisplay: 'averageRatings([1, 5, 1, 5, 1], 3)',
+        id: "sw-p4-t5",
+        inputDisplay: "averageRatings([1, 5, 1, 5, 1], 3)",
         inputArgs: [[1, 5, 1, 5, 1], 3],
-        expected: [2.3333333333333335, 3.6666666666666665, 2.3333333333333335],
+        expected: [2, 4, 2],
       },
     ],
     hints: [
-      'Фиксированное окно размера k',
-      'Набрать сумму первых k элементов, затем скользить',
+      "Фиксированное окно размера k",
+      "Набрать сумму первых k элементов, затем скользить",
     ],
     solutionCode: `function averageRatings(ratings, k) {
   const result = [];
@@ -264,63 +264,63 @@ export const slidingWindowProblems: Problem[] = [
   for (let i = 0; i < k; i++) {
     sum += ratings[i];
   }
-  result.push(sum / k);
+  result.push(Math.round(sum / k));
 
   for (let i = k; i < ratings.length; i++) {
     sum = sum + ratings[i] - ratings[i - k];
-    result.push(sum / k);
+    result.push(Math.round(sum / k));
   }
 
   return result;
 }`,
   },
   {
-    id: 'sw-p5',
-    topicId: 'sliding-window',
-    title: 'Максимальная выручка за период',
-    difficulty: 'medium',
+    id: "sw-p5",
+    topicId: "sliding-window",
+    title: "Максимальная выручка за период",
+    difficulty: "medium",
     isContextual: true,
     description:
-      'Дан массив ежедневной выручки магазина и число days — длина отчётного периода. Найдите максимальную суммарную выручку за любой непрерывный период в days дней. Верните объект { startDay: number, total: number }, где startDay — индекс первого дня лучшего периода (0-based).',
-    functionName: 'bestPeriod',
+      "Дан массив ежедневной выручки магазина и число days — длина отчётного периода. Найдите максимальную суммарную выручку за любой непрерывный период в days дней. Верните объект { startDay: number, total: number }, где startDay — индекс первого дня лучшего периода (0-based).",
+    functionName: "bestPeriod",
     starterCode: `function bestPeriod(revenue, days) {
   // ваш код
 }`,
     testCases: [
       {
-        id: 'sw-p5-t1',
-        inputDisplay: 'bestPeriod([100, 200, 150, 300, 250, 100], 3)',
+        id: "sw-p5-t1",
+        inputDisplay: "bestPeriod([100, 200, 150, 300, 250, 100], 3)",
         inputArgs: [[100, 200, 150, 300, 250, 100], 3],
         expected: { startDay: 2, total: 700 },
       },
       {
-        id: 'sw-p5-t2',
-        inputDisplay: 'bestPeriod([500], 1)',
+        id: "sw-p5-t2",
+        inputDisplay: "bestPeriod([500], 1)",
         inputArgs: [[500], 1],
         expected: { startDay: 0, total: 500 },
       },
       {
-        id: 'sw-p5-t3',
-        inputDisplay: 'bestPeriod([10, 20, 30, 40], 2)',
+        id: "sw-p5-t3",
+        inputDisplay: "bestPeriod([10, 20, 30, 40], 2)",
         inputArgs: [[10, 20, 30, 40], 2],
         expected: { startDay: 2, total: 70 },
       },
       {
-        id: 'sw-p5-t4',
-        inputDisplay: 'bestPeriod([1, 1, 1, 1, 1], 5)',
+        id: "sw-p5-t4",
+        inputDisplay: "bestPeriod([1, 1, 1, 1, 1], 5)",
         inputArgs: [[1, 1, 1, 1, 1], 5],
         expected: { startDay: 0, total: 5 },
       },
       {
-        id: 'sw-p5-t5',
-        inputDisplay: 'bestPeriod([50, 100, 50, 100, 50, 100], 4)',
+        id: "sw-p5-t5",
+        inputDisplay: "bestPeriod([50, 100, 50, 100, 50, 100], 4)",
         inputArgs: [[50, 100, 50, 100, 50, 100], 4],
         expected: { startDay: 1, total: 300 },
       },
     ],
     hints: [
-      'Фиксированное окно размера days',
-      'Отслеживайте не только maxSum но и startDay лучшего окна',
+      "Фиксированное окно размера days",
+      "Отслеживайте не только maxSum но и startDay лучшего окна",
     ],
     solutionCode: `function bestPeriod(revenue, days) {
   let sum = 0;

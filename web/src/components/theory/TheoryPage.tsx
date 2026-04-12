@@ -10,8 +10,19 @@ const vizComponents: Record<string, React.LazyExoticComponent<React.ComponentTyp
   'two-pointers': lazy(() => import('../visualizations/TwoPointersViz')),
   'sliding-window': lazy(() => import('../visualizations/SlidingWindowViz')),
   'hash-map': lazy(() => import('../visualizations/HashMapViz')),
+  'frequency-count': lazy(() => import('../visualizations/FrequencyCountViz')),
+  'two-sum-lookup': lazy(() => import('../visualizations/TwoSumLookupViz')),
+  'fixed-window': lazy(() => import('../visualizations/FixedWindowViz')),
+  'dynamic-window': lazy(() => import('../visualizations/DynamicWindowViz')),
   'stacks-queues': lazy(() => import('../visualizations/StackViz')),
+  'queue': lazy(() => import('../visualizations/QueueViz')),
+  'monotonic-stack': lazy(() => import('../visualizations/MonotonicStackViz')),
   'trees': lazy(() => import('../visualizations/TreeViz')),
+  'dfs': lazy(() => import('../visualizations/DfsViz')),
+  'bfs': lazy(() => import('../visualizations/BfsViz')),
+  'binary-search-answer': lazy(() => import('../visualizations/BinarySearchAnswerViz')),
+  'converging-pointers': lazy(() => import('../visualizations/ConvergingPointersViz')),
+  'parallel-pointers': lazy(() => import('../visualizations/ParallelPointersViz')),
 };
 
 /** Parse simple inline markdown: **bold**, `code`, and -- → — */
@@ -86,7 +97,7 @@ function renderBlock(block: TheoryBlock, idx: number) {
       );
     case 'callout':
       return (
-        <Alert key={idx} severity={block.calloutType ?? 'info'} sx={{ my: 2 }}>
+        <Alert key={idx} severity={block.calloutType === 'tip' ? 'success' : (block.calloutType ?? 'info')} sx={{ my: 2 }}>
           {renderInline(block.content)}
         </Alert>
       );

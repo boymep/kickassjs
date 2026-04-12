@@ -122,11 +122,13 @@ export default function CheatsheetPage() {
               <StepLabel
                 onClick={() => handleStepClick(index)}
                 sx={{ cursor: 'pointer' }}
-                StepIconProps={{
-                  sx: {
-                    fontSize: 28,
-                    '&.Mui-active': { color: 'primary.main' },
-                    '&.Mui-completed': { color: 'primary.main' },
+                slotProps={{
+                  stepIcon: {
+                    sx: {
+                      fontSize: 28,
+                      '&.Mui-active': { color: 'primary.main' },
+                      '&.Mui-completed': { color: 'primary.main' },
+                    },
                   },
                 }}
               >

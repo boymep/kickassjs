@@ -37,6 +37,11 @@ export const twoPointersTheory: TopicTheory = {
       title: 'Сходящиеся указатели',
       blocks: [
         {
+          type: 'visualization',
+          content: '',
+          vizId: 'converging-pointers',
+        },
+        {
           type: 'text',
           content:
             'Указатели стартуют с противоположных концов массива и двигаются навстречу, пока не встретятся. На каждом шаге мы решаем, какой указатель сдвигать.',
@@ -82,6 +87,11 @@ export const twoPointersTheory: TopicTheory = {
     {
       title: 'Параллельные указатели',
       blocks: [
+        {
+          type: 'visualization',
+          content: '',
+          vizId: 'parallel-pointers',
+        },
         {
           type: 'text',
           content:

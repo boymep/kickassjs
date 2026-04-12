@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Box, Typography, Paper, Button, Chip, Collapse, Alert, IconButton } from '@mui/material';
+import Markdown from 'react-markdown';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import LightbulbIcon from '@mui/icons-material/Lightbulb';
@@ -46,9 +47,9 @@ export default function ProblemView() {
             <Chip label="Прикладная" color="info" size="small" variant="outlined" />
           )}
         </Box>
-        <Typography variant="body1" sx={{ whiteSpace: 'pre-line' }}>
-          {problem.description.replace(/ -- /g, ' — ')}
-        </Typography>
+        <Box sx={{ '& p': { mt: 0, mb: 1 }, '& code': { backgroundColor: 'action.hover', px: 0.5, borderRadius: 0.5, fontFamily: 'monospace', fontSize: '0.9em' } }}>
+          <Markdown>{problem.description.replace(/ -- /g, ' — ')}</Markdown>
+        </Box>
       </Paper>
 
       <CodeEditor value={code} onChange={setCode} />

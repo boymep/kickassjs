@@ -43,7 +43,7 @@ export default function TestResults({ results, testCases }: Props) {
                       ? `Ошибка: ${r.error}`
                       : `Ожидалось: ${JSON.stringify(r.expected)}, получено: ${JSON.stringify(r.actual)}`
                 }
-                secondaryTypographyProps={{ sx: { fontFamily: 'monospace', fontSize: '12px' } }}
+                slotProps={{ secondary: { sx: { fontFamily: 'monospace', fontSize: '12px' } } }}
               />
             </ListItem>
           );

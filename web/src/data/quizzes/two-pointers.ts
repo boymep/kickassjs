@@ -16,7 +16,7 @@ export const twoPointersQuiz: TopicQuiz = {
   while (left < right) {
     const sum = nums[left] + nums[right];
     if (sum === target) return [left, right];
-    if (sum < target) ___;
+    if (sum < target) ___BLANK___;
     else right--;
   }
   return [-1, -1];
@@ -59,7 +59,7 @@ console.log(twoSum([1, 3, 5, 7, 11], 8));`,
   let slow = 0;
   for (let fast = 1; fast < nums.length; fast++) {
     if (nums[fast] !== nums[slow]) {
-      ___;
+      ___BLANK___;
       nums[slow] = nums[fast];
     }
   }
@@ -168,7 +168,7 @@ console.log(removeDuplicates([0, 0, 1, 1, 2]));`,
   let max = 0;
 
   while (left < right) {
-    const area = ___;
+    const area = ___BLANK___;
     max = Math.max(max, area);
     if (height[left] < height[right]) left++;
     else right--;
@@ -317,7 +317,7 @@ console.log(merge([1, 3, 5], [2, 4, 6]));`,
   while (left < right) {
     const area = Math.min(height[left], height[right]) * (right - left);
     max = Math.max(max, area);
-    if (height[left] < height[right]) ___;
+    if (height[left] < height[right]) ___BLANK___;
     else right--;
   }
   return max;
@@ -490,7 +490,7 @@ console.log(trapWater([0, 1, 0, 2, 1, 0, 1, 3, 2, 1, 2, 1]));`,
   const result: number[][] = [];
 
   for (let i = 0; i < nums.length - 2; i++) {
-    if (___) continue;
+    if (___BLANK___) continue;
 
     let left = i + 1;
     let right = nums.length - 1;

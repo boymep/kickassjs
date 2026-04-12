@@ -10,7 +10,7 @@ export const twoPointersProblems: Problem[] = [
     description:
       'Дан отсортированный по возрастанию массив целых чисел `numbers` и целое число `target`.\n\nНайдите два числа, которые в сумме дают `target`, и верните массив из двух их индексов (0-based).\n\nГарантируется, что решение существует и оно единственное. Нельзя использовать один и тот же элемент дважды.',
     functionName: 'twoSum',
-    starterCode: `function twoSum(numbers: number[], target: number): number[] {
+    starterCode: `function twoSum(numbers, target) {
   // ваш код
 }`,
     testCases: [
@@ -50,7 +50,7 @@ export const twoPointersProblems: Problem[] = [
       'Поставьте один указатель в начало, другой в конец.',
       'Если сумма меньше target — сдвиньте левый указатель вправо. Если больше — правый влево.',
     ],
-    solutionCode: `function twoSum(numbers: number[], target: number): number[] {
+    solutionCode: `function twoSum(numbers, target) {
   let left = 0;
   let right = numbers.length - 1;
 
@@ -80,7 +80,7 @@ export const twoPointersProblems: Problem[] = [
     description:
       'Дан массив неотрицательных целых чисел `height`, где каждый элемент представляет высоту вертикальной линии на координатной оси.\n\nНайдите две линии, которые вместе с осью X образуют контейнер, содержащий наибольшее количество воды.\n\nВерните максимальный объём воды, который может вместить контейнер.\n\nОбъём вычисляется как `min(height[i], height[j]) * (j - i)`.',
     functionName: 'maxArea',
-    starterCode: `function maxArea(height: number[]): number {
+    starterCode: `function maxArea(height) {
   // ваш код
 }`,
     testCases: [
@@ -120,7 +120,7 @@ export const twoPointersProblems: Problem[] = [
       'Начните с самого широкого контейнера: left = 0, right = длина - 1.',
       'Двигайте тот указатель, чья высота меньше — так есть шанс найти более высокую линию.',
     ],
-    solutionCode: `function maxArea(height: number[]): number {
+    solutionCode: `function maxArea(height) {
   let left = 0;
   let right = height.length - 1;
   let max = 0;
@@ -149,20 +149,20 @@ export const twoPointersProblems: Problem[] = [
     description:
       'В маркетплейсе проходит акция: покупатель может выбрать ровно два товара, и их суммарная стоимость не должна превышать бюджет.\n\nДан отсортированный по возрастанию массив цен `prices` и число `budget` — бюджет покупателя.\n\nНайдите пару товаров, суммарная цена которых максимально близка к бюджету, но не превышает его. Верните массив из двух цен этих товаров (в порядке возрастания).\n\nЕсли ни одна пара не укладывается в бюджет, верните пустой массив.\n\nЕсли несколько пар дают одинаковую сумму, верните любую из них.',
     functionName: 'findBestPair',
-    starterCode: `function findBestPair(prices: number[], budget: number): number[] {
+    starterCode: `function findBestPair(prices, budget) {
   // ваш код
 }`,
     testCases: [
       {
         id: 'tp3-tc1',
-        inputDisplay: 'findBestPair([100, 200, 300, 400, 500], 600)',
-        inputArgs: [[100, 200, 300, 400, 500], 600],
+        inputDisplay: 'findBestPair([100, 250, 300, 400, 500], 600)',
+        inputArgs: [[100, 250, 300, 400, 500], 600],
         expected: [100, 500],
       },
       {
         id: 'tp3-tc2',
-        inputDisplay: 'findBestPair([50, 100, 150, 200], 250)',
-        inputArgs: [[50, 100, 150, 200], 250],
+        inputDisplay: 'findBestPair([50, 120, 150, 200], 250)',
+        inputArgs: [[50, 120, 150, 200], 250],
         expected: [50, 200],
       },
       {
@@ -179,9 +179,9 @@ export const twoPointersProblems: Problem[] = [
       },
       {
         id: 'tp3-tc5',
-        inputDisplay: 'findBestPair([1, 2, 3, 4, 5, 6, 7, 8, 9, 10], 15)',
-        inputArgs: [[1, 2, 3, 4, 5, 6, 7, 8, 9, 10], 15],
-        expected: [5, 10],
+        inputDisplay: 'findBestPair([1, 2, 3, 4, 5, 6, 7, 8, 9, 10], 18)',
+        inputArgs: [[1, 2, 3, 4, 5, 6, 7, 8, 9, 10], 18],
+        expected: [8, 10],
       },
     ],
     hints: [
@@ -189,10 +189,10 @@ export const twoPointersProblems: Problem[] = [
       'left в начале, right в конце. Если сумма <= budget, это кандидат на лучшую пару.',
       'Обновляйте лучший результат каждый раз, когда находите пару с суммой <= budget, и двигайте left++. Если сумма > budget — двигайте right--.',
     ],
-    solutionCode: `function findBestPair(prices: number[], budget: number): number[] {
+    solutionCode: `function findBestPair(prices, budget) {
   let left = 0;
   let right = prices.length - 1;
-  let bestPair: number[] = [];
+  let bestPair = [];
   let bestSum = -1;
 
   while (left < right) {
@@ -210,87 +210,6 @@ export const twoPointersProblems: Problem[] = [
   }
 
   return bestPair;
-}`,
-  },
-  {
-    id: 'tp-p4',
-    topicId: 'two-pointers',
-    title: 'Подбор размеров одежды',
-    difficulty: 'easy',
-    isContextual: true,
-    description: `В интернет-магазине есть отсортированный массив доступных размеров одежды sizes. Покупатель хочет размер target. Если точного размера нет, нужно вернуть два ближайших размера (меньший и больший). Если точный есть — вернуть его дважды [target, target].
-
-Крайние случаи:
-- Если нет размера меньше target, вернуть [ближайший больший, ближайший больший].
-- Если нет размера больше target, вернуть [ближайший меньший, ближайший меньший].
-
-Примеры:
-- findClosestSizes([36, 38, 40, 42, 44], 41) => [40, 42]
-- findClosestSizes([36, 38, 40, 42], 40) => [40, 40]
-- findClosestSizes([38, 42, 46], 35) => [38, 38]`,
-    functionName: 'findClosestSizes',
-    starterCode: `function findClosestSizes(sizes, target) {
-  // ваш код
-}`,
-    testCases: [
-      {
-        id: 'tp-p4-t1',
-        inputDisplay: 'findClosestSizes([36, 38, 40, 42, 44], 41)',
-        inputArgs: [[36, 38, 40, 42, 44], 41],
-        expected: [40, 42],
-      },
-      {
-        id: 'tp-p4-t2',
-        inputDisplay: 'findClosestSizes([36, 38, 40, 42], 40)',
-        inputArgs: [[36, 38, 40, 42], 40],
-        expected: [40, 40],
-      },
-      {
-        id: 'tp-p4-t3',
-        inputDisplay: 'findClosestSizes([38, 42, 46], 35)',
-        inputArgs: [[38, 42, 46], 35],
-        expected: [38, 38],
-      },
-      {
-        id: 'tp-p4-t4',
-        inputDisplay: 'findClosestSizes([38, 42, 46], 50)',
-        inputArgs: [[38, 42, 46], 50],
-        expected: [46, 46],
-      },
-      {
-        id: 'tp-p4-t5',
-        inputDisplay: 'findClosestSizes([36, 38, 40, 42, 44, 46], 43)',
-        inputArgs: [[36, 38, 40, 42, 44, 46], 43],
-        expected: [42, 44],
-      },
-    ],
-    hints: [
-      'Найдите позицию вставки target в отсортированном массиве',
-      'Сравните arr[pos-1] и arr[pos] с target',
-    ],
-    solutionCode: `function findClosestSizes(sizes, target) {
-  // Бинарный поиск позиции вставки
-  let left = 0;
-  let right = sizes.length - 1;
-
-  while (left <= right) {
-    const mid = Math.floor((left + right) / 2);
-
-    if (sizes[mid] === target) {
-      return [target, target];
-    } else if (sizes[mid] < target) {
-      left = mid + 1;
-    } else {
-      right = mid - 1;
-    }
-  }
-
-  // left — позиция вставки (первый элемент > target)
-  // right — последний элемент < target
-  if (right < 0) return [sizes[left], sizes[left]];
-  if (left >= sizes.length) return [sizes[right], sizes[right]];
-
-  return [sizes[right], sizes[left]];
 }`,
   },
   {

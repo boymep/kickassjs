@@ -276,6 +276,87 @@ export const binarySearchProblems: Problem[] = [
 }`,
   },
   {
+    id: 'bs-p6',
+    topicId: 'binary-search',
+    title: 'Подбор размеров одежды',
+    difficulty: 'easy',
+    isContextual: true,
+    description: `В интернет-магазине есть отсортированный массив доступных размеров одежды sizes. Покупатель хочет размер target. Если точного размера нет, нужно вернуть два ближайших размера (меньший и больший). Если точный есть — вернуть его дважды [target, target].
+
+Крайние случаи:
+- Если нет размера меньше target, вернуть [ближайший больший, ближайший больший].
+- Если нет размера больше target, вернуть [ближайший меньший, ближайший меньший].
+
+Примеры:
+- findClosestSizes([36, 38, 40, 42, 44], 41) => [40, 42]
+- findClosestSizes([36, 38, 40, 42], 40) => [40, 40]
+- findClosestSizes([38, 42, 46], 35) => [38, 38]`,
+    functionName: 'findClosestSizes',
+    starterCode: `function findClosestSizes(sizes, target) {
+  // ваш код
+}`,
+    testCases: [
+      {
+        id: 'bs-p6-t1',
+        inputDisplay: 'findClosestSizes([36, 38, 40, 42, 44], 41)',
+        inputArgs: [[36, 38, 40, 42, 44], 41],
+        expected: [40, 42],
+      },
+      {
+        id: 'bs-p6-t2',
+        inputDisplay: 'findClosestSizes([36, 38, 40, 42], 40)',
+        inputArgs: [[36, 38, 40, 42], 40],
+        expected: [40, 40],
+      },
+      {
+        id: 'bs-p6-t3',
+        inputDisplay: 'findClosestSizes([38, 42, 46], 35)',
+        inputArgs: [[38, 42, 46], 35],
+        expected: [38, 38],
+      },
+      {
+        id: 'bs-p6-t4',
+        inputDisplay: 'findClosestSizes([38, 42, 46], 50)',
+        inputArgs: [[38, 42, 46], 50],
+        expected: [46, 46],
+      },
+      {
+        id: 'bs-p6-t5',
+        inputDisplay: 'findClosestSizes([36, 38, 40, 42, 44, 46], 43)',
+        inputArgs: [[36, 38, 40, 42, 44, 46], 43],
+        expected: [42, 44],
+      },
+    ],
+    hints: [
+      'Найдите позицию вставки target в отсортированном массиве',
+      'Сравните arr[pos-1] и arr[pos] с target',
+    ],
+    solutionCode: `function findClosestSizes(sizes, target) {
+  // Бинарный поиск позиции вставки
+  let left = 0;
+  let right = sizes.length - 1;
+
+  while (left <= right) {
+    const mid = Math.floor((left + right) / 2);
+
+    if (sizes[mid] === target) {
+      return [target, target];
+    } else if (sizes[mid] < target) {
+      left = mid + 1;
+    } else {
+      right = mid - 1;
+    }
+  }
+
+  // left — позиция вставки (первый элемент > target)
+  // right — последний элемент < target
+  if (right < 0) return [sizes[left], sizes[left]];
+  if (left >= sizes.length) return [sizes[right], sizes[right]];
+
+  return [sizes[right], sizes[left]];
+}`,
+  },
+  {
     id: 'bs-p4',
     topicId: 'binary-search',
     title: 'Поиск версии с багом',

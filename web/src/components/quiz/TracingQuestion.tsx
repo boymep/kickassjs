@@ -20,6 +20,12 @@ export default function TracingQuestion({ question, onAnswer, answered }: Props)
 
   const varNames = question.steps.length > 0 ? Object.keys(question.steps[0].variables) : [];
 
+  // Show only first ~60% of steps before answering, full table after
+  const totalSteps = question.steps.length;
+  const visibleCount = answered ? totalSteps : Math.max(1, Math.ceil(totalSteps * 0.6));
+  const visibleSteps = question.steps.slice(0, visibleCount);
+  const hiddenCount = totalSteps - visibleCount;
+
   return (
     <Paper sx={{ p: 3 }}>
       <Typography variant="h6" gutterBottom>
@@ -42,7 +48,7 @@ export default function TracingQuestion({ question, onAnswer, answered }: Props)
               </TableRow>
             </TableHead>
             <TableBody>
-              {question.steps.map((step, i) => (
+              {visibleSteps.map((step, i) => (
                 <TableRow key={i}>
                   <TableCell>{step.label}</TableCell>
                   {varNames.map((v) => (
@@ -52,6 +58,16 @@ export default function TracingQuestion({ question, onAnswer, answered }: Props)
                   ))}
                 </TableRow>
               ))}
+              {hiddenCount > 0 && (
+                <TableRow>
+                  <TableCell
+                    colSpan={varNames.length + 1}
+                    sx={{ textAlign: 'center', color: 'text.secondary', fontStyle: 'italic', py: 1.5 }}
+                  >
+                    ... продолжите самостоятельно ({hiddenCount} шаг{hiddenCount === 1 ? '' : hiddenCount < 5 ? 'а' : 'ов'} скрыт{hiddenCount === 1 ? '' : 'о'})
+                  </TableCell>
+                </TableRow>
+              )}
             </TableBody>
           </Table>
         </TableContainer>

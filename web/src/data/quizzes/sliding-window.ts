@@ -10,7 +10,7 @@ export const slidingWindowQuiz: TopicQuiz = {
       description: 'Заполните пропуск в коде сдвига фиксированного окна размера k.',
       codeWithBlanks: `// Сдвигаем окно на один элемент вправо
 for (let i = k; i < arr.length; i++) {
-  sum = sum + arr[i] - ___;
+  sum = sum + arr[i] - ___BLANK___;
   maxSum = Math.max(maxSum, sum);
 }`,
       options: ['arr[i - 1]', 'arr[i - k]', 'arr[i + k]', 'arr[0]'],
@@ -47,7 +47,7 @@ console.log(maxSumSubarray([2, 1, 5, 1, 3, 2], 3));`,
       codeWithBlanks: `for (let right = 0; right < nums.length; right++) {
   sum += nums[right];
 
-  while (___) {
+  while (___BLANK___) {
     minLen = Math.min(minLen, right - left + 1);
     sum -= nums[left];
     left++;
@@ -148,7 +148,7 @@ console.log(maxSumSubarray([2, 1, 5, 1, 3, 2], 3));`,
 
   for (let right = 0; right < s.length; right++) {
     while (set.has(s[right])) {
-      ___;
+      ___BLANK___;
       left++;
     }
     set.add(s[right]);
@@ -256,7 +256,7 @@ console.log(lengthOfLongestSubstring("abcabcbb"));`,
 
   for (let right = 0; right < s.length; right++) {
     if (map.has(s[right])) {
-      left = Math.max(left, ___);
+      left = Math.max(left, ___BLANK___);
     }
     map.set(s[right], right);
     maxLen = Math.max(maxLen, right - left + 1);
@@ -443,7 +443,7 @@ function optimal(s) {
       product /= nums[left];
       left++;
     }
-    count += ___;
+    count += ___BLANK___;
   }
   return count;
 }`,

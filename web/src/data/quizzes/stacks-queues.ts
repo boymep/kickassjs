@@ -17,7 +17,7 @@ export const stacksQueuesQuiz: TopicQuiz = {
     if ('({['.includes(ch)) {
       stack.push(ch);
     } else {
-      const last = stack.___();
+      const last = stack.___BLANK___();
       if (last !== pairs[ch]) return false;
     }
   }
@@ -66,7 +66,7 @@ console.log(isValid("([)]"));`,
   const stack = [];
 
   for (let i = 0; i < temps.length; i++) {
-    while (stack.length > 0 && ___) {
+    while (stack.length > 0 && ___BLANK___) {
       const prev = stack.pop();
       result[prev] = i - prev;
     }
@@ -208,13 +208,18 @@ console.log(evalRPN(["2", "1", "+", "3", "*"]));`,
   }
 
   getMin() {
-    return this.___[this.___.length - 1];
+    return this.___BLANK___;
   }
 }`,
-      options: ['stack', 'minStack', 'min', 'queue'],
-      correctIndex: 1,
+      options: [
+        'minStack[this.minStack.length - 1]',
+        'stack[this.stack.length - 1]',
+        'Math.min(...this.stack)',
+        'minStack[0]',
+      ],
+      correctIndex: 0,
       explanation:
-        'getMin() должен возвращать верхний элемент вспомогательного стека minStack — на его вершине всегда хранится текущий минимум. Каждый push() записывает в minStack минимум между новым значением и предыдущим минимумом, а pop() синхронно удаляет элемент из обоих стеков.',
+        'getMin() должен возвращать верхний элемент вспомогательного стека minStack — на его вершине всегда хранится текущий минимум. Обращаемся к последнему элементу через [length - 1]. Math.min(...stack) был бы O(n), а нам нужно O(1).',
     },
     {
       type: 'tracing',
@@ -303,7 +308,7 @@ console.log(evalRPN(["4", "13", "5", "/", "+"]));`,
   for (let i = 0; i < nums.length; i++) {
     while (stack.length > 0 && nums[i] > nums[stack[stack.length - 1]]) {
       const idx = stack.pop();
-      result[idx] = ___;
+      result[idx] = ___BLANK___;
     }
     stack.push(i);
   }
@@ -515,7 +520,7 @@ console.log(asteroidCollision([5, 10, -5]));`,
     }
 
     // удаляем из конца все индексы, чьи значения ≤ текущего
-    while (deque.length > 0 && ___) {
+    while (deque.length > 0 && ___BLANK___) {
       deque.pop();
     }
 

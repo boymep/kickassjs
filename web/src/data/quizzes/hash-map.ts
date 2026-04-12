@@ -13,7 +13,7 @@ export const hashMapQuiz: TopicQuiz = {
   const map = new Map();
 
   for (let i = 0; i < nums.length; i++) {
-    const complement = ___;
+    const complement = ___BLANK___;
 
     if (map.has(complement)) {
       return [map.get(complement), i];
@@ -67,7 +67,7 @@ console.log(twoSum([2, 7, 11, 15], 9));`,
   }
 
   for (const ch of s2) {
-    if (___) return false;
+    if (___BLANK___) return false;
     map.set(ch, map.get(ch) - 1);
   }
 
@@ -158,7 +158,7 @@ console.log(map.size);`,
   const map = new Map();
 
   for (const s of strs) {
-    const key = ___;
+    const key = ___BLANK___;
 
     if (!map.has(key)) map.set(key, []);
     map.get(key).push(s);
@@ -325,7 +325,7 @@ console.log(subarraySum([1, -1, 1, 1], 2));`,
   let longest = 0;
 
   for (const num of set) {
-    if (___) {
+    if (___BLANK___) {
       let length = 1;
       let current = num;
 
@@ -415,7 +415,7 @@ console.log(keys);`,
   const result = [];
 
   for (const n of nums2) {
-    if (___) {
+    if (___BLANK___) {
       result.push(n);
       map.set(n, map.get(n) - 1);
     }

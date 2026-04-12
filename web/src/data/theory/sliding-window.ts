@@ -33,6 +33,11 @@ export const slidingWindowTheory: TopicTheory = {
       title: 'Фиксированное окно',
       blocks: [
         {
+          type: 'visualization',
+          content: '',
+          vizId: 'fixed-window',
+        },
+        {
           type: 'text',
           content:
             'Фиксированное окно имеет заранее известный размер k. Мы сначала считаем агрегат для первых k элементов, а затем сдвигаем окно на один элемент вправо: добавляем arr[i] и убираем arr[i - k].',
@@ -69,6 +74,11 @@ export const slidingWindowTheory: TopicTheory = {
     {
       title: 'Динамическое окно',
       blocks: [
+        {
+          type: 'visualization',
+          content: '',
+          vizId: 'dynamic-window',
+        },
         {
           type: 'text',
           content:

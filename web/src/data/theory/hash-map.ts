@@ -33,6 +33,11 @@ export const hashMapTheory: TopicTheory = {
       title: 'Частотный подсчёт',
       blocks: [
         {
+          type: 'visualization',
+          content: '',
+          vizId: 'frequency-count',
+        },
+        {
           type: 'text',
           content:
             'Один из самых частых паттернов — подсчёт частоты элементов с помощью Map. Проходим по коллекции и для каждого элемента увеличиваем счётчик.',
@@ -63,6 +68,11 @@ export const hashMapTheory: TopicTheory = {
     {
       title: 'Lookup-таблица (паттерн Two Sum)',
       blocks: [
+        {
+          type: 'visualization',
+          content: '',
+          vizId: 'two-sum-lookup',
+        },
         {
           type: 'text',
           content:

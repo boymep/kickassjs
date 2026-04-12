@@ -51,6 +51,11 @@ const tree = {
       title: 'DFS — обход в глубину',
       blocks: [
         {
+          type: 'visualization',
+          content: '',
+          vizId: 'dfs',
+        },
+        {
           type: 'text',
           content:
             'DFS (Depth-First Search) — обход, при котором мы идём как можно глубже по каждой ветке, прежде чем вернуться назад. Реализуется через рекурсию или стек.',
@@ -119,6 +124,11 @@ dfs(tree, (node) => {
     {
       title: 'BFS — обход в ширину',
       blocks: [
+        {
+          type: 'visualization',
+          content: '',
+          vizId: 'bfs',
+        },
         {
           type: 'text',
           content:
