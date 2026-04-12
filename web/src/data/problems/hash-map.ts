@@ -36,7 +36,7 @@ export const hashMapProblems: Problem[] = [
         id: 'hm-p1-t4',
         inputDisplay: 'twoSum([1, 5, 3, 7, 2], 9)',
         inputArgs: [[1, 5, 3, 7, 2], 9],
-        expected: [1, 3],
+        expected: [3, 4],
       },
       {
         id: 'hm-p1-t5',

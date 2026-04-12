@@ -315,7 +315,7 @@ export const slidingWindowProblems: Problem[] = [
         id: "sw-p5-t5",
         inputDisplay: "bestPeriod([50, 100, 50, 100, 50, 100], 4)",
         inputArgs: [[50, 100, 50, 100, 50, 100], 4],
-        expected: { startDay: 1, total: 300 },
+        expected: { startDay: 0, total: 300 },
       },
     ],
     hints: [

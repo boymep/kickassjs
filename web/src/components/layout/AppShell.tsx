@@ -35,7 +35,7 @@ export default function AppShell() {
             </IconButton>
           )}
           <Typography variant='h6' noWrap>
-            AlgorithmJS
+            Prepare JS ✅
           </Typography>
         </Toolbar>
       </AppBar>

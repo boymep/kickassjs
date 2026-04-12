@@ -86,7 +86,21 @@ console.log(bfs(tree));`,
       type: 'tracing',
       id: 'tree-q4',
       description: 'Проследите выполнение getNodes для дерева с вложенными типами.',
-      code: `const tree = {
+      code: `function getNodes(root, targetType) {
+  const result = [];
+  function traverse(node) {
+    if (node.type === targetType) result.push(node);
+    if (node.children) {
+      for (const child of node.children) {
+        traverse(child);
+      }
+    }
+  }
+  traverse(root);
+  return result;
+}
+
+const tree = {
   type: "nested",
   children: [
     { type: "added", value: 42 },
