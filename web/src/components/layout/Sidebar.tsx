@@ -10,7 +10,20 @@ import HomeIcon from '@mui/icons-material/Home';
 import PsychologyIcon from '@mui/icons-material/Psychology';
 import DescriptionIcon from '@mui/icons-material/Description';
 import WarningIcon from '@mui/icons-material/Warning';
-import { topics } from '../../data/topics';
+import BugReportIcon from '@mui/icons-material/BugReport';
+import LockIcon from '@mui/icons-material/Lock';
+import LoopIcon from '@mui/icons-material/Loop';
+import FingerprintIcon from '@mui/icons-material/Fingerprint';
+import HourglassEmptyIcon from '@mui/icons-material/HourglassEmpty';
+import ExtensionIcon from '@mui/icons-material/Extension';
+import DomainVerificationIcon from '@mui/icons-material/DomainVerification';
+import CloudDoneIcon from '@mui/icons-material/CloudDone';
+import WebIcon from '@mui/icons-material/Web';
+import AutorenewIcon from '@mui/icons-material/Autorenew';
+import WaterIcon from '@mui/icons-material/Water';
+import RouterIcon from '@mui/icons-material/Router';
+import SpeedIcon from '@mui/icons-material/Speed';
+import { algorithmTopics, jsTopics, nodejsTopics } from '../../data/topics';
 
 const iconMap: Record<string, React.ReactElement> = {
   Search: <SearchIcon />,
@@ -19,6 +32,18 @@ const iconMap: Record<string, React.ReactElement> = {
   Tag: <TagIcon />,
   Layers: <LayersIcon />,
   AccountTree: <AccountTreeIcon />,
+  Lock: <LockIcon />,
+  Loop: <LoopIcon />,
+  Fingerprint: <FingerprintIcon />,
+  HourglassEmpty: <HourglassEmptyIcon />,
+  Extension: <ExtensionIcon />,
+  DomainVerification: <DomainVerificationIcon />,
+  CloudDone: <CloudDoneIcon />,
+  Web: <WebIcon />,
+  Autorenew: <AutorenewIcon />,
+  Water: <WaterIcon />,
+  Router: <RouterIcon />,
+  Speed: <SpeedIcon />,
 };
 
 export default function Sidebar({ onClose }: { onClose?: () => void }) {
@@ -38,7 +63,31 @@ export default function Sidebar({ onClose }: { onClose?: () => void }) {
       </ListItemButton>
       <Divider sx={{ my: 1 }} />
       <ListSubheader sx={{ bgcolor: 'transparent' }}>Алгоритмы</ListSubheader>
-      {topics.map((t) => (
+      {algorithmTopics.map((t) => (
+        <ListItemButton
+          key={t.id}
+          selected={location.pathname.startsWith(`/topic/${t.slug}`)}
+          onClick={() => go(`/topic/${t.slug}/theory`)}
+        >
+          <ListItemIcon>{iconMap[t.icon]}</ListItemIcon>
+          <ListItemText primary={t.title} />
+        </ListItemButton>
+      ))}
+      <Divider sx={{ my: 1 }} />
+      <ListSubheader sx={{ bgcolor: 'transparent' }}>JavaScript</ListSubheader>
+      {jsTopics.map((t) => (
+        <ListItemButton
+          key={t.id}
+          selected={location.pathname.startsWith(`/topic/${t.slug}`)}
+          onClick={() => go(`/topic/${t.slug}/theory`)}
+        >
+          <ListItemIcon>{iconMap[t.icon]}</ListItemIcon>
+          <ListItemText primary={t.title} />
+        </ListItemButton>
+      ))}
+      <Divider sx={{ my: 1 }} />
+      <ListSubheader sx={{ bgcolor: 'transparent' }}>Node.js</ListSubheader>
+      {nodejsTopics.map((t) => (
         <ListItemButton
           key={t.id}
           selected={location.pathname.startsWith(`/topic/${t.slug}`)}
@@ -61,6 +110,10 @@ export default function Sidebar({ onClose }: { onClose?: () => void }) {
       <ListItemButton selected={location.pathname === '/js-pitfalls'} onClick={() => go('/js-pitfalls')}>
         <ListItemIcon><WarningIcon /></ListItemIcon>
         <ListItemText primary="JS-ловушки" />
+      </ListItemButton>
+      <ListItemButton selected={location.pathname === '/bug-hunt'} onClick={() => go('/bug-hunt')}>
+        <ListItemIcon><BugReportIcon /></ListItemIcon>
+        <ListItemText primary="Найди баг" />
       </ListItemButton>
     </List>
   );

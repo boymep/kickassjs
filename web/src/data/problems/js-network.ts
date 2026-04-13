@@ -1,0 +1,408 @@
+import type { Problem } from '../../types/problem';
+
+export const jsNetworkProblems: Problem[] = [
+  {
+    id: 'jsnet-p1',
+    topicId: 'js-network',
+    title: 'parseHeaders — парсинг HTTP-заголовков',
+    difficulty: 'easy',
+    isContextual: false,
+    description: `Напишите функцию \`parseHeaders(rawHeaders)\`, которая парсит строку HTTP-заголовков в объект.
+
+Формат входных данных: строка с заголовками, разделёнными \`\\r\\n\` или \`\\n\`. Каждая строка: \`Name: Value\`.
+
+Примеры:
+\`\`\`
+parseHeaders('Content-Type: application/json\\r\\nX-Auth: token123');
+// → { 'content-type': 'application/json', 'x-auth': 'token123' }
+
+parseHeaders('Cache-Control: max-age=3600, no-cache');
+// → { 'cache-control': 'max-age=3600, no-cache' }
+\`\`\``,
+    functionName: 'parseHeaders',
+    starterCode: `function parseHeaders(rawHeaders) {
+  // ваш код
+}`,
+    testCases: [
+      {
+        id: 'jsnet-p1-t1',
+        inputDisplay: 'Content-Type: application/json',
+        inputArgs: ['Content-Type: application/json'],
+        expected: { 'content-type': 'application/json' },
+      },
+      {
+        id: 'jsnet-p1-t2',
+        inputDisplay: 'два заголовка через \\r\\n',
+        inputArgs: ['Content-Type: text/html\r\nX-Auth: abc'],
+        expected: { 'content-type': 'text/html', 'x-auth': 'abc' },
+      },
+      {
+        id: 'jsnet-p1-t3',
+        inputDisplay: 'пустая строка → {}',
+        inputArgs: [''],
+        expected: {},
+      },
+      {
+        id: 'jsnet-p1-t4',
+        inputDisplay: 'имена заголовков приводятся к нижнему регистру',
+        inputArgs: ['CONTENT-TYPE: text/plain'],
+        expected: { 'content-type': 'text/plain' },
+      },
+      {
+        id: 'jsnet-p1-t5',
+        inputDisplay: 'значение с двоеточием не обрезается',
+        inputArgs: ['Date: Mon, 01 Jan 2024 00:00:00 GMT'],
+        expected: { 'date': 'Mon, 01 Jan 2024 00:00:00 GMT' },
+      },
+    ],
+    hints: [
+      'Разбейте строку по `\\r\\n` или `\\n`: `rawHeaders.split(/\\r?\\n/)`. Отфильтруйте пустые строки.',
+      'Для каждой строки: найдите первое двоеточие (`indexOf(":")`), левая часть — имя, правая — значение.',
+      'Имя заголовка нужно привести к нижнему регистру. Значение — обрезать пробелы (`trim()`).',
+    ],
+    solutionCode: `function parseHeaders(rawHeaders) {
+  const result = {};
+  if (!rawHeaders) return result;
+
+  const lines = rawHeaders.split(/\\r?\\n/).filter(Boolean);
+  for (const line of lines) {
+    const colonIdx = line.indexOf(':');
+    if (colonIdx === -1) continue;
+    const name = line.slice(0, colonIdx).trim().toLowerCase();
+    const value = line.slice(colonIdx + 1).trim();
+    result[name] = value;
+  }
+  return result;
+}`,
+  },
+  {
+    id: 'jsnet-p2',
+    topicId: 'js-network',
+    title: 'parseCookieString — парсинг cookies',
+    difficulty: 'easy',
+    isContextual: false,
+    description: `Напишите функцию \`parseCookieString(cookieStr)\`, которая парсит строку заголовка \`Cookie\` (браузерный формат) в объект \`{ name: value }\`.
+
+Примеры:
+\`\`\`
+parseCookieString('session=abc; lang=ru; theme=dark');
+// → { session: 'abc', lang: 'ru', theme: 'dark' }
+
+parseCookieString('');
+// → {}
+\`\`\``,
+    functionName: 'parseCookieString',
+    starterCode: `function parseCookieString(cookieStr) {
+  // ваш код
+}`,
+    testCases: [
+      {
+        id: 'jsnet-p2-t1',
+        inputDisplay: 'session=abc → { session: "abc" }',
+        inputArgs: ['session=abc'],
+        expected: { session: 'abc' },
+      },
+      {
+        id: 'jsnet-p2-t2',
+        inputDisplay: 'три кuki через "; "',
+        inputArgs: ['a=1; b=2; c=3'],
+        expected: { a: '1', b: '2', c: '3' },
+      },
+      {
+        id: 'jsnet-p2-t3',
+        inputDisplay: 'пустая строка → {}',
+        inputArgs: [''],
+        expected: {},
+      },
+      {
+        id: 'jsnet-p2-t4',
+        inputDisplay: 'пробелы вокруг значений обрезаются',
+        inputArgs: [' name = Alice '],
+        expected: { name: 'Alice' },
+      },
+      {
+        id: 'jsnet-p2-t5',
+        inputDisplay: 'значение с = внутри',
+        inputArgs: ['token=abc=def'],
+        expected: { token: 'abc=def' },
+      },
+    ],
+    hints: [
+      'Разбейте по `"; "` или `";"`. Для каждого кусочка найдите первое `=` через `indexOf("=")`.',
+      'Левая часть от `=` — имя, правая — значение. `trim()` обе части.',
+      'Для значения с `=` внутри: используйте `indexOf("=")`, а не `split("=")`, иначе `abc=def` разобьётся на `["abc", "def"]`.',
+    ],
+    solutionCode: `function parseCookieString(cookieStr) {
+  const result = {};
+  if (!cookieStr.trim()) return result;
+
+  cookieStr.split(';').forEach((pair) => {
+    const eqIdx = pair.indexOf('=');
+    if (eqIdx === -1) return;
+    const name = pair.slice(0, eqIdx).trim();
+    const value = pair.slice(eqIdx + 1).trim();
+    result[name] = value;
+  });
+  return result;
+}`,
+  },
+  {
+    id: 'jsnet-p3',
+    topicId: 'js-network',
+    title: 'buildQueryString — сборка query string',
+    difficulty: 'easy',
+    isContextual: false,
+    description: `Напишите функцию \`buildQueryString(params)\`, которая конвертирует объект параметров в строку запроса URL.
+
+Требования:
+- Специальные символы в значениях должны быть закодированы
+- Параметры разделены \`&\`
+- Порядок — как в объекте (Object.entries)
+
+Примеры:
+\`\`\`
+buildQueryString({ q: 'hello world', page: 1 });
+// → 'q=hello%20world&page=1'
+
+buildQueryString({ name: 'Alice & Bob', tag: 'c++' });
+// → 'name=Alice%20%26%20Bob&tag=c%2B%2B'
+\`\`\``,
+    functionName: 'buildQueryString',
+    starterCode: `function buildQueryString(params) {
+  // ваш код
+}`,
+    testCases: [
+      {
+        id: 'jsnet-p3-t1',
+        inputDisplay: '{ q: "hello world" } → "q=hello%20world"',
+        inputArgs: [{ q: 'hello world' }],
+        expected: 'q=hello%20world',
+      },
+      {
+        id: 'jsnet-p3-t2',
+        inputDisplay: '{ a: 1, b: 2 } → "a=1&b=2"',
+        inputArgs: [{ a: 1, b: 2 }],
+        expected: 'a=1&b=2',
+      },
+      {
+        id: 'jsnet-p3-t3',
+        inputDisplay: '{} → ""',
+        inputArgs: [{}],
+        expected: '',
+      },
+      {
+        id: 'jsnet-p3-t4',
+        inputDisplay: 'спецсимволы & + кодируются',
+        inputArgs: [{ tag: 'c++' }],
+        expected: 'tag=c%2B%2B',
+      },
+      {
+        id: 'jsnet-p3-t5',
+        inputDisplay: '{ page: 1, size: 20 }',
+        inputArgs: [{ page: 1, size: 20 }],
+        expected: 'page=1&size=20',
+      },
+    ],
+    hints: [
+      'Используйте `encodeURIComponent(value)` для кодирования значений. Он кодирует все спецсимволы кроме `- _ . ! ~ * \' ( )`.',
+      'Соберите пары: `Object.entries(params).map(([k, v]) => \`\${k}=\${encodeURIComponent(v)}\`).join("&")`.',
+    ],
+    solutionCode: `function buildQueryString(params) {
+  return Object.entries(params)
+    .map(([key, val]) => \`\${encodeURIComponent(key)}=\${encodeURIComponent(val)}\`)
+    .join('&');
+}`,
+  },
+  {
+    id: 'jsnet-p4',
+    topicId: 'js-network',
+    title: 'rateLimiter — ограничение запросов',
+    difficulty: 'medium',
+    isContextual: true,
+    description: `Реализуйте функцию \`createRateLimiter(limit, windowMs)\`, которая возвращает функцию \`check(userId)\`:
+- \`check(userId)\` возвращает \`true\`, если пользователь не превысил лимит
+- \`check(userId)\` возвращает \`false\`, если лимит превышен
+- Каждый пользователь имеет свой счётчик
+- Счётчик сбрасывается каждые \`windowMs\` миллисекунд
+
+Примеры:
+\`\`\`
+const limiter = createRateLimiter(3, 1000); // 3 запроса в секунду
+limiter('user1'); // true
+limiter('user1'); // true
+limiter('user1'); // true
+limiter('user1'); // false (превышен)
+limiter('user2'); // true (другой пользователь)
+\`\`\``,
+    functionName: 'createRateLimiter',
+    starterCode: `function createRateLimiter(limit, windowMs) {
+  // ваш код
+}`,
+    testCases: [
+      {
+        id: 'jsnet-p4-t1',
+        inputDisplay: '3 запроса в рамках лимита → все true',
+        inputArgs: ['within-limit'],
+        expected: [true, true, true],
+      },
+      {
+        id: 'jsnet-p4-t2',
+        inputDisplay: '4-й запрос превышает лимит → false',
+        inputArgs: ['exceeds'],
+        expected: false,
+      },
+      {
+        id: 'jsnet-p4-t3',
+        inputDisplay: 'разные пользователи — независимые счётчики',
+        inputArgs: ['independent'],
+        expected: true,
+      },
+      {
+        id: 'jsnet-p4-t4',
+        inputDisplay: 'возвращает функцию',
+        inputArgs: ['returns-function'],
+        expected: true,
+      },
+      {
+        id: 'jsnet-p4-t5',
+        inputDisplay: 'limit=1: первый true, второй false',
+        inputArgs: ['limit-1'],
+        expected: [true, false],
+      },
+    ],
+    hints: [
+      'Используйте `Map` для хранения данных о каждом пользователе: `{ count, resetAt }`.',
+      'При каждом вызове: проверьте, не истёк ли window (`Date.now() > resetAt`). Если истёк — сбросьте count.',
+      'Если count < limit — инкрементируйте и верните true. Иначе — false.',
+    ],
+    solutionCode: `function createRateLimiter(limit, windowMs) {
+  const clients = new Map();
+
+  return function check(userId) {
+    const now = Date.now();
+    let data = clients.get(userId);
+
+    if (!data || now > data.resetAt) {
+      data = { count: 0, resetAt: now + windowMs };
+      clients.set(userId, data);
+    }
+
+    if (data.count < limit) {
+      data.count++;
+      return true;
+    }
+    return false;
+  };
+}`,
+  },
+  {
+    id: 'jsnet-p5',
+    topicId: 'js-network',
+    title: 'Router — простой URL-роутер',
+    difficulty: 'medium',
+    isContextual: false,
+    description: `Реализуйте класс \`Router\`:
+- \`get(pattern, handler)\` — регистрирует обработчик GET для паттерна
+- \`match(method, url)\` — возвращает \`{ handler, params }\` если паттерн совпал, иначе \`null\`
+
+Паттерн может содержать именованные сегменты \`:name\`.
+
+Примеры:
+\`\`\`
+const router = new Router();
+router.get('/users/:id', (params) => params.id);
+router.get('/posts/:postId/comments', (params) => params.postId);
+
+router.match('GET', '/users/42');
+// → { handler: fn, params: { id: '42' } }
+
+router.match('GET', '/unknown');
+// → null
+\`\`\``,
+    functionName: 'Router',
+    starterCode: `class Router {
+  constructor() {
+    // ваш код
+  }
+
+  get(pattern, handler) {
+    // ваш код
+  }
+
+  match(method, url) {
+    // ваш код — вернуть { handler, params } или null
+  }
+}`,
+    testCases: [
+      {
+        id: 'jsnet-p5-t1',
+        inputDisplay: 'match("GET", "/users/42") → params.id = "42"',
+        inputArgs: ['basic-param'],
+        expected: '42',
+      },
+      {
+        id: 'jsnet-p5-t2',
+        inputDisplay: 'несовпадающий URL → null',
+        inputArgs: ['no-match'],
+        expected: null,
+      },
+      {
+        id: 'jsnet-p5-t3',
+        inputDisplay: 'несколько параметров',
+        inputArgs: ['multi-params'],
+        expected: { postId: '5', commentId: '10' },
+      },
+      {
+        id: 'jsnet-p5-t4',
+        inputDisplay: 'статический маршрут без параметров',
+        inputArgs: ['static'],
+        expected: {},
+      },
+      {
+        id: 'jsnet-p5-t5',
+        inputDisplay: 'неверный метод → null',
+        inputArgs: ['wrong-method'],
+        expected: null,
+      },
+    ],
+    hints: [
+      'Для каждого паттерна создайте regex: `/users/:id` → `/^\/users\/([^\/]+)$/`. Сохраните имена параметров в массив.',
+      'В match: для каждого роута выполните regex.exec(url). Если совпало — создайте params из имён и захваченных групп.',
+      'Для преобразования паттерна: замените `:name` на `([^/]+)` и оберните в `^...$`.',
+    ],
+    solutionCode: `class Router {
+  constructor() {
+    this.routes = [];
+  }
+
+  get(pattern, handler) {
+    const paramNames = [];
+    const regexStr = pattern
+      .replace(/:([^/]+)/g, (_, name) => {
+        paramNames.push(name);
+        return '([^/]+)';
+      });
+    this.routes.push({
+      method: 'GET',
+      regex: new RegExp(\`^\${regexStr}$\`),
+      paramNames,
+      handler,
+    });
+  }
+
+  match(method, url) {
+    for (const route of this.routes) {
+      if (route.method !== method.toUpperCase()) continue;
+      const match = route.regex.exec(url);
+      if (!match) continue;
+      const params = {};
+      route.paramNames.forEach((name, i) => {
+        params[name] = match[i + 1];
+      });
+      return { handler: route.handler, params };
+    }
+    return null;
+  }
+}`,
+  },
+];

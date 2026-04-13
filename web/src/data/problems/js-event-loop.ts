@@ -1,0 +1,358 @@
+import type { Problem } from '../../types/problem';
+
+export const jsEventLoopProblems: Problem[] = [
+  {
+    id: 'jsel-p1',
+    topicId: 'js-event-loop',
+    title: 'delay — промис-пауза',
+    difficulty: 'easy',
+    isContextual: false,
+    description: `Напишите функцию \`delay(ms)\`, которая возвращает Promise, который резолвится через \`ms\` миллисекунд.
+
+Это базовый строительный блок для любой async-логики с паузами.
+
+Примеры:
+\`\`\`
+await delay(100); // пауза 100ms
+console.log('после паузы');
+
+// Последовательные паузы:
+await delay(50);
+await delay(50);
+// итого ~100ms
+\`\`\``,
+    functionName: 'delay',
+    starterCode: `function delay(ms) {
+  // ваш код
+}`,
+    testCases: [
+      {
+        id: 'jsel-p1-t1',
+        inputDisplay: 'delay(0) резолвится (возвращает Promise)',
+        inputArgs: [0],
+        expected: true,
+      },
+      {
+        id: 'jsel-p1-t2',
+        inputDisplay: 'delay(10) резолвится примерно через 10ms',
+        inputArgs: [10],
+        expected: true,
+      },
+      {
+        id: 'jsel-p1-t3',
+        inputDisplay: 'delay возвращает Promise',
+        inputArgs: ['is-promise'],
+        expected: true,
+      },
+      {
+        id: 'jsel-p1-t4',
+        inputDisplay: 'два delay выполняются последовательно',
+        inputArgs: ['sequential'],
+        expected: true,
+      },
+      {
+        id: 'jsel-p1-t5',
+        inputDisplay: 'delay резолвится с undefined',
+        inputArgs: ['resolves-undefined'],
+        expected: true,
+      },
+    ],
+    hints: [
+      '`delay` — обёртка над `setTimeout` в Promise. Внутри `new Promise((resolve) => setTimeout(resolve, ms))`.',
+      'Promise не принимает значение — просто резолвится без аргументов (или с `undefined`).',
+    ],
+    solutionCode: `function delay(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}`,
+  },
+  {
+    id: 'jsel-p2',
+    topicId: 'js-event-loop',
+    title: 'debounce',
+    difficulty: 'medium',
+    isContextual: false,
+    description: `Реализуйте функцию \`debounce(fn, ms)\`.
+
+Возвращаемая функция откладывает вызов \`fn\` на \`ms\` миллисекунд после последнего вызова. Если функция вызывается снова до истечения таймера — таймер сбрасывается.
+
+Это ключевой паттерн для оптимизации: поиск при вводе, обработка ресайза окна.
+
+Примеры:
+\`\`\`
+const debouncedSearch = debounce(search, 300);
+debouncedSearch('h');
+debouncedSearch('he');
+debouncedSearch('hel'); // только этот вызов выполнится через 300ms
+\`\`\``,
+    functionName: 'debounce',
+    starterCode: `function debounce(fn, ms) {
+  // ваш код
+}`,
+    testCases: [
+      {
+        id: 'jsel-p2-t1',
+        inputDisplay: '3 быстрых вызова → fn вызвана 1 раз',
+        inputArgs: ['call-count-3'],
+        expected: 1,
+      },
+      {
+        id: 'jsel-p2-t2',
+        inputDisplay: 'fn вызвана с последними аргументами',
+        inputArgs: ['last-args'],
+        expected: 'hello',
+      },
+      {
+        id: 'jsel-p2-t3',
+        inputDisplay: 'два вызова с паузой > ms → fn вызвана 2 раза',
+        inputArgs: ['two-separate-calls'],
+        expected: 2,
+      },
+      {
+        id: 'jsel-p2-t4',
+        inputDisplay: 'debounce возвращает функцию',
+        inputArgs: ['returns-function'],
+        expected: true,
+      },
+      {
+        id: 'jsel-p2-t5',
+        inputDisplay: 'один вызов → fn вызвана ровно 1 раз через ms',
+        inputArgs: ['single-call'],
+        expected: 1,
+      },
+    ],
+    hints: [
+      'Внутри debounce объявите переменную `timer`. Возвращаемая функция должна: сначала `clearTimeout(timer)`, затем `timer = setTimeout(() => fn(...args), ms)`.',
+      'Используйте замыкание — `timer` живёт между вызовами благодаря замыканию на внешний scope функции debounce.',
+      'Для передачи контекста: `fn.apply(this, args)` вместо `fn(...args)`, если нужно сохранить `this`.',
+    ],
+    solutionCode: `function debounce(fn, ms) {
+  let timer = null;
+  return function(...args) {
+    clearTimeout(timer);
+    timer = setTimeout(() => {
+      fn.apply(this, args);
+    }, ms);
+  };
+}`,
+  },
+  {
+    id: 'jsel-p3',
+    topicId: 'js-event-loop',
+    title: 'throttle',
+    difficulty: 'medium',
+    isContextual: false,
+    description: `Реализуйте функцию \`throttle(fn, ms)\`.
+
+Возвращаемая функция вызывает \`fn\` **не чаще одного раза** за период \`ms\`. Первый вызов выполняется немедленно. Последующие вызовы в течение паузы игнорируются.
+
+Примеры:
+\`\`\`
+const throttled = throttle(handler, 100);
+throttled(); // выполнится немедленно
+throttled(); // игнорируется (< 100ms)
+throttled(); // игнорируется
+// ... через 100ms ...
+throttled(); // выполнится снова
+\`\`\``,
+    functionName: 'throttle',
+    starterCode: `function throttle(fn, ms) {
+  // ваш код
+}`,
+    testCases: [
+      {
+        id: 'jsel-p3-t1',
+        inputDisplay: '5 немедленных вызовов → fn вызвана 1 раз',
+        inputArgs: ['burst-5'],
+        expected: 1,
+      },
+      {
+        id: 'jsel-p3-t2',
+        inputDisplay: 'первый вызов выполняется немедленно',
+        inputArgs: ['first-immediate'],
+        expected: true,
+      },
+      {
+        id: 'jsel-p3-t3',
+        inputDisplay: 'throttle возвращает функцию',
+        inputArgs: ['returns-function'],
+        expected: true,
+      },
+      {
+        id: 'jsel-p3-t4',
+        inputDisplay: 'fn передаются правильные аргументы',
+        inputArgs: ['correct-args'],
+        expected: 42,
+      },
+      {
+        id: 'jsel-p3-t5',
+        inputDisplay: '2 вызова с паузой > ms → fn вызвана 2 раза',
+        inputArgs: ['two-windows'],
+        expected: 2,
+      },
+    ],
+    hints: [
+      'Сохраните время последнего вызова: `let lastCall = 0`. При каждом вызове сравнивайте `Date.now() - lastCall` с `ms`.',
+      'Если прошло достаточно времени — обновить `lastCall = Date.now()` и вызвать `fn`.',
+    ],
+    solutionCode: `function throttle(fn, ms) {
+  let lastCall = 0;
+  return function(...args) {
+    const now = Date.now();
+    if (now - lastCall >= ms) {
+      lastCall = now;
+      return fn.apply(this, args);
+    }
+  };
+}`,
+  },
+  {
+    id: 'jsel-p4',
+    topicId: 'js-event-loop',
+    title: 'runSequentially — последовательные промисы',
+    difficulty: 'medium',
+    isContextual: false,
+    description: `Напишите функцию \`runSequentially(asyncFns)\`, которая принимает массив функций, каждая из которых возвращает Promise, и выполняет их **строго по очереди** — следующая запускается только после завершения предыдущей.
+
+Функция возвращает Promise с массивом результатов (в том же порядке, что и входной массив).
+
+Примеры:
+\`\`\`
+const delay = (ms) => new Promise(r => setTimeout(r, ms));
+const fns = [
+  () => delay(10).then(() => 1),
+  () => delay(10).then(() => 2),
+  () => delay(10).then(() => 3),
+];
+await runSequentially(fns); // → [1, 2, 3]
+// Общее время: ~30ms (последовательно, не параллельно)
+\`\`\``,
+    functionName: 'runSequentially',
+    starterCode: `async function runSequentially(asyncFns) {
+  // ваш код
+}`,
+    testCases: [
+      {
+        id: 'jsel-p4-t1',
+        inputDisplay: '[() => 1, () => 2, () => 3] → [1, 2, 3]',
+        inputArgs: ['simple-3'],
+        expected: [1, 2, 3],
+      },
+      {
+        id: 'jsel-p4-t2',
+        inputDisplay: 'пустой массив → []',
+        inputArgs: ['empty'],
+        expected: [],
+      },
+      {
+        id: 'jsel-p4-t3',
+        inputDisplay: 'выполняются строго последовательно (порядок сохранён)',
+        inputArgs: ['order'],
+        expected: ['a', 'b', 'c'],
+      },
+      {
+        id: 'jsel-p4-t4',
+        inputDisplay: '[() => 42] → [42]',
+        inputArgs: ['single'],
+        expected: [42],
+      },
+      {
+        id: 'jsel-p4-t5',
+        inputDisplay: 'промисы с разными задержками — порядок не нарушается',
+        inputArgs: ['async-order'],
+        expected: [1, 2, 3],
+      },
+    ],
+    hints: [
+      'Используйте цикл `for...of` с `await`: `for (const fn of asyncFns) { results.push(await fn()); }`',
+      'Альтернатива через `reduce`: `asyncFns.reduce(async (prev, fn) => [...(await prev), await fn()], Promise.resolve([]))`',
+      'В отличие от `Promise.all` — здесь строго по одному. `Promise.all` запускает все параллельно.',
+    ],
+    solutionCode: `async function runSequentially(asyncFns) {
+  const results = [];
+  for (const fn of asyncFns) {
+    results.push(await fn());
+  }
+  return results;
+}`,
+  },
+  {
+    id: 'jsel-p5',
+    topicId: 'js-event-loop',
+    title: 'retryWithDelay — повтор с паузой',
+    difficulty: 'medium',
+    isContextual: true,
+    description: `В продакшн-коде часто нужно повторить запрос при ошибке. Реализуйте функцию \`retryWithDelay(fn, retries, ms)\`:
+- Вызывает \`fn()\` (асинхронная функция, возвращает Promise)
+- При ошибке ждёт \`ms\` миллисекунд и повторяет
+- Если \`retries\` попыток исчерпаны — бросает последнюю ошибку
+- При успехе — возвращает результат
+
+Примеры:
+\`\`\`
+let attempt = 0;
+const unstable = () => {
+  attempt++;
+  if (attempt < 3) throw new Error('fail');
+  return 'success';
+};
+
+await retryWithDelay(unstable, 3, 0); // → 'success'
+// attempt = 3 (два провала, третья — успех)
+\`\`\``,
+    functionName: 'retryWithDelay',
+    starterCode: `async function retryWithDelay(fn, retries, ms) {
+  // ваш код
+}`,
+    testCases: [
+      {
+        id: 'jsel-p5-t1',
+        inputDisplay: 'fn падает 2 раза, 3-я успешна → "success"',
+        inputArgs: ['fail-2-then-ok'],
+        expected: 'success',
+      },
+      {
+        id: 'jsel-p5-t2',
+        inputDisplay: 'fn всегда успешна → 1 попытка',
+        inputArgs: ['always-ok'],
+        expected: 42,
+      },
+      {
+        id: 'jsel-p5-t3',
+        inputDisplay: 'fn всегда падает → throws после retries попыток',
+        inputArgs: ['always-fail'],
+        expected: 'Error: always-fail',
+      },
+      {
+        id: 'jsel-p5-t4',
+        inputDisplay: 'retries=1: одна попытка, при ошибке бросает',
+        inputArgs: ['retries-1'],
+        expected: 'Error',
+      },
+      {
+        id: 'jsel-p5-t5',
+        inputDisplay: 'количество попыток ≤ retries',
+        inputArgs: ['attempt-count'],
+        expected: true,
+      },
+    ],
+    hints: [
+      'Используйте цикл `for` от 0 до retries. Оберните вызов fn в try/catch. Если это не последняя попытка — делайте `await delay(ms)` и продолжайте.',
+      'После цикла бросайте последнюю пойманную ошибку: сохраните её в переменной `lastError` и бросьте `throw lastError` после цикла.',
+      'Паузу реализуйте через `await new Promise(r => setTimeout(r, ms))`.',
+    ],
+    solutionCode: `async function retryWithDelay(fn, retries, ms) {
+  let lastError;
+  for (let i = 0; i < retries; i++) {
+    try {
+      return await fn();
+    } catch (err) {
+      lastError = err;
+      if (i < retries - 1) {
+        await new Promise((r) => setTimeout(r, ms));
+      }
+    }
+  }
+  throw lastError;
+}`,
+  },
+];

@@ -10,8 +10,11 @@ import {
   useTheme,
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
+import DarkModeIcon from "@mui/icons-material/DarkMode";
+import LightModeIcon from "@mui/icons-material/LightMode";
 import { Outlet } from "react-router-dom";
 import Sidebar from "./Sidebar";
+import { useColorMode } from "../../App";
 
 const DRAWER_WIDTH = 260;
 
@@ -19,6 +22,7 @@ export default function AppShell() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const [open, setOpen] = useState(false);
+  const { toggleColorMode } = useColorMode();
 
   return (
     <Box sx={{ display: "flex", minHeight: "100vh" }}>
@@ -34,9 +38,12 @@ export default function AppShell() {
               <MenuIcon />
             </IconButton>
           )}
-          <Typography variant='h6' noWrap>
+          <Typography variant='h6' noWrap sx={{ flexGrow: 1 }}>
             Prepare JS ✅
           </Typography>
+          <IconButton color='inherit' onClick={toggleColorMode} size='small'>
+            {theme.palette.mode === 'dark' ? <LightModeIcon /> : <DarkModeIcon />}
+          </IconButton>
         </Toolbar>
       </AppBar>
 

@@ -9,6 +9,8 @@ import ProblemView from './components/practice/ProblemView';
 import PatternGamePage from './components/pattern-game/PatternGamePage';
 import CheatsheetPage from './components/cheatsheet/CheatsheetPage';
 import JsPitfallsPage from './components/js-pitfalls/JsPitfallsPage';
+import FlashcardsPage from './components/flashcards/FlashcardsPage';
+import BugHuntPage from './components/bug-hunt/BugHuntPage';
 
 export const router = createBrowserRouter([
   {
@@ -24,11 +26,13 @@ export const router = createBrowserRouter([
           { path: 'quiz', element: <QuizPage /> },
           { path: 'practice', element: <PracticePage /> },
           { path: 'practice/:problemId', element: <ProblemView /> },
+          { path: 'flashcards', element: <FlashcardsPage /> },
         ],
       },
       { path: '/pattern-game', element: <PatternGamePage /> },
       { path: '/cheatsheet', element: <CheatsheetPage /> },
       { path: '/js-pitfalls', element: <JsPitfallsPage /> },
+      { path: '/bug-hunt', element: <BugHuntPage /> },
     ],
   },
 ]);

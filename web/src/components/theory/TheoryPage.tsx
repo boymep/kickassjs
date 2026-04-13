@@ -23,6 +23,11 @@ const vizComponents: Record<string, React.LazyExoticComponent<React.ComponentTyp
   'binary-search-answer': lazy(() => import('../visualizations/BinarySearchAnswerViz')),
   'converging-pointers': lazy(() => import('../visualizations/ConvergingPointersViz')),
   'parallel-pointers': lazy(() => import('../visualizations/ParallelPointersViz')),
+  // JS / Node.js visualizations
+  'event-loop': lazy(() => import('../visualizations/EventLoopViz')),
+  'node-event-loop': lazy(() => import('../visualizations/NodeEventLoopViz')),
+  'prototype-chain': lazy(() => import('../visualizations/PrototypeChainViz')),
+  'closure-scope': lazy(() => import('../visualizations/ClosureScopeViz')),
 };
 
 /** Parse simple inline markdown: **bold**, `code`, and -- → — */

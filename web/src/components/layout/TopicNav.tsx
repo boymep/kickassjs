@@ -1,19 +1,27 @@
 import { Tabs, Tab, Box, Typography } from '@mui/material';
 import { Outlet, useNavigate, useLocation, useParams } from 'react-router-dom';
-import { topics } from '../../data/topics';
+import { algorithmTopics, jsTopics, nodejsTopics } from '../../data/topics';
+import { hasFlashcards } from '../../data/flashcards';
 
-const tabPaths = ['theory', 'quiz', 'practice'] as const;
-const tabLabels = ['Теория', 'Квиз', 'Практика'];
+const allTopics = [...algorithmTopics, ...jsTopics, ...nodejsTopics];
 
 export default function TopicLayout() {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const location = useLocation();
 
-  const topic = topics.find((t) => t.slug === slug);
+  const topic = allTopics.find((t) => t.slug === slug);
   if (!topic) return <Typography>Тема не найдена</Typography>;
 
-  const currentTab = tabPaths.findIndex((p) => location.pathname.includes(`/${p}`));
+  const showFlashcards = hasFlashcards(slug ?? '');
+  const tabPaths = showFlashcards
+    ? (['theory', 'quiz', 'practice', 'flashcards'] as const)
+    : (['theory', 'quiz', 'practice'] as const);
+  const tabLabels = showFlashcards
+    ? ['Теория', 'Квиз', 'Практика', 'Карточки']
+    : ['Теория', 'Квиз', 'Практика'];
+
+  const currentTab = tabPaths.findIndex((p) => location.pathname.endsWith(`/${p}`));
   const activeTab = currentTab >= 0 ? currentTab : 0;
 
   return (
