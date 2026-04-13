@@ -1,4 +1,5 @@
 import { useState, useMemo, useCallback } from 'react';
+import { Inline } from '../../utils/renderInline';
 import {
   Box,
   Typography,
@@ -277,7 +278,7 @@ export default function PatternGamePage() {
             <Typography variant="body2" sx={{ fontWeight: 600, mb: 0.5 }}>
               {isCorrect ? 'Правильно!' : `Неправильно. Верный ответ: ${PATTERN_LABELS[question.correctAnswer]}`}
             </Typography>
-            <Typography variant="body2">{question.explanation}</Typography>
+            <Typography variant="body2"><Inline>{question.explanation}</Inline></Typography>
           </Alert>
 
           <Box sx={{ textAlign: 'right' }}>

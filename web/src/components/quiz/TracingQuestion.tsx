@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Paper, Typography, Button, Box, Alert, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
 import type { TracingQuestion as TQ } from '../../types/quiz';
 import CodeBlock from '../theory/CodeBlock';
+import { Inline } from '../../utils/renderInline';
 
 interface Props {
   question: TQ;
@@ -32,7 +33,7 @@ export default function TracingQuestion({ question, onAnswer, answered }: Props)
         Трейсинг
       </Typography>
       <Typography variant="body1" sx={{ mb: 2 }}>
-        {question.description}
+        <Inline>{question.description}</Inline>
       </Typography>
       <CodeBlock code={question.code} />
 
@@ -74,7 +75,7 @@ export default function TracingQuestion({ question, onAnswer, answered }: Props)
       )}
 
       <Typography variant="body1" sx={{ mt: 2, mb: 1, fontWeight: 600 }}>
-        {question.question}
+        <Inline>{question.question}</Inline>
       </Typography>
       <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
         {question.options.map((opt, i) => (
@@ -100,7 +101,7 @@ export default function TracingQuestion({ question, onAnswer, answered }: Props)
       </Box>
       {answered && (
         <Alert severity={selected === question.correctIndex ? 'success' : 'error'} sx={{ mt: 2 }}>
-          {question.explanation}
+          <Inline>{question.explanation}</Inline>
         </Alert>
       )}
     </Paper>

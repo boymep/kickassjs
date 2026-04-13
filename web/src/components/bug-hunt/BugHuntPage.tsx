@@ -14,6 +14,7 @@ import {
 import BugReportIcon from '@mui/icons-material/BugReport';
 import ReplayIcon from '@mui/icons-material/Replay';
 import CodeBlock from '../theory/CodeBlock';
+import { Inline } from '../../utils/renderInline';
 import { bugHuntItems } from '../../data/bug-hunt';
 import type { BugHuntItem } from '../../types/bughunt';
 
@@ -306,10 +307,10 @@ export default function BugHuntPage() {
             {item.bugs.map((bug, i) => (
               <Alert key={i} severity="error" sx={{ mb: i < item.bugs.length - 1 ? 2 : 0 }}>
                 <Typography variant="body2" sx={{ fontWeight: 600, mb: 0.5 }}>
-                  {bug.description}
+                  <Inline>{bug.description}</Inline>
                 </Typography>
                 <Typography variant="body2" sx={{ mb: 1 }}>
-                  {bug.explanation}
+                  <Inline>{bug.explanation}</Inline>
                 </Typography>
                 <CodeBlock code={bug.fix} language={item.language} />
               </Alert>

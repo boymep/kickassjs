@@ -7,11 +7,11 @@ import {
   LinearProgress,
   Chip,
   Paper,
-  Alert,
   Divider,
 } from '@mui/material';
 import ReplayIcon from '@mui/icons-material/Replay';
 import CodeBlock from '../theory/CodeBlock';
+import { Inline } from '../../utils/renderInline';
 import { getFlashcards } from '../../data/flashcards';
 import type { Flashcard } from '../../types/flashcard';
 
@@ -159,7 +159,7 @@ export default function FlashcardsPage() {
                 {i + 1}.
               </Typography>
               <Typography variant="body2" sx={{ flex: 1 }}>
-                {r.card.question}
+                <Inline>{r.card.question}</Inline>
               </Typography>
               <Chip
                 label={SCORE_LABEL[r.score]}
@@ -195,7 +195,7 @@ export default function FlashcardsPage() {
           Вопрос
         </Typography>
         <Typography variant="h6" gutterBottom>
-          {card.question}
+          <Inline>{card.question}</Inline>
         </Typography>
 
         {!revealed ? (
@@ -215,7 +215,7 @@ export default function FlashcardsPage() {
               Ответ
             </Typography>
             <Typography variant="body1" sx={{ mb: 2, lineHeight: 1.65 }}>
-              {card.answer}
+              <Inline>{card.answer}</Inline>
             </Typography>
 
             {card.keyPoints.length > 0 && (
@@ -226,7 +226,7 @@ export default function FlashcardsPage() {
                 <Box component="ul" sx={{ m: 0, pl: 2.5 }}>
                   {card.keyPoints.map((pt, i) => (
                     <Box component="li" key={i} sx={{ mb: 0.5 }}>
-                      <Typography variant="body2">{pt}</Typography>
+                      <Typography variant="body2"><Inline>{pt}</Inline></Typography>
                     </Box>
                   ))}
                 </Box>

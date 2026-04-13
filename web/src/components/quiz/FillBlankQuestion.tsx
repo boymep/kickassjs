@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Paper, Typography, Button, Box, Alert } from '@mui/material';
 import type { FillBlankQuestion as FBQ } from '../../types/quiz';
+import { Inline } from '../../utils/renderInline';
 import { Highlight, themes } from 'prism-react-renderer';
 
 const BLANK_MARKER = '___BLANK___';
@@ -114,7 +115,7 @@ export default function FillBlankQuestion({ question, onAnswer, answered }: Prop
         Заполни пропуск
       </Typography>
       <Typography variant="body1" sx={{ mb: 2 }}>
-        {question.description}
+        <Inline>{question.description}</Inline>
       </Typography>
       <CodeWithBlank
         code={question.codeWithBlanks}
@@ -144,7 +145,7 @@ export default function FillBlankQuestion({ question, onAnswer, answered }: Prop
       </Box>
       {answered && (
         <Alert severity={selected === question.correctIndex ? 'success' : 'error'} sx={{ mt: 2 }}>
-          {question.explanation}
+          <Inline>{question.explanation}</Inline>
         </Alert>
       )}
     </Paper>

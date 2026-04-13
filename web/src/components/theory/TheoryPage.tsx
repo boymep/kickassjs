@@ -1,9 +1,10 @@
 import { lazy, Suspense } from 'react';
 import { useParams } from 'react-router-dom';
-import { Box, Typography, Paper, Alert, CircularProgress } from '@mui/material';
+import { Box, Typography, Paper, Alert, CircularProgress, useTheme } from '@mui/material';
 import CodeBlock from './CodeBlock';
 import { getTheory } from '../../data/theory';
 import type { TheoryBlock } from '../../types/topic';
+import { renderInline } from '../../utils/renderInline';
 
 const vizComponents: Record<string, React.LazyExoticComponent<React.ComponentType>> = {
   'binary-search': lazy(() => import('../visualizations/BinarySearchViz')),
@@ -23,58 +24,17 @@ const vizComponents: Record<string, React.LazyExoticComponent<React.ComponentTyp
   'binary-search-answer': lazy(() => import('../visualizations/BinarySearchAnswerViz')),
   'converging-pointers': lazy(() => import('../visualizations/ConvergingPointersViz')),
   'parallel-pointers': lazy(() => import('../visualizations/ParallelPointersViz')),
-  // JS / Node.js visualizations
   'event-loop': lazy(() => import('../visualizations/EventLoopViz')),
   'node-event-loop': lazy(() => import('../visualizations/NodeEventLoopViz')),
   'prototype-chain': lazy(() => import('../visualizations/PrototypeChainViz')),
   'closure-scope': lazy(() => import('../visualizations/ClosureScopeViz')),
 };
 
-/** Parse simple inline markdown: **bold**, `code`, and -- → — */
-function renderInline(text: string): React.ReactNode[] {
-  const normalized = text.replace(/ -- /g, ' — ');
-  const parts: React.ReactNode[] = [];
-  const regex = /(\*\*(.+?)\*\*|`([^`]+?)`)/g;
-  let lastIndex = 0;
-  let match;
-
-  while ((match = regex.exec(normalized)) !== null) {
-    if (match.index > lastIndex) {
-      parts.push(normalized.slice(lastIndex, match.index));
-    }
-    if (match[2]) {
-      parts.push(<strong key={match.index}>{match[2]}</strong>);
-    } else if (match[3]) {
-      parts.push(
-        <code
-          key={match.index}
-          style={{
-            backgroundColor: 'rgba(0,0,0,0.05)',
-            borderRadius: 4,
-            padding: '1px 5px',
-            fontSize: '0.88em',
-            fontFamily: '"SF Mono", "Fira Code", Consolas, monospace',
-          }}
-        >
-          {match[3]}
-        </code>,
-      );
-    }
-    lastIndex = match.index + match[0].length;
-  }
-
-  if (lastIndex < normalized.length) {
-    parts.push(normalized.slice(lastIndex));
-  }
-
-  return parts.length > 0 ? parts : [normalized];
-}
-
 function stripListPrefix(item: string): string {
   return item.replace(/^[-•*]\s+/, '');
 }
 
-function renderBlock(block: TheoryBlock, idx: number) {
+function renderBlock(block: TheoryBlock, idx: number, ri: (t: string) => React.ReactNode[]) {
   switch (block.type) {
     case 'heading':
       return (
@@ -85,7 +45,7 @@ function renderBlock(block: TheoryBlock, idx: number) {
     case 'text':
       return (
         <Typography key={idx} variant="body1" sx={{ mb: 1, whiteSpace: 'pre-line' }}>
-          {renderInline(block.content)}
+          {ri(block.content)}
         </Typography>
       );
     case 'code':
@@ -95,7 +55,7 @@ function renderBlock(block: TheoryBlock, idx: number) {
         <Box key={idx} component="ul" sx={{ pl: 3, mb: 1 }}>
           {block.content.split('\n').map((item, i) => (
             <li key={i}>
-              <Typography variant="body1">{renderInline(stripListPrefix(item))}</Typography>
+              <Typography variant="body1">{ri(stripListPrefix(item))}</Typography>
             </li>
           ))}
         </Box>
@@ -103,7 +63,7 @@ function renderBlock(block: TheoryBlock, idx: number) {
     case 'callout':
       return (
         <Alert key={idx} severity={block.calloutType === 'tip' ? 'success' : (block.calloutType ?? 'info')} sx={{ my: 2 }}>
-          {renderInline(block.content)}
+          {ri(block.content)}
         </Alert>
       );
     case 'visualization': {
@@ -125,6 +85,8 @@ function renderBlock(block: TheoryBlock, idx: number) {
 export default function TheoryPage() {
   const { slug } = useParams<{ slug: string }>();
   const theory = getTheory(slug ?? '');
+  const theme = useTheme();
+  const ri = (text: string) => renderInline(text, theme.palette.mode === 'dark');
 
   if (!theory) {
     return <Typography>Теория не найдена</Typography>;
@@ -137,7 +99,7 @@ export default function TheoryPage() {
           <Typography variant="h5" gutterBottom>
             {section.title}
           </Typography>
-          {section.blocks.map((block, bi) => renderBlock(block, bi))}
+          {section.blocks.map((block, bi) => renderBlock(block, bi, ri))}
         </Paper>
       ))}
     </Box>

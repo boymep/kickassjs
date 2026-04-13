@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Paper, Typography, Button, Box, Alert } from '@mui/material';
 import type { OutputQuestion as OQ } from '../../types/quiz';
 import CodeBlock from '../theory/CodeBlock';
+import { Inline } from '../../utils/renderInline';
 
 interface Props {
   question: OQ;
@@ -24,7 +25,7 @@ export default function OutputQuestion({ question, onAnswer, answered }: Props) 
         Что выведет код?
       </Typography>
       <Typography variant="body1" sx={{ mb: 2 }}>
-        {question.description}
+        <Inline>{question.description}</Inline>
       </Typography>
       <CodeBlock code={question.code} />
       <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 2 }}>
@@ -51,7 +52,7 @@ export default function OutputQuestion({ question, onAnswer, answered }: Props) 
       </Box>
       {answered && (
         <Alert severity={selected === question.correctIndex ? 'success' : 'error'} sx={{ mt: 2 }}>
-          {question.explanation}
+          <Inline>{question.explanation}</Inline>
         </Alert>
       )}
     </Paper>
