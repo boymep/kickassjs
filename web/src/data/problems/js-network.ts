@@ -234,7 +234,7 @@ limiter('user1'); // true
 limiter('user1'); // false (превышен)
 limiter('user2'); // true (другой пользователь)
 \`\`\``,
-    functionName: 'createRateLimiter',
+    functionName: 'createRateLimiter_test',
     starterCode: `function createRateLimiter(limit, windowMs) {
   // ваш код
 }`,
@@ -294,6 +294,26 @@ limiter('user2'); // true (другой пользователь)
     return false;
   };
 }`,
+    testHelperCode: `function createRateLimiter_test(arg) {
+  if (arg === 'within-limit') {
+    const lim = createRateLimiter(3, 1000);
+    return [lim('u1'), lim('u1'), lim('u1')];
+  }
+  if (arg === 'exceeds') {
+    const lim = createRateLimiter(3, 1000);
+    lim('u1'); lim('u1'); lim('u1');
+    return lim('u1');
+  }
+  if (arg === 'independent') {
+    const lim = createRateLimiter(1, 1000);
+    return lim('user1') === true && lim('user2') === true;
+  }
+  if (arg === 'returns-function') return typeof createRateLimiter(3, 1000) === 'function';
+  if (arg === 'limit-1') {
+    const lim = createRateLimiter(1, 1000);
+    return [lim('u1'), lim('u1')];
+  }
+}`,
   },
   {
     id: 'jsnet-p5',
@@ -319,7 +339,7 @@ router.match('GET', '/users/42');
 router.match('GET', '/unknown');
 // → null
 \`\`\``,
-    functionName: 'Router',
+    functionName: 'Router_test',
     starterCode: `class Router {
   constructor() {
     // ваш код
@@ -403,6 +423,17 @@ router.match('GET', '/unknown');
     }
     return null;
   }
+}`,
+    testHelperCode: `function Router_test(arg) {
+  const router = new Router();
+  router.get('/users/:id', (params) => params);
+  router.get('/posts/:postId/comments/:commentId', (params) => params);
+  router.get('/about', () => ({}));
+  if (arg === 'basic-param') return router.match('GET', '/users/42')?.params?.id ?? null;
+  if (arg === 'no-match') return router.match('GET', '/unknown');
+  if (arg === 'multi-params') return router.match('GET', '/posts/5/comments/10')?.params ?? null;
+  if (arg === 'static') return router.match('GET', '/about')?.params ?? null;
+  if (arg === 'wrong-method') return router.match('POST', '/users/42');
 }`,
   },
 ];

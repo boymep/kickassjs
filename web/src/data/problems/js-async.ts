@@ -26,7 +26,7 @@ await myPromiseAll([
   Promise.reject(new Error('oops')),
 ]); // → reject 'oops'
 \`\`\``,
-    functionName: 'myPromiseAll',
+    functionName: 'myPromiseAll_test',
     starterCode: `function myPromiseAll(promises) {
   // ваш код
 }`,
@@ -86,6 +86,19 @@ await myPromiseAll([
     });
   });
 }`,
+    testHelperCode: `async function myPromiseAll_test(arg) {
+  const delay = (ms, val) => new Promise(r => setTimeout(() => r(val), ms));
+  if (arg === 'all-resolve') return myPromiseAll([Promise.resolve(1), Promise.resolve(2), Promise.resolve(3)]);
+  if (arg === 'empty') return myPromiseAll([]);
+  if (arg === 'one-reject') {
+    try { await myPromiseAll([Promise.resolve(1), Promise.reject(new Error('oops'))]); }
+    catch (e) { return 'Error: ' + e.message; }
+  }
+  if (arg === 'order') {
+    return myPromiseAll([delay(30, 1), delay(10, 2), delay(20, 3)]);
+  }
+  if (arg === 'non-promise') return myPromiseAll([1, 'hello', true]);
+}`,
   },
   {
     id: 'jsa-p2',
@@ -104,7 +117,7 @@ const slow = new Promise(r => setTimeout(() => r('slow'), 200));
 
 await myPromiseRace([fast, slow]); // → 'fast'
 \`\`\``,
-    functionName: 'myPromiseRace',
+    functionName: 'myPromiseRace_test',
     starterCode: `function myPromiseRace(promises) {
   // ваш код
 }`,
@@ -151,6 +164,21 @@ await myPromiseRace([fast, slow]); // → 'fast'
     });
   });
 }`,
+    testHelperCode: `async function myPromiseRace_test(arg) {
+  const delay = (ms, val) => new Promise(r => setTimeout(() => r(val), ms));
+  if (arg === 'fast-resolve') return myPromiseRace([delay(50, 'fast'), delay(300, 'slow')]);
+  if (arg === 'fast-reject') {
+    try {
+      await myPromiseRace([
+        new Promise((_, r) => setTimeout(() => r(new Error('fast-error')), 10)),
+        delay(300, 'slow'),
+      ]);
+    } catch (e) { return 'Error: ' + e.message; }
+  }
+  if (arg === 'mixed') return myPromiseRace([Promise.resolve(1), Promise.reject(new Error('fail'))]);
+  if (arg === 'single') return myPromiseRace([Promise.resolve(42)]);
+  if (arg === 'is-promise') return myPromiseRace([Promise.resolve(1)]) instanceof Promise;
+}`,
   },
   {
     id: 'jsa-p3',
@@ -170,7 +198,7 @@ const slow = new Promise(r => setTimeout(() => r('data'), 500));
 await fetchWithTimeout(slow, 100); // → Error: Timeout
 await fetchWithTimeout(slow, 1000); // → 'data'
 \`\`\``,
-    functionName: 'fetchWithTimeout',
+    functionName: 'fetchWithTimeout_test',
     starterCode: `function fetchWithTimeout(promise, ms) {
   // ваш код
 }`,
@@ -216,6 +244,23 @@ await fetchWithTimeout(slow, 1000); // → 'data'
   );
   return Promise.race([promise, timeout]);
 }`,
+    testHelperCode: `async function fetchWithTimeout_test(arg) {
+  const delay = (ms) => new Promise(r => setTimeout(r, ms));
+  if (arg === 'in-time') return fetchWithTimeout(Promise.resolve('result'), 1000);
+  if (arg === 'timeout') {
+    try { await fetchWithTimeout(delay(500).then(() => 'data'), 10); }
+    catch (e) { return 'Error: ' + e.message; }
+  }
+  if (arg === 'reject-first') {
+    try { await fetchWithTimeout(Promise.reject(new Error('original')), 1000); }
+    catch (e) { return 'Error: ' + e.message; }
+  }
+  if (arg === 'zero-timeout') {
+    try { await fetchWithTimeout(delay(100).then(() => 'data'), 0); }
+    catch (e) { return 'Error: ' + e.message; }
+  }
+  if (arg === 'is-promise') return fetchWithTimeout(Promise.resolve(1), 1000) instanceof Promise;
+}`,
   },
   {
     id: 'jsa-p4',
@@ -240,7 +285,7 @@ const readAsync = promisify(readFile);
 await readAsync('good.txt');  // → 'file content'
 await readAsync('bad.txt');   // → reject Error: not found
 \`\`\``,
-    functionName: 'promisify',
+    functionName: 'promisify_test',
     starterCode: `function promisify(fn) {
   // ваш код
 }`,
@@ -290,6 +335,25 @@ await readAsync('bad.txt');   // → reject Error: not found
     });
   };
 }`,
+    testHelperCode: `async function promisify_test(arg) {
+  function readFile(path, callback) {
+    setTimeout(() => {
+      if (path === 'good.txt') callback(null, 'file content');
+      else callback(new Error('not found'));
+    }, 0);
+  }
+  function nodeStyleFn(a, b, callback) {
+    setTimeout(() => callback(null, a + '-' + b), 0);
+  }
+  if (arg === 'success') return promisify(readFile)('good.txt');
+  if (arg === 'error') {
+    try { await promisify(readFile)('bad.txt'); }
+    catch (e) { return 'Error: ' + e.message; }
+  }
+  if (arg === 'returns-function') return typeof promisify(readFile) === 'function';
+  if (arg === 'returns-promise') return promisify(readFile)('good.txt') instanceof Promise;
+  if (arg === 'passes-args') return promisify(nodeStyleFn)('content', '42');
+}`,
   },
   {
     id: 'jsa-p5',
@@ -309,7 +373,7 @@ await readAsync('bad.txt');   // → reject Error: not found
 // Выполнить 10 задач, не более 3 одновременно:
 await limitConcurrency(tasks, 3);
 \`\`\``,
-    functionName: 'limitConcurrency',
+    functionName: 'limitConcurrency_test',
     starterCode: `async function limitConcurrency(fns, limit) {
   // ваш код
 }`,
@@ -369,6 +433,31 @@ await limitConcurrency(tasks, 3);
 
   await Promise.all(executing);
   return results;
+}`,
+    testHelperCode: `async function limitConcurrency_test(arg) {
+  const delay = (ms) => new Promise(r => setTimeout(r, ms));
+  if (arg === 'all-complete') {
+    return limitConcurrency([() => Promise.resolve(1), () => Promise.resolve(2), () => Promise.resolve(3)], 10);
+  }
+  if (arg === 'empty') return limitConcurrency([], 3);
+  if (arg === 'order') {
+    return limitConcurrency([1,2,3,4,5].map(i => () => Promise.resolve(i)), 2);
+  }
+  if (arg === 'sequential') {
+    return limitConcurrency([1,2,3].map(i => () => Promise.resolve(i)), 1);
+  }
+  if (arg === 'concurrency-check') {
+    let running = 0, maxRunning = 0;
+    const fns = Array(6).fill(null).map(() => async () => {
+      running++;
+      maxRunning = Math.max(maxRunning, running);
+      await delay(10);
+      running--;
+      return 1;
+    });
+    await limitConcurrency(fns, 2);
+    return maxRunning <= 2;
+  }
 }`,
   },
 ];

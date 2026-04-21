@@ -6,11 +6,11 @@ export function useCodeRunner() {
   const [results, setResults] = useState<TestResult[] | null>(null);
   const [running, setRunning] = useState(false);
 
-  const run = useCallback(async (code: string, functionName: string, testCases: TestCase[]) => {
+  const run = useCallback(async (code: string, functionName: string, testCases: TestCase[], testHelperCode?: string) => {
     setRunning(true);
     setResults(null);
     try {
-      const res = await runCode(code, functionName, testCases);
+      const res = await runCode(code, functionName, testCases, testHelperCode);
       setResults(res);
     } finally {
       setRunning(false);

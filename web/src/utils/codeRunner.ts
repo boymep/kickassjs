@@ -1,11 +1,12 @@
 import type { TestCase, TestResult } from '../types/problem';
 
-const TIMEOUT_MS = 3000;
+const TIMEOUT_MS = 5000;
 
 export function runCode(
   userCode: string,
   functionName: string,
   testCases: TestCase[],
+  testHelperCode?: string,
 ): Promise<TestResult[]> {
   return new Promise((resolve) => {
     const iframe = document.createElement('iframe');
@@ -32,7 +33,7 @@ export function runCode(
             passed: false,
             actual: null,
             expected: tc.expected,
-            error: 'Превышено время выполнения (3 сек). Возможен бесконечный цикл.',
+            error: 'Превышено время выполнения (5 сек). Возможен бесконечный цикл.',
           })),
         );
       }
@@ -51,36 +52,46 @@ export function runCode(
 
     const script = `
       <script>
-        try {
-          ${userCode}
+        (async () => {
+          try {
+            ${userCode}
+            ${testHelperCode ?? ''}
 
-          const __testCases = ${JSON.stringify(testCases)};
-          const __results = [];
+            const __testCases = ${JSON.stringify(testCases)};
+            const __results = [];
 
-          for (const tc of __testCases) {
-            try {
-              const actual = ${functionName}(...tc.inputArgs);
-              const passed = JSON.stringify(actual) === JSON.stringify(tc.expected);
-              __results.push({ testCaseId: tc.id, passed, actual, expected: tc.expected });
-            } catch (e) {
-              __results.push({ testCaseId: tc.id, passed: false, actual: null, expected: tc.expected, error: e.message });
+            for (const tc of __testCases) {
+              try {
+                let actual = ${functionName}(...tc.inputArgs);
+                if (actual !== null && actual !== undefined && typeof actual.then === 'function') {
+                  try {
+                    actual = await actual;
+                  } catch (e) {
+                    actual = 'Error: ' + e.message;
+                  }
+                }
+                const passed = JSON.stringify(actual) === JSON.stringify(tc.expected);
+                __results.push({ testCaseId: tc.id, passed, actual, expected: tc.expected });
+              } catch (e) {
+                __results.push({ testCaseId: tc.id, passed: false, actual: null, expected: tc.expected, error: e.message });
+              }
             }
-          }
 
-          parent.postMessage({ type: 'results', results: __results }, '*');
-        } catch (e) {
-          const __testCases = ${JSON.stringify(testCases)};
-          parent.postMessage({
-            type: 'results',
-            results: __testCases.map(tc => ({
-              testCaseId: tc.id,
-              passed: false,
-              actual: null,
-              expected: tc.expected,
-              error: e.message
-            }))
-          }, '*');
-        }
+            parent.postMessage({ type: 'results', results: __results }, '*');
+          } catch (e) {
+            const __testCases = ${JSON.stringify(testCases)};
+            parent.postMessage({
+              type: 'results',
+              results: __testCases.map(tc => ({
+                testCaseId: tc.id,
+                passed: false,
+                actual: null,
+                expected: tc.expected,
+                error: e.message
+              }))
+            }, '*');
+          }
+        })();
       <\/script>
     `;
 

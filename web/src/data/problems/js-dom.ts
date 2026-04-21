@@ -28,7 +28,7 @@ createElement({
 });
 // → <div class="card" data-id="1">Hello, <strong>World</strong></div>
 \`\`\``,
-    functionName: 'createElement',
+    functionName: 'createElement_test',
     starterCode: `function createElement(descriptor) {
   // ваш код
 }`,
@@ -36,31 +36,31 @@ createElement({
       {
         id: 'jsdom-p1-t1',
         inputDisplay: 'createElement({ tag: "div" }) → <div>',
-        inputArgs: [{ tag: 'div' }],
+        inputArgs: ['simple-tag'],
         expected: 'DIV',
       },
       {
         id: 'jsdom-p1-t2',
         inputDisplay: 'attrs применяются корректно',
-        inputArgs: [{ tag: 'p', attrs: { class: 'text' } }],
+        inputArgs: ['with-attrs'],
         expected: 'text',
       },
       {
         id: 'jsdom-p1-t3',
         inputDisplay: 'текстовые children добавляются',
-        inputArgs: [{ tag: 'span', children: ['hello'] }],
+        inputArgs: ['text-child'],
         expected: 'hello',
       },
       {
         id: 'jsdom-p1-t4',
         inputDisplay: 'вложенные дочерние элементы',
-        inputArgs: [{ tag: 'div', children: [{ tag: 'strong', children: ['text'] }] }],
+        inputArgs: ['nested-element'],
         expected: 1,
       },
       {
         id: 'jsdom-p1-t5',
         inputDisplay: 'смешанные children: строки и элементы',
-        inputArgs: [{ tag: 'p', children: ['a', { tag: 'b', children: ['b'] }] }],
+        inputArgs: ['mixed-children'],
         expected: 2,
       },
     ],
@@ -90,6 +90,13 @@ createElement({
 
   return el;
 }`,
+    testHelperCode: `function createElement_test(arg) {
+  if (arg === 'simple-tag') return createElement({ tag: 'div' }).tagName;
+  if (arg === 'with-attrs') return createElement({ tag: 'p', attrs: { class: 'text' } }).className;
+  if (arg === 'text-child') return createElement({ tag: 'span', children: ['hello'] }).textContent;
+  if (arg === 'nested-element') return createElement({ tag: 'div', children: [{ tag: 'strong', children: ['text'] }] }).childElementCount;
+  if (arg === 'mixed-children') return createElement({ tag: 'p', children: ['a', { tag: 'b', children: ['b'] }] }).childNodes.length;
+}`,
   },
   {
     id: 'jsdom-p2',
@@ -110,7 +117,7 @@ delegate(list, 'li', 'click', function(el) {
 });
 // Один обработчик обслуживает все li, включая добавленные позже
 \`\`\``,
-    functionName: 'delegate',
+    functionName: 'delegate_test',
     starterCode: `function delegate(parent, selector, eventType, handler) {
   // ваш код
 }`,
@@ -159,6 +166,43 @@ delegate(list, 'li', 'click', function(el) {
     }
   });
 }`,
+    testHelperCode: `function delegate_test(arg) {
+  const parent = document.createElement('ul');
+  const li = document.createElement('li');
+  const div = document.createElement('div');
+  const span = document.createElement('span');
+  li.appendChild(span);
+  parent.appendChild(li);
+  parent.appendChild(div);
+  document.body.appendChild(parent);
+  let result;
+  if (arg === 'match-click') {
+    let called = false;
+    delegate(parent, 'li', 'click', () => { called = true; });
+    li.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    result = called;
+  } else if (arg === 'no-match') {
+    let called = false;
+    delegate(parent, 'li', 'click', () => { called = true; });
+    div.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    result = called;
+  } else if (arg === 'correct-element') {
+    let tagName = null;
+    delegate(parent, 'li', 'click', (el) => { tagName = el.tagName; });
+    li.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    result = tagName;
+  } else if (arg === 'child-click') {
+    let called = false;
+    delegate(parent, 'li', 'click', () => { called = true; });
+    span.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    result = called;
+  } else if (arg === 'parent-handler') {
+    delegate(parent, 'li', 'click', () => {});
+    result = true;
+  }
+  document.body.removeChild(parent);
+  return result;
+}`,
   },
   {
     id: 'jsdom-p3',
@@ -178,7 +222,7 @@ delegate(list, 'li', 'click', function(el) {
 \`\`\`
 serialize(form) → { username: 'alice', age: '25', agree: 'on' }
 \`\`\``,
-    functionName: 'serialize',
+    functionName: 'serialize_test',
     starterCode: `function serialize(form) {
   // ваш код
 }`,
@@ -228,6 +272,33 @@ serialize(form) → { username: 'alice', age: '25', agree: 'on' }
   }
   return result;
 }`,
+    testHelperCode: `function serialize_test(arg) {
+  function makeForm(html) {
+    const form = document.createElement('form');
+    form.innerHTML = html;
+    return form;
+  }
+  if (arg === 'text-input') {
+    const form = makeForm('<input name="username" value="alice">');
+    return serialize(form);
+  }
+  if (arg === 'multiple') {
+    const form = makeForm('<input name="name" value="Alice"><input name="age" value="30">');
+    return serialize(form);
+  }
+  if (arg === 'no-name') {
+    const form = makeForm('<input value="alice">');
+    return serialize(form);
+  }
+  if (arg === 'disabled') {
+    const form = makeForm('<input name="username" value="alice" disabled>');
+    return serialize(form);
+  }
+  if (arg === 'checkbox') {
+    const form = makeForm('<input type="checkbox" name="agree" checked><input type="checkbox" name="newsletter">');
+    return serialize(form);
+  }
+}`,
   },
   {
     id: 'jsdom-p4',
@@ -248,7 +319,7 @@ serialize(form) → { username: 'alice', age: '25', agree: 'on' }
 highlight(div, 'hello');
 // → <div><mark>Hello</mark> world! Say <mark>hello</mark>!</div>
 \`\`\``,
-    functionName: 'highlight',
+    functionName: 'highlight_test',
     starterCode: `function highlight(root, word) {
   // ваш код
 }`,
@@ -318,6 +389,38 @@ highlight(div, 'hello');
     textNode.parentNode.replaceChild(fragment, textNode);
   }
 }`,
+    testHelperCode: `function highlight_test(arg) {
+  function makeDiv(html) {
+    const div = document.createElement('div');
+    div.innerHTML = html;
+    return div;
+  }
+  if (arg === 'one-match') {
+    const div = makeDiv('Hello world');
+    highlight(div, 'world');
+    return div.querySelectorAll('mark').length;
+  }
+  if (arg === 'two-matches') {
+    const div = makeDiv('Hello world, hello again');
+    highlight(div, 'hello');
+    return div.querySelectorAll('mark').length;
+  }
+  if (arg === 'case-insensitive') {
+    const div = makeDiv('Hello world');
+    highlight(div, 'HELLO');
+    return div.querySelectorAll('mark').length;
+  }
+  if (arg === 'no-match') {
+    const div = makeDiv('Hello world');
+    highlight(div, 'xyz');
+    return div.querySelectorAll('mark').length;
+  }
+  if (arg === 'nested') {
+    const div = makeDiv('<p>hello <span>world hello</span></p>');
+    highlight(div, 'hello');
+    return div.querySelectorAll('mark').length;
+  }
+}`,
   },
   {
     id: 'jsdom-p5',
@@ -339,7 +442,7 @@ const clone = deepCloneNode(original);
 clone.outerHTML === original.outerHTML; // true
 clone !== original;                     // true (другой объект)
 \`\`\``,
-    functionName: 'deepCloneNode',
+    functionName: 'deepCloneNode_test',
     starterCode: `function deepCloneNode(el) {
   // ваш код — нельзя использовать cloneNode!
 }`,
@@ -396,6 +499,18 @@ clone !== original;                     // true (другой объект)
   }
 
   return clone;
+}`,
+    testHelperCode: `function deepCloneNode_test(arg) {
+  const original = document.createElement('div');
+  original.className = 'box';
+  original.appendChild(document.createTextNode('Hello'));
+  const p = document.createElement('p');
+  original.appendChild(p);
+  if (arg === 'tagName') return deepCloneNode(original).tagName;
+  if (arg === 'attributes') return deepCloneNode(original).className;
+  if (arg === 'textContent') return deepCloneNode(original).childNodes[0].textContent;
+  if (arg === 'different-ref') return deepCloneNode(original) !== original;
+  if (arg === 'children') return deepCloneNode(original).childElementCount;
 }`,
   },
 ];

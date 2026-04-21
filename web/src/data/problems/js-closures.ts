@@ -22,7 +22,7 @@ c.increment(); // count = 2
 c.decrement(); // count = 1
 c.getCount();  // → 1
 \`\`\``,
-    functionName: 'createCounter',
+    functionName: 'createCounter_test',
     starterCode: `function createCounter() {
   // ваш код
 }`,
@@ -71,10 +71,8 @@ c.getCount();  // → 1
     decrement() { count--; },
     getCount()  { return count; },
   };
-}
-
-// Тест-раннер вызывает так:
-function createCounter_test(arg) {
+}`,
+    testHelperCode: `function createCounter_test(arg) {
   const c = createCounter();
   if (arg === 'increment-2') {
     c.increment(); c.increment();
@@ -116,7 +114,7 @@ fast(4);  // → 16, callCount = 1 (из кеша)
 fast(5);  // → 25, callCount = 2
 fast(5);  // → 25, callCount = 2 (из кеша)
 \`\`\``,
-    functionName: 'memoize',
+    functionName: 'memoize_test',
     starterCode: `function memoize(fn) {
   // ваш код
 }`,
@@ -124,13 +122,13 @@ fast(5);  // → 25, callCount = 2 (из кеша)
       {
         id: 'jsc-p2-t1',
         inputDisplay: 'memoize(fn)(4) дважды — fn вызвана 1 раз',
-        inputArgs: [4, 4],
+        inputArgs: ['call-twice-same'],
         expected: 1,
       },
       {
         id: 'jsc-p2-t2',
         inputDisplay: 'memoize(fn)(4), (5) — fn вызвана 2 раза',
-        inputArgs: [4, 5],
+        inputArgs: ['call-diff'],
         expected: 2,
       },
       {
@@ -170,6 +168,25 @@ fast(5);  // → 25, callCount = 2 (из кеша)
     return result;
   };
 }`,
+    testHelperCode: `function memoize_test(arg) {
+  let callCount = 0;
+  const expensive = (n) => { callCount++; return n * n; };
+  const fast = memoize(expensive);
+  if (arg === 'call-twice-same') { fast(4); fast(4); return callCount; }
+  if (arg === 'call-diff') { fast(4); fast(5); return callCount; }
+  if (arg === 'result-4') return fast(4);
+  if (arg === 'independent') {
+    let c1 = 0, c2 = 0;
+    const fn1 = memoize((n) => { c1++; return n; });
+    const fn2 = memoize((n) => { c2++; return n; });
+    fn1(1); fn1(1); fn2(1); fn2(1);
+    return c1 === 1 && c2 === 1;
+  }
+  if (arg === 'order-matters') {
+    const fn = memoize((a, b) => a - b);
+    return fn(1, 2) !== fn(2, 1);
+  }
+}`,
   },
   {
     id: 'jsc-p3',
@@ -192,7 +209,7 @@ fn(); // → 1 (fn не вызвана снова)
 fn(); // → 1
 count; // → 1 — fn вызвана ровно один раз
 \`\`\``,
-    functionName: 'once',
+    functionName: 'once_test',
     starterCode: `function once(fn) {
   // ваш код
 }`,
@@ -245,6 +262,33 @@ count; // → 1 — fn вызвана ровно один раз
     return result;
   };
 }`,
+    testHelperCode: `function once_test(arg) {
+  if (arg === 'call-count') {
+    let count = 0;
+    const fn = once(() => ++count);
+    fn(); fn(); fn();
+    return count;
+  }
+  if (arg === 'return-value') {
+    const fn = once(() => 42);
+    fn(); return fn();
+  }
+  if (arg === 'with-args') {
+    const fn = once((x) => x * 2);
+    return fn(5);
+  }
+  if (arg === 'independent') {
+    let c1 = 0, c2 = 0;
+    const fn1 = once(() => ++c1);
+    const fn2 = once(() => ++c2);
+    fn1(); fn1(); fn2(); fn2();
+    return c1 === 1 && c2 === 1;
+  }
+  if (arg === 'ignore-args') {
+    const fn = once((x) => x);
+    fn(5); return fn(999);
+  }
+}`,
   },
   {
     id: 'jsc-p4',
@@ -266,7 +310,7 @@ add5(7);   // → 12
 add10(3);  // → 13
 add10(-5); // → 5
 \`\`\``,
-    functionName: 'makeAdder',
+    functionName: 'makeAdder_test',
     starterCode: `function makeAdder(x) {
   // ваш код
 }`,
@@ -311,6 +355,7 @@ add10(-5); // → 5
     return x + y;
   };
 }`,
+    testHelperCode: `function makeAdder_test(x, y) { return makeAdder(x)(y); }`,
   },
   {
     id: 'jsc-p5',
@@ -333,7 +378,7 @@ fns[2](10); // → 20  (10 * 2)
 fns[3](10); // → 30  (10 * 3)
 fns[4](10); // → 40  (10 * 4)
 \`\`\``,
-    functionName: 'getMultipliers',
+    functionName: 'getMultipliers_test',
     starterCode: `function getMultipliers() {
   // Сломанная версия с var:
   // const fns = [];
@@ -388,5 +433,6 @@ fns[4](10); // → 40  (10 * 4)
   }
   return fns;
 }`,
+    testHelperCode: `function getMultipliers_test(i, x) { return getMultipliers()[i](x); }`,
   },
 ];

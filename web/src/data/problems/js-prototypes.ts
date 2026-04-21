@@ -19,7 +19,7 @@ myInstanceof([], String);     // → false
 myInstanceof({}, Object);     // → true
 myInstanceof(null, Object);   // → false
 \`\`\``,
-    functionName: 'myInstanceof',
+    functionName: 'myInstanceof_test',
     starterCode: `function myInstanceof(obj, Constructor) {
   // ваш код
 }`,
@@ -69,6 +69,11 @@ myInstanceof(null, Object);   // → false
   }
   return false;
 }`,
+    testHelperCode: `function myInstanceof_test(obj, ctorName) {
+  const ctors = { Array, Object, String, Date };
+  const actual = obj === 'date' ? new Date() : obj;
+  return myInstanceof(actual, ctors[ctorName]);
+}`,
   },
   {
     id: 'jsp-p2',
@@ -89,7 +94,7 @@ myInstanceof(null, Object);   // → false
 [1, 2, 3].myMap(x => x * 2);  // → [2, 4, 6]
 [1, 2, 3].myMap((x, i) => x + i); // → [1, 3, 5]
 \`\`\``,
-    functionName: 'myMap',
+    functionName: 'myMap_test',
     starterCode: `Array.prototype.myMap = function(callback) {
   // ваш код
 };`,
@@ -139,6 +144,17 @@ myInstanceof(null, Object);   // → false
   }
   return result;
 };`,
+    testHelperCode: `function myMap_test(arr, op) {
+  if (op === 'double') return arr.myMap(x => x * 2);
+  if (op === 'identity') return arr.myMap(x => x);
+  if (op === 'index') return arr.myMap((x, i) => x + i);
+  if (op === 'immutable') {
+    const orig = arr.slice();
+    arr.myMap(x => x * 2);
+    return JSON.stringify(arr) === JSON.stringify(orig);
+  }
+  if (op === 'upper') return arr.myMap(x => x.toUpperCase());
+}`,
   },
   {
     id: 'jsp-p3',
@@ -164,7 +180,7 @@ rex.speak();              // → 'Rex издаёт звук'
 rex instanceof Dog;       // → true
 rex instanceof Animal;    // → true
 \`\`\``,
-    functionName: 'Dog',
+    functionName: 'Dog_test',
     starterCode: `function Animal(name) {
   // ваш код
 }
@@ -227,6 +243,13 @@ Dog.prototype.constructor = Dog;
 Dog.prototype.bark = function() {
   return \`\${this.name} лает!\`;
 };`,
+    testHelperCode: `function Dog_test(arg) {
+  if (arg === 'bark') return new Dog('Rex').bark();
+  if (arg === 'speak') return new Dog('Rex').speak();
+  if (arg === 'instanceof-dog') return new Dog('Rex') instanceof Dog;
+  if (arg === 'instanceof-animal') return new Dog('Rex') instanceof Animal;
+  if (arg === 'name') return new Dog('Rex').name;
+}`,
   },
   {
     id: 'jsp-p4',
@@ -249,7 +272,7 @@ config.db.port = 9999; // молча игнорируется (strict mode → T
 config.db.port; // → 5432 — не изменилось
 Object.isFrozen(config.db); // → true
 \`\`\``,
-    functionName: 'deepFreeze',
+    functionName: 'deepFreeze_test',
     starterCode: `function deepFreeze(obj) {
   // ваш код
 }`,
@@ -300,6 +323,26 @@ Object.isFrozen(config.db); // → true
   });
   return obj;
 }`,
+    testHelperCode: `function deepFreeze_test(arg) {
+  if (arg === 'top-frozen') {
+    return Object.isFrozen(deepFreeze({ a: 1 }));
+  }
+  if (arg === 'nested-frozen') {
+    return Object.isFrozen(deepFreeze({ db: { host: 'localhost' } }).db);
+  }
+  if (arg === 'no-change') {
+    const obj = deepFreeze({ db: { port: 5432 } });
+    try { obj.db.port = 9999; } catch(e) {}
+    return obj.db.port;
+  }
+  if (arg === 'array-frozen') {
+    return Object.isFrozen(deepFreeze({ items: [1, 2, 3] }).items);
+  }
+  if (arg === 'same-ref') {
+    const original = { a: 1 };
+    return deepFreeze(original) === original;
+  }
+}`,
   },
   {
     id: 'jsp-p5',
@@ -322,7 +365,7 @@ Object.getPrototypeOf(child) === base; // → true
 const noProto = myObjectCreate(null);
 Object.getPrototypeOf(noProto); // → null
 \`\`\``,
-    functionName: 'myObjectCreate',
+    functionName: 'myObjectCreate_test',
     starterCode: `function myObjectCreate(proto) {
   // ваш код — нельзя использовать Object.create!
 }`,
@@ -367,6 +410,19 @@ Object.getPrototypeOf(noProto); // → null
   function F() {}
   F.prototype = proto;
   return new F();
+}`,
+    testHelperCode: `function myObjectCreate_test(arg) {
+  const base = { greet() { return 'hello'; } };
+  if (arg === 'method') return myObjectCreate(base).greet();
+  if (arg === 'prototype') return Object.getPrototypeOf(myObjectCreate(base)) === base;
+  if (arg === 'null-proto') return Object.getPrototypeOf(myObjectCreate(null));
+  if (arg === 'no-own') return Object.keys(myObjectCreate(base)).length;
+  if (arg === 'live-ref') {
+    const proto = { val: 'hello' };
+    const child = myObjectCreate(proto);
+    proto.val = 'world';
+    return child.val;
+  }
 }`,
   },
 ];

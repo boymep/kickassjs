@@ -1,4 +1,5 @@
 import { Box } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
 import CodeMirror from '@uiw/react-codemirror';
 import { javascript } from '@codemirror/lang-javascript';
 
@@ -10,11 +11,14 @@ interface Props {
 const extensions = [javascript()];
 
 export default function CodeEditor({ value, onChange }: Props) {
+  const theme = useTheme();
+  const isDark = theme.palette.mode === 'dark';
+
   return (
     <Box
       sx={{
         my: 2,
-        border: '1px solid rgba(0,0,0,0.08)',
+        border: isDark ? '1px solid rgba(255,255,255,0.08)' : '1px solid rgba(0,0,0,0.08)',
         borderRadius: '6px',
         overflow: 'hidden',
         '& .cm-editor': {
@@ -25,7 +29,7 @@ export default function CodeEditor({ value, onChange }: Props) {
           outlineOffset: '-1px',
         },
         '& .cm-gutters': {
-          backgroundColor: '#F0F0F2',
+          backgroundColor: isDark ? '#2C2C2E' : '#F0F0F2',
           border: 'none',
         },
       }}
@@ -35,7 +39,7 @@ export default function CodeEditor({ value, onChange }: Props) {
         onChange={onChange}
         extensions={extensions}
         height="400px"
-        theme="light"
+        theme={isDark ? 'dark' : 'light'}
         basicSetup={{
           lineNumbers: true,
           foldGutter: false,

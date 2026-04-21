@@ -23,7 +23,7 @@ const boundFn = myBind(greet, user, 'Hello');
 boundFn('!');  // → "Hello, Alice!"
 boundFn('?');  // → "Hello, Alice?"
 \`\`\``,
-    functionName: 'myBind',
+    functionName: 'myBind_test',
     starterCode: `function myBind(fn, ctx, ...partialArgs) {
   // ваш код
 }`,
@@ -69,6 +69,30 @@ boundFn('?');  // → "Hello, Alice?"
     return fn.apply(ctx, [...partialArgs, ...callArgs]);
   };
 }`,
+    testHelperCode: `function myBind_test(arg) {
+  function greet(greeting, punct) {
+    return greeting + ', ' + this.name + (punct || '');
+  }
+  const alice = { name: 'Alice' };
+  const bob = { name: 'Bob' };
+  if (arg === 'basic-this') {
+    return myBind(greet, alice)('Hello');
+  }
+  if (arg === 'partial-args') {
+    return myBind(greet, bob, 'Hi')('!');
+  }
+  if (arg === 'returns-function') {
+    return typeof myBind(greet, alice) === 'function';
+  }
+  if (arg === 'combined-args') {
+    function add(a, b, c) { return a + b + c; }
+    return myBind(add, null, 3)(3, 4);
+  }
+  if (arg === 'fixed-this') {
+    function getName() { return this.name; }
+    return myBind(getName, alice)();
+  }
+}`,
   },
   {
     id: 'jst-p2',
@@ -99,7 +123,7 @@ alice.age;    // → 30
 alice.greet(); // → "Hi, I'm Alice"
 alice instanceof Person; // → true
 \`\`\``,
-    functionName: 'myNew',
+    functionName: 'myNew_test',
     starterCode: `function myNew(Constructor, ...args) {
   // ваш код
 }`,
@@ -145,6 +169,24 @@ alice instanceof Person; // → true
   const result = Constructor.apply(obj, args);
   return (result !== null && typeof result === 'object') ? result : obj;
 }`,
+    testHelperCode: `function myNew_test(arg) {
+  function Person(name, age) {
+    this.name = name;
+    this.age = age;
+  }
+  Person.prototype.greet = function() { return "Hi, I'm " + this.name; };
+  if (arg === 'properties') return myNew(Person, 'Alice', 30).name;
+  if (arg === 'prototype') return myNew(Person, 'Alice') instanceof Person;
+  if (arg === 'proto-method') return myNew(Person, 'Alice').greet();
+  if (arg === 'return-object') {
+    function Special(name) { this.name = name; return { special: true }; }
+    return myNew(Special, 'Bob').special === true;
+  }
+  if (arg === 'return-primitive') {
+    function Weird(name) { this.name = name; return 42; }
+    return myNew(Weird, 'Alice').name;
+  }
+}`,
   },
   {
     id: 'jst-p3',
@@ -168,7 +210,7 @@ new Calculator()
   .subtract(5)
   .getValue(); // → 15
 \`\`\``,
-    functionName: 'Calculator',
+    functionName: 'Calculator_test',
     starterCode: `class Calculator {
   constructor(initial = 0) {
     // ваш код
@@ -250,6 +292,13 @@ new Calculator()
     return this.value;
   }
 }`,
+    testHelperCode: `function Calculator_test(arg) {
+  if (arg === 'chain-1') return new Calculator().add(10).multiply(2).subtract(5).getValue();
+  if (arg === 'with-initial') return new Calculator(5).add(5).getValue();
+  if (arg === 'zero') return new Calculator().getValue();
+  if (arg === 'returns-this') { const c = new Calculator(); return c.add(1) === c; }
+  if (arg === 'triple-add') return new Calculator().add(3).add(3).add(3).getValue();
+}`,
   },
   {
     id: 'jst-p4',
@@ -272,7 +321,7 @@ function greet() {
 myCall(greet, { name: 'Alice' }); // → 'Alice'
 myCall(greet, { name: 'Bob' });   // → 'Bob'
 \`\`\``,
-    functionName: 'myCall',
+    functionName: 'myCall_test',
     starterCode: `function myCall(fn, ctx, ...args) {
   // ваш код — нельзя использовать call/apply/bind!
 }`,
@@ -321,6 +370,24 @@ myCall(greet, { name: 'Bob' });   // → 'Bob'
   delete context[key];
   return result;
 }`,
+    testHelperCode: `function myCall_test(arg) {
+  function greet() { return this.name; }
+  if (arg === 'basic') return myCall(greet, { name: 'Alice' });
+  if (arg === 'with-args') {
+    function sum(a, b, c) { return a + b + c; }
+    return myCall(sum, null, 3, 3, 4);
+  }
+  if (arg === 'null-ctx') {
+    function checkGlobal() { return this === globalThis; }
+    return myCall(checkGlobal, null);
+  }
+  if (arg === 'no-pollution') {
+    const obj = { name: 'test' };
+    myCall(greet, obj);
+    return Object.keys(obj).length === 1;
+  }
+  if (arg === 'return-value') return myCall(() => 42, null);
+}`,
   },
   {
     id: 'jst-p5',
@@ -338,7 +405,7 @@ const btn = new EventButton('Купить');
 const handler = btn.handleClick; // извлечение метода
 handler(); // должно вернуть 'Clicked: Купить' — НЕ ошибку
 \`\`\``,
-    functionName: 'EventButton',
+    functionName: 'EventButton_test',
     starterCode: `class EventButton {
   constructor(label) {
     this.label = label;
@@ -393,6 +460,30 @@ handler(); // должно вернуть 'Clicked: Купить' — НЕ ош�
 
   handleClick() {
     return \`Clicked: \${this.label}\`;
+  }
+}`,
+    testHelperCode: `function EventButton_test(arg) {
+  if (arg === 'direct') {
+    const btn = new EventButton('Купить');
+    return btn.handleClick();
+  }
+  if (arg === 'detached') {
+    const btn = new EventButton('Купить');
+    const h = btn.handleClick;
+    return h();
+  }
+  if (arg === 'callback') {
+    const btn = new EventButton('Купить');
+    const h = btn.handleClick;
+    return h();
+  }
+  if (arg === 'independent') {
+    const btn1 = new EventButton('Купить');
+    const btn2 = new EventButton('Продать');
+    return btn1.handleClick() === 'Clicked: Купить' && btn2.handleClick() === 'Clicked: Продать';
+  }
+  if (arg === 'label') {
+    return new EventButton('Купить').label;
   }
 }`,
   },

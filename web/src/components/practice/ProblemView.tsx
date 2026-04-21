@@ -26,7 +26,7 @@ export default function ProblemView() {
   if (!problem) return <Typography>Задача не найдена</Typography>;
 
   const handleRun = () => {
-    run(code, problem.functionName, problem.testCases);
+    run(code, problem.functionName, problem.testCases, problem.testHelperCode);
   };
 
   return (

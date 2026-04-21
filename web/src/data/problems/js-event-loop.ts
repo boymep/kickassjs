@@ -21,7 +21,7 @@ await delay(50);
 await delay(50);
 // итого ~100ms
 \`\`\``,
-    functionName: 'delay',
+    functionName: 'delay_test',
     starterCode: `function delay(ms) {
   // ваш код
 }`,
@@ -29,13 +29,13 @@ await delay(50);
       {
         id: 'jsel-p1-t1',
         inputDisplay: 'delay(0) резолвится (возвращает Promise)',
-        inputArgs: [0],
+        inputArgs: ['resolves'],
         expected: true,
       },
       {
         id: 'jsel-p1-t2',
         inputDisplay: 'delay(10) резолвится примерно через 10ms',
-        inputArgs: [10],
+        inputArgs: ['timing'],
         expected: true,
       },
       {
@@ -64,6 +64,17 @@ await delay(50);
     solutionCode: `function delay(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }`,
+    testHelperCode: `async function delay_test(arg) {
+  if (arg === 'resolves') { await delay(0); return true; }
+  if (arg === 'timing') {
+    const start = Date.now();
+    await delay(10);
+    return Date.now() - start >= 8;
+  }
+  if (arg === 'is-promise') return delay(0) instanceof Promise;
+  if (arg === 'sequential') { await delay(5); await delay(5); return true; }
+  if (arg === 'resolves-undefined') return (await delay(0)) === undefined;
+}`,
   },
   {
     id: 'jsel-p2',
@@ -84,7 +95,7 @@ debouncedSearch('h');
 debouncedSearch('he');
 debouncedSearch('hel'); // только этот вызов выполнится через 300ms
 \`\`\``,
-    functionName: 'debounce',
+    functionName: 'debounce_test',
     starterCode: `function debounce(fn, ms) {
   // ваш код
 }`,
@@ -134,6 +145,40 @@ debouncedSearch('hel'); // только этот вызов выполнится
     }, ms);
   };
 }`,
+    testHelperCode: `async function debounce_test(arg) {
+  const wait = (ms) => new Promise(r => setTimeout(r, ms));
+  if (arg === 'call-count-3') {
+    let count = 0;
+    const fn = debounce(() => count++, 30);
+    fn(); fn(); fn();
+    await wait(100);
+    return count;
+  }
+  if (arg === 'last-args') {
+    let lastArg;
+    const fn = debounce((x) => { lastArg = x; }, 30);
+    fn('a'); fn('b'); fn('hello');
+    await wait(100);
+    return lastArg;
+  }
+  if (arg === 'two-separate-calls') {
+    let count = 0;
+    const fn = debounce(() => count++, 30);
+    fn();
+    await wait(100);
+    fn();
+    await wait(100);
+    return count;
+  }
+  if (arg === 'returns-function') return typeof debounce(() => {}, 30) === 'function';
+  if (arg === 'single-call') {
+    let count = 0;
+    const fn = debounce(() => count++, 30);
+    fn();
+    await wait(100);
+    return count;
+  }
+}`,
   },
   {
     id: 'jsel-p3',
@@ -154,7 +199,7 @@ throttled(); // игнорируется
 // ... через 100ms ...
 throttled(); // выполнится снова
 \`\`\``,
-    functionName: 'throttle',
+    functionName: 'throttle_test',
     starterCode: `function throttle(fn, ms) {
   // ваш код
 }`,
@@ -204,6 +249,36 @@ throttled(); // выполнится снова
     }
   };
 }`,
+    testHelperCode: `async function throttle_test(arg) {
+  const wait = (ms) => new Promise(r => setTimeout(r, ms));
+  if (arg === 'burst-5') {
+    let count = 0;
+    const fn = throttle(() => count++, 100);
+    fn(); fn(); fn(); fn(); fn();
+    return count;
+  }
+  if (arg === 'first-immediate') {
+    let executed = false;
+    const fn = throttle(() => { executed = true; }, 100);
+    fn();
+    return executed;
+  }
+  if (arg === 'returns-function') return typeof throttle(() => {}, 100) === 'function';
+  if (arg === 'correct-args') {
+    let received;
+    const fn = throttle((x) => { received = x; }, 100);
+    fn(42);
+    return received;
+  }
+  if (arg === 'two-windows') {
+    let count = 0;
+    const fn = throttle(() => count++, 30);
+    fn();
+    await wait(100);
+    fn();
+    return count;
+  }
+}`,
   },
   {
     id: 'jsel-p4',
@@ -226,7 +301,7 @@ const fns = [
 await runSequentially(fns); // → [1, 2, 3]
 // Общее время: ~30ms (последовательно, не параллельно)
 \`\`\``,
-    functionName: 'runSequentially',
+    functionName: 'runSequentially_test',
     starterCode: `async function runSequentially(asyncFns) {
   // ваш код
 }`,
@@ -274,6 +349,22 @@ await runSequentially(fns); // → [1, 2, 3]
   }
   return results;
 }`,
+    testHelperCode: `async function runSequentially_test(arg) {
+  const delay = (ms) => new Promise(r => setTimeout(r, ms));
+  if (arg === 'simple-3') return runSequentially([() => 1, () => 2, () => 3]);
+  if (arg === 'empty') return runSequentially([]);
+  if (arg === 'order') return runSequentially([
+    () => Promise.resolve('a'),
+    () => Promise.resolve('b'),
+    () => Promise.resolve('c'),
+  ]);
+  if (arg === 'single') return runSequentially([() => 42]);
+  if (arg === 'async-order') return runSequentially([
+    () => delay(30).then(() => 1),
+    () => delay(10).then(() => 2),
+    () => delay(20).then(() => 3),
+  ]);
+}`,
   },
   {
     id: 'jsel-p5',
@@ -299,7 +390,7 @@ const unstable = () => {
 await retryWithDelay(unstable, 3, 0); // → 'success'
 // attempt = 3 (два провала, третья — успех)
 \`\`\``,
-    functionName: 'retryWithDelay',
+    functionName: 'retryWithDelay_test',
     starterCode: `async function retryWithDelay(fn, retries, ms) {
   // ваш код
 }`,
@@ -353,6 +444,27 @@ await retryWithDelay(unstable, 3, 0); // → 'success'
     }
   }
   throw lastError;
+}`,
+    testHelperCode: `async function retryWithDelay_test(arg) {
+  if (arg === 'fail-2-then-ok') {
+    let attempt = 0;
+    const fn = async () => { attempt++; if (attempt < 3) throw new Error('fail'); return 'success'; };
+    return retryWithDelay(fn, 3, 0);
+  }
+  if (arg === 'always-ok') return retryWithDelay(async () => 42, 3, 0);
+  if (arg === 'always-fail') {
+    try { await retryWithDelay(async () => { throw new Error('always-fail'); }, 3, 0); }
+    catch (e) { return 'Error: ' + e.message; }
+  }
+  if (arg === 'retries-1') {
+    try { await retryWithDelay(async () => { throw new Error('fail'); }, 1, 0); }
+    catch (e) { return 'Error'; }
+  }
+  if (arg === 'attempt-count') {
+    let attempts = 0;
+    try { await retryWithDelay(async () => { attempts++; throw new Error('x'); }, 3, 0); } catch(e) {}
+    return attempts <= 3;
+  }
 }`,
   },
 ];

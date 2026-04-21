@@ -17,6 +17,8 @@ export interface Problem {
   testCases: TestCase[];
   hints: string[];
   solutionCode: string;
+  /** Helper code injected after user code in the sandbox (e.g. test wrapper functions). */
+  testHelperCode?: string;
 }
 
 export interface TestResult {

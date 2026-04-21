@@ -270,7 +270,7 @@ extractCriticalCSS(
           [{ selector: '.btn', styles: 'a' }, { selector: '.unused', styles: 'b' }],
           ['btn'],
         ],
-        expected: 1,
+        expected: [{ selector: '.btn', styles: 'a' }],
       },
       {
         id: 'jsbr-p4-t2',
@@ -279,7 +279,7 @@ extractCriticalCSS(
           [{ selector: '.btn.active', styles: 'a' }],
           ['btn'],
         ],
-        expected: 1,
+        expected: [{ selector: '.btn.active', styles: 'a' }],
       },
       {
         id: 'jsbr-p4-t3',
@@ -288,7 +288,7 @@ extractCriticalCSS(
           [{ selector: '.btn', styles: 'a' }],
           [],
         ],
-        expected: 0,
+        expected: [],
       },
       {
         id: 'jsbr-p4-t4',
@@ -297,7 +297,7 @@ extractCriticalCSS(
           [{ selector: '.a', styles: 'x' }, { selector: '.b', styles: 'y' }],
           ['a', 'b'],
         ],
-        expected: 2,
+        expected: [{ selector: '.a', styles: 'x' }, { selector: '.b', styles: 'y' }],
       },
       {
         id: 'jsbr-p4-t5',
@@ -306,7 +306,7 @@ extractCriticalCSS(
           [{ selector: '.hero', styles: 'font-size: 24px' }],
           ['hero'],
         ],
-        expected: '.hero',
+        expected: [{ selector: '.hero', styles: 'font-size: 24px' }],
       },
     ],
     hints: [
@@ -347,7 +347,7 @@ applyStyles(elements, (el, i) => {
 });
 // Все записано — 1 reflow
 \`\`\``,
-    functionName: 'batchRead',
+    functionName: 'batchRead_test',
     starterCode: `function batchRead(elements, reader) {
   // ваш код
 }
@@ -397,6 +397,23 @@ function applyStyles(elements, stylesFn) {
 
 function applyStyles(elements, stylesFn) {
   elements.forEach((el, i) => stylesFn(el, i));
+}`,
+    testHelperCode: `function batchRead_test(arg) {
+  if (arg === 'read-all') {
+    return batchRead([{ val: 10 }, { val: 20 }, { val: 30 }], el => el.val);
+  }
+  if (arg === 'returns-array') return Array.isArray(batchRead([1, 2], x => x));
+  if (arg === 'apply-all') {
+    let count = 0;
+    applyStyles([{}, {}, {}], () => { count++; });
+    return count;
+  }
+  if (arg === 'correct-index') {
+    const indices = [];
+    applyStyles([{}, {}, {}], (el, i) => { indices.push(i); });
+    return indices;
+  }
+  if (arg === 'empty') return batchRead([], el => el);
 }`,
   },
 ];
