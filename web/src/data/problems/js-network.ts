@@ -316,6 +316,266 @@ limiter('user2'); // true (другой пользователь)
 }`,
   },
   {
+    id: 'jsn-p1',
+    topicId: 'js-network',
+    title: 'fetch и статусы — что выведет код?',
+    difficulty: 'easy',
+    isContextual: false,
+    kind: 'predict-output',
+    description: `Перед вами код, который использует **мок-функцию** \`mockFetch\` вместо настоящего \`fetch\` (в sandbox реальная сеть недоступна). Мок возвращает Response-подобный объект с заданным статусом.
+
+Внимательно прочитайте код и предскажите, что окажется в \`stdout\`.
+
+\`\`\`js
+function mockFetch(status) {
+  return Promise.resolve({
+    ok: status >= 200 && status < 300,
+    status,
+    json: () => Promise.resolve({ data: 'payload' }),
+  });
+}
+
+async function load(status) {
+  try {
+    const res = await mockFetch(status);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const body = await res.json();
+    console.log('ok:', body.data);
+  } catch (err) {
+    console.log('err:', err.message);
+  }
+}
+
+(async () => {
+  await load(200);
+  await load(404);
+  await load(500);
+})();
+\`\`\`
+
+Введите ровно три строки в порядке вывода — каждая на своей строке.`,
+    code: `function mockFetch(status) {
+  return Promise.resolve({
+    ok: status >= 200 && status < 300,
+    status,
+    json: () => Promise.resolve({ data: 'payload' }),
+  });
+}
+
+async function load(status) {
+  try {
+    const res = await mockFetch(status);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const body = await res.json();
+    console.log('ok:', body.data);
+  } catch (err) {
+    console.log('err:', err.message);
+  }
+}
+
+(async () => {
+  await load(200);
+  await load(404);
+  await load(500);
+})();`,
+    expected: 'ok: payload\nerr: HTTP 404\nerr: HTTP 500',
+    hints: [
+      'fetch (и наш мок) НЕ реджектится на 4xx/5xx — промис резолвится с объектом Response.',
+      'Из-за этого ветка `catch` срабатывает только потому, что мы сами бросаем `new Error(...)` после `if (!res.ok)`.',
+      'При статусе 200 `res.ok === true`, поэтому исключение не бросается и печатается «ok: payload».',
+    ],
+    solutionCode: `// Контракт fetch:
+//   - резолвится при любом ответе со статусом, ok = (status в 200-299)
+//   - реджектится ТОЛЬКО на сетевую ошибку или AbortError
+//
+// Поэтому:
+//   load(200) → res.ok = true → res.json() → console.log('ok: payload')
+//   load(404) → res.ok = false → throw 'HTTP 404' → console.log('err: HTTP 404')
+//   load(500) → res.ok = false → throw 'HTTP 500' → console.log('err: HTTP 500')`,
+  },
+  {
+    id: 'jsn-p2',
+    topicId: 'js-network',
+    title: 'searchClient — race condition в поиске',
+    difficulty: 'medium',
+    isContextual: true,
+    kind: 'find-bug',
+    description: `Реализован клиент поиска: при каждом нажатии клавиши вызывается \`search(query)\`, который дёргает мок \`api(query)\` и кладёт результат в \`state.lastResult\`.
+
+В коде есть **race condition**: если ответ для предыдущего запроса приходит **позже**, чем ответ для нового, состояние затирается устаревшими данными. Найдите и исправьте баг.
+
+Контракт:
+- При каждом вызове \`search(query)\` нужно отменять/игнорировать результат предыдущего вызова.
+- В \`state.lastResult\` всегда лежит результат **последнего** вызова \`search\`.
+- Тестовый раннер вызывает \`search('a')\` (медленный, 30 мс) и сразу \`search('ab')\` (быстрый, 5 мс), затем ждёт 60 мс и читает \`state.lastResult\`. Должно быть значение для 'ab', а не для 'a'.
+
+\`\`\`js
+const state = { lastResult: null };
+
+function api(query) {
+  // Мок: для 'a' имитирует медленный ответ.
+  const delay = query === 'a' ? 30 : 5;
+  return new Promise((resolve) => {
+    setTimeout(() => resolve('result-' + query), delay);
+  });
+}
+
+// 🐞 Баг здесь:
+async function search(query) {
+  const result = await api(query);
+  state.lastResult = result; // затирает состояние, даже если уже не актуально
+}
+\`\`\`
+
+Подсказка: используйте счётчик последнего запроса или храните ссылку на «активный» ID.`,
+    buggyCode: `const state = { lastResult: null };
+
+function api(query) {
+  const delay = query === 'a' ? 30 : 5;
+  return new Promise((resolve) => {
+    setTimeout(() => resolve('result-' + query), delay);
+  });
+}
+
+async function search(query) {
+  const result = await api(query);
+  state.lastResult = result;
+}`,
+    functionName: 'searchClient_test',
+    bugSummary:
+      'Без отслеживания «активного» запроса медленный ответ предыдущего вызова приходит позже и затирает свежий результат. Нужен счётчик/токен запроса или AbortController.',
+    testCases: [
+      {
+        id: 'jsn-p2-t1',
+        inputDisplay: 'search("a") + search("ab") → state = result-ab',
+        inputArgs: ['race-fix'],
+        expected: 'result-ab',
+      },
+      {
+        id: 'jsn-p2-t2',
+        inputDisplay: 'один вызов search("x") → state = result-x',
+        inputArgs: ['single'],
+        expected: 'result-x',
+      },
+      {
+        id: 'jsn-p2-t3',
+        inputDisplay: 'три быстрых подряд: state = последний',
+        inputArgs: ['three'],
+        expected: 'result-c',
+      },
+    ],
+    hints: [
+      'Заведите счётчик `let activeId = 0`. На входе: `const myId = ++activeId`.',
+      'После `await api(query)` проверяйте `if (myId !== activeId) return;` — мы устарели.',
+      'Альтернатива — AbortController, но для мока проще монотонный счётчик.',
+    ],
+    solutionCode: `const state = { lastResult: null };
+
+function api(query) {
+  const delay = query === 'a' ? 30 : 5;
+  return new Promise((resolve) => {
+    setTimeout(() => resolve('result-' + query), delay);
+  });
+}
+
+let activeId = 0;
+
+async function search(query) {
+  const myId = ++activeId;
+  const result = await api(query);
+  if (myId !== activeId) return; // устаревший ответ — игнорируем
+  state.lastResult = result;
+}`,
+    testHelperCode: `async function searchClient_test(arg) {
+  const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+
+  if (arg === 'race-fix') {
+    state.lastResult = null;
+    activeId = 0;
+    search('a');   // медленный — 30 мс
+    search('ab');  // быстрый — 5 мс
+    await wait(60);
+    return state.lastResult;
+  }
+  if (arg === 'single') {
+    state.lastResult = null;
+    activeId = 0;
+    search('x');
+    await wait(20);
+    return state.lastResult;
+  }
+  if (arg === 'three') {
+    state.lastResult = null;
+    activeId = 0;
+    search('a');   // 30 мс
+    search('b');   // 5 мс
+    search('c');   // 5 мс — последний
+    await wait(60);
+    return state.lastResult;
+  }
+}`,
+  },
+  {
+    id: 'jsn-p3',
+    topicId: 'js-network',
+    title: 'loadDashboard — параллельные запросы вместо последовательных',
+    difficulty: 'medium',
+    isContextual: true,
+    kind: 'refactor',
+    description: `\`loadDashboard\` загружает три независимых раздела дашборда — пользователя, посты и метрики. Сейчас каждый \`await\` идёт **последовательно**: ждём первый ответ, потом второй, потом третий. На реальной сети это втрое медленнее необходимого.
+
+Каждый из трёх запросов **независим** друг от друга — переписывайте на параллельный вариант через \`Promise.all\`. Контракт результата сохраните: функция должна возвращать объект \`{ user, posts, metrics }\` в том же формате.
+
+Мок \`api(name)\` возвращает Promise со строкой "data-\${name}".
+
+\`\`\`js
+async function loadDashboard() {
+  const user = await api('user');
+  const posts = await api('posts');
+  const metrics = await api('metrics');
+  return { user, posts, metrics };
+}
+\`\`\`
+
+Тесты проверяют только корректность результата — производительность вы должны улучшить осмысленно сами.`,
+    starterCode: `function api(name) {
+  return Promise.resolve('data-' + name);
+}
+
+async function loadDashboard() {
+  const user = await api('user');
+  const posts = await api('posts');
+  const metrics = await api('metrics');
+  return { user, posts, metrics };
+}`,
+    functionName: 'loadDashboard',
+    testCases: [
+      {
+        id: 'jsn-p3-t1',
+        inputDisplay: 'возвращает объект с тремя ключами',
+        inputArgs: [],
+        expected: { user: 'data-user', posts: 'data-posts', metrics: 'data-metrics' },
+      },
+    ],
+    hints: [
+      'Замените три await подряд на одно ожидание Promise.all([api("user"), api("posts"), api("metrics")]).',
+      'Деструктурируйте массив результатов: `const [user, posts, metrics] = await Promise.all([...])`.',
+      'Это даёт время выполнения = max(t1, t2, t3) вместо t1 + t2 + t3.',
+    ],
+    solutionCode: `function api(name) {
+  return Promise.resolve('data-' + name);
+}
+
+async function loadDashboard() {
+  const [user, posts, metrics] = await Promise.all([
+    api('user'),
+    api('posts'),
+    api('metrics'),
+  ]);
+  return { user, posts, metrics };
+}`,
+  },
+  {
     id: 'jsnet-p5',
     topicId: 'js-network',
     title: 'Router — простой URL-роутер',

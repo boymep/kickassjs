@@ -278,4 +278,208 @@ export const twoPointersProblems: Problem[] = [
   return result;
 }`,
   },
+  {
+    id: 'tp-p6',
+    topicId: 'two-pointers',
+    kind: 'predict-output',
+    title: 'Трассировка Two Sum II',
+    difficulty: 'easy',
+    isContextual: false,
+    description: `Перед вами реализация Two Sum на отсортированном массиве с логированием каждого шага. Предскажите вывод программы.
+
+Каждая итерация печатает строку формата \`left=L right=R sum=S\`, а итоговая строка содержит найденную пару индексов.`,
+    code: `function twoSum(nums, target) {
+  let left = 0;
+  let right = nums.length - 1;
+
+  while (left < right) {
+    const sum = nums[left] + nums[right];
+    console.log('left=' + left + ' right=' + right + ' sum=' + sum);
+    if (sum === target) {
+      console.log('found ' + left + ',' + right);
+      return;
+    }
+    if (sum < target) left++;
+    else right--;
+  }
+}
+
+twoSum([1, 2, 4, 7, 11, 15], 13);`,
+    expected: `left=0 right=5 sum=16
+left=0 right=4 sum=12
+left=1 right=4 sum=13
+found 1,4`,
+    hints: [
+      'Считайте sum = nums[left] + nums[right] на каждой итерации.',
+      'Если sum > target — сдвигается right, если sum < target — left.',
+      'Как только sum === target, печатается строка found и функция возвращается.',
+    ],
+    solutionCode: `// Трассировка по шагам:
+// left=0 right=5 sum=1+15=16 (>13) → right--
+// left=0 right=4 sum=1+11=12 (<13) → left++
+// left=1 right=4 sum=2+11=13 (===13) → found 1,4`,
+  },
+  {
+    id: 'tp-p7',
+    topicId: 'two-pointers',
+    kind: 'find-bug',
+    title: 'Найдите баг: проверка палиндрома',
+    difficulty: 'easy',
+    isContextual: false,
+    description: `Функция \`isPalindrome\` должна возвращать \`true\` для палиндромов и \`false\` иначе. Реализация выглядит правильно, но тесты падают.
+
+Найдите ошибку в сдвиге указателей и исправьте её. Подсказка: проверьте, оба ли указателя движутся к центру.`,
+    functionName: 'isPalindrome',
+    buggyCode: `function isPalindrome(s) {
+  let left = 0;
+  let right = s.length - 1;
+
+  while (left < right) {
+    if (s[left] !== s[right]) return false;
+    left++;
+  }
+
+  return true;
+}`,
+    bugSummary:
+      'В теле цикла сдвигается только `left`, а `right` остаётся на месте. После первого совпадения `left` начинает сравниваться с тем же правым символом, и для любого нетривиального палиндрома вторая итерация почти всегда возвращает `false`. Правильное поведение — двигать оба указателя навстречу друг другу: `left++` и `right--`.',
+    testCases: [
+      {
+        id: 'tp-p7-t1',
+        inputDisplay: "isPalindrome('racecar')",
+        inputArgs: ['racecar'],
+        expected: true,
+      },
+      {
+        id: 'tp-p7-t2',
+        inputDisplay: "isPalindrome('level')",
+        inputArgs: ['level'],
+        expected: true,
+      },
+      {
+        id: 'tp-p7-t3',
+        inputDisplay: "isPalindrome('hello')",
+        inputArgs: ['hello'],
+        expected: false,
+      },
+      {
+        id: 'tp-p7-t4',
+        inputDisplay: "isPalindrome('a')",
+        inputArgs: ['a'],
+        expected: true,
+      },
+      {
+        id: 'tp-p7-t5',
+        inputDisplay: "isPalindrome('ab')",
+        inputArgs: ['ab'],
+        expected: false,
+      },
+      {
+        id: 'tp-p7-t6',
+        inputDisplay: "isPalindrome('')",
+        inputArgs: [''],
+        expected: true,
+      },
+    ],
+    hints: [
+      'Сравните условие цикла со стандартным шаблоном converging-pointers.',
+      'Что произойдёт, когда left и right встретятся в середине строки?',
+      'Какой инвариант гарантирует, что элемент не сравнивается сам с собой?',
+    ],
+    solutionCode: `function isPalindrome(s) {
+  let left = 0;
+  let right = s.length - 1;
+
+  while (left < right) {
+    if (s[left] !== s[right]) return false;
+    left++;
+    right--;
+  }
+
+  return true;
+}`,
+  },
+  {
+    id: 'tp-p8',
+    topicId: 'two-pointers',
+    kind: 'refactor',
+    title: 'Рефакторинг: Two Sum за O(n) вместо O(n²)',
+    difficulty: 'medium',
+    isContextual: false,
+    description: `Перед вами рабочая, но медленная реализация задачи Two Sum на **отсортированном** массиве. Она перебирает все пары вложенными циклами за O(n²).
+
+Перепишите её на технику двух указателей за O(n). Решение должно проходить тест производительности: 100 000 элементов за 50 мс.
+
+Функция возвращает массив из двух 0-based индексов первой найденной пары с суммой \`target\`. Если пара не найдена — \`[-1, -1]\`.`,
+    functionName: 'twoSum',
+    starterCode: `function twoSum(numbers, target) {
+  for (let i = 0; i < numbers.length; i++) {
+    for (let j = i + 1; j < numbers.length; j++) {
+      if (numbers[i] + numbers[j] === target) {
+        return [i, j];
+      }
+    }
+  }
+  return [-1, -1];
+}`,
+    testCases: [
+      {
+        id: 'tp-p8-t1',
+        inputDisplay: 'twoSum([2, 7, 11, 15], 9)',
+        inputArgs: [[2, 7, 11, 15], 9],
+        expected: [0, 1],
+      },
+      {
+        id: 'tp-p8-t2',
+        inputDisplay: 'twoSum([1, 3, 5, 7, 9], 14)',
+        inputArgs: [[1, 3, 5, 7, 9], 14],
+        expected: [2, 4],
+      },
+      {
+        id: 'tp-p8-t3',
+        inputDisplay: 'twoSum([-3, -1, 0, 2, 5], 1)',
+        inputArgs: [[-3, -1, 0, 2, 5], 1],
+        expected: [1, 3],
+      },
+      {
+        id: 'tp-p8-t4',
+        inputDisplay: 'twoSum([1, 2, 3], 100)',
+        inputArgs: [[1, 2, 3], 100],
+        expected: [-1, -1],
+      },
+      {
+        id: 'tp-p8-t5',
+        inputDisplay: 'twoSum([1, 2], 3)',
+        inputArgs: [[1, 2], 3],
+        expected: [0, 1],
+      },
+    ],
+    perfTest: {
+      // Отсортированный массив длиной 100 000, target — сумма последних двух элементов,
+      // что заставляет наивное O(n²)-решение выполнить ~5×10^9 итераций и упасть по таймауту.
+      inputArgs: [
+        Array.from({ length: 100000 }, (_, i) => i + 1),
+        100000 + 99999,
+      ],
+      maxMs: 50,
+    },
+    hints: [
+      'Массив уже отсортирован — это ключевая подсказка.',
+      'Поставьте left в начало, right в конец и двигайте указатели в зависимости от знака `sum - target`.',
+      'Каждая итерация сдвигает один указатель → суммарно не больше n шагов.',
+    ],
+    solutionCode: `function twoSum(numbers, target) {
+  let left = 0;
+  let right = numbers.length - 1;
+
+  while (left < right) {
+    const sum = numbers[left] + numbers[right];
+    if (sum === target) return [left, right];
+    if (sum < target) left++;
+    else right--;
+  }
+
+  return [-1, -1];
+}`,
+  },
 ];

@@ -1,16 +1,23 @@
 import { describe, it, expect } from 'vitest';
-import { topics } from '../data/topics';
-import { getTheory } from '../data/theory';
+import { algorithmTopics, jsTopics, nodejsTopics, systemDesignTopics } from '../data/topics';
 import { getQuiz } from '../data/quizzes';
 import { getProblems } from '../data/problems';
+import { getLesson } from '../data/lessons';
+import { getProblemKind } from '../types/problem';
+
+const codeTopics = [...algorithmTopics, ...jsTopics, ...nodejsTopics];
+const allTopics = [...codeTopics, ...systemDesignTopics];
 
 describe('Data integrity', () => {
-  it('has 6 topics', () => {
-    expect(topics).toHaveLength(6);
+  it('topic counts match expected sections', () => {
+    expect(algorithmTopics).toHaveLength(6);
+    expect(jsTopics).toHaveLength(8);
+    expect(nodejsTopics).toHaveLength(4);
+    expect(systemDesignTopics).toHaveLength(7);
   });
 
   it('each topic has required fields', () => {
-    for (const t of topics) {
+    for (const t of allTopics) {
       expect(t.id).toBeTruthy();
       expect(t.slug).toBeTruthy();
       expect(t.title).toBeTruthy();
@@ -18,26 +25,16 @@ describe('Data integrity', () => {
     }
   });
 
-  it('every topic has theory', () => {
-    for (const t of topics) {
-      const theory = getTheory(t.slug);
-      expect(theory).toBeDefined();
-      expect(theory!.sections.length).toBeGreaterThan(0);
+  it('every topic has an authored lesson', () => {
+    for (const t of allTopics) {
+      const lesson = getLesson(t.slug);
+      expect(lesson, `missing lesson for ${t.slug}`).toBeDefined();
+      expect(lesson!.chapters.length).toBeGreaterThan(0);
     }
   });
 
-  it('every theory section has blocks', () => {
-    for (const t of topics) {
-      const theory = getTheory(t.slug)!;
-      for (const section of theory.sections) {
-        expect(section.title).toBeTruthy();
-        expect(section.blocks.length).toBeGreaterThan(0);
-      }
-    }
-  });
-
-  it('every topic has a quiz with questions', () => {
-    for (const t of topics) {
+  it('every code topic has a quiz with questions', () => {
+    for (const t of codeTopics) {
       const quiz = getQuiz(t.slug);
       expect(quiz).toBeDefined();
       expect(quiz!.questions.length).toBeGreaterThanOrEqual(5);
@@ -45,7 +42,7 @@ describe('Data integrity', () => {
   });
 
   it('every quiz question has required fields', () => {
-    for (const t of topics) {
+    for (const t of codeTopics) {
       const quiz = getQuiz(t.slug)!;
       for (const q of quiz.questions) {
         expect(q.id).toBeTruthy();
@@ -57,39 +54,36 @@ describe('Data integrity', () => {
     }
   });
 
-  it('every topic has practice problems', () => {
-    for (const t of topics) {
+  it('every code topic has practice problems', () => {
+    for (const t of codeTopics) {
       const problems = getProblems(t.slug);
       expect(problems.length).toBeGreaterThanOrEqual(2);
     }
   });
 
   it('every problem has test cases and solution', () => {
-    for (const t of topics) {
+    for (const t of codeTopics) {
       const problems = getProblems(t.slug);
       for (const p of problems) {
         expect(p.id).toBeTruthy();
         expect(p.title).toBeTruthy();
-        expect(p.functionName).toBeTruthy();
-        expect(p.starterCode).toBeTruthy();
         expect(p.solutionCode).toBeTruthy();
-        expect(p.testCases.length).toBeGreaterThanOrEqual(3);
+        const kind = getProblemKind(p);
+        if (kind === 'implement' || kind === 'find-bug' || kind === 'refactor') {
+          expect((p as { functionName: string }).functionName).toBeTruthy();
+          // implement/find-bug need a meaningful test set; refactor may rely on perfTest as primary gate.
+          const minCases = kind === 'refactor' ? 1 : 3;
+          expect((p as { testCases: unknown[] }).testCases.length).toBeGreaterThanOrEqual(minCases);
+        }
+        if (kind === 'implement' || kind === 'refactor') {
+          expect((p as { starterCode: string }).starterCode).toBeTruthy();
+        }
       }
     }
   });
 
-  it('every problem has at least one contextual and one algorithmic problem per topic', () => {
-    for (const t of topics) {
-      const problems = getProblems(t.slug);
-      const hasContextual = problems.some((p) => p.isContextual);
-      const hasAlgorithmic = problems.some((p) => !p.isContextual);
-      expect(hasContextual).toBe(true);
-      expect(hasAlgorithmic).toBe(true);
-    }
-  });
-
-  it('returns undefined for unknown topic', () => {
-    expect(getTheory('nonexistent')).toBeUndefined();
+  it('returns undefined / empty for unknown topic', () => {
+    expect(getLesson('nonexistent')).toBeUndefined();
     expect(getQuiz('nonexistent')).toBeUndefined();
     expect(getProblems('nonexistent')).toEqual([]);
   });

@@ -407,4 +407,218 @@ export const stacksQueuesProblems: Problem[] = [
   return stack[stack.length - 1];
 }`,
   },
+  {
+    id: 'sq-p6',
+    topicId: 'stacks-queues',
+    kind: 'predict-output',
+    title: 'Предскажите вывод: трассировка стека и очереди',
+    difficulty: 'easy',
+    isContextual: false,
+    description: `Перед вами короткая программа, которая работает с массивом одновременно как со стеком (\`push\`/\`pop\`) и как с очередью (\`push\`/\`shift\`). Проследите изменение состояния и определите, что выведет финальный \`console.log\`.
+
+Подсказка: после каждой операции мысленно запишите содержимое массива, чтобы не запутаться. Помните: \`pop\` снимает с конца, \`shift\` — с начала.`,
+    code: `const buf = [];
+
+buf.push('a');
+buf.push('b');
+buf.push('c');
+
+const stackTop = buf.pop();    // снимаем с конца
+buf.push('d');
+const queueHead = buf.shift(); // снимаем с начала
+
+console.log(stackTop + ',' + queueHead + ',' + buf.join(''));`,
+    expected: 'c,a,bd',
+    hints: [
+      'После трёх push массив [a, b, c]. pop() снимает с конца — это "c".',
+      'Затем push("d") → [a, b, d]. shift() снимает с начала — это "a".',
+      'В массиве остаются [b, d]; join("") даст "bd".',
+    ],
+    solutionCode: `// push('a'), push('b'), push('c')  → buf = ['a', 'b', 'c']
+// pop()                              → 'c',  buf = ['a', 'b']
+// push('d')                          → buf = ['a', 'b', 'd']
+// shift()                            → 'a',  buf = ['b', 'd']
+//
+// Итог: stackTop = 'c', queueHead = 'a', buf.join('') = 'bd'
+// Вывод: "c,a,bd"`,
+  },
+  {
+    id: 'sq-p7',
+    topicId: 'stacks-queues',
+    kind: 'find-bug',
+    title: 'Найдите баг: проверка скобок и пустой стек',
+    difficulty: 'medium',
+    isContextual: false,
+    description: `Перед вами реализация \`isValid\`, которая должна возвращать \`true\` для сбалансированных скобок и \`false\` иначе. Функция проходит большинство тестов, но на некоторых входах возвращает неверный результат.
+
+Найдите баг и исправьте его. Подумайте о двух вещах: что произойдёт, если строка состоит только из закрывающих скобок, и что — если только из открывающих.`,
+    functionName: 'isValid',
+    buggyCode: `function isValid(s) {
+  const stack = [];
+  const pairs = { ')': '(', ']': '[', '}': '{' };
+
+  for (const ch of s) {
+    if (ch === '(' || ch === '[' || ch === '{') {
+      stack.push(ch);
+    } else {
+      // Снимаем верхнюю и сравниваем с парой
+      const top = stack.pop();
+      if (top !== pairs[ch]) return false;
+    }
+  }
+
+  return true;
+}`,
+    bugSummary:
+      'Функция возвращает true, не проверяя, что стек пуст в конце. Для строки "((" цикл проходит без срабатывания return false, и финальный return true даёт неверный ответ — на самом деле скобки не закрыты.',
+    testCases: [
+      {
+        id: 'sq-p7-t1',
+        inputDisplay: 'isValid("()")',
+        inputArgs: ['()'],
+        expected: true,
+      },
+      {
+        id: 'sq-p7-t2',
+        inputDisplay: 'isValid("((")',
+        inputArgs: ['(('],
+        expected: false,
+      },
+      {
+        id: 'sq-p7-t3',
+        inputDisplay: 'isValid("()[]{}")',
+        inputArgs: ['()[]{}'],
+        expected: true,
+      },
+      {
+        id: 'sq-p7-t4',
+        inputDisplay: 'isValid("([)]")',
+        inputArgs: ['([)]'],
+        expected: false,
+      },
+      {
+        id: 'sq-p7-t5',
+        inputDisplay: 'isValid("{[}")',
+        inputArgs: ['{[}'],
+        expected: false,
+      },
+    ],
+    hints: [
+      'Запустите функцию мысленно на строке "((": цикл выполнится дважды, в каждой итерации только push. Что вернёт return в конце?',
+      'Незакрытые открывающие скобки остаются в стеке. В конце стек должен быть пуст.',
+      'Замените `return true` на проверку `stack.length === 0`.',
+    ],
+    solutionCode: `function isValid(s) {
+  const stack = [];
+  const pairs = { ')': '(', ']': '[', '}': '{' };
+
+  for (const ch of s) {
+    if (ch === '(' || ch === '[' || ch === '{') {
+      stack.push(ch);
+    } else {
+      const top = stack.pop();
+      if (top !== pairs[ch]) return false;
+    }
+  }
+
+  // Все открывающие скобки должны быть закрыты — стек пуст
+  return stack.length === 0;
+}`,
+  },
+  {
+    id: 'sq-p8',
+    topicId: 'stacks-queues',
+    kind: 'refactor',
+    title: 'Рефакторинг: O(n²) Next Greater Element → O(n) монотонный стек',
+    difficulty: 'medium',
+    isContextual: false,
+    description: `Перед вами наивная реализация задачи Next Greater Element: для каждого элемента \`nums[i]\` нужно вернуть ближайший справа элемент, который **строго больше** \`nums[i]\`. Если такого нет — вернуть \`-1\`.
+
+Реализация работает корректно, но за O(n²) — два вложенных цикла. На массиве из 100 000 элементов она слишком медленная.
+
+Перепишите функцию через монотонный стек, чтобы она работала за O(n). Идея: храним в стеке индексы элементов, для которых ответ ещё не найден; как только встретили больший элемент — выталкиваем все меньшие со стека и записываем им ответ.
+
+Тест производительности: на массиве из 100 000 элементов решение должно завершаться за 50 миллисекунд.`,
+    functionName: 'nextGreater',
+    starterCode: `function nextGreater(nums) {
+  // Наивное решение O(n²): для каждого элемента — линейный поиск вправо.
+  const n = nums.length;
+  const res = new Array(n).fill(-1);
+  for (let i = 0; i < n; i++) {
+    for (let j = i + 1; j < n; j++) {
+      if (nums[j] > nums[i]) {
+        res[i] = nums[j];
+        break;
+      }
+    }
+  }
+  return res;
+}`,
+    testCases: [
+      {
+        id: 'sq-p8-t1',
+        inputDisplay: 'nextGreater([2, 1, 2, 4, 3])',
+        inputArgs: [[2, 1, 2, 4, 3]],
+        expected: [4, 2, 4, -1, -1],
+      },
+      {
+        id: 'sq-p8-t2',
+        inputDisplay: 'nextGreater([5, 4, 3, 2, 1])',
+        inputArgs: [[5, 4, 3, 2, 1]],
+        expected: [-1, -1, -1, -1, -1],
+      },
+      {
+        id: 'sq-p8-t3',
+        inputDisplay: 'nextGreater([1, 2, 3, 4, 5])',
+        inputArgs: [[1, 2, 3, 4, 5]],
+        expected: [2, 3, 4, 5, -1],
+      },
+      {
+        id: 'sq-p8-t4',
+        inputDisplay: 'nextGreater([7])',
+        inputArgs: [[7]],
+        expected: [-1],
+      },
+      {
+        id: 'sq-p8-t5',
+        inputDisplay: 'nextGreater([1, 1, 1, 2])',
+        inputArgs: [[1, 1, 1, 2]],
+        expected: [2, 2, 2, -1],
+      },
+    ],
+    perfTest: {
+      // Худший случай для O(n²): убывающий массив + один большой элемент в конце.
+      // 100_000 элементов: [99_999, 99_998, ..., 1, 0, 100_001].
+      inputArgs: [
+        (() => {
+          const a = Array.from({ length: 99_999 }, (_, i) => 99_999 - i);
+          a.push(100_001);
+          return a;
+        })(),
+      ],
+      maxMs: 50,
+    },
+    hints: [
+      'Заведите стек индексов. Идите по массиву слева направо.',
+      'На каждой итерации, пока стек не пуст и nums[i] > nums[stack.top], извлекайте индекс j и записывайте res[j] = nums[i].',
+      'После цикла while положите текущий i на стек.',
+      'Каждый индекс попадает в стек ровно один раз и извлекается максимум один раз → O(n).',
+    ],
+    solutionCode: `function nextGreater(nums) {
+  const n = nums.length;
+  const res = new Array(n).fill(-1);
+  const stack = []; // монотонно убывающий стек индексов
+
+  for (let i = 0; i < n; i++) {
+    while (stack.length > 0 && nums[i] > nums[stack[stack.length - 1]]) {
+      const j = stack.pop();
+      res[j] = nums[i];
+    }
+    stack.push(i);
+  }
+
+  // Индексы, оставшиеся в стеке, не имеют большего справа — у них уже -1.
+  return res;
+}`,
+  },
 ];

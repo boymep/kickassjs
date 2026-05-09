@@ -23,7 +23,14 @@ import AutorenewIcon from '@mui/icons-material/Autorenew';
 import WaterIcon from '@mui/icons-material/Water';
 import RouterIcon from '@mui/icons-material/Router';
 import SpeedIcon from '@mui/icons-material/Speed';
-import { algorithmTopics, jsTopics, nodejsTopics } from '../../data/topics';
+import ArchitectureIcon from '@mui/icons-material/Architecture';
+import StorageIcon from '@mui/icons-material/Storage';
+import ShieldIcon from '@mui/icons-material/Shield';
+import BoltIcon from '@mui/icons-material/Bolt';
+import ApiIcon from '@mui/icons-material/Api';
+import HubIcon from '@mui/icons-material/Hub';
+import AnalyticsIcon from '@mui/icons-material/Analytics';
+import { algorithmTopics, jsTopics, nodejsTopics, systemDesignTopics } from '../../data/topics';
 
 const iconMap: Record<string, React.ReactElement> = {
   Search: <SearchIcon />,
@@ -44,6 +51,13 @@ const iconMap: Record<string, React.ReactElement> = {
   Water: <WaterIcon />,
   Router: <RouterIcon />,
   Speed: <SpeedIcon />,
+  Architecture: <ArchitectureIcon />,
+  Storage: <StorageIcon />,
+  Shield: <ShieldIcon />,
+  Bolt: <BoltIcon />,
+  Api: <ApiIcon />,
+  Hub: <HubIcon />,
+  Monitoring: <AnalyticsIcon />,
 };
 
 export default function Sidebar({ onClose }: { onClose?: () => void }) {
@@ -67,7 +81,7 @@ export default function Sidebar({ onClose }: { onClose?: () => void }) {
         <ListItemButton
           key={t.id}
           selected={location.pathname.startsWith(`/topic/${t.slug}`)}
-          onClick={() => go(`/topic/${t.slug}/theory`)}
+          onClick={() => go(`/topic/${t.slug}`)}
         >
           <ListItemIcon>{iconMap[t.icon]}</ListItemIcon>
           <ListItemText primary={t.title} />
@@ -79,7 +93,7 @@ export default function Sidebar({ onClose }: { onClose?: () => void }) {
         <ListItemButton
           key={t.id}
           selected={location.pathname.startsWith(`/topic/${t.slug}`)}
-          onClick={() => go(`/topic/${t.slug}/theory`)}
+          onClick={() => go(`/topic/${t.slug}`)}
         >
           <ListItemIcon>{iconMap[t.icon]}</ListItemIcon>
           <ListItemText primary={t.title} />
@@ -91,7 +105,19 @@ export default function Sidebar({ onClose }: { onClose?: () => void }) {
         <ListItemButton
           key={t.id}
           selected={location.pathname.startsWith(`/topic/${t.slug}`)}
-          onClick={() => go(`/topic/${t.slug}/theory`)}
+          onClick={() => go(`/topic/${t.slug}`)}
+        >
+          <ListItemIcon>{iconMap[t.icon]}</ListItemIcon>
+          <ListItemText primary={t.title} />
+        </ListItemButton>
+      ))}
+      <Divider sx={{ my: 1 }} />
+      <ListSubheader sx={{ bgcolor: 'transparent' }}>System Design</ListSubheader>
+      {systemDesignTopics.map((t) => (
+        <ListItemButton
+          key={t.id}
+          selected={location.pathname.startsWith(`/topic/${t.slug}`)}
+          onClick={() => go(`/topic/${t.slug}`)}
         >
           <ListItemIcon>{iconMap[t.icon]}</ListItemIcon>
           <ListItemText primary={t.title} />

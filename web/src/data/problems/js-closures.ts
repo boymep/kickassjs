@@ -2,6 +2,118 @@ import type { Problem } from '../../types/problem';
 
 export const jsClosuresProblems: Problem[] = [
   {
+    kind: 'predict-output',
+    id: 'jsc-p6',
+    topicId: 'js-closures',
+    title: 'Угадай вывод: счётчик и независимые замыкания',
+    difficulty: 'easy',
+    isContextual: false,
+    description: `Что выведет этот код по строкам? Введи каждую строку в отдельной строчке поля ответа.`,
+    code: `function makeCounter() {
+  let n = 0;
+  return () => ++n;
+}
+
+const a = makeCounter();
+const b = makeCounter();
+
+console.log(a()); // ?
+console.log(a()); // ?
+console.log(b()); // ?
+console.log(a()); // ?`,
+    expected: '1\n2\n1\n3',
+    hints: [
+      'Каждый вызов makeCounter() создаёт свой замыкание со своей переменной n.',
+      'a и b независимы. Прибавляй к каждому только то, что относится к нему.',
+    ],
+    solutionCode: `// a имеет свой n=0; вызовы a(): 1, 2, ..., 3.
+// b имеет свой n=0; первый вызов b(): 1.
+// a и b не пересекаются — это и есть смысл замыкания.`,
+  },
+  {
+    kind: 'find-bug',
+    id: 'jsc-p7',
+    topicId: 'js-closures',
+    title: 'Найди баг: счётчики в цикле',
+    difficulty: 'easy',
+    isContextual: false,
+    sourceBugHuntId: 'bh-01',
+    description: `Эта функция должна возвращать массив из 5 функций, где \`fns[i]() === i\`. Но что-то не так. Найди баг и почини, чтобы все 5 тестов прошли.`,
+    buggyCode: `function getCounterFns() {
+  const fns = [];
+  for (var i = 0; i < 5; i++) {
+    fns.push(function () {
+      return i;
+    });
+  }
+  return fns;
+}`,
+    functionName: 'jsc_p7_test',
+    bugSummary:
+      '`var` создаёт одну переменную на весь цикл, и все пять функций замыкаются на неё. К моменту вызова цикл завершён и `i === 5`. Решение — заменить `var` на `let`: каждая итерация получит свой binding.',
+    testCases: [
+      { id: 'jsc-p7-t1', inputDisplay: 'fns[0]()', inputArgs: [0], expected: 0 },
+      { id: 'jsc-p7-t2', inputDisplay: 'fns[1]()', inputArgs: [1], expected: 1 },
+      { id: 'jsc-p7-t3', inputDisplay: 'fns[2]()', inputArgs: [2], expected: 2 },
+      { id: 'jsc-p7-t4', inputDisplay: 'fns[3]()', inputArgs: [3], expected: 3 },
+      { id: 'jsc-p7-t5', inputDisplay: 'fns[4]()', inputArgs: [4], expected: 4 },
+    ],
+    hints: [
+      'Подумай, какую область видимости создаёт `var` и какую — `let` в цикле for.',
+      'Замени один символ — этого достаточно.',
+    ],
+    solutionCode: `function getCounterFns() {
+  const fns = [];
+  for (let i = 0; i < 5; i++) {
+    fns.push(function () {
+      return i;
+    });
+  }
+  return fns;
+}`,
+    testHelperCode: `function jsc_p7_test(i) { return getCounterFns()[i](); }`,
+  },
+  {
+    kind: 'refactor',
+    id: 'jsc-p8',
+    topicId: 'js-closures',
+    title: 'Оптимизируй: мемоизация Фибоначчи',
+    difficulty: 'medium',
+    isContextual: false,
+    description: `Дан наивный рекурсивный fib(n) — он работает, но при n=35 уже мучительно медленный (~10⁹ операций).
+
+Перепиши через замыкание + кеш так, чтобы прохождение perf-теста (\`fib(35)\`) укладывалось в 100 мс. Сигнатура функции — \`fib(n)\` — должна остаться.
+
+Tip: можно использовать вспомогательное замыкание или \`Map\`-кеш на уровне модуля.`,
+    functionName: 'fib',
+    starterCode: `function fib(n) {
+  if (n < 2) return n;
+  return fib(n - 1) + fib(n - 2);
+}`,
+    testCases: [
+      { id: 'jsc-p8-t1', inputDisplay: 'fib(0)', inputArgs: [0], expected: 0 },
+      { id: 'jsc-p8-t2', inputDisplay: 'fib(1)', inputArgs: [1], expected: 1 },
+      { id: 'jsc-p8-t3', inputDisplay: 'fib(10)', inputArgs: [10], expected: 55 },
+      { id: 'jsc-p8-t4', inputDisplay: 'fib(20)', inputArgs: [20], expected: 6765 },
+    ],
+    perfTest: { inputArgs: [35], maxMs: 100 },
+    hints: [
+      'Создай Map-кеш в замыкании. На каждый n проверяй кеш перед рекурсией.',
+      'Рекурсия должна вызывать ту же мемоизированную функцию, иначе кеш не сработает.',
+      'Альтернатива — итеративный вариант с двумя переменными a, b. Тоже укладывается легко.',
+    ],
+    solutionCode: `const fib = (() => {
+  const cache = new Map([[0, 0], [1, 1]]);
+  function f(n) {
+    if (cache.has(n)) return cache.get(n);
+    const v = f(n - 1) + f(n - 2);
+    cache.set(n, v);
+    return v;
+  }
+  return f;
+})();`,
+  },
+  {
     id: 'jsc-p1',
     topicId: 'js-closures',
     title: 'Счётчик с замыканием',

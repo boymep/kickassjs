@@ -275,6 +275,210 @@ export const slidingWindowProblems: Problem[] = [
 }`,
   },
   {
+    id: "sw-p6",
+    topicId: "sliding-window",
+    title: "Трассировка окна: длиннейшая подстрока без повторов",
+    difficulty: "easy",
+    isContextual: false,
+    kind: "predict-output",
+    description:
+      'Перед вами реализация задачи «длиннейшая подстрока без повторов» через скользящее окно с \`Set\`. Что выведет код для строки `"pwwkew"`?\n\nВнимательно проследите, как окно сжимается при появлении дубликата и какова длина окна на каждом шаге. Введите ровно одно число — длину длиннейшей подстроки без повторов.',
+    code: `function lengthOfLongestSubstring(s) {
+  const set = new Set();
+  let left = 0, maxLen = 0;
+
+  for (let right = 0; right < s.length; right++) {
+    while (set.has(s[right])) {
+      set.delete(s[left]);
+      left++;
+    }
+    set.add(s[right]);
+    maxLen = Math.max(maxLen, right - left + 1);
+  }
+  return maxLen;
+}
+
+console.log(lengthOfLongestSubstring("pwwkew"));`,
+    expected: "3",
+    hints: [
+      "Окно расширяется, пока нет дубликата.",
+      'Когда встречается второе `w`, окно сжимается слева до тех пор, пока первое `w` не выйдет.',
+      'Длиннейшая подстрока без повторов в "pwwkew" — "wke" (или "kew"), длина 3.',
+    ],
+    solutionCode: `// Шаги:
+// right=0 's=p' → окно "p", maxLen=1
+// right=1 's=w' → окно "pw", maxLen=2
+// right=2 's=w' → дубликат: удаляем "p", "w", left=2; окно "w", maxLen=2
+// right=3 's=k' → окно "wk", maxLen=2
+// right=4 's=e' → окно "wke", maxLen=3
+// right=5 's=w' → дубликат: удаляем "w", left=3; окно "kew", maxLen=3
+// Ответ: 3`,
+  },
+  {
+    id: "sw-p7",
+    topicId: "sliding-window",
+    title: "Найдите баг: динамическое окно с забытым сжатием",
+    difficulty: "medium",
+    isContextual: false,
+    kind: "find-bug",
+    description:
+      'Реализация «кратчайшего подмассива с суммой ≥ target» через скользящее окно работает неверно: для `minSubarrayLen(7, [2, 3, 1, 2, 4, 3])` вместо ожидаемого `2` функция возвращает что-то другое.\n\nНайдите ошибку и исправьте её. Подсказка: внимательно посмотрите на цикл сжатия окна — сдвигается ли левый указатель?',
+    functionName: "minSubarrayLen",
+    buggyCode: `function minSubarrayLen(target, nums) {
+  let left = 0;
+  let sum = 0;
+  let minLen = Infinity;
+
+  for (let right = 0; right < nums.length; right++) {
+    sum += nums[right];
+
+    while (sum >= target) {
+      minLen = Math.min(minLen, right - left + 1);
+      sum -= nums[left];
+      // забыли сдвинуть left — окно не сжимается
+    }
+  }
+
+  return minLen === Infinity ? 0 : minLen;
+}`,
+    bugSummary:
+      "В цикле сжатия отсутствует `left++`. Без сдвига левого указателя окно не сжимается, а `sum` уходит в отрицательные значения, попадая в бесконечный цикл при некоторых входах или давая неверный результат.",
+    testCases: [
+      {
+        id: "sw-p7-t1",
+        inputDisplay: "minSubarrayLen(7, [2, 3, 1, 2, 4, 3])",
+        inputArgs: [7, [2, 3, 1, 2, 4, 3]],
+        expected: 2,
+      },
+      {
+        id: "sw-p7-t2",
+        inputDisplay: "minSubarrayLen(4, [1, 4, 4])",
+        inputArgs: [4, [1, 4, 4]],
+        expected: 1,
+      },
+      {
+        id: "sw-p7-t3",
+        inputDisplay: "minSubarrayLen(11, [1, 1, 1, 1, 1])",
+        inputArgs: [11, [1, 1, 1, 1, 1]],
+        expected: 0,
+      },
+      {
+        id: "sw-p7-t4",
+        inputDisplay: "minSubarrayLen(15, [5, 1, 3, 5, 10, 7, 4, 9, 2, 8])",
+        inputArgs: [15, [5, 1, 3, 5, 10, 7, 4, 9, 2, 8]],
+        expected: 2,
+      },
+    ],
+    hints: [
+      "Внутри `while (sum >= target)` должны выполняться ТРИ действия: запомнить минимальную длину, вычесть левый элемент и сдвинуть `left`.",
+      "Без `left++` окно не сжимается — это классический баг при копировании шаблона на собеседовании.",
+    ],
+    solutionCode: `function minSubarrayLen(target, nums) {
+  let left = 0;
+  let sum = 0;
+  let minLen = Infinity;
+
+  for (let right = 0; right < nums.length; right++) {
+    sum += nums[right];
+
+    while (sum >= target) {
+      minLen = Math.min(minLen, right - left + 1);
+      sum -= nums[left];
+      left++;
+    }
+  }
+
+  return minLen === Infinity ? 0 : minLen;
+}`,
+  },
+  {
+    id: "sw-p8",
+    topicId: "sliding-window",
+    title: "Рефакторинг: O(n²) → O(n) для максимальной суммы окна",
+    difficulty: "medium",
+    isContextual: false,
+    kind: "refactor",
+    description:
+      "Перед вами рабочая, но медленная реализация задачи «максимальная сумма подмассива длины k». Для каждого положения окна она заново считает сумму — это O(n·k), и на массиве из 100 000 элементов с `k = 1000` тест не пройдёт по времени.\n\nПерепишите функцию через скользящее окно за O(n): набирайте сумму первого окна один раз, а затем сдвигайте за O(1) — `sum + arr[i] - arr[i - k]`.\n\nКорректность уже проверена на тест-кейсах. Производительный тест требует, чтобы вход размером 100 000 обрабатывался не более чем за 50 мс.",
+    functionName: "maxSumSubarray",
+    starterCode: `function maxSumSubarray(arr, k) {
+  if (arr.length < k) return 0;
+
+  let maxSum = -Infinity;
+
+  // O(n*k): для каждого окна считаем сумму заново
+  for (let i = 0; i <= arr.length - k; i++) {
+    let sum = 0;
+    for (let j = i; j < i + k; j++) {
+      sum += arr[j];
+    }
+    if (sum > maxSum) maxSum = sum;
+  }
+
+  return maxSum;
+}`,
+    testCases: [
+      {
+        id: "sw-p8-t1",
+        inputDisplay: "maxSumSubarray([2, 1, 5, 1, 3, 2], 3)",
+        inputArgs: [[2, 1, 5, 1, 3, 2], 3],
+        expected: 9,
+      },
+      {
+        id: "sw-p8-t2",
+        inputDisplay: "maxSumSubarray([1, 2, 3, 4, 5], 2)",
+        inputArgs: [[1, 2, 3, 4, 5], 2],
+        expected: 9,
+      },
+      {
+        id: "sw-p8-t3",
+        inputDisplay: "maxSumSubarray([10, -3, 4, 7, 2, -1], 4)",
+        inputArgs: [[10, -3, 4, 7, 2, -1], 4],
+        expected: 18,
+      },
+      {
+        id: "sw-p8-t4",
+        inputDisplay: "maxSumSubarray([5, 5, 5, 5], 1)",
+        inputArgs: [[5, 5, 5, 5], 1],
+        expected: 5,
+      },
+      {
+        id: "sw-p8-t5",
+        inputDisplay: "maxSumSubarray([1, 2], 3)",
+        inputArgs: [[1, 2], 3],
+        expected: 0,
+      },
+    ],
+    perfTest: {
+      inputArgs: [
+        Array.from({ length: 100000 }, (_, i) => ((i * 1103515245 + 12345) >>> 0) % 1000),
+        1000,
+      ],
+      maxMs: 50,
+    },
+    hints: [
+      "Сначала наберите сумму первых k элементов в одном цикле.",
+      "Затем для каждого `i` от `k` до `arr.length - 1` обновляйте сумму за O(1): `sum = sum + arr[i] - arr[i - k]`.",
+      "Каждый элемент должен обрабатываться константное число раз — общая сложность O(n).",
+    ],
+    solutionCode: `function maxSumSubarray(arr, k) {
+  if (arr.length < k) return 0;
+
+  let sum = 0;
+  for (let i = 0; i < k; i++) {
+    sum += arr[i];
+  }
+
+  let maxSum = sum;
+  for (let i = k; i < arr.length; i++) {
+    sum = sum + arr[i] - arr[i - k];
+    if (sum > maxSum) maxSum = sum;
+  }
+
+  return maxSum;
+}`,
+  },
+  {
     id: "sw-p5",
     topicId: "sliding-window",
     title: "Максимальная выручка за период",

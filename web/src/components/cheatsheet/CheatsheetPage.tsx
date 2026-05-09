@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
   Paper,
   Typography,
@@ -14,7 +14,14 @@ import {
   ListItem,
   ListItemIcon,
   ListItemText,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
+  Tabs,
+  Tab,
+  Button,
 } from '@mui/material';
+import { Link as RouterLink } from 'react-router-dom';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ErrorIcon from '@mui/icons-material/Error';
 import FormatQuoteIcon from '@mui/icons-material/FormatQuote';
@@ -25,6 +32,17 @@ import AccountTreeIcon from '@mui/icons-material/AccountTree';
 import SpeedIcon from '@mui/icons-material/Speed';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import LightbulbIcon from '@mui/icons-material/Lightbulb';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
+import {
+  algorithmTopics,
+  jsTopics,
+  nodejsTopics,
+  systemDesignTopics,
+} from '../../data/topics';
+import type { TopicMeta } from '../../types/topic';
+import { getLesson } from '../../data/lessons';
+import Markdown from '../lesson/Markdown';
 
 const steps = [
   {
@@ -91,146 +109,244 @@ const helpfulPhrases = [
   'А если входной массив пустой?',
 ];
 
-export default function CheatsheetPage() {
-  const [activeStep, setActiveStep] = useState(0);
+const SECTIONS: { title: string; topics: TopicMeta[] }[] = [
+  { title: 'Алгоритмы', topics: algorithmTopics },
+  { title: 'JavaScript', topics: jsTopics },
+  { title: 'Node.js', topics: nodejsTopics },
+  { title: 'System Design', topics: systemDesignTopics },
+];
 
-  const handleStepClick = (index: number) => {
-    setActiveStep(index);
-  };
+interface CheatsheetEntry {
+  topic: TopicMeta;
+  cheatsheet: string;
+}
+
+function collectCheatsheets(): { title: string; entries: CheatsheetEntry[] }[] {
+  return SECTIONS.map(({ title, topics }) => ({
+    title,
+    entries: topics
+      .map((t) => {
+        const lesson = getLesson(t.slug);
+        if (!lesson || !lesson.cheatsheet || lesson.cheatsheet.trim() === '') return null;
+        return { topic: t, cheatsheet: lesson.cheatsheet } as CheatsheetEntry;
+      })
+      .filter((e): e is CheatsheetEntry => e !== null),
+  })).filter((s) => s.entries.length > 0);
+}
+
+export default function CheatsheetPage() {
+  const [tab, setTab] = useState(0);
+  const [activeStep, setActiveStep] = useState(0);
+  const sections = useMemo(() => collectCheatsheets(), []);
+  const totalEntries = sections.reduce((sum, s) => sum + s.entries.length, 0);
 
   return (
     <Box>
       <Typography variant="h4" gutterBottom>
         Шпаргалка для собеседования
       </Typography>
-      <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
-        Пошаговый план решения алгоритмической задачи на интервью
+      <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
+        Краткие выжимки по всем темам и универсальный алгоритм решения задач
       </Typography>
 
-      {/* Секция 1: Stepper */}
-      <Paper sx={{ p: 3, mb: 4 }}>
-        <Typography variant="h5" gutterBottom>
-          Как решать задачу на собеседовании
-        </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-          Нажимай на шаг, чтобы увидеть подробности
-        </Typography>
+      <Tabs
+        value={tab}
+        onChange={(_, v) => setTab(v)}
+        sx={{ mb: 3, borderBottom: 1, borderColor: 'divider' }}
+      >
+        <Tab label={`Шпаргалки по темам (${totalEntries})`} />
+        <Tab label="Алгоритм решения задачи" />
+      </Tabs>
 
-        <Stepper activeStep={activeStep} orientation="vertical" nonLinear>
-          {steps.map((step, index) => (
-            <Step key={step.label} active={activeStep === index}>
-              <StepLabel
-                onClick={() => handleStepClick(index)}
-                sx={{ cursor: 'pointer' }}
-                slotProps={{
-                  stepIcon: {
-                    sx: {
-                      fontSize: 28,
-                      '&.Mui-active': { color: 'primary.main' },
-                      '&.Mui-completed': { color: 'primary.main' },
-                    },
-                  },
-                }}
-              >
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  {step.icon}
-                  <Typography variant="h6" sx={{ fontSize: '1.05rem' }}>
-                    {step.label}
-                  </Typography>
-                </Box>
-              </StepLabel>
-              <StepContent>
-                <Typography
-                  variant="body1"
-                  sx={{ py: 1, pl: 1, lineHeight: 1.8, color: 'text.secondary' }}
-                >
-                  {step.description}
+      {tab === 0 && (
+        <Box>
+          {sections.map((section) => (
+            <Box key={section.title} sx={{ mb: 4 }}>
+              <Typography variant="h5" sx={{ mb: 2 }}>
+                {section.title}{' '}
+                <Typography component="span" variant="body2" color="text.secondary">
+                  · {section.entries.length} тем
                 </Typography>
-              </StepContent>
-            </Step>
+              </Typography>
+              {section.entries.map((entry) => (
+                <Accordion
+                  key={entry.topic.slug}
+                  disableGutters
+                  square={false}
+                  sx={{
+                    mb: 1,
+                    border: 1,
+                    borderColor: 'divider',
+                    borderRadius: 2,
+                    '&:before': { display: 'none' },
+                  }}
+                >
+                  <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                    <Box>
+                      <Typography variant="subtitle1" sx={{ fontWeight: 600, lineHeight: 1.3 }}>
+                        {entry.topic.title}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        {entry.topic.description}
+                      </Typography>
+                    </Box>
+                  </AccordionSummary>
+                  <AccordionDetails>
+                    <Box
+                      sx={{
+                        backgroundColor: (t) =>
+                          t.palette.mode === 'dark' ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)',
+                        borderRadius: 1.5,
+                        p: 2,
+                        mb: 2,
+                      }}
+                    >
+                      <Markdown>{entry.cheatsheet}</Markdown>
+                    </Box>
+                    <Button
+                      component={RouterLink}
+                      to={`/topic/${entry.topic.slug}`}
+                      size="small"
+                      endIcon={<ArrowForwardIcon />}
+                      sx={{ textTransform: 'none' }}
+                    >
+                      Открыть полный урок
+                    </Button>
+                  </AccordionDetails>
+                </Accordion>
+              ))}
+            </Box>
           ))}
-        </Stepper>
-      </Paper>
-
-      {/* Секция 2: Edge cases */}
-      <Paper sx={{ p: 3, mb: 4 }}>
-        <Typography variant="h5" gutterBottom>
-          Чеклист edge cases
-        </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          Всегда проверяй эти случаи перед тем, как сказать «готово»
-        </Typography>
-
-        <List dense>
-          {edgeCases.map((item) => (
-            <ListItem key={item}>
-              <ListItemIcon sx={{ minWidth: 36 }}>
-                <CheckCircleIcon color="primary" fontSize="small" />
-              </ListItemIcon>
-              <ListItemText primary={item} />
-            </ListItem>
-          ))}
-        </List>
-      </Paper>
-
-      {/* Секция 3: Красные флаги */}
-      <Paper sx={{ p: 3, mb: 4 }}>
-        <Typography variant="h5" gutterBottom>
-          Красные флаги
-        </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          Что интервьюеры замечают и оценивают негативно
-        </Typography>
-
-        <List dense>
-          {redFlags.map((item) => (
-            <ListItem key={item}>
-              <ListItemIcon sx={{ minWidth: 36 }}>
-                <ErrorIcon color="error" fontSize="small" />
-              </ListItemIcon>
-              <ListItemText primary={item} />
-            </ListItem>
-          ))}
-        </List>
-
-        <Alert severity="warning" sx={{ mt: 2 }}>
-          Даже если ты знаешь решение — покажи процесс мышления. Интервьюеру важно не
-          только «что», но и «как» ты думаешь.
-        </Alert>
-      </Paper>
-
-      <Divider sx={{ my: 4 }} />
-
-      {/* Секция 4: Полезные фразы */}
-      <Paper sx={{ p: 3, mb: 4 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-          <LightbulbIcon color="primary" />
-          <Typography variant="h5">Полезные фразы</Typography>
         </Box>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          Используй эти фразы, чтобы звучать уверенно и структурированно
-        </Typography>
+      )}
 
-        <List>
-          {helpfulPhrases.map((phrase) => (
-            <ListItem key={phrase} sx={{ py: 0.5 }}>
-              <ListItemIcon sx={{ minWidth: 36 }}>
-                <FormatQuoteIcon color="primary" fontSize="small" />
-              </ListItemIcon>
-              <ListItemText
-                primary={
-                  <Chip
-                    label={`«${phrase}»`}
-                    variant="outlined"
-                    color="primary"
-                    sx={{ height: 'auto', py: 0.5, '& .MuiChip-label': { whiteSpace: 'normal' } }}
+      {tab === 1 && (
+        <Box>
+          {/* Секция 1: Stepper */}
+          <Paper sx={{ p: 3, mb: 4 }}>
+            <Typography variant="h5" gutterBottom>
+              Как решать задачу на собеседовании
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+              Нажимай на шаг, чтобы увидеть подробности
+            </Typography>
+
+            <Stepper activeStep={activeStep} orientation="vertical" nonLinear>
+              {steps.map((step, index) => (
+                <Step key={step.label} active={activeStep === index}>
+                  <StepLabel
+                    onClick={() => setActiveStep(index)}
+                    sx={{ cursor: 'pointer' }}
+                    slotProps={{
+                      stepIcon: {
+                        sx: {
+                          fontSize: 28,
+                          '&.Mui-active': { color: 'primary.main' },
+                          '&.Mui-completed': { color: 'primary.main' },
+                        },
+                      },
+                    }}
+                  >
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      {step.icon}
+                      <Typography variant="h6" sx={{ fontSize: '1.05rem' }}>
+                        {step.label}
+                      </Typography>
+                    </Box>
+                  </StepLabel>
+                  <StepContent>
+                    <Typography
+                      variant="body1"
+                      sx={{ py: 1, pl: 1, lineHeight: 1.8, color: 'text.secondary' }}
+                    >
+                      {step.description}
+                    </Typography>
+                  </StepContent>
+                </Step>
+              ))}
+            </Stepper>
+          </Paper>
+
+          {/* Секция 2: Edge cases */}
+          <Paper sx={{ p: 3, mb: 4 }}>
+            <Typography variant="h5" gutterBottom>
+              Чеклист edge cases
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+              Всегда проверяй эти случаи перед тем, как сказать «готово»
+            </Typography>
+
+            <List dense>
+              {edgeCases.map((item) => (
+                <ListItem key={item}>
+                  <ListItemIcon sx={{ minWidth: 36 }}>
+                    <CheckCircleIcon color="primary" fontSize="small" />
+                  </ListItemIcon>
+                  <ListItemText primary={item} />
+                </ListItem>
+              ))}
+            </List>
+          </Paper>
+
+          {/* Секция 3: Красные флаги */}
+          <Paper sx={{ p: 3, mb: 4 }}>
+            <Typography variant="h5" gutterBottom>
+              Красные флаги
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+              Что интервьюеры замечают и оценивают негативно
+            </Typography>
+
+            <List dense>
+              {redFlags.map((item) => (
+                <ListItem key={item}>
+                  <ListItemIcon sx={{ minWidth: 36 }}>
+                    <ErrorIcon color="error" fontSize="small" />
+                  </ListItemIcon>
+                  <ListItemText primary={item} />
+                </ListItem>
+              ))}
+            </List>
+
+            <Alert severity="warning" sx={{ mt: 2 }}>
+              Даже если ты знаешь решение — покажи процесс мышления. Интервьюеру важно не только «что», но и «как» ты думаешь.
+            </Alert>
+          </Paper>
+
+          <Divider sx={{ my: 4 }} />
+
+          {/* Секция 4: Полезные фразы */}
+          <Paper sx={{ p: 3, mb: 4 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+              <LightbulbIcon color="primary" />
+              <Typography variant="h5">Полезные фразы</Typography>
+            </Box>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+              Используй эти фразы, чтобы звучать уверенно и структурированно
+            </Typography>
+
+            <List>
+              {helpfulPhrases.map((phrase) => (
+                <ListItem key={phrase} sx={{ py: 0.5 }}>
+                  <ListItemIcon sx={{ minWidth: 36 }}>
+                    <FormatQuoteIcon color="primary" fontSize="small" />
+                  </ListItemIcon>
+                  <ListItemText
+                    primary={
+                      <Chip
+                        label={`«${phrase}»`}
+                        variant="outlined"
+                        color="primary"
+                        sx={{ height: 'auto', py: 0.5, '& .MuiChip-label': { whiteSpace: 'normal' } }}
+                      />
+                    }
                   />
-                }
-              />
-            </ListItem>
-          ))}
-        </List>
-      </Paper>
+                </ListItem>
+              ))}
+            </List>
+          </Paper>
+        </Box>
+      )}
     </Box>
   );
 }

@@ -404,4 +404,221 @@ export const hashMapProblems: Problem[] = [
   return groups;
 }`,
   },
+  {
+    id: 'hm-p6',
+    topicId: 'hash-map',
+    kind: 'predict-output',
+    title: 'Что выведет код с Map и Set?',
+    difficulty: 'medium',
+    isContextual: false,
+    description:
+      'Перед вами фрагмент кода, использующий Map и Set с разными типами ключей. Что попадёт в stdout?\n\nПодсказка: вспомните, как Map сравнивает ключи (SameValueZero) и принимает ли Set значение `NaN`.',
+    code: `const map = new Map();
+map.set(1, 'number-one');
+map.set('1', 'string-one');
+map.set(NaN, 'not-a-number');
+map.set(NaN, 'still-not-a-number');
+
+const set = new Set([1, '1', NaN, NaN, +0, -0]);
+
+console.log(map.size);
+console.log(map.get(NaN));
+console.log(set.size);`,
+    expected: '3\nstill-not-a-number\n4',
+    hints: [
+      'Map различает ключи 1 и "1" — это разные типы.',
+      'Map использует SameValueZero: NaN считается равным NaN, поэтому второй set перезаписывает первый.',
+      'Set: +0 и -0 — один элемент по SameValueZero. NaN — единственный, остальные — 1, "1".',
+    ],
+    solutionCode: `// map: { 1 => 'number-one', '1' => 'string-one', NaN => 'still-not-a-number' }
+// → size = 3, get(NaN) = 'still-not-a-number'
+// set: { 1, '1', NaN, 0 } — +0 и -0 это один элемент
+// → size = 4`,
+  },
+  {
+    id: 'hm-p7',
+    topicId: 'hash-map',
+    kind: 'find-bug',
+    title: 'Баг: Map с объектным ключом',
+    difficulty: 'medium',
+    isContextual: false,
+    description:
+      'Функция `findUserSession` должна вернуть `sessionId` пользователя по объекту-ключу. Но тесты падают: каждый раз возвращается `undefined`.\n\nНайдите баг и исправьте функцию так, чтобы поиск по совпадающему `userId` работал. Сигнатура и поведение должны остаться прежними: на вход — массив записей `{ user: { id }, sessionId }` и искомый объект `query`. На выход — найденный `sessionId` или `null`.\n\nПодсказка: подумайте, как Map сравнивает объектные ключи.',
+    functionName: 'findUserSession',
+    buggyCode: `function findUserSession(records, query) {
+  const sessions = new Map();
+
+  for (const { user, sessionId } of records) {
+    sessions.set(user, sessionId);
+  }
+
+  return sessions.get(query) ?? null;
+}`,
+    bugSummary:
+      'Map сравнивает объектные ключи по ссылке (SameValueZero). \`query\` и \`user\` из records — разные объекты, даже если у них одинаковый \`id\`. Чтобы сравнение шло по содержимому, нужно использовать \`user.id\` как ключ, а не сам объект.',
+    testCases: [
+      {
+        id: 'hm-p7-t1',
+        inputDisplay:
+          "findUserSession([{user:{id:1},sessionId:'A'},{user:{id:2},sessionId:'B'}], {id:1})",
+        inputArgs: [
+          [
+            { user: { id: 1 }, sessionId: 'A' },
+            { user: { id: 2 }, sessionId: 'B' },
+          ],
+          { id: 1 },
+        ],
+        expected: 'A',
+      },
+      {
+        id: 'hm-p7-t2',
+        inputDisplay:
+          "findUserSession([{user:{id:1},sessionId:'A'},{user:{id:2},sessionId:'B'}], {id:2})",
+        inputArgs: [
+          [
+            { user: { id: 1 }, sessionId: 'A' },
+            { user: { id: 2 }, sessionId: 'B' },
+          ],
+          { id: 2 },
+        ],
+        expected: 'B',
+      },
+      {
+        id: 'hm-p7-t3',
+        inputDisplay: 'findUserSession([], {id:1})',
+        inputArgs: [[], { id: 1 }],
+        expected: null,
+      },
+      {
+        id: 'hm-p7-t4',
+        inputDisplay:
+          "findUserSession([{user:{id:42},sessionId:'X'}], {id:99})",
+        inputArgs: [[{ user: { id: 42 }, sessionId: 'X' }], { id: 99 }],
+        expected: null,
+      },
+      {
+        id: 'hm-p7-t5',
+        inputDisplay:
+          "findUserSession([{user:{id:7},sessionId:'first'},{user:{id:7},sessionId:'second'}], {id:7})",
+        inputArgs: [
+          [
+            { user: { id: 7 }, sessionId: 'first' },
+            { user: { id: 7 }, sessionId: 'second' },
+          ],
+          { id: 7 },
+        ],
+        expected: 'second',
+      },
+    ],
+    hints: [
+      'Запустите код в голове: какой ключ записывает Map? Какой ключ ищется?',
+      'Объект `{id:1}` из records и объект `{id:1}` из query — это две разных ссылки.',
+      'Map сравнивает ключи через SameValueZero: для объектов это сравнение по ссылке.',
+      'Решение — использовать примитивный ключ. Например, `user.id`.',
+    ],
+    solutionCode: `function findUserSession(records, query) {
+  const sessions = new Map();
+
+  for (const { user, sessionId } of records) {
+    sessions.set(user.id, sessionId);
+  }
+
+  return sessions.get(query.id) ?? null;
+}`,
+  },
+  {
+    id: 'hm-p8',
+    topicId: 'hash-map',
+    kind: 'refactor',
+    title: 'Refactor: пары с заданной разностью за O(n)',
+    difficulty: 'medium',
+    isContextual: false,
+    description:
+      'Функция `countPairsWithDiff(nums, k)` должна вернуть количество пар индексов `(i, j)` таких, что `i < j` и `|nums[i] - nums[j]| === k`. В массиве могут быть дубликаты.\n\nТекущая реализация работает за O(n²) — вложенный цикл. На входе из 100 000 элементов это уже не проходит по времени.\n\n**Задача:** перепишите функцию через Map (или Set) так, чтобы она работала за O(n). Подсказка: для каждого числа нас интересуют только два «соседа» — `num + k` и `num - k`. Если построить частотный Map за один проход и второй проход проверять наличие соседей, получится O(n).',
+    functionName: 'countPairsWithDiff',
+    starterCode: `function countPairsWithDiff(nums, k) {
+  let count = 0;
+
+  // O(n^2): вложенный цикл
+  for (let i = 0; i < nums.length; i++) {
+    for (let j = i + 1; j < nums.length; j++) {
+      if (Math.abs(nums[i] - nums[j]) === k) {
+        count++;
+      }
+    }
+  }
+
+  return count;
+}`,
+    testCases: [
+      {
+        id: 'hm-p8-t1',
+        inputDisplay: 'countPairsWithDiff([1, 5, 3, 4, 2], 2)',
+        inputArgs: [[1, 5, 3, 4, 2], 2],
+        expected: 3,
+      },
+      {
+        id: 'hm-p8-t2',
+        inputDisplay: 'countPairsWithDiff([1, 1, 1, 1], 0)',
+        inputArgs: [[1, 1, 1, 1], 0],
+        expected: 6,
+      },
+      {
+        id: 'hm-p8-t3',
+        inputDisplay: 'countPairsWithDiff([1, 2, 3], 5)',
+        inputArgs: [[1, 2, 3], 5],
+        expected: 0,
+      },
+      {
+        id: 'hm-p8-t4',
+        inputDisplay: 'countPairsWithDiff([3, 1, 4, 1, 5], 2)',
+        inputArgs: [[3, 1, 4, 1, 5], 2],
+        expected: 3,
+      },
+      {
+        id: 'hm-p8-t5',
+        inputDisplay: 'countPairsWithDiff([], 1)',
+        inputArgs: [[], 1],
+        expected: 0,
+      },
+    ],
+    perfTest: {
+      // 100k элементов, k=1 — вложенный цикл не уложится в 50ms.
+      inputArgs: [
+        Array.from({ length: 100_000 }, (_, i) => i % 1000),
+        1,
+      ],
+      maxMs: 50,
+    },
+    hints: [
+      'Для каждого num нас интересуют только num+k и num-k — кандидаты в пары.',
+      'Сначала постройте частотный Map: значение → количество вхождений.',
+      'Если k === 0, считайте пары внутри одной группы по формуле C(n, 2) = n*(n-1)/2.',
+      'Если k > 0, для каждого ключа добавляйте `freq[key] * (freq[key + k] || 0)` — каждая пара считается ровно один раз.',
+    ],
+    solutionCode: `function countPairsWithDiff(nums, k) {
+  const freq = new Map();
+  for (const n of nums) {
+    freq.set(n, (freq.get(n) || 0) + 1);
+  }
+
+  let count = 0;
+
+  if (k === 0) {
+    // Пары одинаковых: C(n, 2) = n*(n-1)/2 в каждой группе.
+    for (const c of freq.values()) {
+      count += (c * (c - 1)) / 2;
+    }
+    return count;
+  }
+
+  // k > 0: для каждого num считаем пары (num, num + k).
+  for (const [num, c] of freq) {
+    const partner = freq.get(num + k);
+    if (partner) count += c * partner;
+  }
+
+  return count;
+}`,
+  },
 ];

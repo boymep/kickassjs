@@ -15,6 +15,7 @@ import LightModeIcon from "@mui/icons-material/LightMode";
 import { Outlet } from "react-router-dom";
 import Sidebar from "./Sidebar";
 import { useColorMode } from "../../App";
+import { ProgressProvider } from "../../hooks/useProgress";
 
 const DRAWER_WIDTH = 260;
 
@@ -25,6 +26,7 @@ export default function AppShell() {
   const { toggleColorMode } = useColorMode();
 
   return (
+    <ProgressProvider>
     <Box sx={{ display: "flex", minHeight: "100vh" }}>
       <AppBar position='fixed' sx={{ zIndex: theme.zIndex.drawer + 1 }}>
         <Toolbar>
@@ -77,16 +79,17 @@ export default function AppShell() {
         component='main'
         sx={{
           flexGrow: 1,
+          minWidth: 0,
           px: { xs: 3, md: 5 },
           py: { xs: 3, md: 4 },
           mt: 10,
           maxWidth: 1140,
           mx: "auto",
-          overflow: "auto",
         }}
       >
         <Outlet />
       </Box>
     </Box>
+    </ProgressProvider>
   );
 }

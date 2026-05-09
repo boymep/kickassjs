@@ -118,6 +118,65 @@ export const jsTopics: TopicMeta[] = [
   },
 ];
 
+export const systemDesignTopics: TopicMeta[] = [
+  {
+    id: 'sd-rendering',
+    slug: 'sd-rendering',
+    title: 'Стратегии рендеринга',
+    description: 'CSR, SSR, SSG, ISR, hydration, streaming — что выбрать и почему',
+    icon: 'Architecture',
+    complexity: 'Senior',
+  },
+  {
+    id: 'sd-caching',
+    slug: 'sd-caching',
+    title: 'Кеширование',
+    description: 'HTTP-кеш, CDN, service worker, in-memory, инвалидация',
+    icon: 'Storage',
+    complexity: 'Senior',
+  },
+  {
+    id: 'sd-auth',
+    slug: 'sd-auth',
+    title: 'Аутентификация и безопасность',
+    description: 'Session vs JWT, OAuth, CSP, XSS, CSRF, безопасность куки',
+    icon: 'Shield',
+    complexity: 'Senior',
+  },
+  {
+    id: 'sd-performance',
+    slug: 'sd-performance',
+    title: 'Производительность фронта',
+    description: 'Core Web Vitals, бюджет бандла, lazy/preload, оптимизация изображений',
+    icon: 'Bolt',
+    complexity: 'Senior',
+  },
+  {
+    id: 'sd-api-design',
+    slug: 'sd-api-design',
+    title: 'Дизайн API',
+    description: 'REST vs GraphQL vs gRPC, версионирование, обработка ошибок, контракты',
+    icon: 'Api',
+    complexity: 'Senior',
+  },
+  {
+    id: 'sd-scaling',
+    slug: 'sd-scaling',
+    title: 'Масштабирование фронта',
+    description: 'Микрофронтенды, монорепы, edge functions, CDN-распределение',
+    icon: 'Hub',
+    complexity: 'Senior',
+  },
+  {
+    id: 'sd-observability',
+    slug: 'sd-observability',
+    title: 'Мониторинг и observability',
+    description: 'RUM, error tracking, A/B тесты, feature flags, метрики качества',
+    icon: 'Monitoring',
+    complexity: 'Senior',
+  },
+];
+
 export const nodejsTopics: TopicMeta[] = [
   {
     id: 'node-event-loop',

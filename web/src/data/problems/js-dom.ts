@@ -513,4 +513,296 @@ clone !== original;                     // true (другой объект)
   if (arg === 'children') return deepCloneNode(original).childElementCount;
 }`,
   },
+  {
+    id: 'jsd-p1',
+    topicId: 'js-dom',
+    title: 'Трассировка всплытия события',
+    difficulty: 'easy',
+    isContextual: false,
+    kind: 'predict-output',
+    description: `Дано:
+\`\`\`html
+<div id="outer">
+  <div id="middle">
+    <button id="btn">click</button>
+  </div>
+</div>
+\`\`\`
+
+\`\`\`js
+outer.addEventListener('click', () => console.log('outer-bubble'));
+outer.addEventListener('click', () => console.log('outer-capture'), true);
+middle.addEventListener('click', () => console.log('middle-bubble'));
+middle.addEventListener('click', () => console.log('middle-capture'), true);
+btn.addEventListener('click', () => console.log('btn'));
+
+btn.click();
+\`\`\`
+
+Что будет выведено в консоль и в каком порядке?
+
+Каждое значение на отдельной строке.`,
+    code: `outer.addEventListener('click', () => console.log('outer-bubble'));
+outer.addEventListener('click', () => console.log('outer-capture'), true);
+middle.addEventListener('click', () => console.log('middle-bubble'));
+middle.addEventListener('click', () => console.log('middle-capture'), true);
+btn.addEventListener('click', () => console.log('btn'));
+
+btn.click();`,
+    expected: 'outer-capture\nmiddle-capture\nbtn\nmiddle-bubble\nouter-bubble',
+    hints: [
+      'Сначала выполняется фаза capture: от внешнего предка вниз к цели.',
+      'Затем — обработчики на самой цели в порядке регистрации.',
+      'Наконец — фаза bubble: от цели вверх к внешнему предку.',
+    ],
+    solutionCode: `// Порядок фаз: capture (сверху вниз) → target → bubble (снизу вверх).
+// outer-capture (capture, на самом внешнем) →
+// middle-capture (capture, на промежуточном) →
+// btn         (target — обработчик на самой кнопке) →
+// middle-bubble (bubble, на промежуточном) →
+// outer-bubble  (bubble, на самом внешнем)`,
+  },
+  {
+    id: 'jsd-p2',
+    topicId: 'js-dom',
+    title: 'Найди баг: removeEventListener',
+    difficulty: 'medium',
+    isContextual: false,
+    kind: 'find-bug',
+    description: `Функция \`subscribe(emitter, type, fn)\` должна повесить обработчик на эмиттер и вернуть функцию-отписку. После вызова отписки обработчик НЕ должен срабатывать.
+
+Тесты используют упрощённый эмиттер с API \`addEventListener\` / \`removeEventListener\`. Найдите и исправьте баг.
+
+Подсказка: при вызове \`removeEventListener\` важно передать **ту же** ссылку на функцию, что и при добавлении.`,
+    functionName: 'subscribe_test',
+    buggyCode: `function subscribe(emitter, type, fn) {
+  emitter.addEventListener(type, (e) => fn(e));
+  return () => {
+    emitter.removeEventListener(type, (e) => fn(e));
+  };
+}`,
+    bugSummary:
+      'addEventListener и removeEventListener получают РАЗНЫЕ стрелочные функции (новая создаётся на каждой строке). Чтобы отписка работала, нужно сохранить одну функцию и передать её в оба вызова.',
+    testCases: [
+      {
+        id: 'jsd-p2-t1',
+        inputDisplay: 'обработчик срабатывает до отписки',
+        inputArgs: ['fires-before'],
+        expected: 1,
+      },
+      {
+        id: 'jsd-p2-t2',
+        inputDisplay: 'после отписки обработчик не срабатывает',
+        inputArgs: ['silent-after'],
+        expected: 1,
+      },
+      {
+        id: 'jsd-p2-t3',
+        inputDisplay: 'subscribe возвращает функцию',
+        inputArgs: ['returns-fn'],
+        expected: 'function',
+      },
+      {
+        id: 'jsd-p2-t4',
+        inputDisplay: 'event передаётся в handler',
+        inputArgs: ['passes-event'],
+        expected: 'ping',
+      },
+      {
+        id: 'jsd-p2-t5',
+        inputDisplay: 'двойная отписка не падает',
+        inputArgs: ['double-unsub'],
+        expected: true,
+      },
+    ],
+    hints: [
+      'Сохраните единственную ссылку на обработчик в переменной до addEventListener.',
+      'В замыкании верните функцию, вызывающую removeEventListener с этой же переменной.',
+      'Стрелочная функция, созданная заново, — это другой объект, removeEventListener его не найдёт.',
+    ],
+    solutionCode: `function subscribe(emitter, type, fn) {
+  const handler = (e) => fn(e);
+  emitter.addEventListener(type, handler);
+  return () => {
+    emitter.removeEventListener(type, handler);
+  };
+}`,
+    testHelperCode: `function makeEmitter() {
+  const map = new Map();
+  return {
+    addEventListener(type, fn) {
+      if (!map.has(type)) map.set(type, new Set());
+      map.get(type).add(fn);
+    },
+    removeEventListener(type, fn) {
+      map.get(type)?.delete(fn);
+    },
+    dispatch(type, payload) {
+      const set = map.get(type);
+      if (!set) return;
+      for (const fn of [...set]) fn(payload);
+    },
+  };
+}
+
+function subscribe_test(arg) {
+  const em = makeEmitter();
+  if (arg === 'fires-before') {
+    let calls = 0;
+    subscribe(em, 'tick', () => calls++);
+    em.dispatch('tick', null);
+    return calls;
+  }
+  if (arg === 'silent-after') {
+    let calls = 0;
+    const off = subscribe(em, 'tick', () => calls++);
+    em.dispatch('tick', null);
+    off();
+    em.dispatch('tick', null);
+    em.dispatch('tick', null);
+    return calls;
+  }
+  if (arg === 'returns-fn') {
+    const off = subscribe(em, 'tick', () => {});
+    return typeof off;
+  }
+  if (arg === 'passes-event') {
+    let received = null;
+    subscribe(em, 'tick', (e) => { received = e; });
+    em.dispatch('tick', 'ping');
+    return received;
+  }
+  if (arg === 'double-unsub') {
+    const off = subscribe(em, 'tick', () => {});
+    off();
+    try { off(); } catch { return false; }
+    return true;
+  }
+}`,
+  },
+  {
+    id: 'jsd-p3',
+    topicId: 'js-dom',
+    title: 'Рефакторинг: 100 обработчиков → один делегированный',
+    difficulty: 'medium',
+    isContextual: false,
+    kind: 'refactor',
+    description: `Функция \`attachHandlers(items, onPick)\` должна для каждого элемента \`items\` (объекты с полем \`id\`) сделать так, чтобы при вызове \`item.click()\` был вызван \`onPick(item.id)\`.
+
+Текущая реализация навешивает отдельный обработчик на каждый item — это работает, но раздувает память на больших списках.
+
+**Задача**: перепишите функцию через **делегирование**. Используйте общий «контейнер» (объект с \`addEventListener\`) и **один** обработчик на нём; при клике определяйте, какой item был источником, и вызывайте \`onPick(item.id)\`.
+
+API контейнера в тестах:
+- \`container.addEventListener('click', handler)\` — регистрирует обработчик; в \`event\` будет поле \`target\` с item.
+- \`item.click()\` — генерирует click, который доставляется в обработчики контейнера.
+
+Корректное решение должно вызвать \`onPick\` ровно один раз на каждый \`item.click()\` и НЕ должно вызывать \`addEventListener\` на каждом item отдельно.`,
+    functionName: 'attachHandlers_test',
+    starterCode: `function attachHandlers(container, items, onPick) {
+  // Текущая (рабочая, но неэффективная) реализация: обработчик на каждом item.
+  for (const item of items) {
+    item.addEventListener('click', () => onPick(item.id));
+  }
+}`,
+    testCases: [
+      {
+        id: 'jsd-p3-t1',
+        inputDisplay: 'клик по item вызывает onPick с правильным id',
+        inputArgs: ['basic-pick'],
+        expected: 'item-2',
+      },
+      {
+        id: 'jsd-p3-t2',
+        inputDisplay: 'все 100 items работают через один обработчик',
+        inputArgs: ['delegated-count'],
+        expected: 1,
+      },
+      {
+        id: 'jsd-p3-t3',
+        inputDisplay: 'на items НЕ должны вешаться отдельные обработчики',
+        inputArgs: ['no-per-item'],
+        expected: 0,
+      },
+      {
+        id: 'jsd-p3-t4',
+        inputDisplay: 'каждый клик вызывает onPick ровно один раз',
+        inputArgs: ['one-call-per-click'],
+        expected: 100,
+      },
+      {
+        id: 'jsd-p3-t5',
+        inputDisplay: 'клик по элементу вне списка не вызывает onPick',
+        inputArgs: ['outside-click'],
+        expected: 0,
+      },
+    ],
+    hints: [
+      'Регистрируйте обработчик ОДИН раз — на container, не на каждом item.',
+      'В обработчике event.target — это item, который сгенерировал клик. Используйте его id.',
+      'Перед вызовом onPick проверьте, что target присутствует в массиве items (защита от чужих кликов).',
+    ],
+    solutionCode: `function attachHandlers(container, items, onPick) {
+  const known = new Set(items);
+  container.addEventListener('click', (e) => {
+    if (known.has(e.target)) {
+      onPick(e.target.id);
+    }
+  });
+}`,
+    testHelperCode: `function makeNode(container) {
+  const listeners = [];
+  return {
+    id: null,
+    _listeners: listeners,
+    addEventListener(type, fn) {
+      listeners.push({ type, fn });
+    },
+    click() {
+      const event = { type: 'click', target: this };
+      // Делегированные обработчики живут на container — обходим всю цепочку.
+      const all = container ? [...container._listeners, ...listeners] : listeners;
+      for (const l of all) if (l.type === 'click') l.fn(event);
+    },
+  };
+}
+
+function attachHandlers_test(arg) {
+  const container = makeNode(null);
+  const items = Array.from({ length: 100 }, (_, i) => {
+    const node = makeNode(container);
+    node.id = 'item-' + i;
+    return node;
+  });
+
+  if (arg === 'basic-pick') {
+    let last = null;
+    attachHandlers(container, items, (id) => { last = id; });
+    items[2].click();
+    return last;
+  }
+  if (arg === 'delegated-count') {
+    attachHandlers(container, items, () => {});
+    return container._listeners.length;
+  }
+  if (arg === 'no-per-item') {
+    attachHandlers(container, items, () => {});
+    return items.reduce((sum, it) => sum + it._listeners.length, 0);
+  }
+  if (arg === 'one-call-per-click') {
+    let calls = 0;
+    attachHandlers(container, items, () => { calls++; });
+    for (const it of items) it.click();
+    return calls;
+  }
+  if (arg === 'outside-click') {
+    let calls = 0;
+    attachHandlers(container, items, () => { calls++; });
+    const stranger = makeNode(container);
+    stranger.id = 'stranger';
+    stranger.click();
+    return calls;
+  }
+}`,
+  },
 ];

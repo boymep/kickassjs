@@ -1,19 +1,22 @@
 import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import HomePage from '../components/home/HomePage';
-import TheoryPage from '../components/theory/TheoryPage';
-import QuizPage from '../components/quiz/QuizPage';
 import PracticePage from '../components/practice/PracticePage';
+import LessonPage from '../components/lesson/LessonPage';
 import CodeBlock from '../components/theory/CodeBlock';
+import { ProgressProvider } from '../hooks/useProgress';
 
 function renderWithRouter(ui: React.ReactElement, initialEntries: string[] = ['/']) {
-  return render(<MemoryRouter initialEntries={initialEntries}>{ui}</MemoryRouter>);
+  return render(
+    <MemoryRouter initialEntries={initialEntries}>
+      <ProgressProvider>{ui}</ProgressProvider>
+    </MemoryRouter>,
+  );
 }
 
 describe('HomePage', () => {
-  it('renders all 6 topic cards', () => {
+  it('renders all 6 algorithm topic cards', () => {
     renderWithRouter(<HomePage />);
     expect(screen.getByText('Бинарный поиск')).toBeInTheDocument();
     expect(screen.getByText('Два указателя')).toBeInTheDocument();
@@ -23,7 +26,13 @@ describe('HomePage', () => {
     expect(screen.getByText('Обход деревьев')).toBeInTheDocument();
   });
 
-  it('renders extra sections', () => {
+  it('renders System Design section', () => {
+    renderWithRouter(<HomePage />);
+    expect(screen.getByText('System Design')).toBeInTheDocument();
+    expect(screen.getByText('Стратегии рендеринга')).toBeInTheDocument();
+  });
+
+  it('renders extra tool sections', () => {
     renderWithRouter(<HomePage />);
     expect(screen.getByText('Определи паттерн')).toBeInTheDocument();
     expect(screen.getByText('Шпаргалка для собеса')).toBeInTheDocument();
@@ -45,23 +54,18 @@ describe('CodeBlock', () => {
   });
 });
 
-describe('TheoryPage', () => {
-  it('renders theory for binary-search', () => {
-    renderWithRouter(
-      <TheoryPage />,
-      ['/topic/binary-search/theory'],
+describe('LessonPage', () => {
+  it('renders fallback when topic slug is unknown', () => {
+    render(
+      <MemoryRouter initialEntries={['/topic/nonexistent']}>
+        <ProgressProvider>
+          <Routes>
+            <Route path="/topic/:slug" element={<LessonPage />} />
+          </Routes>
+        </ProgressProvider>
+      </MemoryRouter>,
     );
-    // TheoryPage uses useParams, which needs matching route params
-    // With MemoryRouter without Route, params will be empty
-    // It should show "Теория не найдена" since slug is missing
-    expect(screen.getByText('Теория не найдена')).toBeInTheDocument();
-  });
-});
-
-describe('QuizPage', () => {
-  it('renders fallback when quiz not found', () => {
-    renderWithRouter(<QuizPage />, ['/topic/unknown/quiz']);
-    expect(screen.getByText('Квиз не найден')).toBeInTheDocument();
+    expect(screen.getByText('Тема не найдена')).toBeInTheDocument();
   });
 });
 

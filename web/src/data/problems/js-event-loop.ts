@@ -367,6 +367,218 @@ await runSequentially(fns); // → [1, 2, 3]
 }`,
   },
   {
+    kind: 'predict-output',
+    id: 'jsel-p6',
+    topicId: 'js-event-loop',
+    title: 'Угадай вывод: setTimeout, Promise и queueMicrotask',
+    difficulty: 'medium',
+    isContextual: false,
+    description: `Перед вами классический микс синхронного кода, макро- и микрозадач. Введи каждую напечатанную строку в отдельной строчке поля ответа.
+
+Подсказка: помни порядок — сначала весь синхронный код, затем microtask checkpoint опустошает очередь микрозадач, и только потом event loop берёт макрозадачу.`,
+    code: `console.log('1');
+
+setTimeout(() => console.log('2'), 0);
+
+Promise.resolve().then(() => {
+  console.log('3');
+  queueMicrotask(() => console.log('4'));
+});
+
+queueMicrotask(() => console.log('5'));
+
+console.log('6');`,
+    expected: '1\n6\n3\n5\n4',
+    hints: [
+      'Синхронный код в порядке появления: 1 и 6.',
+      'queueMicrotask и Promise.then идут в одну и ту же очередь и выполняются в порядке постановки: сначала Promise.then (3), потом второй queueMicrotask (5).',
+      'Микрозадача внутри микрозадачи (4) добавляется в текущий checkpoint и тоже выполняется до setTimeout.',
+    ],
+    solutionCode: `// 1 — sync
+// 6 — sync
+// 3 — Promise.then (первая микрозадача)
+//   внутри неё ставится новая микрозадача (4)
+// 5 — queueMicrotask (поставлена раньше, чем 4)
+// 4 — микрозадача, добавленная во время чекпоинта; чекпоинт продолжается
+// 2 — setTimeout (макрозадача) — последний`,
+  },
+  {
+    kind: 'find-bug',
+    id: 'jsel-p7',
+    topicId: 'js-event-loop',
+    title: 'Найди баг: забытый await в последовательной загрузке',
+    difficulty: 'easy',
+    isContextual: false,
+    description: `Функция должна загрузить два значения **последовательно** и вернуть массив \`[первое, второе]\`. Тесты проверяют, что результат — реальные значения, а не \`Promise\`-объекты.
+
+В коде есть распространённая ошибка: забыт \`await\`, из-за чего в массив попадают непрорезолвенные промисы. Найди баг и почини.`,
+    buggyCode: `async function loadBoth() {
+  const a = await fetchValue('a');
+  const b = fetchValue('b'); // <-- баг здесь
+  return [a, b];
+}
+
+function fetchValue(label) {
+  return new Promise((resolve) =>
+    setTimeout(() => resolve('value-' + label), 5),
+  );
+}`,
+    functionName: 'jsel_p7_test',
+    bugSummary:
+      'Забыт `await` перед вторым `fetchValue`. В результате `b` — это `Promise`, а не разрешённое значение. Решение — добавить `await`: `const b = await fetchValue("b")`.',
+    testCases: [
+      {
+        id: 'jsel-p7-t1',
+        inputDisplay: 'loadBoth() возвращает массив строк, не промисов',
+        inputArgs: ['types'],
+        expected: 'string,string',
+      },
+      {
+        id: 'jsel-p7-t2',
+        inputDisplay: 'первый элемент = "value-a"',
+        inputArgs: ['first'],
+        expected: 'value-a',
+      },
+      {
+        id: 'jsel-p7-t3',
+        inputDisplay: 'второй элемент = "value-b" (а не [object Promise])',
+        inputArgs: ['second'],
+        expected: 'value-b',
+      },
+      {
+        id: 'jsel-p7-t4',
+        inputDisplay: 'длина массива = 2',
+        inputArgs: ['length'],
+        expected: 2,
+      },
+    ],
+    hints: [
+      'Сравни строки `const a = ...` и `const b = ...`. Что-то отличается между ними.',
+      'Async-функция возвращает Promise. Чтобы получить значение, нужен `await`.',
+      'Если в массиве оказался непрорезолвенный Promise, типичный признак — `typeof b === "object"` и `b instanceof Promise`.',
+    ],
+    solutionCode: `async function loadBoth() {
+  const a = await fetchValue('a');
+  const b = await fetchValue('b');
+  return [a, b];
+}
+
+function fetchValue(label) {
+  return new Promise((resolve) =>
+    setTimeout(() => resolve('value-' + label), 5),
+  );
+}`,
+    testHelperCode: `async function jsel_p7_test(arg) {
+  const result = await loadBoth();
+  if (arg === 'types') return result.map((x) => typeof x).join(',');
+  if (arg === 'first') return result[0];
+  if (arg === 'second') return result[1];
+  if (arg === 'length') return result.length;
+}`,
+  },
+  {
+    kind: 'refactor',
+    id: 'jsel-p8',
+    topicId: 'js-event-loop',
+    title: 'Оптимизируй: блокирующий цикл → батчинг через setTimeout',
+    difficulty: 'medium',
+    isContextual: false,
+    description: `Функция \`processAllChunked(items, transform, chunkSize)\` обрабатывает каждый элемент и возвращает массив результатов. Текущая реализация делает всё в одном синхронном цикле — это блокирует event loop, и страница «зависает», пока работа идёт.
+
+Перепиши функцию так, чтобы она возвращала **Promise** с тем же массивом результатов, но при этом разбивала работу на чанки по \`chunkSize\` элементов и отдавала управление event loop через \`setTimeout(fn, 0)\` между чанками. Это позволит браузеру обрабатывать ввод и рисовать кадры, пока идёт обработка.
+
+Корректность: результат должен совпадать с прежним по элементам и порядку. Сигнатура функции остаётся \`processAllChunked(items, transform, chunkSize)\` и должна возвращать Promise.`,
+    functionName: 'processAllChunked_test',
+    starterCode: `function processAllChunked(items, transform, chunkSize) {
+  // Текущая реализация — синхронный блокирующий цикл.
+  // Перепиши её через рекурсивный setTimeout с чанкованием
+  // и верни Promise.
+  const result = [];
+  for (const item of items) {
+    result.push(transform(item));
+  }
+  return Promise.resolve(result);
+}`,
+    testCases: [
+      {
+        id: 'jsel-p8-t1',
+        inputDisplay: 'processAllChunked([1,2,3], x => x * 2, 100) → [2, 4, 6]',
+        inputArgs: [[1, 2, 3], 'double', 100],
+        expected: [2, 4, 6],
+      },
+      {
+        id: 'jsel-p8-t2',
+        inputDisplay: 'пустой массив → []',
+        inputArgs: [[], 'double', 100],
+        expected: [],
+      },
+      {
+        id: 'jsel-p8-t3',
+        inputDisplay: 'один элемент с маленьким chunk → [identity]',
+        inputArgs: [[42], 'double', 1],
+        expected: [84],
+      },
+      {
+        id: 'jsel-p8-t4',
+        inputDisplay: 'результат — Promise',
+        inputArgs: [[1, 2, 3], 'is-promise', 2],
+        expected: true,
+      },
+      {
+        id: 'jsel-p8-t5',
+        inputDisplay: '300 элементов с chunkSize=50 → корректная сумма',
+        inputArgs: [Array.from({ length: 300 }, (_, i) => i), 'sum', 50],
+        expected: (300 * 299) / 2,
+      },
+      {
+        id: 'jsel-p8-t6',
+        inputDisplay: 'порядок элементов сохранён при chunkSize=3 на массиве из 10',
+        inputArgs: [Array.from({ length: 10 }, (_, i) => i), 'double', 3],
+        expected: [0, 2, 4, 6, 8, 10, 12, 14, 16, 18],
+      },
+    ],
+    hints: [
+      'Верни `new Promise((resolve) => { ... })`. Внутри объяви функцию `step()`, которая обрабатывает один чанк размера `chunkSize` и через `setTimeout(step, 0)` запускает следующий.',
+      'Когда обработаны все элементы — вызови `resolve(result)`.',
+      'Чтобы убедиться, что управление действительно отдано event loop — между чанками должен успеть выполниться внешний `setTimeout(fn, 0)`, заведённый снаружи.',
+      'Помни, что `setTimeout` — макрозадача. Если использовать `queueMicrotask`, paint всё равно будет заблокирован, потому что microtask checkpoint не завершается.',
+    ],
+    solutionCode: `function processAllChunked(items, transform, chunkSize) {
+  return new Promise((resolve) => {
+    const result = [];
+    let i = 0;
+
+    function step() {
+      const end = Math.min(i + chunkSize, items.length);
+      while (i < end) result.push(transform(items[i++]));
+      if (i < items.length) {
+        setTimeout(step, 0); // отдаём управление event loop
+      } else {
+        resolve(result);
+      }
+    }
+
+    if (items.length === 0) resolve(result);
+    else step();
+  });
+}`,
+    testHelperCode: `// Адаптер: рантайм вызывает processAllChunked_test(items, mode, chunkSize),
+// а тот, в зависимости от mode, вызывает написанную пользователем processAllChunked.
+async function processAllChunked_test(items, mode, chunkSize) {
+  const double = (x) => x * 2;
+  const identity = (x) => x;
+  if (mode === 'double') return await processAllChunked(items, double, chunkSize);
+  if (mode === 'is-promise') {
+    const p = processAllChunked(items, double, chunkSize);
+    return p instanceof Promise;
+  }
+  if (mode === 'sum') {
+    const arr = await processAllChunked(items, identity, chunkSize);
+    return arr.reduce((a, b) => a + b, 0);
+  }
+}`,
+  },
+  {
     id: 'jsel-p5',
     topicId: 'js-event-loop',
     title: 'retryWithDelay — повтор с паузой',

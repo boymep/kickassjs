@@ -34,13 +34,22 @@ import WaterIcon from '@mui/icons-material/Water';
 import RouterIcon from '@mui/icons-material/Router';
 import SpeedIcon from '@mui/icons-material/Speed';
 
+// System Design icons
+import ArchitectureIcon from '@mui/icons-material/Architecture';
+import StorageIcon from '@mui/icons-material/Storage';
+import ShieldIcon from '@mui/icons-material/Shield';
+import BoltIcon from '@mui/icons-material/Bolt';
+import ApiIcon from '@mui/icons-material/Api';
+import HubIcon from '@mui/icons-material/Hub';
+import AnalyticsIcon from '@mui/icons-material/Analytics';
+
 // Tool icons
 import PsychologyIcon from '@mui/icons-material/Psychology';
 import DescriptionIcon from '@mui/icons-material/Description';
 import WarningIcon from '@mui/icons-material/Warning';
 import BugReportIcon from '@mui/icons-material/BugReport';
 
-import { algorithmTopics, jsTopics, nodejsTopics } from '../../data/topics';
+import { algorithmTopics, jsTopics, nodejsTopics, systemDesignTopics } from '../../data/topics';
 import type { TopicMeta } from '../../types/topic';
 
 const iconMap: Record<string, React.ReactElement> = {
@@ -62,10 +71,18 @@ const iconMap: Record<string, React.ReactElement> = {
   Water: <WaterIcon sx={{ fontSize: 36 }} />,
   Router: <RouterIcon sx={{ fontSize: 36 }} />,
   Speed: <SpeedIcon sx={{ fontSize: 36 }} />,
+  Architecture: <ArchitectureIcon sx={{ fontSize: 36 }} />,
+  Storage: <StorageIcon sx={{ fontSize: 36 }} />,
+  Shield: <ShieldIcon sx={{ fontSize: 36 }} />,
+  Bolt: <BoltIcon sx={{ fontSize: 36 }} />,
+  Api: <ApiIcon sx={{ fontSize: 36 }} />,
+  Hub: <HubIcon sx={{ fontSize: 36 }} />,
+  Monitoring: <AnalyticsIcon sx={{ fontSize: 36 }} />,
 };
 
 const complexityColor: Record<string, 'error' | 'warning' | 'default'> = {
   'Важно': 'warning',
+  'Senior': 'error',
 };
 
 function TopicGrid({ topics }: { topics: TopicMeta[] }) {
@@ -76,7 +93,7 @@ function TopicGrid({ topics }: { topics: TopicMeta[] }) {
         <Grid key={t.id} size={{ xs: 12, sm: 6, md: 4 }}>
           <Card variant="outlined" sx={{ height: '100%' }}>
             <CardActionArea
-              onClick={() => navigate(`/topic/${t.slug}/theory`)}
+              onClick={() => navigate(`/topic/${t.slug}`)}
               sx={{ p: 1.5, height: '100%', alignItems: 'flex-start' }}
             >
               <CardContent sx={{ p: 1 }}>
@@ -160,6 +177,15 @@ export default function HomePage() {
 
       <Divider sx={{ my: 4 }} />
 
+      {/* System Design */}
+      <SectionHeader
+        title="System Design"
+        subtitle="7 тем для senior-собеседования: рендеринг, кеширование, безопасность, перформанс, API, масштабирование, observability"
+      />
+      <TopicGrid topics={systemDesignTopics} />
+
+      <Divider sx={{ my: 4 }} />
+
       {/* Extra tools */}
       <SectionHeader
         title="Инструменты"
@@ -167,8 +193,8 @@ export default function HomePage() {
       />
       <Grid container spacing={2}>
         <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-          <Card variant="outlined">
-            <CardActionArea onClick={() => navigate('/pattern-game')} sx={{ p: 1.5 }}>
+          <Card variant="outlined" sx={{ height: '100%' }}>
+            <CardActionArea onClick={() => navigate('/pattern-game')} sx={{ p: 1.5, height: '100%', alignItems: 'flex-start' }}>
               <CardContent sx={{ p: 1 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
                   <PsychologyIcon sx={{ fontSize: 32 }} />
@@ -182,8 +208,8 @@ export default function HomePage() {
           </Card>
         </Grid>
         <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-          <Card variant="outlined">
-            <CardActionArea onClick={() => navigate('/cheatsheet')} sx={{ p: 1.5 }}>
+          <Card variant="outlined" sx={{ height: '100%' }}>
+            <CardActionArea onClick={() => navigate('/cheatsheet')} sx={{ p: 1.5, height: '100%', alignItems: 'flex-start' }}>
               <CardContent sx={{ p: 1 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
                   <DescriptionIcon sx={{ fontSize: 32 }} />
@@ -197,8 +223,8 @@ export default function HomePage() {
           </Card>
         </Grid>
         <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-          <Card variant="outlined">
-            <CardActionArea onClick={() => navigate('/js-pitfalls')} sx={{ p: 1.5 }}>
+          <Card variant="outlined" sx={{ height: '100%' }}>
+            <CardActionArea onClick={() => navigate('/js-pitfalls')} sx={{ p: 1.5, height: '100%', alignItems: 'flex-start' }}>
               <CardContent sx={{ p: 1 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
                   <WarningIcon sx={{ fontSize: 32 }} />
@@ -212,8 +238,8 @@ export default function HomePage() {
           </Card>
         </Grid>
         <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-          <Card variant="outlined">
-            <CardActionArea onClick={() => navigate('/bug-hunt')} sx={{ p: 1.5 }}>
+          <Card variant="outlined" sx={{ height: '100%' }}>
+            <CardActionArea onClick={() => navigate('/bug-hunt')} sx={{ p: 1.5, height: '100%', alignItems: 'flex-start' }}>
               <CardContent sx={{ p: 1 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
                   <BugReportIcon sx={{ fontSize: 32 }} />

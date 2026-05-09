@@ -141,8 +141,10 @@ const result = await processChunked(
 );
 // → [1, 4, 9, 16, 25]
 // Обрабатывается: [1,2] → yield → [3,4] → yield → [5] → done
-\`\`\``,
-    functionName: 'processChunked',
+\`\`\`
+
+В тестах \`processChunked\` вызывается через хелпер \`nodel_p2_test\`.`,
+    functionName: 'nodel_p2_test',
     starterCode: `function processChunked(arr, chunkSize, processor) {
   // ваш код — используйте setTimeout для yield
 }`,
@@ -202,6 +204,19 @@ const result = await processChunked(
 
     processNext();
   });
+}`,
+    testHelperCode: `async function nodel_p2_test(arr, chunkSize, kind) {
+  if (arr === 'is-promise') {
+    const r = processChunked([1, 2, 3], 2, (x) => x);
+    return r && typeof r.then === 'function';
+  }
+  const procs = {
+    square: (x) => x * x,
+    identity: (x) => x,
+    double: (x) => x * 2,
+  };
+  const fn = procs[kind] || ((x) => x);
+  return await processChunked(arr, chunkSize, fn);
 }`,
   },
   {
@@ -422,8 +437,10 @@ const slow = () => new Promise(r => setTimeout(() => r('data'), 500));
 
 await withTimeout(slow, 100, 'default'); // → 'default' (timeout)
 await withTimeout(slow, 1000, 'default'); // → 'data' (вовремя)
-\`\`\``,
-    functionName: 'withTimeout',
+\`\`\`
+
+В тестах \`withTimeout\` вызывается через хелпер \`nodel_p5_test\`.`,
+    functionName: 'nodel_p5_test',
     starterCode: `async function withTimeout(asyncFn, ms, fallback) {
   // ваш код
 }`,
@@ -466,6 +483,228 @@ await withTimeout(slow, 1000, 'default'); // → 'data' (вовремя)
     solutionCode: `async function withTimeout(asyncFn, ms, fallback) {
   const timer = new Promise((resolve) => setTimeout(() => resolve(fallback), ms));
   return Promise.race([asyncFn(), timer]);
+}`,
+    testHelperCode: `async function nodel_p5_test(kind) {
+  const fast = () => new Promise((r) => setTimeout(() => r('result'), 5));
+  const slow = () => new Promise((r) => setTimeout(() => r('data'), 200));
+  if (kind === 'in-time') {
+    return await withTimeout(fast, 100, 'default');
+  }
+  if (kind === 'timeout') {
+    return await withTimeout(slow, 20, 'default');
+  }
+  if (kind === 'null-fallback') {
+    return await withTimeout(slow, 20, null);
+  }
+  if (kind === 'zero-fallback') {
+    return await withTimeout(slow, 20, 0);
+  }
+  if (kind === 'no-throw') {
+    try {
+      await withTimeout(slow, 20, 'fallback');
+      return true;
+    } catch {
+      return false;
+    }
+  }
+}`,
+  },
+  {
+    kind: 'predict-output',
+    id: 'nodel-p6',
+    topicId: 'node-event-loop',
+    title: 'Угадай вывод: микрозадачи и таймер',
+    difficulty: 'medium',
+    isContextual: false,
+    description: `Что выведет этот код в среде, где доступны \`queueMicrotask\`, \`Promise\` и \`setTimeout\`? Запишите каждое значение на отдельной строке в порядке вывода.
+
+Подсказка: микрозадачи опустошаются полностью **перед** следующей макрозадачей. В Node.js перед \`queueMicrotask\` ещё проходит очередь \`process.nextTick\` — здесь её нет, но логика та же.`,
+    code: `console.log('A');
+
+setTimeout(() => console.log('B'), 0);
+
+queueMicrotask(() => {
+  console.log('C');
+  queueMicrotask(() => console.log('D'));
+});
+
+Promise.resolve().then(() => console.log('E'));
+
+console.log('F');`,
+    expected: 'A\nF\nC\nE\nD\nB',
+    hints: [
+      'Сначала выполняется весь синхронный код — это «A» и «F».',
+      'Затем microtask checkpoint опустошает очередь полностью, включая микрозадачи, добавленные внутри других микрозадач.',
+      'setTimeout — макрозадача и выполняется после всех микрозадач.',
+    ],
+    solutionCode: `// Порядок:
+// 1. 'A'  — синхронный console.log.
+// 2. 'F'  — синхронный console.log в конце.
+// 3. 'C'  — первая микрозадача из queueMicrotask.
+// 4. 'E'  — Promise.resolve().then — следующая микрозадача в очереди.
+// 5. 'D'  — микрозадача, добавленная внутри 'C'; обрабатывается на том же checkpoint.
+// 6. 'B'  — макрозадача setTimeout, выполняется после microtask checkpoint.`,
+  },
+  {
+    kind: 'find-bug',
+    id: 'nodel-p7',
+    topicId: 'node-event-loop',
+    title: 'Найди баг: рекурсивная очередь блокирует таймер',
+    difficulty: 'medium',
+    isContextual: true,
+    description: `Функция \`runWithDelay(initialQueue, work)\` должна:
+1. Выполнить \`work(item)\` для каждого элемента из \`initialQueue\` через очередь микрозадач (имитация \`process.nextTick\`).
+2. После полной обработки очереди — вернуть промис, который резолвится массивом результатов.
+3. Гарантировать, что \`setTimeout\` с задержкой 0 (имитация I/O) выполнится **до** того, как промис зарезолвится, если очередь оказалась пустой.
+
+В текущей реализации \`runWithDelay([], () => 0)\` зависает: цикл проверки очереди добавляет себя в микрозадачи, не давая таймеру шанса выполниться. Найдите и исправьте баг — нужно правильно завершать пустую очередь.
+
+В тестах \`runWithDelay\` вызывается через хелпер \`nodel_p7_test\`.`,
+    buggyCode: `function runWithDelay(initialQueue, work) {
+  const queue = [...initialQueue];
+  const results = [];
+
+  return new Promise((resolve) => {
+    function step() {
+      if (queue.length === 0) {
+        // BUG: бесконечно перепланируем себя через микрозадачу,
+        // вместо того чтобы зарезолвить промис.
+        queueMicrotask(step);
+        return;
+      }
+      const item = queue.shift();
+      results.push(work(item));
+      queueMicrotask(step);
+    }
+    queueMicrotask(step);
+  });
+}`,
+    functionName: 'nodel_p7_test',
+    bugSummary:
+      'При пустой очереди функция перепланировала саму себя через `queueMicrotask`, создавая бесконечный microtask checkpoint и не отпуская event loop. Правильное поведение — резолвить промис, как только очередь опустела.',
+    testCases: [
+      {
+        id: 'nodel-p7-t1',
+        inputDisplay: 'пустая очередь резолвится []',
+        inputArgs: ['empty'],
+        expected: '[]',
+      },
+      {
+        id: 'nodel-p7-t2',
+        inputDisplay: 'очередь [1,2,3] и x*2 → [2,4,6]',
+        inputArgs: ['simple'],
+        expected: '[2,4,6]',
+      },
+      {
+        id: 'nodel-p7-t3',
+        inputDisplay: 'таймер успевает выполниться, потом промис резолвится',
+        inputArgs: ['timer-not-starved'],
+        expected: 'timer-first',
+      },
+      {
+        id: 'nodel-p7-t4',
+        inputDisplay: 'очередь [10] резолвится [10]',
+        inputArgs: ['single'],
+        expected: '[10]',
+      },
+    ],
+    hints: [
+      'Посмотрите на ветку `if (queue.length === 0)`. Что должна делать функция, когда обрабатывать больше нечего?',
+      'Замените `queueMicrotask(step)` в этой ветке на `resolve(results)` — это завершит промис и не даст microtask checkpoint зависнуть.',
+    ],
+    solutionCode: `function runWithDelay(initialQueue, work) {
+  const queue = [...initialQueue];
+  const results = [];
+
+  return new Promise((resolve) => {
+    function step() {
+      if (queue.length === 0) {
+        resolve(results);
+        return;
+      }
+      const item = queue.shift();
+      results.push(work(item));
+      queueMicrotask(step);
+    }
+    queueMicrotask(step);
+  });
+}`,
+    testHelperCode: `async function nodel_p7_test(arg) {
+  if (arg === 'empty') {
+    const r = await runWithDelay([], (x) => x);
+    return JSON.stringify(r);
+  }
+  if (arg === 'simple') {
+    const r = await runWithDelay([1, 2, 3], (x) => x * 2);
+    return JSON.stringify(r);
+  }
+  if (arg === 'single') {
+    const r = await runWithDelay([10], (x) => x);
+    return JSON.stringify(r);
+  }
+  if (arg === 'timer-not-starved') {
+    let timerFired = false;
+    setTimeout(() => { timerFired = true; }, 0);
+    await runWithDelay([1, 2], (x) => x);
+    // дождёмся таймера
+    await new Promise((r) => setTimeout(r, 10));
+    return timerFired ? 'timer-first' : 'timer-blocked';
+  }
+}`,
+  },
+  {
+    kind: 'refactor',
+    id: 'nodel-p8',
+    topicId: 'node-event-loop',
+    title: 'Оптимизируй: батчинг тяжёлой обработки массива',
+    difficulty: 'medium',
+    isContextual: true,
+    description: `Функция \`sumOfSquares(arr)\` корректна, но в текущем виде содержит вложенный цикл O(n²) и при больших массивах блокирует event loop на сотни миллисекунд.
+
+Перепишите функцию так, чтобы:
+1. Сложность стала линейной — O(n).
+2. Сигнатура осталась прежней: \`sumOfSquares(arr)\` возвращает число.
+3. Perf-тест на массиве из 50 000 элементов укладывался в 200 мс.
+
+Это типовая задача для Node.js-сервера: один такой запрос на горячем пути в исходном виде задержит обработку всех остальных соединений.`,
+    functionName: 'sumOfSquares',
+    starterCode: `function sumOfSquares(arr) {
+  // Корректно, но O(n²): для каждого элемента заново суммируем префикс.
+  let total = 0;
+  for (let i = 0; i < arr.length; i++) {
+    let prefix = 0;
+    for (let j = 0; j <= i; j++) {
+      prefix += arr[j];
+    }
+    total += arr[i] * arr[i];
+    // prefix используется только чтобы «затормозить» —
+    // в исходной задаче он не нужен.
+    if (prefix < 0) total = -total;
+  }
+  return total;
+}`,
+    testCases: [
+      { id: 'nodel-p8-t1', inputDisplay: 'sumOfSquares([])', inputArgs: [[]], expected: 0 },
+      { id: 'nodel-p8-t2', inputDisplay: 'sumOfSquares([1,2,3])', inputArgs: [[1, 2, 3]], expected: 14 },
+      { id: 'nodel-p8-t3', inputDisplay: 'sumOfSquares([5])', inputArgs: [[5]], expected: 25 },
+      { id: 'nodel-p8-t4', inputDisplay: 'sumOfSquares([1,1,1,1,1])', inputArgs: [[1, 1, 1, 1, 1]], expected: 5 },
+      { id: 'nodel-p8-t5', inputDisplay: 'sumOfSquares([10, -10])', inputArgs: [[10, -10]], expected: 200 },
+    ],
+    perfTest: {
+      inputArgs: [Array.from({ length: 50000 }, (_, i) => i + 1)],
+      maxMs: 200,
+    },
+    hints: [
+      'Префиксная сумма не нужна для результата — это «лишний» вложенный цикл, который и даёт O(n²).',
+      'Оставьте только один проход: на каждой итерации добавляйте `arr[i] * arr[i]` к total.',
+      'В реальном сервере, если бы тяжёлая логика была обоснована, её разбили бы на чанки через `setImmediate` (или `setTimeout(0)` в браузере), чтобы не блокировать event loop. Здесь достаточно убрать лишний цикл.',
+    ],
+    solutionCode: `function sumOfSquares(arr) {
+  let total = 0;
+  for (let i = 0; i < arr.length; i++) {
+    total += arr[i] * arr[i];
+  }
+  return total;
 }`,
   },
 ];

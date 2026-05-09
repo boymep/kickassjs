@@ -567,4 +567,282 @@ matchesFilter({ city: "Moscow", age: 30 }, filter) → false`,
   return false;
 }`,
   },
+  {
+    id: 'tr-p6',
+    topicId: 'trees',
+    kind: 'predict-output',
+    title: 'Предскажите вывод: pre-order и BFS на одном дереве',
+    difficulty: 'easy',
+    isContextual: false,
+    description: `Перед вами небольшое дерево и две функции обхода — pre-order DFS и BFS. Проследите выполнение и определите, что выведет console.log.
+
+Дерево:
+\`\`\`
+        1
+       / \\
+      2   3
+     / \\   \\
+    4   5   6
+\`\`\`
+
+Подсказка: pre-order идёт «корень → левое поддерево → правое». BFS идёт по уровням: сначала корень, потом дети, потом внуки.`,
+    code: `const tree = {
+  value: 1,
+  children: [
+    { value: 2, children: [{ value: 4 }, { value: 5 }] },
+    { value: 3, children: [{ value: 6 }] },
+  ],
+};
+
+function dfs(node) {
+  const out = [node.value];
+  if (node.children) for (const c of node.children) out.push(...dfs(c));
+  return out;
+}
+
+function bfs(root) {
+  const out = [];
+  const queue = [root];
+  while (queue.length) {
+    const n = queue.shift();
+    out.push(n.value);
+    if (n.children) for (const c of n.children) queue.push(c);
+  }
+  return out;
+}
+
+console.log(dfs(tree).join(','));
+console.log(bfs(tree).join(','));`,
+    expected: '1,2,4,5,3,6\n1,2,3,4,5,6',
+    hints: [
+      'Pre-order DFS: посетите узел → рекурсивно по детям слева направо.',
+      'BFS обходит уровень за уровнем: [1] → [2, 3] → [4, 5, 6].',
+      'Главное отличие: DFS уходит вглубь по первой ветке, BFS обрабатывает уровень целиком.',
+    ],
+    solutionCode: `// DFS (pre-order):
+//   visit(1) → visit(2) → visit(4) → visit(5) → visit(3) → visit(6)
+//   результат: [1, 2, 4, 5, 3, 6]
+//
+// BFS (по уровням):
+//   уровень 0: [1]
+//   уровень 1: [2, 3]
+//   уровень 2: [4, 5, 6]
+//   результат: [1, 2, 3, 4, 5, 6]`,
+  },
+  {
+    id: 'tr-p7',
+    topicId: 'trees',
+    kind: 'find-bug',
+    title: 'Найдите баг: DFS зацикливается на структуре с циклом',
+    difficulty: 'medium',
+    isContextual: false,
+    description: `Перед вами реализация подсчёта узлов в «дереве». Функция работает корректно на настоящих деревьях, но «дерево» в этом приложении приходит из API, и иногда из-за бага бэкенда содержит обратные ссылки — структура превращается в граф с циклом.
+
+Сейчас функция уходит в бесконечную рекурсию и падает с Maximum call stack. Найдите ошибку и исправьте её, чтобы функция корректно считала уникальные узлы при наличии циклов.
+
+Подсказка: в графе обход требует отметки посещённых узлов.`,
+    functionName: 'countNodes',
+    buggyCode: `function countNodes(root) {
+  let count = 1;
+  if (root.children) {
+    for (const child of root.children) {
+      count += countNodes(child);
+    }
+  }
+  return count;
+}`,
+    bugSummary:
+      'DFS без отметки посещённых узлов на циклической структуре уходит в бесконечную рекурсию. Решение — Set seen, передаваемый в рекурсию, чтобы каждый узел учитывался ровно один раз.',
+    testCases: [
+      {
+        id: 'tr-p7-t1',
+        inputDisplay: 'обычное дерево из 6 узлов',
+        inputArgs: [
+          {
+            value: 1,
+            children: [
+              { value: 2, children: [{ value: 4 }, { value: 5 }] },
+              { value: 3, children: [{ value: 6 }] },
+            ],
+          },
+        ],
+        expected: 6,
+      },
+      {
+        id: 'tr-p7-t2',
+        inputDisplay: 'один узел без children',
+        inputArgs: [{ value: 1 }],
+        expected: 1,
+      },
+      {
+        id: 'tr-p7-t3',
+        inputDisplay: 'плоское дерево {1, [2, 3, 4]}',
+        inputArgs: [{ value: 1, children: [{ value: 2 }, { value: 3 }, { value: 4 }] }],
+        expected: 4,
+      },
+      {
+        id: 'tr-p7-t4',
+        inputDisplay: 'граф с циклом: ребёнок ссылается на корень',
+        inputArgs: [
+          (() => {
+            const root: { value: number; children: unknown[] } = { value: 1, children: [] };
+            const child = { value: 2, children: [root] }; // ← цикл!
+            root.children.push(child);
+            return root;
+          })(),
+        ],
+        expected: 2,
+      },
+      {
+        id: 'tr-p7-t5',
+        inputDisplay: 'граф с диамантом: один узел — общий ребёнок',
+        inputArgs: [
+          (() => {
+            const shared = { value: 99, children: [] };
+            return {
+              value: 1,
+              children: [
+                { value: 2, children: [shared] },
+                { value: 3, children: [shared] },
+              ],
+            };
+          })(),
+        ],
+        expected: 4,
+      },
+    ],
+    hints: [
+      'Что произойдёт, если ребёнок ссылается обратно на родителя? Рекурсия не остановится.',
+      'Заведите Set посещённых узлов и передавайте его в рекурсию.',
+      'Перед обработкой узла проверяйте seen.has(node) — если уже видели, верните 0.',
+    ],
+    solutionCode: `function countNodes(root, seen = new Set()) {
+  if (seen.has(root)) return 0;
+  seen.add(root);
+
+  let count = 1;
+  if (root.children) {
+    for (const child of root.children) {
+      count += countNodes(child, seen);
+    }
+  }
+  return count;
+}`,
+  },
+  {
+    id: 'tr-p8',
+    topicId: 'trees',
+    kind: 'refactor',
+    title: 'Рефакторинг: рекурсивный DFS → итеративный со стеком',
+    difficulty: 'medium',
+    isContextual: false,
+    description: `Перед вами рекурсивный DFS, собирающий значения всех узлов дерева. Он корректно работает на сбалансированных деревьях, но на дереве-цепочке глубиной 50 000 узлов он падает с Maximum call stack size exceeded — V8 ограничивает стек вызовов примерно 10–15 тысячами кадров.
+
+Перепишите функцию итеративно, используя явный стек. Контракт остаётся тем же: вернуть массив значений в pre-order (корень → дети слева направо).
+
+Тест производительности: цепочка из 50 000 узлов должна обходиться без падения стека и завершаться за 100 миллисекунд.`,
+    functionName: 'collectValues',
+    starterCode: `function collectValues(root) {
+  // Рекурсивный DFS — работает, но падает на глубокой цепочке
+  const result = [];
+
+  function dfs(node) {
+    result.push(node.value);
+    if (node.children) {
+      for (const child of node.children) dfs(child);
+    }
+  }
+
+  dfs(root);
+  return result;
+}`,
+    testCases: [
+      {
+        id: 'tr-p8-t1',
+        inputDisplay: 'базовое дерево {1, [2, [4, 5], 3, [6]]}',
+        inputArgs: [
+          {
+            value: 1,
+            children: [
+              { value: 2, children: [{ value: 4 }, { value: 5 }] },
+              { value: 3, children: [{ value: 6 }] },
+            ],
+          },
+        ],
+        expected: [1, 2, 4, 5, 3, 6],
+      },
+      {
+        id: 'tr-p8-t2',
+        inputDisplay: 'один узел',
+        inputArgs: [{ value: 42 }],
+        expected: [42],
+      },
+      {
+        id: 'tr-p8-t3',
+        inputDisplay: 'плоское дерево {1, [2, 3, 4]}',
+        inputArgs: [{ value: 1, children: [{ value: 2 }, { value: 3 }, { value: 4 }] }],
+        expected: [1, 2, 3, 4],
+      },
+      {
+        id: 'tr-p8-t4',
+        inputDisplay: 'короткая цепочка глубины 5',
+        inputArgs: [
+          {
+            value: 0,
+            children: [
+              {
+                value: 1,
+                children: [
+                  {
+                    value: 2,
+                    children: [
+                      { value: 3, children: [{ value: 4 }] },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+        expected: [0, 1, 2, 3, 4],
+      },
+    ],
+    perfTest: {
+      // Chain of 50_000 nodes — recursive DFS will blow the stack on this input.
+      inputArgs: [
+        (() => {
+          let chain: { value: number; children: unknown[] } | null = null;
+          for (let i = 49_999; i >= 0; i--) {
+            chain = { value: i, children: chain ? [chain] : [] };
+          }
+          return chain;
+        })(),
+      ],
+      maxMs: 100,
+    },
+    hints: [
+      'Замените стек вызовов на массив-стек: const stack = [root].',
+      'В цикле while (stack.length) делайте pop, push в результат, потом push детей.',
+      'Чтобы получить pre-order, кладите детей в стек в обратном порядке — тогда первый ребёнок окажется на вершине и обработается первым.',
+      'Итеративный обход не использует стек вызовов V8 и не имеет ограничения по глубине.',
+    ],
+    solutionCode: `function collectValues(root) {
+  const result = [];
+  const stack = [root];
+
+  while (stack.length > 0) {
+    const node = stack.pop();
+    result.push(node.value);
+
+    if (node.children) {
+      // Кладём в обратном порядке: первый ребёнок окажется на вершине
+      for (let i = node.children.length - 1; i >= 0; i--) {
+        stack.push(node.children[i]);
+      }
+    }
+  }
+
+  return result;
+}`,
+  },
 ];

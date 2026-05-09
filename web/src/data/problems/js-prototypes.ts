@@ -2,6 +2,179 @@ import type { Problem } from '../../types/problem';
 
 export const jsPrototypesProblems: Problem[] = [
   {
+    kind: 'predict-output',
+    id: 'jsp-p6',
+    topicId: 'js-prototypes',
+    title: 'Угадай вывод: переопределение метода в цепочке',
+    difficulty: 'easy',
+    isContextual: false,
+    description: `Что выведет этот код по строкам? Введи каждую строку в отдельной строчке поля ответа.`,
+    code: `class Animal {
+  speak() { return 'generic'; }
+}
+class Dog extends Animal {
+  speak() { return super.speak() + ' → woof'; }
+}
+class Poodle extends Dog {}
+
+const a = new Animal();
+const d = new Dog();
+const p = new Poodle();
+
+console.log(a.speak());
+console.log(d.speak());
+console.log(p.speak());
+console.log(p instanceof Animal);`,
+    expected: 'generic\ngeneric → woof\ngeneric → woof\ntrue',
+    hints: [
+      'Поиск метода идёт по цепочке: p → Poodle.prototype → Dog.prototype → Animal.prototype.',
+      'Poodle не переопределяет speak, поэтому используется Dog.prototype.speak с super = Animal.prototype.speak.',
+      'instanceof проверяет всю цепочку прототипов до Object.prototype.',
+    ],
+    solutionCode: `// a.speak(): найдено на Animal.prototype → 'generic'.
+// d.speak(): найдено на Dog.prototype, super.speak() = 'generic' → 'generic → woof'.
+// p.speak(): Poodle.prototype не имеет speak, поднимаемся в Dog.prototype, далее всё как у d → 'generic → woof'.
+// p instanceof Animal: цепочка Poodle.prototype → Dog.prototype → Animal.prototype → true.`,
+  },
+  {
+    kind: 'find-bug',
+    id: 'jsp-p7',
+    topicId: 'js-prototypes',
+    title: 'Найди баг: constructor после наследования через прототип',
+    difficulty: 'medium',
+    isContextual: false,
+    description: `Класс Dog наследует от Animal через ручную сборку прототипа. Но что-то не так: после создания экземпляра \`new Dog('Rex').constructor\` указывает не на Dog. Найди и почини баг, чтобы все тесты прошли.`,
+    buggyCode: `function Animal(name) {
+  this.name = name;
+}
+Animal.prototype.speak = function () {
+  return this.name + ' издаёт звук';
+};
+
+function Dog(name) {
+  Animal.call(this, name);
+}
+Dog.prototype = Object.create(Animal.prototype);
+
+Dog.prototype.bark = function () {
+  return this.name + ' лает!';
+};`,
+    functionName: 'jsp_p7_test',
+    bugSummary:
+      'После `Dog.prototype = Object.create(Animal.prototype)` свойство `constructor` стало наследоваться от Animal.prototype и указывает на Animal. Это ломает фабричные паттерны вида `new this.constructor()`. Лечится одной строкой: `Dog.prototype.constructor = Dog`.',
+    testCases: [
+      { id: 'jsp-p7-t1', inputDisplay: 'new Dog("Rex").bark()', inputArgs: ['bark'], expected: 'Rex лает!' },
+      { id: 'jsp-p7-t2', inputDisplay: 'new Dog("Rex").speak()', inputArgs: ['speak'], expected: 'Rex издаёт звук' },
+      { id: 'jsp-p7-t3', inputDisplay: 'new Dog("Rex").constructor === Dog', inputArgs: ['ctor-dog'], expected: true },
+      { id: 'jsp-p7-t4', inputDisplay: 'new Dog("Rex") instanceof Dog', inputArgs: ['inst-dog'], expected: true },
+      { id: 'jsp-p7-t5', inputDisplay: 'new Dog("Rex") instanceof Animal', inputArgs: ['inst-animal'], expected: true },
+    ],
+    hints: [
+      'instanceof работает — значит цепочка прототипов настроена корректно.',
+      'Проблема в том, что `Object.create(Animal.prototype)` создаёт новый объект, у которого `constructor` унаследован от Animal.prototype.',
+      'Допиши одну строку после `Dog.prototype = Object.create(...)`: восстанови `Dog.prototype.constructor`.',
+    ],
+    solutionCode: `function Animal(name) {
+  this.name = name;
+}
+Animal.prototype.speak = function () {
+  return this.name + ' издаёт звук';
+};
+
+function Dog(name) {
+  Animal.call(this, name);
+}
+Dog.prototype = Object.create(Animal.prototype);
+Dog.prototype.constructor = Dog;
+
+Dog.prototype.bark = function () {
+  return this.name + ' лает!';
+};`,
+    testHelperCode: `function jsp_p7_test(arg) {
+  if (arg === 'bark') return new Dog('Rex').bark();
+  if (arg === 'speak') return new Dog('Rex').speak();
+  if (arg === 'ctor-dog') return new Dog('Rex').constructor === Dog;
+  if (arg === 'inst-dog') return new Dog('Rex') instanceof Dog;
+  if (arg === 'inst-animal') return new Dog('Rex') instanceof Animal;
+}`,
+  },
+  {
+    kind: 'refactor',
+    id: 'jsp-p8',
+    topicId: 'js-prototypes',
+    title: 'Перепиши: прототипное наследование → ES2015 class',
+    difficulty: 'medium',
+    isContextual: false,
+    description: `Дан рабочий код с ручным прототипным наследованием в стиле ES5. Перепиши его на современный синтаксис \`class\` / \`extends\` / \`super\`.
+
+Поведение должно остаться идентичным:
+- \`new Square(3).area()\` → \`9\`
+- \`new Square(3).describe()\` → \`'Фигура: square, площадь 9'\`
+- \`new Square(3) instanceof Shape\` → \`true\`
+
+Используй \`class Shape\`, \`class Square extends Shape\` и \`super(...)\` в конструкторе.`,
+    functionName: 'jsp_p8_test',
+    starterCode: `function Shape(kind) {
+  this.kind = kind;
+}
+Shape.prototype.describe = function () {
+  return 'Фигура: ' + this.kind + ', площадь ' + this.area();
+};
+Shape.prototype.area = function () {
+  return 0;
+};
+
+function Square(side) {
+  Shape.call(this, 'square');
+  this.side = side;
+}
+Square.prototype = Object.create(Shape.prototype);
+Square.prototype.constructor = Square;
+Square.prototype.area = function () {
+  return this.side * this.side;
+};`,
+    testCases: [
+      { id: 'jsp-p8-t1', inputDisplay: 'new Square(3).area()', inputArgs: ['area'], expected: 9 },
+      { id: 'jsp-p8-t2', inputDisplay: 'new Square(4).area()', inputArgs: ['area4'], expected: 16 },
+      { id: 'jsp-p8-t3', inputDisplay: 'new Square(3).describe()', inputArgs: ['describe'], expected: 'Фигура: square, площадь 9' },
+      { id: 'jsp-p8-t4', inputDisplay: 'new Square(3) instanceof Shape', inputArgs: ['inst-shape'], expected: true },
+      { id: 'jsp-p8-t5', inputDisplay: 'new Square(3) instanceof Square', inputArgs: ['inst-square'], expected: true },
+    ],
+    hints: [
+      'class Shape { constructor(kind) { ... } describe() { ... } area() { ... } }',
+      'class Square extends Shape — в конструкторе вызови super("square") до использования this.',
+      'Метод area переопредели в Square — он перекроет родительский по правилам цепочки прототипов.',
+    ],
+    solutionCode: `class Shape {
+  constructor(kind) {
+    this.kind = kind;
+  }
+  describe() {
+    return 'Фигура: ' + this.kind + ', площадь ' + this.area();
+  }
+  area() {
+    return 0;
+  }
+}
+
+class Square extends Shape {
+  constructor(side) {
+    super('square');
+    this.side = side;
+  }
+  area() {
+    return this.side * this.side;
+  }
+}`,
+    testHelperCode: `function jsp_p8_test(arg) {
+  if (arg === 'area') return new Square(3).area();
+  if (arg === 'area4') return new Square(4).area();
+  if (arg === 'describe') return new Square(3).describe();
+  if (arg === 'inst-shape') return new Square(3) instanceof Shape;
+  if (arg === 'inst-square') return new Square(3) instanceof Square;
+}`,
+  },
+  {
     id: 'jsp-p1',
     topicId: 'js-prototypes',
     title: 'myInstanceof — реализовать instanceof',
@@ -404,9 +577,12 @@ Object.getPrototypeOf(noProto); // → null
     hints: [
       'Используйте конструктор-заглушку: `function F() {}; F.prototype = proto; return new F()`.',
       'Это классическая реализация до появления стандартного Object.create.',
-      'Для null-прототипа: у объектов, созданных через `new F()`, прототип будет `F.prototype`. Если `proto === null`, то `F.prototype = null` — так и создаётся объект без прототипа.',
+      'Случай `proto === null` нужно обработать отдельно: `F.prototype = null` не сработает (движок подставит `Object.prototype`). Используйте `{ __proto__: null }`.',
     ],
     solutionCode: `function myObjectCreate(proto) {
+  if (proto === null) {
+    return { __proto__: null };
+  }
   function F() {}
   F.prototype = proto;
   return new F();

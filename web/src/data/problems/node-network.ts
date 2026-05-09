@@ -221,6 +221,36 @@ limiter.check('user2'); // true (другой пользователь)
     },
   };
 }`,
+    testHelperCode: `// Wraps the user's createRateLimiter and dispatches by scenario token.
+// We reassign the same identifier (function decls are mutable bindings inside the IIFE).
+const __createRateLimiter = createRateLimiter;
+createRateLimiter = function (arg) {
+  if (arg === 'within-limit') {
+    const limiter = __createRateLimiter(3, 1000);
+    return [limiter.check('user1'), limiter.check('user1'), limiter.check('user1')];
+  }
+  if (arg === 'exceed') {
+    const limiter = __createRateLimiter(3, 1000);
+    limiter.check('u'); limiter.check('u'); limiter.check('u');
+    return limiter.check('u');
+  }
+  if (arg === 'different-users') {
+    const limiter = __createRateLimiter(2, 1000);
+    limiter.check('a'); limiter.check('a');
+    // user 'a' exhausted, but user 'b' must still be allowed
+    return limiter.check('b') === true && limiter.check('a') === false;
+  }
+  if (arg === 'returns-bool') {
+    const limiter = __createRateLimiter(1, 1000);
+    const r = limiter.check('x');
+    return typeof r === 'boolean';
+  }
+  if (arg === 'first-request') {
+    const limiter = __createRateLimiter(5, 1000);
+    return limiter.check('first') === true;
+  }
+  return null;
+};`,
   },
   {
     id: 'nodenet-p4',
@@ -417,6 +447,299 @@ await fetchWithRetry(alwaysFails, 2);
     }
   }
   throw lastError;
+}`,
+    testHelperCode: `// Wraps the user's fetchWithRetry and dispatches by scenario token.
+const __fetchWithRetry = fetchWithRetry;
+fetchWithRetry = async function (arg) {
+  // Use small baseDelay (1ms) so tests run fast.
+  if (arg === 'success-first') {
+    const fetchFn = async () => ({ ok: true });
+    return await __fetchWithRetry(fetchFn, 3, 1);
+  }
+  if (arg === 'success-third') {
+    let attempts = 0;
+    const fetchFn = async () => {
+      attempts++;
+      if (attempts < 3) throw new Error('network error');
+      return { ok: true };
+    };
+    return await __fetchWithRetry(fetchFn, 3, 1);
+  }
+  if (arg === 'all-fail') {
+    const fetchFn = async () => { throw new Error('network error'); };
+    try {
+      await __fetchWithRetry(fetchFn, 2, 1);
+      return null;
+    } catch (e) {
+      return 'Error: ' + (e && e.message ? e.message : String(e));
+    }
+  }
+  if (arg === 'no-retry') {
+    let attempts = 0;
+    const fetchFn = async () => { attempts++; throw new Error('fail'); };
+    try {
+      await __fetchWithRetry(fetchFn, 0, 1);
+    } catch {}
+    return attempts === 1;
+  }
+  if (arg === 'delay-check') {
+    let attempts = 0;
+    const times = [];
+    const fetchFn = async () => {
+      times.push(Date.now());
+      attempts++;
+      if (attempts < 3) throw new Error('boom');
+      return { ok: true };
+    };
+    const start = Date.now();
+    const result = await __fetchWithRetry(fetchFn, 3, 50);
+    const elapsed = Date.now() - start;
+    // Expected delays: 50ms after 1st fail, 100ms after 2nd fail = ~150ms minimum.
+    return result && result.ok === true && attempts === 3 && elapsed >= 140;
+  }
+  return null;
+};`,
+  },
+  {
+    kind: 'predict-output',
+    id: 'nn-p6',
+    topicId: 'node-network',
+    title: 'Угадай вывод: middleware-цепочка Express',
+    difficulty: 'medium',
+    isContextual: false,
+    description: `Перед вами middleware-цепочка в стиле Express: каждый middleware печатает строку до next() и опционально после. Введите каждую напечатанную строку в отдельной строчке поля ответа.
+
+Подсказка: middleware выполняются строго в порядке регистрации. \`next()\` синхронно вызывает следующий middleware, а после его возврата управление возвращается обратно — поэтому строки «после next()» печатаются в обратном порядке.`,
+    code: `function runPipeline(middlewares, req, res) {
+  let i = 0;
+  function next() {
+    if (i >= middlewares.length) return;
+    const mw = middlewares[i++];
+    mw(req, res, next);
+  }
+  next();
+}
+
+const a = (req, res, next) => {
+  console.log('A in');
+  next();
+  console.log('A out');
+};
+const b = (req, res, next) => {
+  console.log('B in');
+  next();
+  console.log('B out');
+};
+const c = (req, res, next) => {
+  console.log('C handler');
+};
+
+runPipeline([a, b, c], {}, {});`,
+    expected: 'A in\nB in\nC handler\nB out\nA out',
+    hints: [
+      'next() — синхронный вызов следующего middleware. Управление возвращается обратно после его завершения.',
+      'Сначала идём «вглубь»: A in → B in → C handler.',
+      'Затем «всплываем» обратно: B out → A out (LIFO).',
+      'Это тот же порядок, что у вложенных функций — каждый next() как обычный синхронный вызов.',
+    ],
+    solutionCode: `// A in   — middleware A напечатал и вызвал next()
+// B in   — middleware B напечатал и вызвал next()
+// C handler — последний middleware (next() не вызвал)
+// B out  — управление вернулось к B после next()
+// A out  — управление вернулось к A после next()
+// Итог: A in, B in, C handler, B out, A out`,
+  },
+  {
+    kind: 'find-bug',
+    id: 'nn-p7',
+    topicId: 'node-network',
+    title: 'Найди баг: middleware не вызывает next()',
+    difficulty: 'easy',
+    isContextual: false,
+    description: `Функция \`runPipeline(middlewares, req)\` имитирует Express-конвейер: запускает middleware по очереди, и каждый из них дописывает свой идентификатор в \`req.trace\`. Тесты ожидают, что после прогона цепочки \`req.trace === 'AUTH|LOG|HANDLER'\`.
+
+В коде есть распространённый production-баг: один из middleware **забывает** вызвать \`next()\` после своей работы. Из-за этого цепочка обрывается, последующие middleware не выполняются, и в реальном Express-сервере запрос «зависнет» до server-timeout.
+
+Найдите и почините.`,
+    buggyCode: `function authMw(req, res, next) {
+  req.trace = (req.trace ?? '') + 'AUTH';
+  // Забыли вызвать next() — цепочка обрывается!
+}
+
+function logMw(req, res, next) {
+  req.trace += '|LOG';
+  next();
+}
+
+function handlerMw(req, res, next) {
+  req.trace += '|HANDLER';
+}
+
+function runPipeline(middlewares, req) {
+  let i = 0;
+  function next() {
+    if (i >= middlewares.length) return;
+    const mw = middlewares[i++];
+    mw(req, {}, next);
+  }
+  next();
+  return req;
+}
+
+function nn_p7_test(arg) {
+  const req = {};
+  if (arg === 'all') {
+    runPipeline([authMw, logMw, handlerMw], req);
+    return req.trace;
+  }
+  if (arg === 'auth-only') {
+    runPipeline([authMw], req);
+    return req.trace;
+  }
+  if (arg === 'auth+log') {
+    runPipeline([authMw, logMw], req);
+    return req.trace;
+  }
+}`,
+    functionName: 'nn_p7_test',
+    bugSummary:
+      'authMw не вызывает next(), поэтому конвейер обрывается на первом же middleware. logMw и handlerMw никогда не выполняются. В реальном Express-сервере это приводит к зависанию запроса до server timeout.',
+    testCases: [
+      {
+        id: 'nn-p7-t1',
+        inputDisplay: 'все три middleware выполнились → AUTH|LOG|HANDLER',
+        inputArgs: ['all'],
+        expected: 'AUTH|LOG|HANDLER',
+      },
+      {
+        id: 'nn-p7-t2',
+        inputDisplay: 'authMw в одиночку → AUTH',
+        inputArgs: ['auth-only'],
+        expected: 'AUTH',
+      },
+      {
+        id: 'nn-p7-t3',
+        inputDisplay: 'auth+log выполнились → AUTH|LOG',
+        inputArgs: ['auth+log'],
+        expected: 'AUTH|LOG',
+      },
+    ],
+    hints: [
+      'Запустите код мысленно: authMw добавил "AUTH", и… что дальше? Цепочка управления должна перейти к следующему middleware, но как?',
+      'В middleware-pipeline следующий middleware вызывается через next(). Если его не вызвать — конвейер заморожен.',
+      'Допишите next() в конце authMw.',
+    ],
+    solutionCode: `function authMw(req, res, next) {
+  req.trace = (req.trace ?? '') + 'AUTH';
+  next();
+}
+
+function logMw(req, res, next) {
+  req.trace += '|LOG';
+  next();
+}
+
+function handlerMw(req, res, next) {
+  req.trace += '|HANDLER';
+}
+
+function runPipeline(middlewares, req) {
+  let i = 0;
+  function next() {
+    if (i >= middlewares.length) return;
+    const mw = middlewares[i++];
+    mw(req, {}, next);
+  }
+  next();
+  return req;
+}
+
+function nn_p7_test(arg) {
+  const req = {};
+  if (arg === 'all') {
+    runPipeline([authMw, logMw, handlerMw], req);
+    return req.trace;
+  }
+  if (arg === 'auth-only') {
+    runPipeline([authMw], req);
+    return req.trace;
+  }
+  if (arg === 'auth+log') {
+    runPipeline([authMw, logMw], req);
+    return req.trace;
+  }
+}`,
+  },
+  {
+    kind: 'refactor',
+    id: 'nn-p8',
+    topicId: 'node-network',
+    title: 'Оптимизируй: цепочка if-ов → словарь маршрутов',
+    difficulty: 'easy',
+    isContextual: false,
+    description: `Функция \`route(method, path)\` — наивный роутер на цепочке \`if/else if\`. С каждым новым маршрутом конструкция растёт линейно и плохо читается. Перепишите функцию так, чтобы маршруты хранились в **словаре** (\`Map\` или объекте) с ключом \`\`\${method} \${path}\`\`, а \`route\` делал \`O(1)\` lookup.
+
+Сигнатура остаётся: \`route(method, path)\` возвращает строку — имя обработчика — или \`'404'\`, если маршрут не зарегистрирован. Корректность: результат должен совпадать со starter-кодом для всех тест-кейсов.`,
+    functionName: 'route',
+    starterCode: `function route(method, path) {
+  if (method === 'GET' && path === '/users') return 'getAllUsers';
+  if (method === 'POST' && path === '/users') return 'createUser';
+  if (method === 'GET' && path === '/posts') return 'getAllPosts';
+  if (method === 'POST' && path === '/posts') return 'createPost';
+  if (method === 'GET' && path === '/health') return 'healthCheck';
+  if (method === 'GET' && path === '/metrics') return 'getMetrics';
+  if (method === 'DELETE' && path === '/cache') return 'clearCache';
+  return '404';
+}`,
+    testCases: [
+      {
+        id: 'nn-p8-t1',
+        inputDisplay: 'GET /users → getAllUsers',
+        inputArgs: ['GET', '/users'],
+        expected: 'getAllUsers',
+      },
+      {
+        id: 'nn-p8-t2',
+        inputDisplay: 'POST /posts → createPost',
+        inputArgs: ['POST', '/posts'],
+        expected: 'createPost',
+      },
+      {
+        id: 'nn-p8-t3',
+        inputDisplay: 'DELETE /cache → clearCache',
+        inputArgs: ['DELETE', '/cache'],
+        expected: 'clearCache',
+      },
+      {
+        id: 'nn-p8-t4',
+        inputDisplay: 'GET /unknown → 404',
+        inputArgs: ['GET', '/unknown'],
+        expected: '404',
+      },
+      {
+        id: 'nn-p8-t5',
+        inputDisplay: 'PUT /users → 404 (метод не зарегистрирован)',
+        inputArgs: ['PUT', '/users'],
+        expected: '404',
+      },
+    ],
+    hints: [
+      'Создайте `Map` (или обычный объект) один раз вне функции `route`. Ключ — `` `${method} ${path}` ``, значение — имя обработчика.',
+      'Внутри `route` соберите тот же ключ и сделайте `routes.get(key) ?? "404"`.',
+      'Если используете обычный объект — `routes[key]` тоже работает, но Map предпочтительнее: ключи изолированы от прототипа.',
+    ],
+    solutionCode: `const routes = new Map([
+  ['GET /users', 'getAllUsers'],
+  ['POST /users', 'createUser'],
+  ['GET /posts', 'getAllPosts'],
+  ['POST /posts', 'createPost'],
+  ['GET /health', 'healthCheck'],
+  ['GET /metrics', 'getMetrics'],
+  ['DELETE /cache', 'clearCache'],
+]);
+
+function route(method, path) {
+  return routes.get(\`\${method} \${path}\`) ?? '404';
 }`,
   },
 ];

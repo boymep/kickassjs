@@ -430,6 +430,208 @@ export const binarySearchProblems: Problem[] = [
 }`,
   },
   {
+    id: 'bs-p7',
+    topicId: 'binary-search',
+    kind: 'predict-output',
+    title: 'Предскажите вывод: бинарный поиск 4 в [1, 2, 4, 4, 5]',
+    difficulty: 'easy',
+    isContextual: false,
+    description: `Перед вами реализация классического бинарного поиска. Проследите выполнение для массива [1, 2, 4, 4, 5] и target = 4. Какой индекс выведет console.log?
+
+Подсказка: посчитайте mid вручную для каждой итерации и определите, на какой именно итерации сработает условие arr[mid] === target.`,
+    code: `function binarySearch(arr, target) {
+  let left = 0;
+  let right = arr.length - 1;
+
+  while (left <= right) {
+    const mid = Math.floor((left + right) / 2);
+
+    if (arr[mid] === target) return mid;
+    else if (arr[mid] < target) left = mid + 1;
+    else right = mid - 1;
+  }
+
+  return -1;
+}
+
+console.log(binarySearch([1, 2, 4, 4, 5], 4));`,
+    expected: '2',
+    hints: [
+      'Итерация 1: left=0, right=4, mid=2, arr[2]=4 — совпадение.',
+      'Классический шаблон возвращает первый встретившийся индекс, не обязательно самый левый.',
+    ],
+    solutionCode: `// На итерации 1: mid = Math.floor((0 + 4) / 2) = 2.
+// arr[2] === 4 === target, поэтому функция возвращает 2.
+//
+// Заметьте: индекс 3 — тоже валидное вхождение 4,
+// но классический шаблон останавливается на первом найденном.`,
+  },
+  {
+    id: 'bs-p8',
+    topicId: 'binary-search',
+    kind: 'find-bug',
+    title: 'Найдите баг: бесконечный цикл в бинарном поиске',
+    difficulty: 'medium',
+    isContextual: false,
+    description: `Перед вами реализация бинарного поиска, в которой содержится баг. На некоторых входах функция зависает в бесконечном цикле или возвращает неверный результат.
+
+Найдите ошибку и исправьте её. Подумайте, как сочетаются условие цикла и сдвиг границ.`,
+    functionName: 'binarySearch',
+    buggyCode: `function binarySearch(arr, target) {
+  let left = 0;
+  let right = arr.length - 1;
+
+  while (left < right) {
+    const mid = Math.floor((left + right) / 2);
+
+    if (arr[mid] === target) return mid;
+    else if (arr[mid] < target) left = mid + 1;
+    else right = mid - 1;
+  }
+
+  return -1;
+}`,
+    bugSummary:
+      'Условие цикла left < right (вместо left <= right) пропускает диапазон из одного элемента. Когда искомое значение находится в позиции left === right, цикл завершается до проверки.',
+    testCases: [
+      {
+        id: 'bs-p8-t1',
+        inputDisplay: 'binarySearch([1, 3, 5, 7, 9], 9)',
+        inputArgs: [[1, 3, 5, 7, 9], 9],
+        expected: 4,
+      },
+      {
+        id: 'bs-p8-t2',
+        inputDisplay: 'binarySearch([1], 1)',
+        inputArgs: [[1], 1],
+        expected: 0,
+      },
+      {
+        id: 'bs-p8-t3',
+        inputDisplay: 'binarySearch([1, 3, 5, 7, 9], 5)',
+        inputArgs: [[1, 3, 5, 7, 9], 5],
+        expected: 2,
+      },
+      {
+        id: 'bs-p8-t4',
+        inputDisplay: 'binarySearch([1, 3, 5, 7, 9], 1)',
+        inputArgs: [[1, 3, 5, 7, 9], 1],
+        expected: 0,
+      },
+      {
+        id: 'bs-p8-t5',
+        inputDisplay: 'binarySearch([1, 3, 5, 7, 9], 6)',
+        inputArgs: [[1, 3, 5, 7, 9], 6],
+        expected: -1,
+      },
+    ],
+    hints: [
+      'Запустите код мысленно для массива [1] и target = 1. Войдёт ли цикл?',
+      'Сравните условие цикла с шаблоном из теории: какое из двух (< или <=) подходит при сдвигах mid + 1 / mid - 1?',
+      'Закрытый интервал [left; right] требует условия left <= right.',
+    ],
+    solutionCode: `function binarySearch(arr, target) {
+  let left = 0;
+  let right = arr.length - 1;
+
+  while (left <= right) {
+    const mid = Math.floor((left + right) / 2);
+
+    if (arr[mid] === target) return mid;
+    else if (arr[mid] < target) left = mid + 1;
+    else right = mid - 1;
+  }
+
+  return -1;
+}`,
+  },
+  {
+    id: 'bs-p9',
+    topicId: 'binary-search',
+    kind: 'refactor',
+    title: 'Рефакторинг: O(n) поиск → O(log n) бинарный поиск',
+    difficulty: 'medium',
+    isContextual: false,
+    description: `Перед вами линейный поиск элемента в отсортированном массиве. Он работает корректно, но за O(n) — на массиве из 100 000 элементов это слишком медленно.
+
+Перепишите функцию так, чтобы она использовала бинарный поиск и работала за O(log n). Контракт остаётся тем же: вернуть индекс target или -1, если элемента нет.
+
+Тест производительности: на массиве из 100 000 элементов с target в середине решение должно завершаться за 50 миллисекунд.`,
+    functionName: 'findIndex',
+    starterCode: `function findIndex(arr, target) {
+  // Линейный поиск — работает, но медленно
+  for (let i = 0; i < arr.length; i++) {
+    if (arr[i] === target) return i;
+  }
+  return -1;
+}`,
+    testCases: [
+      {
+        id: 'bs-p9-t1',
+        inputDisplay: 'findIndex([1, 3, 5, 7, 9], 5)',
+        inputArgs: [[1, 3, 5, 7, 9], 5],
+        expected: 2,
+      },
+      {
+        id: 'bs-p9-t2',
+        inputDisplay: 'findIndex([1, 3, 5, 7, 9], 6)',
+        inputArgs: [[1, 3, 5, 7, 9], 6],
+        expected: -1,
+      },
+      {
+        id: 'bs-p9-t3',
+        inputDisplay: 'findIndex([10], 10)',
+        inputArgs: [[10], 10],
+        expected: 0,
+      },
+      {
+        id: 'bs-p9-t4',
+        inputDisplay: 'findIndex([], 5)',
+        inputArgs: [[], 5],
+        expected: -1,
+      },
+      {
+        id: 'bs-p9-t5',
+        inputDisplay: 'findIndex([1, 2, 3, 4, 5], 1)',
+        inputArgs: [[1, 2, 3, 4, 5], 1],
+        expected: 0,
+      },
+      {
+        id: 'bs-p9-t6',
+        inputDisplay: 'findIndex([1, 2, 3, 4, 5], 5)',
+        inputArgs: [[1, 2, 3, 4, 5], 5],
+        expected: 4,
+      },
+    ],
+    perfTest: {
+      // Sorted array of 100_000 numbers (0, 2, 4, ..., 199_998); target = 99_998 (middle index 49_999).
+      inputArgs: [
+        Array.from({ length: 100_000 }, (_, i) => i * 2),
+        99_998,
+      ],
+      maxMs: 50,
+    },
+    hints: [
+      'Используйте классический шаблон с двумя указателями left и right.',
+      'На каждой итерации сравнивайте arr[mid] с target и сдвигайте одну из границ на mid ± 1.',
+      'Линейный поиск делает O(n) сравнений; бинарный — O(log n) (около 17 для 100 000 элементов).',
+    ],
+    solutionCode: `function findIndex(arr, target) {
+  let left = 0;
+  let right = arr.length - 1;
+
+  while (left <= right) {
+    const mid = Math.floor((left + right) / 2);
+
+    if (arr[mid] === target) return mid;
+    else if (arr[mid] < target) left = mid + 1;
+    else right = mid - 1;
+  }
+
+  return -1;
+}`,
+  },
+  {
     id: 'bs-p5',
     topicId: 'binary-search',
     title: 'Минимальная скорость доставки',

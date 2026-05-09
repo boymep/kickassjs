@@ -460,4 +460,224 @@ await limitConcurrency(tasks, 3);
   }
 }`,
   },
+  {
+    kind: 'predict-output',
+    id: 'jsa-p6',
+    topicId: 'js-async',
+    title: 'Угадай вывод: await, Promise.then и queueMicrotask',
+    difficulty: 'medium',
+    isContextual: false,
+    description: `Перед вами микс синхронного кода, async/await, Promise.then и queueMicrotask. Введи каждую напечатанную строку в отдельной строчке поля ответа.
+
+Подсказка: \`await\` — синтаксический сахар над \`Promise.then\`. Каждый \`await\` ставит продолжение в очередь микрозадач. \`queueMicrotask\` и \`Promise.resolve().then\` идут в **одну и ту же** очередь и выполняются в порядке постановки.`,
+    code: `async function run() {
+  console.log('A');
+  await Promise.resolve();
+  console.log('B');
+  await Promise.resolve();
+  console.log('C');
+}
+
+console.log('1');
+run();
+queueMicrotask(() => console.log('Q'));
+Promise.resolve().then(() => console.log('T'));
+console.log('2');`,
+    expected: '1\nA\n2\nB\nQ\nT\nC',
+    hints: [
+      'Синхронный код в порядке появления: 1, затем A (до первого await в run), затем 2.',
+      'После синхронного кода microtask checkpoint опустошает очередь в порядке постановки.',
+      'Первая микрозадача в очереди — продолжение run после первого await: печатает B и регистрирует следующее продолжение для C.',
+      'Затем выполняются queueMicrotask (Q) и Promise.then (T), которые были поставлены в очередь раньше, чем continuation-C.',
+      'Последним выполняется continuation-C, поставленный после Q и T. Итог: 1, A, 2, B, Q, T, C.',
+    ],
+    solutionCode: `// 1 — sync
+// run() начинает выполняться: A — sync (до первого await)
+// первый await ставит continuation-1 (печать B) в microtask queue
+// queueMicrotask(Q) — добавлена в microtask queue ПОСЛЕ continuation-1
+// Promise.resolve().then(T) — добавлена в microtask queue после Q
+// 2 — sync
+// microtask checkpoint (FIFO):
+//   continuation-1: печатает B, ставит continuation-2 (печать C) в очередь
+//   Q
+//   T
+//   continuation-2: печатает C
+// Итог: 1, A, 2, B, Q, T, C`,
+  },
+  {
+    kind: 'find-bug',
+    id: 'jsa-p7',
+    topicId: 'js-async',
+    title: 'Найди баг: Promise.all передан массив функций',
+    difficulty: 'easy',
+    isContextual: false,
+    description: `Функция \`runAll(fns)\` должна параллельно вызвать каждую функцию из массива и вернуть массив результатов в исходном порядке. Тесты проверяют, что результат — реальные значения, а не функции или сами Promise.
+
+В коде есть распространённая ошибка: в \`Promise.all\` передан массив **функций**, а не массив промисов — функции не были вызваны. Найди баг и почини.`,
+    buggyCode: `async function runAll(fns) {
+  // Передаём массив функций вместо вызовов.
+  // Promise.all не «знает» про функции — он ждёт промисы.
+  return await Promise.all(fns);
+}`,
+    functionName: 'jsa_p7_test',
+    bugSummary:
+      'Promise.all принимает итерируемое промисов (или значений), а не функций. Чтобы запустить функции, их нужно вызвать: `Promise.all(fns.map((fn) => fn()))`. Без этого Promise.all резолвится массивом самих функций как обычных значений.',
+    testCases: [
+      {
+        id: 'jsa-p7-t1',
+        inputDisplay: 'все async-функции выполнены → массив значений',
+        inputArgs: ['basic'],
+        expected: [1, 2, 3],
+      },
+      {
+        id: 'jsa-p7-t2',
+        inputDisplay: 'элементы — числа, не функции',
+        inputArgs: ['types'],
+        expected: 'number,number,number',
+      },
+      {
+        id: 'jsa-p7-t3',
+        inputDisplay: 'порядок результатов соответствует порядку входа',
+        inputArgs: ['order'],
+        expected: [10, 20, 30],
+      },
+      {
+        id: 'jsa-p7-t4',
+        inputDisplay: 'пустой массив → []',
+        inputArgs: ['empty'],
+        expected: [],
+      },
+    ],
+    hints: [
+      'Что находится в массиве `fns`? Это функции, возвращающие Promise, — а не сами Promise.',
+      'Promise.all ждёт promise-like значения. Нужно сначала вызвать каждую функцию, чтобы получить промис.',
+      'Достаточно одной строки: `fns.map((fn) => fn())` перед передачей в Promise.all.',
+    ],
+    solutionCode: `async function runAll(fns) {
+  return await Promise.all(fns.map((fn) => fn()));
+}`,
+    testHelperCode: `async function jsa_p7_test(arg) {
+  const delay = (ms, val) => new Promise((r) => setTimeout(() => r(val), ms));
+  if (arg === 'basic') {
+    return await runAll([
+      () => Promise.resolve(1),
+      () => Promise.resolve(2),
+      () => Promise.resolve(3),
+    ]);
+  }
+  if (arg === 'types') {
+    const result = await runAll([
+      () => Promise.resolve(1),
+      () => Promise.resolve(2),
+      () => Promise.resolve(3),
+    ]);
+    return result.map((x) => typeof x).join(',');
+  }
+  if (arg === 'order') {
+    return await runAll([
+      () => delay(20, 10),
+      () => delay(5, 20),
+      () => delay(10, 30),
+    ]);
+  }
+  if (arg === 'empty') {
+    return await runAll([]);
+  }
+}`,
+  },
+  {
+    kind: 'refactor',
+    id: 'jsa-p8',
+    topicId: 'js-async',
+    title: 'Оптимизируй: sequential await → parallel Promise.all',
+    difficulty: 'easy',
+    isContextual: false,
+    description: `Функция \`fetchAllParallel(urls, fetcher)\` загружает данные по списку URL и возвращает массив результатов в исходном порядке. Текущая реализация выполняет загрузку **последовательно** через \`for...of\` + \`await\` — это медленно, так как сумма всех задержек складывается.
+
+Перепиши функцию так, чтобы она запускала все загрузки **параллельно** через \`Promise.all\`, сохраняя порядок результатов. Корректность: результат должен совпадать с прежним элемент-в-элемент.
+
+Сигнатура остаётся: \`fetchAllParallel(urls, fetcher)\` принимает массив строк и async-функцию \`fetcher(url)\`, возвращает Promise с массивом результатов.`,
+    functionName: 'fetchAllParallel_test',
+    starterCode: `async function fetchAllParallel(urls, fetcher) {
+  // Текущая реализация — последовательная.
+  // Перепиши через Promise.all + map, чтобы запросы шли параллельно.
+  const results = [];
+  for (const url of urls) {
+    results.push(await fetcher(url));
+  }
+  return results;
+}`,
+    testCases: [
+      {
+        id: 'jsa-p8-t1',
+        inputDisplay: '3 URL → массив результатов в исходном порядке',
+        inputArgs: ['order'],
+        expected: ['data:a', 'data:b', 'data:c'],
+      },
+      {
+        id: 'jsa-p8-t2',
+        inputDisplay: 'пустой массив → []',
+        inputArgs: ['empty'],
+        expected: [],
+      },
+      {
+        id: 'jsa-p8-t3',
+        inputDisplay: 'результат — массив значений (не промисов)',
+        inputArgs: ['types'],
+        expected: 'string,string,string',
+      },
+      {
+        id: 'jsa-p8-t4',
+        inputDisplay: 'порядок сохраняется при разных задержках',
+        inputArgs: ['varied-delays'],
+        expected: [1, 2, 3],
+      },
+      {
+        id: 'jsa-p8-t5',
+        inputDisplay: 'параллельность: все запросы стартуют одновременно',
+        inputArgs: ['parallel-check'],
+        expected: true,
+      },
+    ],
+    hints: [
+      'Используй `urls.map((url) => fetcher(url))` — это создаст массив промисов, запущенных одновременно.',
+      'Затем оберни в `await Promise.all(...)`, чтобы дождаться всех и получить массив значений.',
+      'Promise.all сохраняет порядок результатов независимо от того, какой промис завершился раньше — индексация по входу.',
+    ],
+    solutionCode: `async function fetchAllParallel(urls, fetcher) {
+  return await Promise.all(urls.map((url) => fetcher(url)));
+}`,
+    testHelperCode: `async function fetchAllParallel_test(arg) {
+  const delay = (ms, val) => new Promise((r) => setTimeout(() => r(val), ms));
+  const fetcher = (url) => delay(5, 'data:' + url);
+  if (arg === 'order') {
+    return await fetchAllParallel(['a', 'b', 'c'], fetcher);
+  }
+  if (arg === 'empty') {
+    return await fetchAllParallel([], fetcher);
+  }
+  if (arg === 'types') {
+    const result = await fetchAllParallel(['a', 'b', 'c'], fetcher);
+    return result.map((x) => typeof x).join(',');
+  }
+  if (arg === 'varied-delays') {
+    const variedFetcher = (n) => delay(n === 1 ? 30 : n === 2 ? 10 : 20, n);
+    return await fetchAllParallel([1, 2, 3], variedFetcher);
+  }
+  if (arg === 'parallel-check') {
+    let started = 0, maxStarted = 0;
+    const trackingFetcher = async (url) => {
+      started++;
+      maxStarted = Math.max(maxStarted, started);
+      await delay(15, null);
+      started--;
+      return url;
+    };
+    await fetchAllParallel(['a', 'b', 'c'], trackingFetcher);
+    // Если parallel — все 3 стартуют одновременно (maxStarted === 3).
+    // Если sequential — maxStarted === 1.
+    return maxStarted === 3;
+  }
+}`,
+  },
 ];

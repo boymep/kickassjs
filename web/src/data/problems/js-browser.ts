@@ -61,12 +61,12 @@ getVisibleRange(200, 300, 50, 100);
     ],
     hints: [
       '`startIndex = Math.floor(scrollTop / itemHeight)`. `offsetY = startIndex * itemHeight`.',
-      '`visibleCount = Math.ceil(containerHeight / itemHeight) + 1` (плюс один для частично видимых).',
-      '`endIndex = Math.min(startIndex + visibleCount, totalItems)`.',
+      '`visibleCount = Math.ceil(containerHeight / itemHeight)` (количество видимых элементов).',
+      '`endIndex = Math.min(startIndex + visibleCount, totalItems)` (не включительно).',
     ],
     solutionCode: `function getVisibleRange(scrollTop, containerHeight, itemHeight, totalItems) {
   const startIndex = Math.floor(scrollTop / itemHeight);
-  const visibleCount = Math.ceil(containerHeight / itemHeight) + 1;
+  const visibleCount = Math.ceil(containerHeight / itemHeight);
   const endIndex = Math.min(startIndex + visibleCount, totalItems);
   const offsetY = startIndex * itemHeight;
   return { startIndex, endIndex, offsetY };
@@ -414,6 +414,267 @@ function applyStyles(elements, stylesFn) {
     return indices;
   }
   if (arg === 'empty') return batchRead([], el => el);
+}`,
+  },
+  {
+    kind: 'predict-output',
+    id: 'jsb-p6',
+    topicId: 'js-browser',
+    title: 'Угадай вывод: getBoundingClientRect в цикле и счётчик reflow',
+    difficulty: 'medium',
+    isContextual: false,
+    description: `Перед вами модель браузера: переменная \`reflows\` инкрементируется каждый раз, когда **читается** геометрия элемента после того, как layout стал «грязным» (\`layoutDirty = true\`). Запись стиля устанавливает \`layoutDirty = true\`. Чтение \`offsetWidth\` сбрасывает флаг и при необходимости добавляет +1 к \`reflows\`.
+
+Это упрощённая, но рабочая модель **layout thrashing**. Введи последнюю напечатанную строку — значение \`reflows\` и финальный \`total\`, разделённые пробелом, в формате как в примере вывода.
+
+Подсказка: посмотри, на каждой ли итерации цикла происходит forced reflow, и сколько всего READ-ов после dirty-write.`,
+    code: `let reflows = 0;
+let layoutDirty = true;
+
+const elements = [
+  { _w: 10 }, { _w: 20 }, { _w: 30 },
+];
+
+function readWidth(el) {
+  if (layoutDirty) { reflows++; layoutDirty = false; }
+  return el._w;
+}
+function writeWidth(el, val) {
+  el._w = val;
+  layoutDirty = true;
+}
+
+let total = 0;
+elements.forEach((el) => {
+  const w = readWidth(el);   // READ — может вызвать reflow
+  writeWidth(el, w + 1);     // WRITE — делает layout dirty
+  total += w;
+});
+
+console.log('reflows', reflows, 'total', total);`,
+    expected: 'reflows 3 total 60',
+    hints: [
+      'На первой итерации layoutDirty = true → readWidth → reflow #1, читаем 10, total=10, пишем 11 → dirty.',
+      'На каждой следующей итерации опять layoutDirty = true (после write предыдущей итерации), значит снова reflow.',
+      '3 итерации, на каждой по reflow → 3. Total = 10 + 20 + 30 = 60.',
+    ],
+    solutionCode: `// Это predict-output, кода-решения нет. Правильный ответ:
+// reflows 3 total 60
+// Каждая итерация делает READ после dirty-WRITE предыдущей итерации,
+// поэтому каждое чтение принудительно вызывает reflow.`,
+  },
+  {
+    kind: 'find-bug',
+    id: 'jsb-p7',
+    topicId: 'js-browser',
+    title: 'Найди баг: layout thrashing — read/write в одном цикле',
+    difficulty: 'easy',
+    isContextual: false,
+    description: `Функция \`doubleWidths(elements)\` должна удвоить ширину каждого элемента: прочитать текущее \`width\` и записать удвоенное. Корректность не страдает — все значения удваиваются. Но **производительно** функция плохая: на каждой итерации происходит forced reflow.
+
+Тестовый счётчик \`getReflowCount()\` считает, сколько раз произошёл reflow. Для массива из 5 элементов правильная (батчевая) реализация делает **ровно 1** reflow, а не 5. Перепиши функцию: разнеси все READ в первый цикл, все WRITE — во второй.`,
+    buggyCode: `function doubleWidths(elements) {
+  // Антипаттерн: чтение и запись чередуются.
+  // На каждой итерации writeWidth делает layout dirty,
+  // а следующий readWidth принудительно вызывает reflow.
+  elements.forEach((el) => {
+    const w = readWidth(el);
+    writeWidth(el, w * 2);
+  });
+}`,
+    functionName: 'jsb_p7_test',
+    bugSummary:
+      'Layout thrashing: чередование read/write в одном цикле вынуждает браузер пересчитывать layout на каждой итерации. Решение — разделить фазы: сначала собрать все ширины через map, затем во втором проходе записать удвоенные значения. Тогда reflow срабатывает один раз — на первом READ.',
+    testCases: [
+      {
+        id: 'jsb-p7-t1',
+        inputDisplay: 'все ширины удвоены',
+        inputArgs: ['values'],
+        expected: [20, 40, 60, 80, 100],
+      },
+      {
+        id: 'jsb-p7-t2',
+        inputDisplay: '5 элементов → ровно 1 reflow (батчинг)',
+        inputArgs: ['reflows'],
+        expected: 1,
+      },
+      {
+        id: 'jsb-p7-t3',
+        inputDisplay: 'пустой массив → 0 reflow',
+        inputArgs: ['empty'],
+        expected: 0,
+      },
+      {
+        id: 'jsb-p7-t4',
+        inputDisplay: '1 элемент → ровно 1 reflow',
+        inputArgs: ['single'],
+        expected: 1,
+      },
+    ],
+    hints: [
+      'Каждый writeWidth ставит layoutDirty = true. Следующее readWidth тогда триггерит reflow.',
+      'Чтобы избежать thrashing, прочитай все значения сначала: const widths = elements.map(readWidth).',
+      'Затем во втором проходе: elements.forEach((el, i) => writeWidth(el, widths[i] * 2)).',
+    ],
+    solutionCode: `function doubleWidths(elements) {
+  // Сначала все READ — один reflow на всю партию.
+  const widths = elements.map((el) => readWidth(el));
+  // Затем все WRITE — следующего reflow не будет до выхода из функции.
+  elements.forEach((el, i) => writeWidth(el, widths[i] * 2));
+}`,
+    testHelperCode: `// Mock-окружение browser layout: счётчик reflow.
+let __reflows = 0;
+let __layoutDirty = true;
+function readWidth(el) {
+  if (__layoutDirty) { __reflows++; __layoutDirty = false; }
+  return el._w;
+}
+function writeWidth(el, val) {
+  el._w = val;
+  __layoutDirty = true;
+}
+function jsb_p7_test(arg) {
+  __reflows = 0;
+  __layoutDirty = true;
+  if (arg === 'values') {
+    const els = [{ _w: 10 }, { _w: 20 }, { _w: 30 }, { _w: 40 }, { _w: 50 }];
+    doubleWidths(els);
+    return els.map((e) => e._w);
+  }
+  if (arg === 'reflows') {
+    const els = [{ _w: 1 }, { _w: 2 }, { _w: 3 }, { _w: 4 }, { _w: 5 }];
+    doubleWidths(els);
+    return __reflows;
+  }
+  if (arg === 'empty') {
+    doubleWidths([]);
+    return __reflows;
+  }
+  if (arg === 'single') {
+    doubleWidths([{ _w: 7 }]);
+    return __reflows;
+  }
+}`,
+  },
+  {
+    kind: 'refactor',
+    id: 'jsb-p8',
+    topicId: 'js-browser',
+    title: 'Оптимизируй: серия insertBefore → DocumentFragment',
+    difficulty: 'medium',
+    isContextual: false,
+    description: `Функция \`buildList(parent, items, createNode)\` вставляет в \`parent\` новые узлы в порядке \`items\`, используя \`createNode(item)\` для создания каждого. Текущая реализация делает \`parent.insertBefore(node, null)\` в цикле — каждая вставка отдельной операцией. В реальном DOM это запускает reflow и paint после **каждой** вставки.
+
+Перепиши функцию так, чтобы все узлы сначала собирались в **DocumentFragment**, а в конце фрагмент **одной операцией** вставлялся в \`parent\`. Корректность: финальное содержимое \`parent.children\` должно совпадать с прежним порядок-в-порядок.
+
+В тестах используется mock-DOM со счётчиком \`getInsertCount()\`. Правильная реализация делает ровно **1** вставку в \`parent\` (фрагмент), независимо от количества items.`,
+    functionName: 'jsb_p8_test',
+    starterCode: `function buildList(parent, items, createNode) {
+  // Антипаттерн: N отдельных вставок в parent.
+  // Каждая insertBefore = отдельный reflow в реальном DOM.
+  for (const item of items) {
+    const node = createNode(item);
+    parent.insertBefore(node, null);
+  }
+}`,
+    testCases: [
+      {
+        id: 'jsb-p8-t1',
+        inputDisplay: 'порядок вставок сохранён',
+        inputArgs: ['order'],
+        expected: ['a', 'b', 'c', 'd'],
+      },
+      {
+        id: 'jsb-p8-t2',
+        inputDisplay: '4 items → ровно 1 вставка в parent (фрагмент)',
+        inputArgs: ['inserts'],
+        expected: 1,
+      },
+      {
+        id: 'jsb-p8-t3',
+        inputDisplay: 'пустой массив → 0 вставок',
+        inputArgs: ['empty-inserts'],
+        expected: 0,
+      },
+      {
+        id: 'jsb-p8-t4',
+        inputDisplay: 'пустой массив → пустой parent',
+        inputArgs: ['empty-children'],
+        expected: [],
+      },
+      {
+        id: 'jsb-p8-t5',
+        inputDisplay: '1 item → 1 вставка',
+        inputArgs: ['single'],
+        expected: 1,
+      },
+    ],
+    hints: [
+      'Создай контейнер: const fragment = document.createDocumentFragment().',
+      'В цикле добавляй узлы во фрагмент: fragment.appendChild(createNode(item)).',
+      'В конце одной операцией: parent.appendChild(fragment) — все дети фрагмента переносятся в parent за один reflow.',
+    ],
+    solutionCode: `function buildList(parent, items, createNode) {
+  const fragment = document.createDocumentFragment();
+  for (const item of items) {
+    fragment.appendChild(createNode(item));
+  }
+  parent.appendChild(fragment);
+}`,
+    testHelperCode: `// Используем реальный DOM iframe-сэндбокса и счётчик прямых вставок в parent.
+function __makeCountedParent() {
+  const parent = document.createElement('div');
+  parent.__inserts = 0;
+  const origAppend = parent.appendChild.bind(parent);
+  const origInsert = parent.insertBefore.bind(parent);
+  parent.appendChild = function (child) {
+    parent.__inserts++;
+    return origAppend(child);
+  };
+  parent.insertBefore = function (child, ref) {
+    parent.__inserts++;
+    return origInsert(child, ref);
+  };
+  return parent;
+}
+function jsb_p8_test(arg) {
+  if (arg === 'order') {
+    const parent = __makeCountedParent();
+    buildList(parent, ['a', 'b', 'c', 'd'], (v) => {
+      const n = document.createElement('span');
+      n.textContent = v;
+      return n;
+    });
+    return Array.from(parent.children).map((n) => n.textContent);
+  }
+  if (arg === 'inserts') {
+    const parent = __makeCountedParent();
+    buildList(parent, [1, 2, 3, 4], (v) => {
+      const n = document.createElement('span');
+      n.textContent = String(v);
+      return n;
+    });
+    return parent.__inserts;
+  }
+  if (arg === 'empty-inserts') {
+    const parent = __makeCountedParent();
+    buildList(parent, [], (v) => document.createElement('span'));
+    return parent.__inserts;
+  }
+  if (arg === 'empty-children') {
+    const parent = __makeCountedParent();
+    buildList(parent, [], (v) => document.createElement('span'));
+    return Array.from(parent.children).map((n) => n.textContent);
+  }
+  if (arg === 'single') {
+    const parent = __makeCountedParent();
+    buildList(parent, ['x'], (v) => {
+      const n = document.createElement('span');
+      n.textContent = v;
+      return n;
+    });
+    return parent.__inserts;
+  }
 }`,
   },
 ];

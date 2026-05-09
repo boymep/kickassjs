@@ -1,4 +1,42 @@
 {
+  "permissions": {
+    "allow": [
+      "Bash(curl *)",
+      "Bash(npx --yes tsx scripts/*)",
+      "Bash(npm run *)",
+      "Bash(npm test *)",
+      "Bash(npm install *)",
+      "Bash(npx vitest *)",
+      "Bash(node *)",
+      "Bash(node -e *)",
+      "Bash(echo *)",
+      "Bash(printf *)",
+      "Bash(tee *)",
+      "Bash(grep *)",
+      "Bash(rg *)",
+      "Bash(sed *)",
+      "Bash(awk *)",
+      "Bash(jq *)",
+      "Bash(wc *)",
+      "Bash(ls *)",
+      "Bash(cat *)",
+      "Bash(head *)",
+      "Bash(tail *)",
+      "Bash(find *)",
+      "Bash(pkill *)",
+      "Bash(kill *)",
+      "Bash(pgrep *)",
+      "Bash(ps *)",
+      "Bash(mkdir *)",
+      "Bash(rm /tmp/*)",
+      "Bash(rm /Users/boymep/Projects/interview/web/src/test/problems-runs.test.ts)",
+      "Bash(mv /Users/boymep/Projects/interview/web/*)",
+      "Bash(python3 -c *)",
+      "Bash(npx --yes tsx /tmp/audit-bug-hunt.mjs)",
+      "Bash(npx tsx *)",
+      "Bash(npx --yes tsx /tmp/sanity-bh.mjs)"
+    ]
+  },
   "hooks": {
     "PostToolUse": [
       {

@@ -1,16 +1,20 @@
-import { createBrowserRouter, Navigate } from 'react-router-dom';
+import { createBrowserRouter, Navigate, useParams } from 'react-router-dom';
 import AppShell from './components/layout/AppShell';
 import TopicLayout from './components/layout/TopicNav';
 import HomePage from './components/home/HomePage';
-import TheoryPage from './components/theory/TheoryPage';
-import QuizPage from './components/quiz/QuizPage';
+import LessonPage from './components/lesson/LessonPage';
 import PracticePage from './components/practice/PracticePage';
 import ProblemView from './components/practice/ProblemView';
 import PatternGamePage from './components/pattern-game/PatternGamePage';
 import CheatsheetPage from './components/cheatsheet/CheatsheetPage';
 import JsPitfallsPage from './components/js-pitfalls/JsPitfallsPage';
-import FlashcardsPage from './components/flashcards/FlashcardsPage';
 import BugHuntPage from './components/bug-hunt/BugHuntPage';
+
+/** Redirects /topic/:slug/<legacy> → /topic/:slug{#hash}, preserving the slug param. */
+function LegacyTopicRedirect({ hash }: { hash?: string }) {
+  const { slug } = useParams<{ slug: string }>();
+  return <Navigate to={`/topic/${slug ?? ''}${hash ?? ''}`} replace />;
+}
 
 export const router = createBrowserRouter([
   {
@@ -21,12 +25,12 @@ export const router = createBrowserRouter([
         path: '/topic/:slug',
         element: <TopicLayout />,
         children: [
-          { index: true, element: <Navigate to="theory" replace /> },
-          { path: 'theory', element: <TheoryPage /> },
-          { path: 'quiz', element: <QuizPage /> },
+          { index: true, element: <LessonPage /> },
+          { path: 'theory', element: <LegacyTopicRedirect /> },
+          { path: 'quiz', element: <LegacyTopicRedirect hash="#final-quiz" /> },
+          { path: 'flashcards', element: <LegacyTopicRedirect hash="#flashcards" /> },
           { path: 'practice', element: <PracticePage /> },
           { path: 'practice/:problemId', element: <ProblemView /> },
-          { path: 'flashcards', element: <FlashcardsPage /> },
         ],
       },
       { path: '/pattern-game', element: <PatternGamePage /> },
