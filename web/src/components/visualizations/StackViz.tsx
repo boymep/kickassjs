@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { Button, Paper, Typography, Box } from '@mui/material';
+import { useVizColors } from './_colors';
 
 const input = '({[]})';
 
-const colors = {
+const baseColors = {
   primary: '#007AFF',
   success: '#34C759',
   orange: '#FF9500',
@@ -16,12 +17,12 @@ const colors = {
 };
 
 const bracketColor: Record<string, string> = {
-  '(': colors.primary,
-  ')': colors.primary,
-  '{': colors.success,
-  '}': colors.success,
-  '[': colors.orange,
-  ']': colors.orange,
+  '(': baseColors.primary,
+  ')': baseColors.primary,
+  '{': baseColors.success,
+  '}': baseColors.success,
+  '[': baseColors.orange,
+  ']': baseColors.orange,
 };
 
 interface Step {
@@ -89,6 +90,7 @@ const STACK_X = 160;
 const STACK_GAP = 6;
 
 export default function StackViz() {
+  const colors = useVizColors(baseColors);
   const [currentStep, setCurrentStep] = useState(0);
 
   const step = currentStep > 0 ? steps[currentStep - 1] : null;

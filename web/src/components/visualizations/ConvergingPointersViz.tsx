@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Button, Paper, Typography, Box } from '@mui/material';
+import { useVizColors } from './_colors';
 
 interface Step {
   left: number;
@@ -61,7 +62,7 @@ const START_X = 30;
 const START_Y = 30;
 const POINTER_Y = START_Y + CELL_H + 30;
 
-const colors = {
+const baseColors = {
   primary: '#007AFF',
   success: '#34C759',
   red: '#FF3B30',
@@ -72,6 +73,7 @@ const colors = {
 };
 
 export default function ConvergingPointersViz() {
+  const colors = useVizColors(baseColors);
   const [currentStep, setCurrentStep] = useState(0);
 
   const step = currentStep > 0 ? allSteps[currentStep - 1] : null;

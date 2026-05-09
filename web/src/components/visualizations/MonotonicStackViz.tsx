@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Button, Paper, Typography, Box } from '@mui/material';
+import { useVizColors } from './_colors';
 
-const colors = {
+const baseColors = {
   primary: '#007AFF',
   success: '#34C759',
   orange: '#FF9500',
@@ -104,6 +105,7 @@ const RESULT_Y = 280;
 const RESULT_START_X = 90;
 
 export default function MonotonicStackViz() {
+  const colors = useVizColors(baseColors);
   const [currentStep, setCurrentStep] = useState(0);
 
   const step = currentStep > 0 ? steps[currentStep - 1] : null;

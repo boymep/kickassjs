@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Button, Paper, Typography, Box } from '@mui/material';
+import { useVizColors } from './_colors';
 
-const colors = {
+const baseColors = {
   primary: '#007AFF',
   success: '#34C759',
   orange: '#FF9500',
@@ -13,7 +14,7 @@ const colors = {
   lightText: '#8E8E93',
 };
 
-const elementColors = [colors.primary, colors.success, colors.orange, colors.red];
+const elementColors = [baseColors.primary, baseColors.success, baseColors.orange, baseColors.red];
 
 interface Step {
   queue: string[];
@@ -97,10 +98,11 @@ const QUEUE_START_X = 80;
 
 const colorForElement = (el: string): string => {
   const idx = 'ABCD'.indexOf(el);
-  return idx >= 0 ? elementColors[idx] : colors.primary;
+  return idx >= 0 ? elementColors[idx] : baseColors.primary;
 };
 
 export default function QueueViz() {
+  const colors = useVizColors(baseColors);
   const [currentStep, setCurrentStep] = useState(0);
 
   const step = currentStep > 0 ? steps[currentStep - 1] : null;

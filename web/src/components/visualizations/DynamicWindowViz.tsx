@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Button, Paper, Typography, Box } from '@mui/material';
+import { useVizColors } from './_colors';
 
 const ARRAY = [2, 3, 1, 2, 4, 3];
 const TARGET = 7;
