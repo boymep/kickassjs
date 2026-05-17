@@ -1,7 +1,16 @@
 {
   "permissions": {
     "allow": [
-      "Bash(node -e ':*)"
+      "Bash(node -e ':*)",
+      "Bash(netstat -ano)",
+      "Bash(findstr \":5174\")",
+      "Bash(findstr \":5173\")",
+      "Bash(tasklist)",
+      "Bash(findstr \"node\")",
+      "Bash(taskkill /F /IM node.exe)",
+      "PowerShell(Stop-Process -Name node -Force -ErrorAction SilentlyContinue)",
+      "Bash(git add *)",
+      "Bash(git commit *)"
     ]
   }
 }
