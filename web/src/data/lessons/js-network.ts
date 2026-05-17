@@ -229,6 +229,7 @@ await safeRetry(() => fetch('/api/users/1'));
       ],
       flashcardIds: ['jsnw-f6'],
       checkpoint: [Q['jsnet-q9']!],
+      docsLink: { url: 'https://developer.mozilla.org/ru/docs/Web/HTTP/Methods', title: 'HTTP-методы — MDN (ru)' },
     },
 
     {
@@ -310,6 +311,7 @@ res.setHeader('Access-Control-Allow-Credentials', 'true');`,
       ],
       flashcardIds: ['jsnw-f1', 'jsnw-f2', 'jsnw-f8'],
       checkpoint: [Q['jsnet-q3']!, Q['jsnet-q11']!],
+      docsLink: { url: 'https://developer.mozilla.org/ru/docs/Web/HTTP/CORS', title: 'CORS — MDN (ru)' },
     },
 
     {
@@ -381,6 +383,7 @@ sessionStorage.setItem('draft', JSON.stringify(form));
       ],
       flashcardIds: ['jsnw-f3', 'jsnw-f9'],
       checkpoint: [Q['jsnet-q5']!, Q['jsnet-q6']!],
+      docsLink: { url: 'https://learn.javascript.ru/cookie', title: 'Cookie — learn.javascript.ru' },
     },
 
     {
@@ -474,6 +477,7 @@ const json = await clone.json();    // клон`,
       ],
       flashcardIds: ['jsnw-f7'],
       checkpoint: [Q['jsnet-q1']!],
+      docsLink: { url: 'https://learn.javascript.ru/fetch', title: 'Fetch API — learn.javascript.ru' },
     },
 
     {
@@ -556,6 +560,7 @@ useEffect(() => {
         },
       ],
       flashcardIds: ['jsnw-f4', 'jsnw-f10'],
+      docsLink: { url: 'https://learn.javascript.ru/fetch-abort', title: 'AbortController — learn.javascript.ru' },
       playground: {
         starterCode: `// Реализуйте fetchWithTimeout(promiseFactory, ms):
 // - вызывает promiseFactory() и ждёт результат
@@ -626,6 +631,7 @@ If-None-Match: "v1-abc123"
         },
       ],
       flashcardIds: ['jsnw-f5'],
+      docsLink: { url: 'https://developer.mozilla.org/ru/docs/Web/HTTP/Caching', title: 'Кеширование HTTP — MDN (ru)' },
     },
   ],
 

@@ -443,11 +443,13 @@ export const sdAuthLesson: Lesson = {
   topicId: 'sd-auth',
 
   intro: {
-    whyItMatters: `Аутентификация и безопасность — единственная подсистема веб-приложения, ошибка в которой превращает «баг» в утечку персональных данных, угон аккаунтов и судебные иски. На senior-собеседовании этот блок звучит как набор дилемм: **session vs JWT** (серверное состояние и легкий отзыв против stateless и горизонтального масштабирования), **где хранить токен** (HttpOnly+Secure+SameSite cookie против localStorage с её уязвимостью к XSS), какой **OAuth flow** выбрать для SPA (Authorization Code + PKCE, а не устаревший Implicit), как реализовать **refresh-token rotation** и зачем он нужен.
+    whyItMatters: `Аутентификация — единственная часть приложения, где ошибка превращает «баг» в утечку данных, угон аккаунтов и судебные иски. Именно поэтому здесь нет «сделаем потом» — безопасность закладывается при проектировании, а не прикручивается сверху.
 
-Параллельно нужно держать в голове модель угроз. **XSS** позволяет атакующему выполнить JS в контексте страницы и украсть всё, что доступно скриптам — токены в localStorage, открытые формы, тело DOM. **CSRF** использует автоматическую отправку cookie браузером и заставляет залогиненного пользователя выполнить запрос с чужого сайта. **Session fixation** навязывает жертве заранее известный sessionId. На каждый класс атак есть конкретные защиты: **SameSite cookie**, **Content Security Policy**, **CSRF-токены**, **double-submit**, **регенерация sessionId после логина**, **CORS allow-list**. Отдельный пласт — хранение паролей: bcrypt/argon2id с подобранными параметрами вместо «голого» SHA-256, а также соль и pepper.
+На собеседовании этот блок — это серия обоснованных выборов. **Session или JWT?** Сессия хранится на сервере — её легко отозвать, но она не масштабируется без общего хранилища (Redis). JWT stateless — хорошо масштабируется, но отозвать досрочно сложно. **Где хранить токен?** HttpOnly cookie — скрипт на странице его не прочитает, значит XSS не страшен. localStorage — удобно, но любой JS на странице имеет доступ. **Какой OAuth flow?** Для SPA — Authorization Code + PKCE, устаревший Implicit flow небезопасен.
 
-Этот урок собирает всю картину в один чек-лист: вы научитесь обоснованно выбирать между session и JWT, аккуратно строить OAuth/OIDC-флоу для SPA, защищать страницу с UGC от stored XSS, настраивать SameSite/CSP под конкретное приложение и грамотно отвечать на вопрос «что произойдёт, если токен утечёт».`,
+Второй слой — **модель угроз**: что именно атакуют и чем защищаться. XSS выполняет чужой JS в вашей странице — защита: Content Security Policy и HttpOnly cookie. CSRF заставляет браузер отправить запрос от имени пользователя на другой сайт — защита: SameSite cookie и CSRF-токены. Пароли нужно хранить через bcrypt или argon2id — не SHA-256, который взламывается за минуты на видеокарте.
+
+По итогам урока вы сможете выбрать схему аутентификации под конкретный тип приложения, объяснить каждое решение через модель угроз и ответить на вопрос «что произойдёт, если токен утечёт?».`,
     estimatedMinutes: 45,
     interviewAngle:
       'Senior-интервьюер проверяет не определения, а способность держать в голове модель угроз и trade-off-ы. Сильный кандидат не зачитывает MDN, а формулирует: «для SPA-админки за логином — Authorization Code + PKCE, токен в HttpOnly cookie, SameSite=Lax, CSP с nonce, refresh с rotation, argon2id для паролей» — и объясняет, что произойдёт, если каждое из решений сломается.',
@@ -607,6 +609,7 @@ function auth(req, res, next) {
       ],
       flashcardIds: ['sda-f1', 'sda-f12'],
       checkpoint: [Q['sda-q1']!],
+      docsLink: { url: 'https://developer.mozilla.org/ru/docs/Web/HTTP/Cookies', title: 'Cookie — MDN (ru)' },
     },
 
     {
@@ -669,6 +672,7 @@ async function refresh() {
         },
       ],
       flashcardIds: ['sda-f2', 'sda-f13'],
+      docsLink: { url: 'https://developer.mozilla.org/ru/docs/Web/HTTP/Cookies', title: 'Cookie — MDN (ru)' },
     },
 
     {
@@ -761,6 +765,7 @@ const { payload } = await jwtVerify(idToken, JWKS, {
       ],
       flashcardIds: ['sda-f3', 'sda-f4', 'sda-f5'],
       checkpoint: [Q['sda-q5']!],
+      docsLink: { url: 'https://developer.mozilla.org/ru/docs/Web/HTTP/Authentication', title: 'HTTP Авторизация — MDN (ru)' },
     },
 
     {
@@ -822,6 +827,7 @@ app.post('/auth/refresh', async (req, res) => {
         },
       ],
       flashcardIds: ['sda-f6', 'sda-f14'],
+      docsLink: { url: 'https://developer.mozilla.org/ru/docs/Web/HTTP/Cookies', title: 'Cookie — MDN (ru)' },
     },
 
     {
@@ -922,6 +928,7 @@ console.log(div.innerHTML.length > 0 ? 'rendered' : 'empty');`,
       },
       flashcardIds: ['sda-f7', 'sda-f10'],
       checkpoint: [Q['sda-q11']!],
+      docsLink: { url: 'https://developer.mozilla.org/ru/docs/Web/Security/Types_of_attacks', title: 'Типы атак — MDN (ru)' },
     },
 
     {
@@ -1012,6 +1019,7 @@ if (req.cookies.csrf !== req.headers['x-csrf-token']) {
       ],
       flashcardIds: ['sda-f8', 'sda-f15'],
       checkpoint: [Q['sda-q4']!],
+      docsLink: { url: 'https://developer.mozilla.org/ru/docs/Web/HTTP/Headers/Set-Cookie/SameSite', title: 'SameSite — MDN (ru)' },
     },
 
     {
@@ -1073,6 +1081,7 @@ if (!ok) {
         },
       ],
       flashcardIds: ['sda-f9', 'sda-f11'],
+      docsLink: { url: 'https://developer.mozilla.org/ru/docs/Web/Security', title: 'Безопасность веба — MDN (ru)' },
     },
   ],
 

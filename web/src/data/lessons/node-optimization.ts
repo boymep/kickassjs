@@ -46,7 +46,7 @@ const extraFlashcards = [
     id: 'nodeop-f9',
     question: 'Почему наивная мемоизация может «съесть» память сервера?',
     answer:
-      'Наивная мемоизация хранит результаты в обычном Map без ограничения размера и без TTL. На сервере, где аргументы — это пользовательские данные (id, query-параметры), множество ключей растёт неограниченно. Map удерживает значения, GC не может их освободить, heap растёт пока процесс не упадёт по OOM.',
+      'Наивная мемоизация хранит результаты в обычном Map без ограничения размера и без TTL. На сервере, где аргументы — это пользовательские данные (id, query-параметры), множество ключей растёт неограниченно. Map удерживает значения, GC не может их освободить, heap растёт, пока процесс не упадёт с ошибкой «Out of Memory» (нехватка памяти).',
     keyPoints: [
       'На сервере аргументы редко из малого фиксированного множества',
       'Map не очищается сам — нужны LRU-вытеснение или TTL',
@@ -177,6 +177,7 @@ setInterval(() => {
             'Если event loop lag p99 > 100 мс — на сервере есть синхронная блокировка. Это первое, что нужно искать перед тем, как добавлять кэши и пулы.',
         },
       ],
+      docsLink: { url: 'https://metanit.com/web/nodejs/5.1.php', title: 'Отладка Node.js — metanit.com' },
     },
 
     {
@@ -248,6 +249,7 @@ console.log(cache.get(2)); // -1`,
       ],
       flashcardIds: ['nodeop-f1'],
       checkpoint: [Q['nodeopt-q1']!, Q['nodeopt-q12']!],
+      docsLink: { url: 'https://learn.javascript.ru/map-set', title: 'Map и Set — learn.javascript.ru' },
       playground: {
         starterCode: `// Реализуйте LRU Cache на 2 элемента и предскажите вывод.
 class LRUCache {
@@ -317,7 +319,7 @@ const getUser = memoize((id) => db.users.findById(id));`,
           type: 'callout',
           calloutType: 'warning',
           content:
-            'На сервере наивная мемоизация почти всегда ошибка: аргументы — это пользовательские данные. Map не очищается сам, GC не может освободить значения, heap растёт пока процесс не упадёт по OOM. Производственное правило: **любая** мемоизация на сервере должна иметь ограничение по размеру (LRU) или TTL.',
+            'На сервере наивная мемоизация почти всегда ошибка: аргументы — это пользовательские данные. Map не очищается сам, GC не может освободить значения, heap растёт, пока процесс не упадёт с ошибкой «Out of Memory» (нехватка памяти). Производственное правило: **любая** мемоизация на сервере должна иметь ограничение по размеру (LRU) или TTL.',
         },
         {
           type: 'code',
@@ -359,6 +361,7 @@ function memoizeLRU(fn, capacity) {
       ],
       flashcardIds: ['nodeop-f2', 'nodeop-f8', 'nodeop-f9'],
       checkpoint: [Q['nodeopt-q3']!, Q['nodeopt-q11']!],
+      docsLink: { url: 'https://learn.javascript.ru/closure', title: 'Замыкания — learn.javascript.ru' },
     },
 
     {
@@ -452,6 +455,7 @@ try {
         },
       ],
       flashcardIds: ['nodeop-f3', 'nodeop-f4'],
+      docsLink: { url: 'https://metanit.com/web/nodejs/4.1.php', title: 'HTTP-сервер — metanit.com' },
     },
 
     {
@@ -521,6 +525,7 @@ const safeCall = createCircuitBreaker(unstableApi, 5, 30_000);
       ],
       flashcardIds: ['nodeop-f6'],
       checkpoint: [Q['nodeopt-q7']!],
+      docsLink: { url: 'https://metanit.com/web/nodejs/4.1.php', title: 'HTTP-сервер — metanit.com' },
     },
 
     {
@@ -585,6 +590,7 @@ class WorkerPool {
       ],
       flashcardIds: ['nodeop-f7'],
       checkpoint: [Q['nodeopt-q4']!, Q['nodeopt-q5']!],
+      docsLink: { url: 'https://metanit.com/web/nodejs/17.1.php', title: 'Worker Threads — metanit.com' },
     },
 
     {
@@ -636,6 +642,7 @@ setInterval(() => {
         },
       ],
       flashcardIds: ['nodeop-f5'],
+      docsLink: { url: 'https://metanit.com/web/nodejs/5.1.php', title: 'Отладка Node.js — metanit.com' },
     },
   ],
 
@@ -648,7 +655,7 @@ setInterval(() => {
   cheatsheet: `### Шпаргалка по оптимизации Node.js
 
 - **LRU через Map**: \`get\` = delete + set, \`put\` = удалить старый ключ \`map.keys().next().value\`. Все операции O(1).
-- **Мемоизация на сервере** ВСЕГДА с лимитом: LRU или TTL. Иначе heap → OOM.
+- **Мемоизация на сервере** ВСЕГДА с лимитом: LRU или TTL. Иначе память заканчивается и процесс падает.
 - **Кэш vs мемоизация**: мемоизация — частный случай кэша для чистых функций по аргументам.
 - **Батчинг (DataLoader)**: N+1 → 1 запрос \`WHERE id IN (...)\`. Сбор за один тик event loop.
 - **Connection pool**: TCP-handshake 50–100 мс на запрос → пул из \`CPU × 2..4\` соединений. Всегда \`release()\` в \`finally\`.

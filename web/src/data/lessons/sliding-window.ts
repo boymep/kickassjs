@@ -120,6 +120,7 @@ export const slidingWindowLesson: Lesson = {
       ],
       flashcardIds: ['sw-f1', 'sw-f2'],
       checkpoint: [Q['sw-q5']!],
+      docsLink: { url: 'https://learn.javascript.ru/array-methods', title: 'Методы массивов — learn.javascript.ru' },
     },
 
     {

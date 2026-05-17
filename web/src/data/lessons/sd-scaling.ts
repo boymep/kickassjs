@@ -562,6 +562,7 @@ Edge functions меняют картину инфраструктуры: V8 isol
       ],
       flashcardIds: ['sds-f1', 'sds-f10'],
       checkpoint: [Q['sds-q1']!],
+      docsLink: { url: 'https://habr.com/ru/hub/highload/', title: 'Highload и масштабирование — Habr' },
     },
 
     {
@@ -651,6 +652,7 @@ packages:
         },
       ],
       flashcardIds: ['sds-f3', 'sds-f4'],
+      docsLink: { url: 'https://habr.com/ru/hub/monorepo/', title: 'Монорепо — Habr' },
     },
 
     {
@@ -728,6 +730,7 @@ export function App() {
       ],
       flashcardIds: ['sds-f1', 'sds-f2', 'sds-f11', 'sds-f12'],
       checkpoint: [Q['sds-q5']!],
+      docsLink: { url: 'https://habr.com/ru/hub/microfrontends/', title: 'Микрофронтенды — Habr' },
     },
 
     {
@@ -792,6 +795,7 @@ export interface ButtonProps {
         },
       ],
       flashcardIds: ['sds-f7', 'sds-f13', 'sds-f15'],
+      docsLink: { url: 'https://habr.com/ru/hub/microfrontends/', title: 'Дизайн-система — Habr' },
       playground: {
         starterCode: `// Какой тип релиза по semver выбрать в каждом случае?
 // Заполните "patch" | "minor" | "major".
@@ -876,6 +880,7 @@ export async function GET(req: Request) {
       ],
       flashcardIds: ['sds-f5', 'sds-f6', 'sds-f14'],
       checkpoint: [Q['sds-q9']!],
+      docsLink: { url: 'https://developer.mozilla.org/ru/docs/Web/HTTP/Caching', title: 'Кеширование HTTP — MDN (ru)' },
     },
 
     {
@@ -918,6 +923,7 @@ export async function GET(req: Request) {
       ],
       flashcardIds: ['sds-f8'],
       checkpoint: [Q['sds-q11']!],
+      docsLink: { url: 'https://habr.com/ru/hub/microfrontends/', title: 'Закон Конвея — Habr' },
     },
 
     {
@@ -965,6 +971,7 @@ export async function GET(req: Request) {
         },
       ],
       flashcardIds: ['sds-f9', 'sds-f10'],
+      docsLink: { url: 'https://habr.com/ru/hub/microfrontends/', title: 'Микрофронтенды — Habr' },
     },
   ],
 

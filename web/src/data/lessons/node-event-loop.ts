@@ -183,6 +183,7 @@ export const nodeEventLoopLesson: Lesson = {
       ],
       flashcardIds: ['nodel-f1'],
       checkpoint: [Q['nodel-q1']!, Q['nodel-q6']!],
+      docsLink: { url: 'https://metanit.com/web/nodejs/1.4.php', title: 'Node.js Event Loop — metanit.com' },
     },
 
     {
@@ -240,6 +241,7 @@ fs.readFile(__filename, () => {
       ],
       flashcardIds: ['nodel-f2'],
       checkpoint: [Q['nodel-q9']!],
+      docsLink: { url: 'https://metanit.com/web/nodejs/1.4.php', title: 'Node.js Event Loop — metanit.com' },
     },
 
     {
@@ -312,6 +314,7 @@ console.log('5');`,
           'Запустите код и убедитесь, что весь синхронный код печатается первым, затем все микрозадачи в порядке постановки, и только потом макрозадача setTimeout. В Node.js перед строкой "2" выполнились бы ещё все process.nextTick.',
       },
       flashcardIds: ['nodel-f3'],
+      docsLink: { url: 'https://metanit.com/web/nodejs/1.4.php', title: 'Node.js Event Loop — metanit.com' },
     },
 
     {
@@ -388,6 +391,7 @@ parentPort.postMessage({ hash });`,
       ],
       flashcardIds: ['nodel-f4', 'nodel-f7'],
       checkpoint: [Q['nodel-q4']!],
+      docsLink: { url: 'https://metanit.com/web/nodejs/17.1.php', title: 'Worker Threads — metanit.com' },
     },
 
     {
@@ -440,6 +444,7 @@ stream.on('error', (err) => console.error(err));`,
         },
       ],
       flashcardIds: ['nodel-f5', 'nodel-f8'],
+      docsLink: { url: 'https://metanit.com/web/nodejs/2.6.php', title: 'EventEmitter — metanit.com' },
     },
 
     {
@@ -499,6 +504,7 @@ async function fetchWithTimeout(url, ms) {
         },
       ],
       flashcardIds: ['nodel-f9'],
+      docsLink: { url: 'https://metanit.com/web/nodejs/1.4.php', title: 'Node.js Event Loop — metanit.com' },
     },
   ],
 

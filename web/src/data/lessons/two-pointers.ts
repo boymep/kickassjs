@@ -119,6 +119,7 @@ export const twoPointersLesson: Lesson = {
       ],
       flashcardIds: ['tp-f1', 'tp-f2'],
       checkpoint: [Q['tp-q1']!, Q['tp-q5']!],
+      docsLink: { url: 'https://learn.javascript.ru/array-methods', title: 'Методы массивов — learn.javascript.ru' },
     },
 
     {

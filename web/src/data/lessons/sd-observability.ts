@@ -457,11 +457,13 @@ export const sdObservabilityLesson: Lesson = {
   topicId: 'sd-observability',
 
   intro: {
-    whyItMatters: `Observability — это способность системы отвечать на вопросы, которые вы заранее не задавали. В то время как обычный мониторинг показывает «жив ли сервис и не превышен ли CPU», observability отвечает на вопросы вида «почему именно у пользователей из Канады в Safari после релиза 4.12 чекаут стал на 800 мс медленнее». Разница — в способности дебажить unknown-unknowns без новой выкатки кода.
+    whyItMatters: `Обычный мониторинг отвечает на вопрос «всё ли работает?» — CPU, uptime, количество ошибок. Observability идёт дальше: она отвечает на вопрос «почему именно у пользователей из Канады в Safari после релиза 4.12 чекаут стал на 800 мс медленнее?». Разница принципиальная — второй вопрос возникает уже после инцидента, и без правильно настроенной системы сбора данных на него просто нельзя ответить без новой выкатки кода.
 
-Классически observability держится на **трёх столпах: metrics, logs, traces**. Метрики — агрегированные числовые показатели для dashboards и алертов. Логи — структурированные события с контекстом. Трейсы — деревья спанов одного пользовательского запроса через все сервисы. На фронте к этому добавляется RUM (Real User Monitoring) — телеметрия с устройств реальных пользователей: web-vitals, navigation timing, errors, clicks. RUM противопоставляется синтетическому мониторингу (Lighthouse CI, Playwright-боты), который проверяет сценарии в управляемой среде. Google для ранжирования использует именно RUM-данные через CrUX.
+Observability строится на **трёх источниках данных**. **Метрики** — числа во времени: сколько запросов, какой p99 latency, процент ошибок. Хороши для алертов и дашбордов. **Логи** — текстовые события с контекстом: «пользователь 42 не смог оплатить, ошибка X». Хороши для детального разбора. **Трейсы** — путь одного запроса через все микросервисы, с временем на каждом шаге. Хороши для поиска, где именно тормозит.
 
-Ключевые сервисы, которые встречаются на каждом интервью: **Sentry** и **Bugsnag** для error tracking c source maps и release tracking; **LogRocket**, **FullStory** и Sentry Replay для записи пользовательских сессий с обязательной маскировкой PII; **Unleash** и **LaunchDarkly** для feature flags и gradual rollout; **Statsig** и LaunchDarkly Experiments для A/B-тестов со статистической значимостью. Поверх этого SRE строит SLO/SLI/error budget и symptom-based алертинг, чтобы избежать alert fatigue. На senior-собеседовании ожидают, что вы не только перечислите инструменты, но и объясните, как их связать в систему: какие метрики выводить, как защитить пользовательскую приватность, как избежать утечки исходного кода через source maps и почему feature flag не равно A/B-тест.`,
+Для фронтенда к этому добавляется **RUM** (Real User Monitoring) — данные с реальных устройств пользователей: скорость загрузки, ошибки JS, клики. Это противоположность синтетическому мониторингу (Lighthouse CI, Playwright), который гоняет тесты в управляемой среде. Google для ранжирования в поиске использует именно RUM-данные.
+
+Из инструментов важно знать: **Sentry / Bugsnag** — ловят ошибки JS с контекстом и стектрейсом; **LogRocket / FullStory** — записывают сессии пользователей (с обязательным скрытием персональных данных); **LaunchDarkly / Unleash** — feature flags, плавный rollout; **Statsig / LaunchDarkly Experiments** — A/B-тесты. На интервью важно не просто перечислить эти инструменты, а объяснить, чем feature flag отличается от A/B-теста и почему source maps нельзя публиковать в open access.`,
     estimatedMinutes: 45,
     interviewAngle:
       'Senior-интервьюер проверяет, умеете ли вы строить observability как систему, а не как набор подключённых SDK. Сильный ответ показывает связь между сигналами (RUM ↔ ошибки ↔ трейсы ↔ feature flag), уважение к приватности пользователя (PII redaction, согласия), понимание SRE-практик (SLO, error budget, burn rate) и привычку думать о шуме (alert fatigue, дедупликация, sampling).',
@@ -619,6 +621,7 @@ logWithContext('info', 'checkout-started', { userId: 'u_42', cartTotal: 1290 });
       ],
       flashcardIds: ['sdo-f1', 'sdo-f2'],
       checkpoint: [Q['sdo-q1']!],
+      docsLink: { url: 'https://habr.com/ru/hub/monitoring/', title: 'Мониторинг и observability — Habr' },
     },
 
     {
@@ -691,6 +694,7 @@ addEventListener('visibilitychange', () => {
       ],
       flashcardIds: ['sdo-f3', 'sdo-f4', 'sdo-f13'],
       checkpoint: [Q['sdo-q3']!],
+      docsLink: { url: 'https://web.dev/i18n/ru/vitals/', title: 'Web Vitals — web.dev (ru)' },
       playground: {
         starterCode: `// Допишите два числа — пороги «good» по версии Core Web Vitals 2024.
 //   - LCP good ≤ ?  (миллисекунды)
@@ -791,6 +795,7 @@ Sentry.init({
         },
       ],
       flashcardIds: ['sdo-f5', 'sdo-f14'],
+      docsLink: { url: 'https://habr.com/ru/hub/monitoring/', title: 'Мониторинг и observability — Habr' },
     },
 
     {
@@ -847,6 +852,7 @@ Sentry.init({
         },
       ],
       flashcardIds: ['sdo-f6'],
+      docsLink: { url: 'https://habr.com/ru/hub/monitoring/', title: 'Мониторинг и observability — Habr' },
     },
 
     {
@@ -908,6 +914,7 @@ if (!acquirerEnabled) {
         },
       ],
       flashcardIds: ['sdo-f7', 'sdo-f8'],
+      docsLink: { url: 'https://habr.com/ru/hub/monitoring/', title: 'Мониторинг и observability — Habr' },
     },
 
     {
@@ -989,6 +996,7 @@ slo:
       ],
       flashcardIds: ['sdo-f9', 'sdo-f10', 'sdo-f11', 'sdo-f12'],
       checkpoint: [Q['sdo-q8']!, Q['sdo-q11']!],
+      docsLink: { url: 'https://habr.com/ru/hub/monitoring/', title: 'Мониторинг и observability — Habr' },
     },
 
     {
@@ -1041,6 +1049,7 @@ type RumEvent = {
         },
       ],
       flashcardIds: ['sdo-f15'],
+      docsLink: { url: 'https://web.dev/i18n/ru/vitals/', title: 'Web Vitals — web.dev (ru)' },
     },
   ],
 

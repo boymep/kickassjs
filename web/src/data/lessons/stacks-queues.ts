@@ -133,6 +133,7 @@ const isEmpty = stack.length === 0;  // false`,
       ],
       flashcardIds: ['sq-f1', 'sq-f2'],
       checkpoint: [Q['sq-q1']!, Q['sq-q6']!],
+      docsLink: { url: 'https://learn.javascript.ru/array', title: 'Массивы — learn.javascript.ru' },
     },
 
     {

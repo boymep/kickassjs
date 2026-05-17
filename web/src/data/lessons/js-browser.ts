@@ -26,7 +26,7 @@ const extraFlashcards = [
     id: 'jsbr-f8',
     question: 'Когда использовать will-change и в чём его подвох?',
     answer:
-      'will-change — CSS-подсказка браузеру: «этот элемент скоро будет анимироваться». Браузер заранее создаёт отдельный compositor layer, чтобы при старте анимации не было «рывка». Подвох — каждый layer ест GPU-память, а постоянный will-change на множестве элементов может ухудшить производительность вместо улучшения.',
+      'will-change — CSS-подсказка браузеру: «этот элемент скоро будет анимироваться». Браузер заранее создаёт отдельный отдельный GPU-слой, чтобы при старте анимации не было «рывка». Подвох — каждый layer ест GPU-память, а постоянный will-change на множестве элементов может ухудшить производительность вместо улучшения.',
     keyPoints: [
       'Применять только к элементам, которые реально анимируются прямо сейчас',
       'Снимать (will-change: auto) после завершения анимации',
@@ -74,7 +74,7 @@ export const jsBrowserLesson: Lesson = {
   intro: {
     whyItMatters: `Браузер — это сложная многоэтапная машина рендеринга, и понимание того, как она работает, отличает фронтендера-«сборщика страниц» от инженера, который умеет делать быстрый UI. Каждый раз, когда страница загружается, браузер проходит **Critical Rendering Path**: парсит HTML в **DOM**, парсит CSS в **CSSOM**, объединяет их в **Render Tree**, считает геометрию (**Layout** / Reflow), растеризует пиксели по слоям (**Paint**) и собирает финальное изображение из слоёв на GPU (**Composite**). Любое изменение DOM или стилей запускает часть этой цепочки заново — и не любое одинаково дорого.
 
-**Reflow** (пересчёт макета) — самая тяжёлая операция: меняются \`width\`, \`height\`, \`top\`, шрифт, добавляется/удаляется узел — и браузер пересчитывает геометрию всего поддерева, иногда всего документа. **Repaint** — перерисовка пикселей без изменения геометрии (\`color\`, \`background\`) — дешевле. А **Composite** — простое смещение уже готового слоя на GPU — почти бесплатно. Поэтому \`transform\` и \`opacity\` — главные «дешёвые» свойства для анимаций: они не трогают layout-поток вообще. Подсказка \`will-change: transform\` заранее переводит элемент на отдельный compositor layer, чтобы первый кадр анимации не вызвал «рывок».
+**Reflow** (пересчёт макета) — самая тяжёлая операция: меняются \`width\`, \`height\`, \`top\`, шрифт, добавляется/удаляется узел — и браузер пересчитывает геометрию всего поддерева, иногда всего документа. **Repaint** — перерисовка пикселей без изменения геометрии (\`color\`, \`background\`) — дешевле. А **Composite** — простое смещение уже готового слоя на GPU — почти бесплатно. Поэтому \`transform\` и \`opacity\` — главные «дешёвые» свойства для анимаций: они не трогают layout-поток вообще. Подсказка \`will-change: transform\` заранее переводит элемент на отдельный отдельный GPU-слой, чтобы первый кадр анимации не вызвал «рывок».
 
 Не менее важны **изображения**: на типичной странице они дают 50–70% веса. Современные форматы (**AVIF**, **WebP**) экономят 25–50% по сравнению с JPEG; \`srcset\` + \`sizes\` отдают каждому устройству свой размер; \`loading="lazy"\` откладывает загрузку до приближения к viewport. Метрики **Core Web Vitals** (LCP, INP, CLS) — то, чем Google измеряет UX, и то, что почти всегда обсуждается на интервью на frontend-позиции.`,
     estimatedMinutes: 35,
@@ -163,7 +163,7 @@ export const jsBrowserLesson: Lesson = {
 2. **CSS → CSSOM.** Парсер CSS строит модель стилей. CSS блокирует рендеринг (но не парсинг HTML).
 3. **DOM + CSSOM → Render Tree.** Только видимые элементы (\`display: none\` отбрасывается) с вычисленными стилями.
 4. **Layout (Reflow).** Расчёт геометрии: размер и позиция каждого узла.
-5. **Paint.** Растеризация: пиксели разбиваются на **слои** (compositor layers).
+5. **Paint.** Растеризация: пиксели разбиваются на **слои** (отдельный GPU-слойs).
 6. **Composite.** Слои собираются в финальное изображение, чаще всего на GPU.`,
         },
         {
@@ -203,6 +203,7 @@ export const jsBrowserLesson: Lesson = {
       ],
       flashcardIds: ['jsbr-f1'],
       checkpoint: [Q['jsbr-q8']!],
+      docsLink: { url: 'https://developer.mozilla.org/ru/docs/Web/Performance/Critical_rendering_path', title: 'Critical Rendering Path — MDN (ru)' },
     },
 
     {
@@ -219,7 +220,7 @@ export const jsBrowserLesson: Lesson = {
           type: 'list',
           content: `**Reflow (Layout)** — пересчёт геометрии. Запускают: \`width\`, \`height\`, \`margin\`, \`padding\`, \`top\`, \`left\`, \`font-size\`, добавление/удаление узлов, чтение \`offsetWidth\`/\`getBoundingClientRect\`/\`scrollTop\`.
 **Repaint** — перерисовка пикселей **без** изменения геометрии. Запускают: \`color\`, \`background-color\`, \`visibility\`, \`border-color\`, \`box-shadow\`.
-**Composite** — пересборка готовых слоёв на GPU. Запускают **только**: \`transform\` и \`opacity\` (если элемент уже на отдельном compositor layer).`,
+**Composite** — пересборка готовых слоёв на GPU. Запускают **только**: \`transform\` и \`opacity\` (если элемент уже на отдельном отдельный GPU-слой).`,
         },
         {
           type: 'code',
@@ -267,11 +268,11 @@ function good(elements) {
           content:
             'В Chrome DevTools Performance такие операции подсвечиваются красно-фиолетовым «Forced reflow». Если видите их в hot path — почти всегда виноват цикл с миксом read/write.',
         },
-        { type: 'heading', content: 'will-change и compositor layers' },
+        { type: 'heading', content: 'will-change и отдельный GPU-слойs' },
         {
           type: 'text',
           content:
-            '`will-change: transform` (или `opacity`) — подсказка браузеру: «этот элемент будет анимироваться». Браузер **заранее** создаёт отдельный compositor layer, и первый кадр анимации не вызывает «рывок» из-за подъёма на GPU.',
+            '`will-change: transform` (или `opacity`) — подсказка браузеру: «этот элемент будет анимироваться». Браузер **заранее** создаёт отдельный отдельный GPU-слой, и первый кадр анимации не вызывает «рывок» из-за подъёма на GPU.',
         },
         {
           type: 'callout',
@@ -282,6 +283,7 @@ function good(elements) {
       ],
       flashcardIds: ['jsbr-f2', 'jsbr-f3', 'jsbr-f7', 'jsbr-f8'],
       checkpoint: [Q['jsbr-q1']!, Q['jsbr-q2']!],
+      docsLink: { url: 'https://developer.mozilla.org/ru/docs/Web/Performance/Critical_rendering_path', title: 'Critical Rendering Path — MDN (ru)' },
       playground: {
         starterCode: `// Эмуляция layout thrashing.
 // reflows — счётчик; каждое READ после WRITE его инкрементирует.
@@ -389,6 +391,7 @@ document.querySelectorAll('img[data-src]').forEach((img) => observer.observe(img
         },
       ],
       flashcardIds: ['jsbr-f9'],
+      docsLink: { url: 'https://developer.mozilla.org/ru/docs/Web/HTML/Element/img', title: 'img — MDN (ru)' },
     },
 
     {
@@ -457,6 +460,7 @@ self.onmessage = (e) => {
       ],
       flashcardIds: ['jsbr-f5'],
       checkpoint: [Q['jsbr-q7']!],
+      docsLink: { url: 'https://developer.mozilla.org/ru/docs/Web/API/window/requestAnimationFrame', title: 'requestAnimationFrame — MDN (ru)' },
     },
 
     {
@@ -532,6 +536,7 @@ function getVisibleRange(scrollTop, containerHeight, itemHeight, total) {
         },
       ],
       flashcardIds: ['jsbr-f4', 'jsbr-f6', 'jsbr-f10'],
+      docsLink: { url: 'https://web.dev/i18n/ru/vitals/', title: 'Core Web Vitals — web.dev (ru)' },
     },
   ],
 
@@ -547,7 +552,7 @@ function getVisibleRange(scrollTop, containerHeight, itemHeight, total) {
 - CSS блокирует **рендер** (не парсинг HTML); JS без \`defer\`/\`async\` блокирует **и** парсинг, **и** рендер.
 - Стоимость обновлений: **Reflow > Repaint > Composite**. Анимируйте только \`transform\` и \`opacity\`.
 - **Layout thrashing** = чередование READ/WRITE → принудительный reflow. Решение: read-фаза → write-фаза или \`requestAnimationFrame\`.
-- \`will-change: transform\` — подъём на отдельный compositor layer заранее. Не злоупотреблять.
+- \`will-change: transform\` — подъём на отдельный отдельный GPU-слой заранее. Не злоупотреблять.
 - Изображения: AVIF/WebP, \`srcset\`+\`sizes\`, \`loading="lazy"\`, \`fetchpriority="high"\`, обязательные \`width\`/\`height\` против CLS.
 - \`requestAnimationFrame\` синхронизирован с экраном; \`setTimeout\` — нет. Тяжёлый CPU — в Web Worker.
 - **Core Web Vitals**: LCP < 2.5 с (preload, AVIF, SSR), INP < 200 мс (батчинг long tasks, Worker), CLS < 0.1 (резервируйте размеры).`,
@@ -593,7 +598,7 @@ function getVisibleRange(scrollTop, containerHeight, itemHeight, total) {
 
 **Repaint.** Перерисовка пикселей **без** изменения геометрии. Дешевле: запускается при изменении \`color\`, \`background-color\`, \`visibility\`, \`border-color\`. Не затрагивает шаг Layout.
 
-**Composite.** Пересборка готовых слоёв в финальное изображение. Самая дешёвая операция: выполняется на GPU, не затрагивает главный поток. Только \`transform\` и \`opacity\` (если элемент уже на отдельном compositor layer) дают composite-only обновление.
+**Composite.** Пересборка готовых слоёв в финальное изображение. Самая дешёвая операция: выполняется на GPU, не затрагивает главный поток. Только \`transform\` и \`opacity\` (если элемент уже на отдельном отдельный GPU-слой) дают composite-only обновление.
 
 Из этого вытекают практические правила:
 - Анимации делать через \`transform\` и \`opacity\`.
@@ -610,8 +615,8 @@ function getVisibleRange(scrollTop, containerHeight, itemHeight, total) {
       id: 'jsbr-iq3',
       question: 'Какие CSS-свойства не вызывают reflow и почему?',
       shortAnswer:
-        '`transform` и `opacity` — единственные свойства, которые могут обновляться только на этапе Composite, без Reflow и Paint. Они работают на compositor layer элемента, который GPU собирает отдельно от остальной страницы. Поэтому именно их используют в плавных 60-FPS анимациях.',
-      fullAnswer: `Чтобы CSS-свойство не вызывало reflow, оно не должно менять геометрию документа и должно выполняться на отдельном compositor layer.
+        '`transform` и `opacity` — единственные свойства, которые могут обновляться только на этапе Composite, без Reflow и Paint. Они работают на отдельный GPU-слой элемента, который GPU собирает отдельно от остальной страницы. Поэтому именно их используют в плавных 60-FPS анимациях.',
+      fullAnswer: `Чтобы CSS-свойство не вызывало reflow, оно не должно менять геометрию документа и должно выполняться на отдельном отдельный GPU-слой.
 
 **Без reflow и без repaint** (только Composite, на GPU):
 - \`transform: translate / scale / rotate / skew\` — смещение, масштабирование, поворот.
@@ -671,8 +676,8 @@ function getVisibleRange(scrollTop, containerHeight, itemHeight, total) {
       id: 'jsbr-iq5',
       question: 'Зачем нужен `will-change` и в чём его подвох?',
       shortAnswer:
-        '`will-change: transform` подсказывает браузеру: «этот элемент скоро будет анимироваться». Браузер заранее создаёт отдельный compositor layer на GPU, чтобы первый кадр анимации не вызвал «рывок» из-за подъёма на слой. Подвох — каждый layer ест GPU-память; постоянный `will-change` на сотнях элементов даёт обратный эффект и расход батареи.',
-      fullAnswer: `**\`will-change\`** — CSS-свойство, которое сообщает браузеру: «этот элемент в ближайшее время будет меняться по таким-то свойствам». На основе этой подсказки браузер заранее выделяет ресурсы — обычно создаёт отдельный compositor layer.
+        '`will-change: transform` подсказывает браузеру: «этот элемент скоро будет анимироваться». Браузер заранее создаёт отдельный отдельный GPU-слой на GPU, чтобы первый кадр анимации не вызвал «рывок» из-за подъёма на слой. Подвох — каждый layer ест GPU-память; постоянный `will-change` на сотнях элементов даёт обратный эффект и расход батареи.',
+      fullAnswer: `**\`will-change\`** — CSS-свойство, которое сообщает браузеру: «этот элемент в ближайшее время будет меняться по таким-то свойствам». На основе этой подсказки браузер заранее выделяет ресурсы — обычно создаёт отдельный отдельный GPU-слой.
 
 **Зачем это нужно.** Без \`will-change\` первый кадр анимации часто «дёргается»: браузер только в момент изменения замечает, что элемент стоит анимировать, и поднимает его на отдельный слой. Это занимает несколько миллисекунд и даёт визуальный «рывок». \`will-change: transform\` устраняет этот jank: слой создан заранее, переход на анимацию плавный.
 

@@ -71,12 +71,12 @@ export const jsAsyncLesson: Lesson = {
 
 История API эволюционировала в три этапа. Сначала был **callback-стиль**: \`fs.readFile(path, (err, data) => {...})\`. Он прост, но плохо масштабируется — при последовательных операциях код превращается в «callback hell» с глубокой вложенностью и дублирующейся обработкой ошибок. В ES2015 пришли **Promise** — объект-обёртка над будущим результатом, поддерживающая цепочки и единый \`.catch\` на всю цепочку. В ES2017 появился **async/await** — синтаксический сахар над промисами, превращающий асинхронный код в плоский, похожий на синхронный. Под капотом \`await\` по-прежнему ставит продолжение в очередь микрозадач — это важно понимать (см. урок про event loop).
 
-На собеседовании асинхронность проверяют через **последствия**: что выведет код с миксом \`await\` и \`Promise.then\`, чем отличаются четыре статических метода Promise, как сделать N параллельных запросов с лимитом, как реализовать timeout, что произойдёт с забытым \`await\` или необработанным \`reject\`. Сильный кандидат отличает sequential от parallel и видит лишний \`await\` в цикле как код-смелл.
+На собеседовании асинхронность проверяют через **последствия**: что выведет код с миксом \`await\` и \`Promise.then\`, чем отличаются четыре статических метода Promise, как сделать N параллельных запросов с лимитом, как реализовать timeout, что произойдёт с забытым \`await\` или необработанным \`reject\`. Сильный кандидат отличает последовательное выполнение от параллельного и замечает лишний \`await\` в цикле как явный признак проблемы.
 
 В этом уроке вы научитесь читать асинхронный код одинаково уверенно в обоих стилях, выбирать между \`Promise.all\` и \`Promise.allSettled\`, писать timeout и retry, реализовывать ограниченный параллелизм и диагностировать классические баги — забытый \`await\`, race condition, проглоченный rejected.`,
     estimatedMinutes: 35,
     interviewAngle:
-      'Интервьюер проверяет понимание Promise как state machine, разницу четырёх статических методов, поведение await как микрозадачи, умение отличать sequential от parallel, реализацию timeout/retry/ограниченного параллелизма и диагностику забытого await или unhandled rejection.',
+      'Интервьюер проверяет понимание трёх состояний Promise и однократности перехода между ними, разницу четырёх статических методов, поведение await как микрозадачи, умение отличать последовательное выполнение от параллельного, реализацию timeout/retry/ограниченного параллелизма и диагностику забытого await или необработанного reject.',
     prerequisites: [{ slug: 'js-event-loop', title: 'Event Loop' }],
   },
 
@@ -206,6 +206,7 @@ promise
       ],
       flashcardIds: ['jsa-f1'],
       checkpoint: [Q['jsa-q3']!, Q['jsa-q1']!],
+      docsLink: { url: 'https://learn.javascript.ru/promise-basics', title: 'Промисы — learn.javascript.ru' },
     },
 
     {
@@ -283,10 +284,11 @@ async function fast() {
           type: 'callout',
           calloutType: 'tip',
           content:
-            'Правило: если результаты независимы — пускайте параллельно через `Promise.all`. Если результат запроса B зависит от ответа A — последовательность неизбежна. Лишний sequential `await` — самая частая причина медленных страниц.',
+            'Правило: если результаты независимы — запускайте параллельно через `Promise.all`. Если результат запроса B зависит от ответа A — последовательность неизбежна. Лишний `await` внутри цикла, когда запросы можно было запустить одновременно, — самая частая причина медленных страниц.',
         },
       ],
       flashcardIds: ['jsa-f8'],
+      docsLink: { url: 'https://learn.javascript.ru/async-await', title: 'async/await — learn.javascript.ru' },
       playground: {
         starterCode: `// В коде ниже два независимых запроса выполняются последовательно.
 // Перепишите функцию так, чтобы они шли параллельно через Promise.all.
@@ -394,6 +396,7 @@ try {
       ],
       flashcardIds: ['jsa-f2', 'jsa-f7'],
       checkpoint: [Q['jsa-q2']!, Q['jsa-q9']!],
+      docsLink: { url: 'https://learn.javascript.ru/promise-api', title: 'Promise API — learn.javascript.ru' },
     },
 
     {
@@ -492,6 +495,7 @@ async function fixed() {
         },
       ],
       flashcardIds: ['jsa-f3', 'jsa-f4', 'jsa-f9'],
+      docsLink: { url: 'https://developer.mozilla.org/ru/docs/Web/JavaScript/Reference/Global_Objects/Promise', title: 'Promise — MDN (ru)' },
     },
 
     {
@@ -600,6 +604,7 @@ const content = await readFileAsync('file.txt', 'utf8');`,
         },
       ],
       flashcardIds: ['jsa-f5', 'jsa-f6'],
+      docsLink: { url: 'https://learn.javascript.ru/async-await', title: 'async/await — learn.javascript.ru' },
       playground: {
         starterCode: `// Реализуйте retry: повторите fn до attempts раз, верните первый успешный результат.
 // Если все попытки упали — пробросьте последнюю ошибку.
@@ -632,14 +637,14 @@ retry(flaky, 5).then(console.log).catch((e) => console.log('err', e.message));`,
 
   cheatsheet: `### Шпаргалка по Promise и async/await
 
-- **Promise** — state machine: pending → fulfilled или pending → rejected, переход однократный.
-- Цепочка \`.then\` — каждый возвращает новый Promise; \`.catch\` ловит ошибку из любого звена; \`.finally\` для cleanup.
-- **async** функция всегда возвращает Promise; \`return v\` → \`Promise.resolve(v)\`, \`throw\` → \`Promise.reject\`.
-- **await** ставит продолжение в microtask queue; \`try/catch\` вокруг \`await\` эквивалентен \`.catch\`.
-- **Promise.all** — все или ошибка; **allSettled** — все исходы; **race** — первый любой; **any** — первый успех.
-- Sequential через \`for...of\` + await; parallel через \`Promise.all(items.map(...))\`. forEach не ждёт.
-- Timeout: \`Promise.race([request, delay(ms).then(throw)])\`. Retry: цикл try/catch с задержкой.
-- Не возвращённый rejected Promise → unhandledrejection (Node.js 15+ завершает процесс).`,
+- **Promise** — объект с тремя состояниями: pending (ожидание) → fulfilled (успех) или rejected (ошибка). Переход однократный и необратимый.
+- Цепочка \`.then\` — каждый вызов возвращает новый Promise; \`.catch\` ловит ошибку из любого звена; \`.finally\` — для завершающей очистки.
+- **async**-функция всегда возвращает Promise; \`return v\` → \`Promise.resolve(v)\`, \`throw\` → \`Promise.reject\`.
+- **await** ставит продолжение в очередь микрозадач; \`try/catch\` вокруг \`await\` равнозначен \`.catch\`.
+- **Promise.all** — все или ошибка; **allSettled** — все исходы без исключений; **race** — первый завершившийся; **any** — первый успешный.
+- Последовательно: \`for...of\` + await; параллельно: \`Promise.all(items.map(...))\`. \`forEach\` с async не ждёт результатов.
+- Timeout: \`Promise.race([request, delay(ms).then(() => { throw new Error() })])\`. Retry: цикл try/catch с задержкой.
+- Не обработанный rejected Promise → событие unhandledrejection (Node.js 15+ завершает процесс с ошибкой).`,
 
   interviewQA: [
     {

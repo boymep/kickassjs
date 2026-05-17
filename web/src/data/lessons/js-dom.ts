@@ -153,6 +153,7 @@ Node.COMMENT_NODE;  // 8`,
         },
       ],
       flashcardIds: ['jsdom-f3'],
+      docsLink: { url: 'https://learn.javascript.ru/dom-nodes', title: 'DOM — learn.javascript.ru' },
     },
 
     {
@@ -221,6 +222,7 @@ document.addEventListener('click', () => console.log('document'));
       ],
       flashcardIds: ['jsdom-f2', 'jsdom-f5'],
       checkpoint: [Q['jsdom-q1']!, Q['jsdom-q6']!, Q['jsdom-q4']!],
+      docsLink: { url: 'https://learn.javascript.ru/bubbling-and-capturing', title: 'Всплытие и перехват — learn.javascript.ru' },
     },
 
     {
@@ -305,6 +307,7 @@ span.dispatchEvent(new MouseEvent('click', { bubbles: true }));`,
       },
       flashcardIds: ['jsdom-f1'],
       checkpoint: [Q['jsdom-q9']!],
+      docsLink: { url: 'https://learn.javascript.ru/event-delegation', title: 'Делегирование событий — learn.javascript.ru' },
     },
 
     {
@@ -363,6 +366,7 @@ observer.disconnect(); // когда больше не нужен`,
             'Для отслеживания появления элементов в области видимости используйте `IntersectionObserver` (lazy-load изображений, бесконечная прокрутка) — он эффективнее, чем обработчик `scroll`.',
         },
       ],
+      docsLink: { url: 'https://developer.mozilla.org/ru/docs/Web/API/CustomEvent', title: 'CustomEvent — MDN (ru)' },
     },
 
     {
@@ -455,6 +459,7 @@ console.log(elems.map((e) => e.style.height).join(','));`,
       },
       flashcardIds: ['jsdom-f4'],
       checkpoint: [Q['jsdom-q11']!],
+      docsLink: { url: 'https://learn.javascript.ru/styles-and-classes', title: 'Стили и классы — learn.javascript.ru' },
     },
   ],
 

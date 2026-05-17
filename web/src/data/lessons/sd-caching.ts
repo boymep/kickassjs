@@ -566,6 +566,7 @@ Origin recompute        :  секунды   (полный SSR + БД)`,
       ],
       flashcardIds: ['sdc-f1'],
       checkpoint: [Q['sdc-q1']!],
+      docsLink: { url: 'https://developer.mozilla.org/ru/docs/Web/HTTP/Caching', title: 'Кеширование HTTP — MDN (ru)' },
     },
 
     {
@@ -659,6 +660,7 @@ Vary: Cookie
       ],
       flashcardIds: ['sdc-f2', 'sdc-f3', 'sdc-f13', 'sdc-f14'],
       checkpoint: [Q['sdc-q3']!],
+      docsLink: { url: 'https://developer.mozilla.org/ru/docs/Web/HTTP/Caching', title: 'Кеширование HTTP — MDN (ru)' },
     },
 
     {
@@ -724,6 +726,7 @@ export async function POST(req: Request) {
         },
       ],
       flashcardIds: ['sdc-f5', 'sdc-f11'],
+      docsLink: { url: 'https://developer.mozilla.org/ru/docs/Web/HTTP/Caching', title: 'Кеширование HTTP — MDN (ru)' },
     },
 
     {
@@ -800,6 +803,7 @@ self.addEventListener('fetch', (e) => {
         },
       ],
       flashcardIds: ['sdc-f6'],
+      docsLink: { url: 'https://developer.mozilla.org/ru/docs/Web/API/Service_Worker_API', title: 'Service Worker API — MDN (ru)' },
       playground: {
         starterCode: `// Реализуйте простой stale-while-revalidate.
 // При hit возвращаем cached сразу; при miss — fetch.
@@ -894,6 +898,7 @@ async function updateUser(id: string, patch: Partial<User>) {
         },
       ],
       flashcardIds: ['sdc-f9'],
+      docsLink: { url: 'https://developer.mozilla.org/ru/docs/Web/HTTP/Caching', title: 'Кеширование HTTP — MDN (ru)' },
     },
 
     {
@@ -992,6 +997,7 @@ async function get(id: string) {
       ],
       flashcardIds: ['sdc-f4', 'sdc-f7', 'sdc-f8', 'sdc-f10'],
       checkpoint: [Q['sdc-q5']!, Q['sdc-q9']!],
+      docsLink: { url: 'https://developer.mozilla.org/ru/docs/Web/HTTP/Caching', title: 'Кеширование HTTP — MDN (ru)' },
     },
 
     {
@@ -1045,6 +1051,7 @@ Vary: Authorization`,
         },
       ],
       flashcardIds: ['sdc-f12'],
+      docsLink: { url: 'https://developer.mozilla.org/ru/docs/Web/HTTP/Caching', title: 'Кеширование HTTP — MDN (ru)' },
     },
   ],
 

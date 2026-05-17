@@ -162,6 +162,7 @@ console.log(alice.name); // 'Алиса'`,
       ],
       flashcardIds: ['jsth-f1'],
       checkpoint: [Q['jst-q1']!],
+      docsLink: { url: 'https://learn.javascript.ru/object-methods', title: 'Методы объекта и this — learn.javascript.ru' },
     },
 
     {
@@ -228,6 +229,7 @@ obj.regularMethod(); // 'obj'`,
       ],
       flashcardIds: ['jsth-f3'],
       checkpoint: [Q['jst-q2']!, Q['jst-q9']!],
+      docsLink: { url: 'https://learn.javascript.ru/arrow-functions', title: 'Стрелочные функции — learn.javascript.ru' },
     },
 
     {
@@ -300,6 +302,7 @@ double(10); // 20`,
         },
       ],
       flashcardIds: ['jsth-f6'],
+      docsLink: { url: 'https://learn.javascript.ru/bind', title: 'bind, call, apply — learn.javascript.ru' },
       playground: {
         starterCode: `// Метод user.greet теряет контекст при передаче как callback.
 // Исправьте код одной строкой так, чтобы вывод был "Привет, Алиса!".
@@ -401,6 +404,7 @@ setTimeout(logger.log.bind(logger), 100, 'привет');`,
         },
       ],
       flashcardIds: ['jsth-f2'],
+      docsLink: { url: 'https://developer.mozilla.org/ru/docs/Web/JavaScript/Reference/Operators/this', title: 'this — MDN (ru)' },
       playground: {
         starterCode: `// Класс ниже теряет this в обработчике forEach.
 // Исправьте метод processAll, чтобы вывод был "[CTX] a", "[CTX] b", "[CTX] c".
@@ -477,6 +481,7 @@ class ButtonOld {
       ],
       flashcardIds: ['jsth-f5'],
       checkpoint: [Q['jst-q6']!],
+      docsLink: { url: 'https://learn.javascript.ru/class', title: 'Классы — learn.javascript.ru' },
     },
 
     {
@@ -536,6 +541,7 @@ new Dog('Рекс').describe(); // 'Я Рекс, и я собака'`,
         },
       ],
       flashcardIds: ['jsth-f4'],
+      docsLink: { url: 'https://learn.javascript.ru/constructor-new', title: 'Конструкторы и new — learn.javascript.ru' },
     },
   ],
 
@@ -615,7 +621,7 @@ class Timer {
 - \`fn.apply(ctx, [a, b, c])\` вызывает функцию немедленно. Аргументы передаются массивом или массивоподобным объектом. Удобно, когда аргументы уже собраны в массив.
 - \`fn.bind(ctx, a)\` не вызывает функцию. Возвращает **новую** функцию, у которой \`this\` зафиксирован равным \`ctx\`, а первый аргумент уже подставлен.
 
-Особенность \`bind\` — это **hard binding**: повторный \`bind\` на уже привязанную функцию не меняет \`this\`. Снять привязку можно только через \`new\`, потому что правило \`new\` имеет высший приоритет.
+Особенность \`bind\` — привязка **жёсткая**: повторный \`bind\` на уже привязанную функцию не меняет \`this\`. Снять её можно только через \`new\`, потому что правило \`new\` имеет высший приоритет.
 
 Практические применения \`bind\`: фиксация \`this\` в конструкторе класса, частичное применение аргументов, передача метода как callback без потери контекста. Применения \`call\`/\`apply\`: заимствование методов (\`Array.prototype.slice.call(arguments)\`), вызов функций со «спред»-аргументами в средах без \`...\`.`,
       followUps: [

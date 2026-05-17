@@ -78,7 +78,7 @@ export const nodeNetworkLesson: Lesson = {
   topicId: 'node-network',
 
   intro: {
-    whyItMatters: `Node.js — это HTTP-сервер «из коробки»: модуль \`http\` входит в стандартную библиотеку, и для запуска сервера не нужно ни одной зависимости. Эта особенность делает Node.js де-факто стандартом для бэкенда веб-приложений и BFF-слоёв. На собеседовании в Node.js-команды почти всегда проверяют, понимаете ли вы, что происходит **под** Express: как устроены \`req\` и \`res\` (это Readable и Writable стримы), как работает middleware-цепочка (массив функций \`(req, res, next) => ...\`, выполняемых по порядку), как вручную написать роутинг (паттерн пути → обработчик), и где в этой архитектуре заканчивается зона ответственности фреймворка и начинается ваша.
+    whyItMatters: `Node.js — это HTTP-сервер «из коробки»: модуль \`http\` входит в стандартную библиотеку, и для запуска сервера не нужно ни одной зависимости. Эта особенность делает Node.js де-факто стандартом для бэкенда веб-приложений и BFF-слоёв (BFF, Backend For Frontend — промежуточный сервер между браузером и основными сервисами). На собеседовании в Node.js-команды почти всегда проверяют, понимаете ли вы, что происходит **под** Express: как устроены \`req\` и \`res\` (это Readable и Writable стримы), как работает middleware-цепочка (массив функций \`(req, res, next) => ...\`, выполняемых по порядку), как вручную написать роутинг (паттерн пути → обработчик), и где в этой архитектуре заканчивается зона ответственности фреймворка и начинается ваша.
 
 Помимо архитектуры важна **безопасность**: CORS на стороне сервера (Access-Control-Allow-*, preflight OPTIONS), rate limiting (защита от brute-force и DoS), helmet для базовых HTTP-заголовков (CSP, HSTS, X-Frame-Options). Понимание этих механизмов отличает джуна от мидла: джун пишет \`app.use(cors())\` и идёт дальше, мидл объясняет, почему \`Access-Control-Allow-Origin: *\` не работает с credentials, как preflight кэшируется и почему rate limiter в multi-instance сервере должен быть на Redis, а не в памяти процесса.
 
@@ -216,6 +216,7 @@ server.listen(3000, () => console.log('Server :3000'));`,
         },
       ],
       flashcardIds: ['nodenw-f6'],
+      docsLink: { url: 'https://metanit.com/web/nodejs/4.1.php', title: 'HTTP-сервер — metanit.com' },
     },
 
     {
@@ -330,6 +331,7 @@ console.log(req.log); // ожидаем 'ABC'`,
       },
       flashcardIds: ['nodenw-f1'],
       checkpoint: [Q['nodenet-q3']!, Q['nodenet-q2']!],
+      docsLink: { url: 'https://metanit.com/web/nodejs/4.2.php', title: 'Middleware — metanit.com' },
     },
 
     {
@@ -417,6 +419,7 @@ class Router {
         },
       ],
       flashcardIds: [],
+      docsLink: { url: 'https://metanit.com/web/nodejs/4.3.php', title: 'Роутинг — metanit.com' },
     },
 
     {
@@ -478,6 +481,7 @@ app.use(corsMiddleware);`,
         },
       ],
       flashcardIds: ['nodenw-f7'],
+      docsLink: { url: 'https://developer.mozilla.org/ru/docs/Web/HTTP/CORS', title: 'CORS — MDN (ru)' },
     },
 
     {
@@ -551,6 +555,7 @@ limit('user-1'); // false → сервер отвечает 429 Too Many Request
       ],
       flashcardIds: ['nodenw-f5', 'nodenw-f8'],
       checkpoint: [Q['nodenet-q6']!],
+      docsLink: { url: 'https://developer.mozilla.org/ru/docs/Web/Security', title: 'Безопасность веба — MDN (ru)' },
     },
 
     {
@@ -607,6 +612,7 @@ http.get('http://api.example.com/data', { agent }, (res) => {
       ],
       flashcardIds: ['nodenw-f4', 'nodenw-f9'],
       checkpoint: [Q['nodenet-q9']!],
+      docsLink: { url: 'https://developer.mozilla.org/ru/docs/Web/HTTP/Overview', title: 'Обзор HTTP — MDN (ru)' },
     },
   ],
 

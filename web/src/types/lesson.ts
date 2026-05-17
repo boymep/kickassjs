@@ -49,6 +49,7 @@ export interface Playground {
   description?: string;
   language?: 'javascript';
   asserts?: { code: string; label: string }[];
+  noValidation?: boolean;
 }
 
 export interface Chapter {
@@ -60,6 +61,7 @@ export interface Chapter {
   playground?: Playground;
   video?: VideoEmbed;
   flashcardIds?: string[];
+  docsLink?: { url: string; title: string };
 }
 
 export interface LessonIntro {

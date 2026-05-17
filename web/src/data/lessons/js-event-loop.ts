@@ -144,15 +144,15 @@ export const jsEventLoopLesson: Lesson = {
         {
           type: 'text',
           content:
-            'JavaScript в браузере выполняется в **одном потоке**. У этого потока есть **call stack** (стек вызовов) — LIFO-структура, куда кладутся фреймы вызванных функций. Пока стек не пуст, браузер не может ни обработать клик, ни нарисовать новый кадр.',
+            'JavaScript в браузере выполняется в **одном потоке**. У этого потока есть **стек вызовов** (call stack) — работает как стопка: каждый вызов функции ложится сверху, завершённый снимается. Пока стек не пуст, браузер не может ни обработать клик, ни нарисовать новый кадр.',
         },
         {
           type: 'list',
-          content: `- **Call Stack** — фреймы выполнения функций, LIFO.
-- **Heap** — куча, где живут объекты и замыкания.
-- **Web APIs** — таймеры, fetch, DOM-события, observers. Реализованы в C++ внутри браузера, **не** на главном потоке.
-- **Task Queue** (она же callback queue) — очередь макрозадач: колбэки таймеров, обработчики DOM-событий, сетевые ответы.
-- **Microtask Queue** — очередь микрозадач: \`Promise.then\`, \`queueMicrotask\`, \`MutationObserver\`.`,
+          content: `- **Call Stack** (стек вызовов) — список активных функций. Каждый вызов добавляется сверху, завершённый удаляется.
+- **Heap** (куча) — область памяти, где живут объекты и замыкания.
+- **Web APIs** — таймеры, fetch, DOM-события, observers. Работают вне главного потока, внутри браузера.
+- **Task Queue** (очередь задач) — макрозадачи: коллбэки таймеров, обработчики DOM-событий, сетевые ответы.
+- **Microtask Queue** (очередь микрозадач) — \`Promise.then\`, \`queueMicrotask\`, \`MutationObserver\`.`,
         },
         {
           type: 'code',
@@ -186,6 +186,7 @@ console.log('End');             // 2. синхронно
       ],
       flashcardIds: ['jsel-f1'],
       checkpoint: [Q['jsel-q1']!],
+      docsLink: { url: 'https://learn.javascript.ru/event-loop', title: 'Цикл событий — learn.javascript.ru' },
     },
 
     {
@@ -250,11 +251,12 @@ console.log('D');
           type: 'callout',
           calloutType: 'tip',
           content:
-            'Бесконечная цепочка `Promise.resolve().then(...)` способна заблокировать рендер: microtask checkpoint не завершается, и браузер не доходит до paint. Это «микрозадачный jank» — та же проблема, что starvation в Node.js.',
+            'Бесконечная цепочка `Promise.resolve().then(...)` способна заблокировать рендер: очередь микрозадач никогда не пустеет, и браузер не доходит до отрисовки кадра. Эффект тот же, что от бесконечного синхронного цикла — страница замерзает.',
         },
       ],
       flashcardIds: ['jsel-f2', 'jsel-f3', 'jsel-f9'],
       checkpoint: [Q['jsel-q2']!, Q['jsel-q4']!],
+      docsLink: { url: 'https://learn.javascript.ru/microtask-queue', title: 'Микрозадачи — learn.javascript.ru' },
     },
 
     {
@@ -311,6 +313,7 @@ requestAnimationFrame(animate);
         },
       ],
       flashcardIds: ['jsel-f4', 'jsel-f7'],
+      docsLink: { url: 'https://developer.mozilla.org/ru/docs/Web/API/window/requestAnimationFrame', title: 'requestAnimationFrame — MDN (ru)' },
       playground: {
         starterCode: `// Предскажите порядок вывода и запустите код.
 // Подсказка: queueMicrotask и Promise.then идут в одну очередь
@@ -328,6 +331,7 @@ queueMicrotask(() => console.log('mt-2'));
 
 console.log('2');`,
         expectedOutput: '1\n2\nmt-1\np-1\nmt-2\nto-1',
+        noValidation: true,
         description:
           'Сначала выводится синхронный код (1, 2). Затем microtask checkpoint опустошает очередь в порядке постановки: mt-1, p-1, mt-2. Только после этого выполняется макрозадача setTimeout (to-1).',
       },
@@ -404,6 +408,7 @@ window.addEventListener('unhandledrejection', (event) => {
         },
       ],
       flashcardIds: ['jsel-f3'],
+      docsLink: { url: 'https://learn.javascript.ru/async-await', title: 'async/await — learn.javascript.ru' },
     },
 
     {
@@ -479,6 +484,7 @@ async function processWithYield(items) {
       ],
       flashcardIds: ['jsel-f6', 'jsel-f8'],
       checkpoint: [Q['jsel-q10']!],
+      docsLink: { url: 'https://learn.javascript.ru/event-loop', title: 'Цикл событий — learn.javascript.ru' },
       playground: {
         starterCode: `// Замените блокирующий цикл на чанкование через setTimeout,
 // чтобы между батчами могли выполниться микрозадачи и rAF.
@@ -570,6 +576,7 @@ console.log('после паузы');`,
         },
       ],
       flashcardIds: ['jsel-f5'],
+      docsLink: { url: 'https://learn.javascript.ru/event-loop', title: 'Цикл событий — learn.javascript.ru' },
       playground: {
         starterCode: `// Реализуйте debounce так, чтобы тест прошёл.
 // fn должна быть вызвана ровно ОДИН раз с последними аргументами.
@@ -623,7 +630,7 @@ setTimeout(() => {
         'Event loop — алгоритм, который при пустом call stack берёт одну макрозадачу из task queue, выполняет её, опустошает microtask queue, при необходимости запускает rAF и шаг рендеринга, и переходит к следующей итерации. Web APIs выполняются вне главного потока и кладут колбэки в очереди.',
       fullAnswer: `Главный поток JavaScript состоит из нескольких структур:
 
-- **Call Stack** — LIFO-стек фреймов вызовов функций. Пока не пуст, никакие новые задачи не берутся.
+- **Call Stack** (стек вызовов) — список активных функций. Пока не пуст, никакие новые задачи не берутся.
 - **Heap** — куча, где живут объекты, замыкания, массивы.
 - **Web APIs** — таймеры, fetch, DOM-события, observers; реализованы в C++ внутри браузера.
 - **Task Queue** (она же callback queue) — макрозадачи: setTimeout, обработчики DOM, message-event, сетевые ответы.
@@ -707,7 +714,7 @@ console.log('2');
       id: 'jsel-iq4',
       question: 'Что произойдёт, если внутри Promise.then бесконечно резолвить новые промисы?',
       shortAnswer:
-        'Microtask checkpoint никогда не завершится. Браузер не сможет ни взять новую макрозадачу, ни выполнить rAF, ни нарисовать кадр — страница «зависнет». Это микрозадачный аналог starvation event loop в Node.js.',
+        'Очередь микрозадач никогда не опустеет. Браузер не сможет ни взять новую макрозадачу, ни выполнить rAF, ни нарисовать кадр — страница «зависнет». Это та же проблема, что и бесконечный синхронный цикл, только в асинхронной обёртке.',
       fullAnswer: `Microtask queue опустошается **полностью** перед переходом к следующей макрозадаче и шагу рендеринга. Если каждый колбэк микрозадачи добавляет в очередь новый — она никогда не пуста.
 
 \`\`\`js

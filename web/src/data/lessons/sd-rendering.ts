@@ -570,6 +570,7 @@ export default async function Page() {
       ],
       flashcardIds: ['sdr-f1', 'sdr-f9'],
       checkpoint: [Q['sdr-q1']!],
+      docsLink: { url: 'https://developer.mozilla.org/ru/docs/Web/Performance', title: 'Производительность — MDN (ru)' },
     },
 
     {
@@ -633,6 +634,7 @@ app.get('*', (req, res) => {
         },
       ],
       flashcardIds: ['sdr-f1', 'sdr-f2', 'sdr-f13'],
+      docsLink: { url: 'https://developer.mozilla.org/ru/docs/Learn/Server-side/First_steps/Introduction', title: 'Серверный рендеринг — MDN (ru)' },
     },
 
     {
@@ -717,6 +719,7 @@ console.log(blogRevalidate, newsRevalidate);`,
       },
       flashcardIds: ['sdr-f3', 'sdr-f4'],
       checkpoint: [Q['sdr-q5']!],
+      docsLink: { url: 'https://habr.com/ru/hub/next_js/', title: 'SSG и ISR — Habr' },
     },
 
     {
@@ -787,6 +790,7 @@ function ClientOnly({ children }: { children: React.ReactNode }) {
       ],
       flashcardIds: ['sdr-f5', 'sdr-f10', 'sdr-f11'],
       checkpoint: [Q['sdr-q3']!],
+      docsLink: { url: 'https://habr.com/ru/hub/reactjs/', title: 'Гидратация — Habr' },
     },
 
     {
@@ -886,6 +890,7 @@ export function LikeButton({ postId }: { postId: string }) {
       ],
       flashcardIds: ['sdr-f6', 'sdr-f7', 'sdr-f14'],
       checkpoint: [Q['sdr-q9']!],
+      docsLink: { url: 'https://habr.com/ru/hub/reactjs/', title: 'React Server Components — Habr' },
     },
 
     {
@@ -940,6 +945,7 @@ const post = await fetchPost(Astro.params.slug);
         },
       ],
       flashcardIds: ['sdr-f8', 'sdr-f12'],
+      docsLink: { url: 'https://habr.com/ru/hub/next_js/', title: 'Islands Architecture — Habr' },
     },
 
     {
@@ -997,6 +1003,7 @@ const post = await fetchPost(Astro.params.slug);
         },
       ],
       flashcardIds: ['sdr-f9'],
+      docsLink: { url: 'https://developer.mozilla.org/ru/docs/Web/Performance', title: 'Производительность — MDN (ru)' },
     },
   ],
 

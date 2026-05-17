@@ -140,6 +140,7 @@ const bst = {
       ],
       flashcardIds: ['tr-f1', 'tr-f2'],
       checkpoint: [Q['tree-q2']!],
+      docsLink: { url: 'https://ru.algorithmica.org/cs/trees/', title: 'Корневые деревья — ru.algorithmica.org' },
     },
 
     {
@@ -212,6 +213,7 @@ function dfs(node, visit) {
       ],
       flashcardIds: ['tr-f3', 'tr-f4', 'tr-f5'],
       checkpoint: [Q['tree-q6']!, Q['tree-q8']!],
+      docsLink: { url: 'https://ru.algorithmica.org/cs/graph-traversals/dfs/', title: 'Поиск в глубину (DFS) — ru.algorithmica.org' },
     },
 
     {
@@ -293,6 +295,7 @@ function dfs(node, visit) {
       ],
       flashcardIds: ['tr-f6', 'tr-f7'],
       checkpoint: [Q['tree-q3']!],
+      docsLink: { url: 'https://ru.algorithmica.org/cs/graph-traversals/', title: 'Обходы графов — ru.algorithmica.org' },
     },
 
     {
