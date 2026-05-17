@@ -6,9 +6,10 @@ import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import CodeEditor from './CodeEditor';
 import TestResults from './TestResults';
 import CodeBlock from '../theory/CodeBlock';
-import HintsPanel from './HintsPanel';
+import { HintsButton, HintsDisplay } from './HintsPanel';
 import ProblemHeader from './ProblemHeader';
 import { useCodeRunner } from '../../hooks/useCodeRunner';
+import { useHints } from '../../hooks/useHints';
 import type { FindBugProblem } from '../../types/problem';
 import { useProgress } from '../../hooks/useProgress';
 
@@ -21,6 +22,7 @@ export default function FindBugView({ problem }: FindBugViewProps) {
   const [showSolution, setShowSolution] = useState(false);
   const { results, running, run } = useCodeRunner();
   const { markSolved } = useProgress(problem.topicId);
+  const { hintIndex, showNext } = useHints(problem.id);
 
   useEffect(() => {
     setCode(problem.buggyCode);
@@ -44,23 +46,23 @@ export default function FindBugView({ problem }: FindBugViewProps) {
         В коде ниже спрятан баг — код пройдёт лишь часть тестов. Найди и почини.
       </Alert>
       <CodeEditor value={code} onChange={setCode} />
-      <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'flex-start' }}>
-        <Button variant="contained" startIcon={<PlayArrowIcon />} onClick={handleRun} disabled={running}>
-          {running ? 'Выполняется...' : 'Запустить тесты'}
-        </Button>
-        <Button startIcon={<RestartAltIcon />} onClick={() => setCode(problem.buggyCode)}>
-          Вернуть исходный
-        </Button>
-        <HintsPanel hints={problem.hints} />
-        <Button
-          variant="outlined"
-          color="secondary"
-          startIcon={<VisibilityIcon />}
-          onClick={() => setShowSolution((s) => !s)}
-        >
-          {showSolution ? 'Скрыть разбор' : 'Показать разбор'}
-        </Button>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 2, flexWrap: 'wrap', mt: 2 }}>
+        <Box sx={{ display: 'flex', gap: 1.5 }}>
+          <Button variant="contained" startIcon={<PlayArrowIcon />} onClick={handleRun} disabled={running}>
+            {running ? 'Выполняется...' : 'Запустить'}
+          </Button>
+          <Button variant="outlined" startIcon={<RestartAltIcon />} onClick={() => setCode(problem.buggyCode)}>
+            Сбросить
+          </Button>
+        </Box>
+        <Box sx={{ display: 'flex', gap: 1.5 }}>
+          <HintsButton hints={problem.hints} hintIndex={hintIndex} onNext={() => showNext(problem.hints.length)} />
+          <Button variant="outlined" color="secondary" startIcon={<VisibilityIcon />} onClick={() => setShowSolution((s) => !s)}>
+            {showSolution ? 'Скрыть разбор' : 'Показать разбор'}
+          </Button>
+        </Box>
       </Box>
+      <HintsDisplay hints={problem.hints} hintIndex={hintIndex} />
       {results && <TestResults results={results} testCases={problem.testCases} />}
       {allPassed && (
         <Alert severity="success" sx={{ mt: 2 }}>

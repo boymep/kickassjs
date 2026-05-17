@@ -5,9 +5,10 @@ import VisibilityIcon from '@mui/icons-material/Visibility';
 import CodeEditor from './CodeEditor';
 import TestResults from './TestResults';
 import CodeBlock from '../theory/CodeBlock';
-import HintsPanel from './HintsPanel';
+import { HintsButton, HintsDisplay } from './HintsPanel';
 import ProblemHeader from './ProblemHeader';
 import { useCodeRunner } from '../../hooks/useCodeRunner';
+import { useHints } from '../../hooks/useHints';
 import type { ImplementProblem } from '../../types/problem';
 import { useProgress } from '../../hooks/useProgress';
 
@@ -20,6 +21,7 @@ export default function ImplementProblemView({ problem }: ImplementProblemViewPr
   const [showSolution, setShowSolution] = useState(false);
   const { results, running, run } = useCodeRunner();
   const { markSolved } = useProgress(problem.topicId);
+  const { hintIndex, showNext } = useHints(problem.id);
 
   useEffect(() => setCode(problem.starterCode), [problem.id, problem.starterCode]);
 
@@ -37,25 +39,20 @@ export default function ImplementProblemView({ problem }: ImplementProblemViewPr
     <>
       <ProblemHeader problem={problem} />
       <CodeEditor value={code} onChange={setCode} />
-      <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'flex-start' }}>
-        <Button
-          variant="contained"
-          startIcon={<PlayArrowIcon />}
-          onClick={handleRun}
-          disabled={running}
-        >
-          {running ? 'Выполняется...' : 'Запустить'}
-        </Button>
-        <HintsPanel hints={problem.hints} />
-        <Button
-          variant="outlined"
-          color="secondary"
-          startIcon={<VisibilityIcon />}
-          onClick={() => setShowSolution((s) => !s)}
-        >
-          {showSolution ? 'Скрыть решение' : 'Показать решение'}
-        </Button>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 2, flexWrap: 'wrap', mt: 2 }}>
+        <Box sx={{ display: 'flex', gap: 1.5 }}>
+          <Button variant="contained" startIcon={<PlayArrowIcon />} onClick={handleRun} disabled={running}>
+            {running ? 'Выполняется...' : 'Запустить'}
+          </Button>
+        </Box>
+        <Box sx={{ display: 'flex', gap: 1.5 }}>
+          <HintsButton hints={problem.hints} hintIndex={hintIndex} onNext={() => showNext(problem.hints.length)} />
+          <Button variant="outlined" color="secondary" startIcon={<VisibilityIcon />} onClick={() => setShowSolution((s) => !s)}>
+            {showSolution ? 'Скрыть решение' : 'Показать решение'}
+          </Button>
+        </Box>
       </Box>
+      <HintsDisplay hints={problem.hints} hintIndex={hintIndex} />
       <Collapse in={showSolution}>
         <Paper sx={{ p: 2, mt: 2 }}>
           <Typography variant="h6" gutterBottom>Решение</Typography>

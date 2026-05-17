@@ -759,4 +759,136 @@ Counter.prototype.increment = () => {
   }
 }`,
   },
+  {
+    id: 'jst-h1',
+    topicId: 'js-this',
+    kind: 'implement',
+    title: 'Реализуй Function.prototype.myBind',
+    difficulty: 'hard',
+    isContextual: false,
+    description: `Реализуйте метод \`Function.prototype.myBind(thisArg, ...partialArgs)\`, аналог нативного \`bind\`.
+
+Метод должен:
+- Фиксировать \`this\` в возвращаемой функции
+- Поддерживать **частичное применение** аргументов
+- Возвращать функцию, которую можно вызвать с дополнительными аргументами
+- При вызове через \`new\` — \`this\` должен быть новым объектом (как у нативного \`bind\`)
+
+Примеры:
+\`\`\`
+function greet(greeting, name) {
+  return \`\${greeting}, \${name}! I am \${this.title}\`;
+}
+
+const obj = { title: 'Dr.' };
+const boundGreet = greet.myBind(obj, 'Hello');
+boundGreet('Alice')  // → "Hello, Alice! I am Dr."
+\`\`\``,
+    functionName: 'myBind_test',
+    starterCode: `Function.prototype.myBind = function(thisArg, ...partialArgs) {
+  // ваш код
+};`,
+    testCases: [
+      { id: 'jst-h1-t1', inputDisplay: 'фиксирует this', inputArgs: ['bind-this'], expected: 'Hello, Alice! I am Dr.' },
+      { id: 'jst-h1-t2', inputDisplay: 'частичное применение аргументов', inputArgs: ['partial-args'], expected: 15 },
+      { id: 'jst-h1-t3', inputDisplay: 'дополнительные аргументы при вызове', inputArgs: ['extra-args'], expected: 'AB' },
+      { id: 'jst-h1-t4', inputDisplay: 'this игнорируется при new', inputArgs: ['new-call'], expected: true },
+    ],
+    hints: [
+      'Сохраните оригинальную функцию в переменную: `const fn = this`. Верните новую функцию с нужным this.',
+      'Объедините partialArgs и аргументы нового вызова: `fn.apply(thisArg, [...partialArgs, ...args])`.',
+      'Для поддержки `new`: проверьте `this instanceof bound` внутри возвращаемой функции. Если true — используйте текущий `this` вместо thisArg.',
+    ],
+    solutionCode: `Function.prototype.myBind = function(thisArg, ...partialArgs) {
+  const fn = this;
+
+  function bound(...args) {
+    // При вызове через new this является новым объектом — используем его
+    const context = this instanceof bound ? this : thisArg;
+    return fn.apply(context, [...partialArgs, ...args]);
+  }
+
+  // Наследование прототипа для корректной работы instanceof
+  if (fn.prototype) {
+    bound.prototype = Object.create(fn.prototype);
+  }
+
+  return bound;
+};`,
+    testHelperCode: `function myBind_test(scenario) {
+  if (scenario === 'bind-this') {
+    function greet(greeting, name) {
+      return greeting + ', ' + name + '! I am ' + this.title;
+    }
+    const obj = { title: 'Dr.' };
+    return greet.myBind(obj, 'Hello')('Alice');
+  }
+  if (scenario === 'partial-args') {
+    function add(a, b, c) { return a + b + c; }
+    return add.myBind(null, 5, 4)(6);
+  }
+  if (scenario === 'extra-args') {
+    function concat(a, b) { return a + b; }
+    const f = concat.myBind(null, 'A');
+    return f('B');
+  }
+  if (scenario === 'new-call') {
+    function Counter(start) { this.count = start; }
+    const BoundCounter = Counter.myBind({}, 10);
+    const c = new BoundCounter();
+    return c instanceof Counter;
+  }
+}`,
+  },
+  {
+    id: 'jst-h2',
+    topicId: 'js-this',
+    kind: 'predict-output',
+    title: 'Предскажи вывод: классы, стрелки и потеря контекста',
+    difficulty: 'hard',
+    isContextual: false,
+    description: `Внимательно проследите, какой \`this\` у каждого вызова: класс, стрелочная функция, деструктуризация метода.
+
+Что выведет код? Введите строки через перенос строки.`,
+    code: `class Timer {
+  constructor(name) {
+    this.name = name;
+    this.ticks = 0;
+  }
+
+  tick() {
+    this.ticks++;
+    return this.name;
+  }
+
+  start() {
+    const fn = this.tick;
+    const arrow = () => this.tick();
+
+    console.log(fn.call({ name: 'override', ticks: 0 }));
+    console.log(arrow());
+    console.log(this.ticks);
+  }
+}
+
+const t = new Timer('T');
+t.start();`,
+    expected: 'override\nT\n1',
+    hints: [
+      '`fn.call({ name: "override" })` — this внутри tick это { name: "override" }, возвращает "override".',
+      '`arrow()` — стрелка захватывает this из start, то есть экземпляр t. tick() вызывается как t.tick(), ticks становится 1, возвращает "T".',
+      '`this.ticks` — после двух вызовов: первый через call изменил ticks у временного объекта (не у t), второй через arrow вызвал t.tick() и увеличил t.ticks до 1.',
+    ],
+    solutionCode: `// fn.call({ name: 'override', ticks: 0 }):
+//   this = { name: 'override', ticks: 0 }
+//   this.ticks++ → 1
+//   return 'override' → выводит "override"
+//
+// arrow(): стрелка захватила this = t (экземпляр Timer)
+//   вызывает t.tick() → t.ticks++ = 1, return 'T'
+//   выводит "T"
+//
+// console.log(this.ticks): t.ticks === 1 (увеличен стрелкой)
+//   выводит "1"`,
+  },
 ];

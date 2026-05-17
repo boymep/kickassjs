@@ -58,6 +58,10 @@ export function runStdoutCode(userCode: string): Promise<StdoutRunResult> {
           try {
             const __result = (async () => { ${userCode}\n })();
             await __result;
+            // Flush pending macrotasks (e.g. setTimeout(fn, 0)) queued by user code.
+            // Our resolver is added to the timer queue after any setTimeout(fn,0) calls
+            // from user code, so all of them fire before this resolves.
+            await new Promise(r => setTimeout(r, 0));
             parent.postMessage({ type: 'stdout-result', output: __lines.join('\\n') }, '*');
           } catch (e) {
             parent.postMessage({

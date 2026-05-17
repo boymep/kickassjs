@@ -680,4 +680,166 @@ console.log('2');`,
   }
 }`,
   },
+  {
+    id: 'jsa-h1',
+    topicId: 'js-async',
+    kind: 'implement',
+    title: 'myPromiseAny — реализовать Promise.any',
+    difficulty: 'hard',
+    isContextual: false,
+    description: `Реализуйте \`myPromiseAny(promises)\` — аналог \`Promise.any\`:
+- Резолвится **первым успешным** результатом из массива
+- Если **все** промисы реджектятся — реджектится с \`AggregateError\` (массив всех ошибок)
+- Пустой массив → сразу реджектится с \`AggregateError([])\`
+
+Примеры:
+\`\`\`
+await myPromiseAny([
+  Promise.reject('a'),
+  Promise.resolve('b'),
+  Promise.resolve('c'),
+]); // → 'b'  (первый успешный)
+
+await myPromiseAny([
+  Promise.reject('x'),
+  Promise.reject('y'),
+]); // → AggregateError(['x', 'y'])
+\`\`\``,
+    functionName: 'myPromiseAny_test',
+    starterCode: `function myPromiseAny(promises) {
+  // ваш код
+}`,
+    testCases: [
+      { id: 'jsa-h1-t1', inputDisplay: 'первый успешный resolve', inputArgs: ['first-resolve'], expected: 'b' },
+      { id: 'jsa-h1-t2', inputDisplay: 'все reject → AggregateError', inputArgs: ['all-reject'], expected: 'AggregateError' },
+      { id: 'jsa-h1-t3', inputDisplay: 'пустой массив → AggregateError', inputArgs: ['empty'], expected: 'AggregateError' },
+      { id: 'jsa-h1-t4', inputDisplay: 'победитель — быстрейший resolve', inputArgs: ['fastest'], expected: 'fast' },
+      { id: 'jsa-h1-t5', inputDisplay: 'все resolve → берётся первый', inputArgs: ['all-resolve'], expected: 1 },
+    ],
+    hints: [
+      'Создайте `new Promise`. Внутри: массив errors, счётчик rejections.',
+      'Для каждого промиса: при resolve — сразу resolve всего (первый выигрывает). При reject — сохраните ошибку по индексу.',
+      'Когда rejections === promises.length — reject с new AggregateError(errors).',
+    ],
+    solutionCode: `function myPromiseAny(promises) {
+  return new Promise((resolve, reject) => {
+    if (promises.length === 0) {
+      reject(new AggregateError([], 'All promises were rejected'));
+      return;
+    }
+
+    const errors = new Array(promises.length);
+    let rejectedCount = 0;
+
+    promises.forEach((p, i) => {
+      Promise.resolve(p).then(
+        (val) => resolve(val),
+        (err) => {
+          errors[i] = err;
+          if (++rejectedCount === promises.length) {
+            reject(new AggregateError(errors, 'All promises were rejected'));
+          }
+        }
+      );
+    });
+  });
+}`,
+    testHelperCode: `async function myPromiseAny_test(scenario) {
+  if (scenario === 'first-resolve') {
+    return await myPromiseAny([Promise.reject('a'), Promise.resolve('b'), Promise.resolve('c')]);
+  }
+  if (scenario === 'all-reject') {
+    try { await myPromiseAny([Promise.reject('x'), Promise.reject('y')]); }
+    catch (e) { return e instanceof AggregateError ? 'AggregateError' : 'other'; }
+  }
+  if (scenario === 'empty') {
+    try { await myPromiseAny([]); }
+    catch (e) { return e instanceof AggregateError ? 'AggregateError' : 'other'; }
+  }
+  if (scenario === 'fastest') {
+    const slow = new Promise(res => setTimeout(() => res('slow'), 100));
+    const fast = new Promise(res => setTimeout(() => res('fast'), 10));
+    return await myPromiseAny([slow, fast]);
+  }
+  if (scenario === 'all-resolve') {
+    return await myPromiseAny([Promise.resolve(1), Promise.resolve(2)]);
+  }
+}`,
+  },
+  {
+    id: 'jsa-h2',
+    topicId: 'js-async',
+    kind: 'implement',
+    title: 'Async pool — параллельный перебор с ограничением',
+    difficulty: 'hard',
+    isContextual: false,
+    description: `Реализуйте функцию \`asyncPool(concurrency, items, fn)\`:
+- Применяет асинхронную функцию \`fn\` ко всем элементам \`items\`
+- Одновременно выполняется не более \`concurrency\` задач
+- Возвращает промис массива результатов **в том же порядке**, что и items
+
+Это мощнее, чем простой \`Promise.all\` — он ограничивает параллелизм.
+
+Примеры:
+\`\`\`
+const delay = (ms) => new Promise(res => setTimeout(res, ms));
+
+const results = await asyncPool(2, [1, 2, 3, 4, 5],
+  async (n) => { await delay(n * 10); return n * 2; }
+);
+// → [2, 4, 6, 8, 10]  (порядок сохранён)
+\`\`\``,
+    functionName: 'asyncPool_test',
+    starterCode: `async function asyncPool(concurrency, items, fn) {
+  // ваш код
+}`,
+    testCases: [
+      { id: 'jsa-h2-t1', inputDisplay: 'результаты в исходном порядке', inputArgs: ['order'], expected: [2,4,6,8,10] },
+      { id: 'jsa-h2-t2', inputDisplay: 'не более concurrency параллельных задач', inputArgs: ['concurrency'], expected: true },
+      { id: 'jsa-h2-t3', inputDisplay: 'пустой массив → []', inputArgs: ['empty'], expected: [] },
+    ],
+    hints: [
+      'Начните первые `concurrency` задач. По мере завершения каждой — стартуйте следующую из очереди.',
+      'Один из способов: используйте Set "running". При добавлении задачи добавьте в Set и при завершении — удалите. Если размер Set >= concurrency — await любой задачи из Set.',
+      'Для сохранения порядка: заранее создайте массив results[items.length] и записывайте результат по индексу.',
+    ],
+    solutionCode: `async function asyncPool(concurrency, items, fn) {
+  const results = new Array(items.length);
+  const running = new Set();
+
+  for (let i = 0; i < items.length; i++) {
+    const promise = fn(items[i], i).then((val) => {
+      results[i] = val;
+    });
+    const wrapped = promise.then(() => running.delete(wrapped));
+    running.add(wrapped);
+
+    if (running.size >= concurrency) {
+      await Promise.race(running);
+    }
+  }
+
+  await Promise.all(running);
+  return results;
+}`,
+    testHelperCode: `async function asyncPool_test(scenario) {
+  const delay = (ms) => new Promise(res => setTimeout(res, ms));
+  if (scenario === 'order') {
+    return await asyncPool(2, [1,2,3,4,5], async (n) => { await delay(n * 5); return n * 2; });
+  }
+  if (scenario === 'concurrency') {
+    let active = 0, maxActive = 0;
+    await asyncPool(2, [1,2,3,4], async () => {
+      active++;
+      maxActive = Math.max(maxActive, active);
+      await delay(20);
+      active--;
+    });
+    return maxActive <= 2;
+  }
+  if (scenario === 'empty') {
+    return await asyncPool(3, [], async (x) => x);
+  }
+}`,
+  },
 ];

@@ -37,11 +37,15 @@ export default function TestResults({ results, testCases }: Props) {
               <ListItemText
                 primary={tc?.inputDisplay ?? r.testCaseId}
                 secondary={
-                  r.passed
-                    ? undefined
-                    : r.error
-                      ? `Ошибка: ${r.error}`
-                      : `Ожидалось: ${JSON.stringify(r.expected)}, получено: ${JSON.stringify(r.actual)}`
+                  r.error
+                    ? `Ошибка: ${r.error}`
+                    : tc?.maxMs !== undefined
+                      ? r.passed
+                        ? `→ ${r.actual}мс (лимит: ${r.expected}мс)`
+                        : `${r.actual}мс — превышает лимит ${r.expected}мс`
+                      : r.passed
+                        ? `→ ${JSON.stringify(r.actual)}`
+                        : `Ожидалось: ${JSON.stringify(r.expected)}, получено: ${JSON.stringify(r.actual)}`
                 }
                 slotProps={{ secondary: { sx: { fontFamily: 'monospace', fontSize: '12px' } } }}
               />

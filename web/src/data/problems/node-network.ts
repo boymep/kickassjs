@@ -742,4 +742,269 @@ function route(method, path) {
   return routes.get(\`\${method} \${path}\`) ?? '404';
 }`,
   },
+  {
+    id: 'nodn-h1',
+    topicId: 'node-network',
+    kind: 'implement',
+    title: 'Rate Limiter — ограничение запросов по IP',
+    difficulty: 'hard',
+    isContextual: false,
+    description: `Реализуйте функцию \`createRateLimiter({ windowMs, maxRequests })\`, которая возвращает middleware-функцию \`(req, res, next)\` для Express-подобного сервера.
+
+Middleware:
+- Считает количество запросов с каждого IP за скользящее окно \`windowMs\` мс
+- Если превышен лимит \`maxRequests\` — возвращает ответ 429 с телом \`{ error: 'Too Many Requests' }\`
+- Иначе — вызывает \`next()\`
+
+Используйте скользящее окно (sliding window log) — точный алгоритм на основе временных меток.`,
+    functionName: 'createRateLimiter_test',
+    starterCode: `function createRateLimiter({ windowMs, maxRequests }) {
+  // ваш код
+  return function(req, res, next) {
+    // ваш код
+  };
+}`,
+    testCases: [
+      { id: 'nodn-h1-t1', inputDisplay: 'запросы в пределах лимита проходят', inputArgs: ['within-limit'], expected: 'next-called' },
+      { id: 'nodn-h1-t2', inputDisplay: 'превышение лимита → 429', inputArgs: ['over-limit'], expected: 429 },
+      { id: 'nodn-h1-t3', inputDisplay: 'разные IP — независимые счётчики', inputArgs: ['diff-ip'], expected: 'next-called' },
+      { id: 'nodn-h1-t4', inputDisplay: 'старые запросы выходят из окна', inputArgs: ['window-slide'], expected: 'next-called' },
+    ],
+    hints: [
+      'Храните Map<ip, number[]> — список timestamp запросов для каждого IP.',
+      'При каждом запросе: удалите из массива timestamps старше Date.now() - windowMs.',
+      'Если timestamps.length >= maxRequests — отправьте 429. Иначе — добавьте timestamp и вызовите next().',
+    ],
+    solutionCode: `function createRateLimiter({ windowMs, maxRequests }) {
+  const requests = new Map(); // ip → timestamps[]
+
+  return function(req, res, next) {
+    const ip = req.ip || req.connection?.remoteAddress || 'unknown';
+    const now = Date.now();
+
+    if (!requests.has(ip)) requests.set(ip, []);
+    const timestamps = requests.get(ip);
+
+    // Удаляем устаревшие
+    while (timestamps.length > 0 && timestamps[0] <= now - windowMs) {
+      timestamps.shift();
+    }
+
+    if (timestamps.length >= maxRequests) {
+      res.status(429).json({ error: 'Too Many Requests' });
+      return;
+    }
+
+    timestamps.push(now);
+    next();
+  };
+}`,
+    testHelperCode: `function createRateLimiter_test(scenario) {
+  const makeReq = (ip) => ({ ip });
+  const makeRes = () => {
+    const r = { _status: 200, _body: null };
+    r.status = (code) => { r._status = code; return r; };
+    r.json = (body) => { r._body = body; };
+    return r;
+  };
+
+  if (scenario === 'within-limit') {
+    const limiter = createRateLimiter({ windowMs: 1000, maxRequests: 3 });
+    const req = makeReq('1.1.1.1');
+    let called = false;
+    limiter(req, makeRes(), () => { called = true; });
+    limiter(req, makeRes(), () => { called = true; });
+    const res = makeRes();
+    limiter(req, res, () => { called = true; });
+    return called ? 'next-called' : 'blocked';
+  }
+  if (scenario === 'over-limit') {
+    const limiter = createRateLimiter({ windowMs: 1000, maxRequests: 2 });
+    const req = makeReq('2.2.2.2');
+    limiter(req, makeRes(), () => {});
+    limiter(req, makeRes(), () => {});
+    const res = makeRes();
+    limiter(req, res, () => {});
+    return res._status;
+  }
+  if (scenario === 'diff-ip') {
+    const limiter = createRateLimiter({ windowMs: 1000, maxRequests: 1 });
+    limiter(makeReq('3.3.3.3'), makeRes(), () => {});
+    let called = false;
+    const res = makeRes();
+    limiter(makeReq('4.4.4.4'), res, () => { called = true; });
+    return called ? 'next-called' : 'blocked';
+  }
+  if (scenario === 'window-slide') {
+    // Используем фиктивные временные метки
+    const requests = new Map();
+    const windowMs = 100;
+    const maxRequests = 2;
+    // Эмулируем: IP уже делал 2 запроса 200 мс назад (вне окна)
+    requests.set('5.5.5.5', [Date.now() - 200, Date.now() - 150]);
+    const limiter = createRateLimiter({ windowMs, maxRequests });
+    // Подменяем внутренний кеш не можем, поэтому ждём
+    // Просто проверим что свежий IP проходит после лимита
+    const limiter2 = createRateLimiter({ windowMs: 50, maxRequests: 1 });
+    const req = makeReq('6.6.6.6');
+    limiter2(req, makeRes(), () => {});
+    return new Promise(res => setTimeout(() => {
+      let called = false;
+      limiter2(req, makeRes(), () => { called = true; });
+      res(called ? 'next-called' : 'blocked');
+    }, 60));
+  }
+}`,
+  },
+  {
+    id: 'nodn-h2',
+    topicId: 'node-network',
+    kind: 'implement',
+    title: 'Connection Pool — пул TCP/HTTP соединений',
+    difficulty: 'hard',
+    isContextual: false,
+    description: `Реализуйте класс \`ConnectionPool\`, который управляет пулом переиспользуемых соединений.
+
+Методы:
+- \`acquire()\` — получить соединение из пула (возвращает промис). Если пул пуст — создаёт новое, если достигнут maxSize — ожидает освобождения.
+- \`release(conn)\` — вернуть соединение в пул
+- \`destroy()\` — закрыть все соединения
+
+\`\`\`js
+const pool = new ConnectionPool({
+  create: async () => ({ id: Math.random() }),
+  destroy: async (conn) => { conn.closed = true; },
+  maxSize: 3,
+});
+\`\`\``,
+    functionName: 'ConnectionPool_test',
+    starterCode: `class ConnectionPool {
+  constructor({ create, destroy, maxSize }) {
+    // ваш код
+  }
+
+  async acquire() {
+    // ваш код
+  }
+
+  release(conn) {
+    // ваш код
+  }
+
+  async destroy() {
+    // ваш код
+  }
+}`,
+    testCases: [
+      { id: 'nodn-h2-t1', inputDisplay: 'acquire возвращает соединение', inputArgs: ['basic'], expected: true },
+      { id: 'nodn-h2-t2', inputDisplay: 'release возвращает соединение в пул', inputArgs: ['reuse'], expected: true },
+      { id: 'nodn-h2-t3', inputDisplay: 'ожидание при заполненном пуле', inputArgs: ['wait'], expected: true },
+      { id: 'nodn-h2-t4', inputDisplay: 'destroy закрывает все соединения', inputArgs: ['destroy'], expected: true },
+    ],
+    hints: [
+      'Храните: массив idle соединений, счётчик total (всего создано), очередь waiters (resolve-функции).',
+      'acquire(): если есть idle — вернуть. Если total < maxSize — создать новое. Иначе — вернуть new Promise(resolve => waiters.push(resolve)).',
+      'release(conn): если есть waiters — передать им conn напрямую. Иначе — добавить в idle.',
+    ],
+    solutionCode: `class ConnectionPool {
+  constructor({ create, destroy: destroyFn, maxSize }) {
+    this._create = create;
+    this._destroyFn = destroyFn;
+    this.maxSize = maxSize;
+    this.idle = [];
+    this.total = 0;
+    this.waiters = [];
+    this.allConns = [];
+  }
+
+  async acquire() {
+    if (this.idle.length > 0) {
+      return this.idle.pop();
+    }
+
+    if (this.total < this.maxSize) {
+      this.total++;
+      const conn = await this._create();
+      this.allConns.push(conn);
+      return conn;
+    }
+
+    return new Promise((resolve) => this.waiters.push(resolve));
+  }
+
+  release(conn) {
+    if (this.waiters.length > 0) {
+      const waiter = this.waiters.shift();
+      waiter(conn);
+    } else {
+      this.idle.push(conn);
+    }
+  }
+
+  async destroy() {
+    const toDestroy = [...this.allConns];
+    this.idle = [];
+    this.allConns = [];
+    this.total = 0;
+    await Promise.all(toDestroy.map(c => this._destroyFn(c)));
+  }
+}`,
+    testHelperCode: `async function ConnectionPool_test(scenario) {
+  const delay = (ms) => new Promise(res => setTimeout(res, ms));
+
+  if (scenario === 'basic') {
+    const pool = new ConnectionPool({
+      create: async () => ({ id: 1, closed: false }),
+      destroy: async (c) => { c.closed = true; },
+      maxSize: 2,
+    });
+    const conn = await pool.acquire();
+    return conn !== null && conn !== undefined;
+  }
+
+  if (scenario === 'reuse') {
+    let created = 0;
+    const pool = new ConnectionPool({
+      create: async () => ({ id: ++created }),
+      destroy: async () => {},
+      maxSize: 2,
+    });
+    const c1 = await pool.acquire();
+    pool.release(c1);
+    const c2 = await pool.acquire();
+    return c1 === c2; // одно и то же соединение
+  }
+
+  if (scenario === 'wait') {
+    const pool = new ConnectionPool({
+      create: async () => ({}),
+      destroy: async () => {},
+      maxSize: 1,
+    });
+    const c1 = await pool.acquire();
+    let c2resolved = false;
+    const p2 = pool.acquire().then(c => { c2resolved = true; return c; });
+    await delay(10);
+    const beforeRelease = !c2resolved;
+    pool.release(c1);
+    await p2;
+    return beforeRelease && c2resolved;
+  }
+
+  if (scenario === 'destroy') {
+    const closed = [];
+    const pool = new ConnectionPool({
+      create: async () => ({ closed: false }),
+      destroy: async (c) => { c.closed = true; closed.push(true); },
+      maxSize: 2,
+    });
+    const c1 = await pool.acquire();
+    const c2 = await pool.acquire();
+    pool.release(c1);
+    pool.release(c2);
+    await pool.destroy();
+    return closed.length === 2;
+  }
+}`,
+  },
 ];

@@ -80,9 +80,9 @@ console.log(a()); // ?`,
     title: 'Оптимизируй: мемоизация Фибоначчи',
     difficulty: 'medium',
     isContextual: false,
-    description: `Дан наивный рекурсивный fib(n) — он работает, но при n=35 уже мучительно медленный (~10⁹ операций).
+    description: `Дан наивный рекурсивный fib(n) — он работает, но при n=40 мучительно медленный (~165 млн рекурсивных вызовов).
 
-Перепиши через замыкание + кеш так, чтобы прохождение perf-теста (\`fib(35)\`) укладывалось в 100 мс. Сигнатура функции — \`fib(n)\` — должна остаться.
+Перепиши через замыкание + кеш так, чтобы \`fib(40)\` выполнялся быстрее 200 мс. Сигнатура функции — \`fib(n)\` — должна остаться.
 
 Tip: можно использовать вспомогательное замыкание или \`Map\`-кеш на уровне модуля.`,
     functionName: 'fib',
@@ -96,7 +96,7 @@ Tip: можно использовать вспомогательное замы
       { id: 'jsc-p8-t3', inputDisplay: 'fib(10)', inputArgs: [10], expected: 55 },
       { id: 'jsc-p8-t4', inputDisplay: 'fib(20)', inputArgs: [20], expected: 6765 },
     ],
-    perfTest: { inputArgs: [35], maxMs: 100 },
+    perfTest: { inputArgs: [40], maxMs: 200 },
     hints: [
       'Создай Map-кеш в замыкании. На каждый n проверяй кеш перед рекурсией.',
       'Рекурсия должна вызывать ту же мемоизированную функцию, иначе кеш не сработает.',
@@ -470,81 +470,193 @@ add10(-5); // → 5
     testHelperCode: `function makeAdder_test(x, y) { return makeAdder(x)(y); }`,
   },
   {
+    kind: 'find-bug',
     id: 'jsc-p5',
     topicId: 'js-closures',
-    title: 'Исправить замыкание в цикле',
-    difficulty: 'medium',
+    title: 'Найди баг: стек с общим состоянием',
+    difficulty: 'easy',
     isContextual: false,
-    description: `Дана функция \`getMultipliers()\`, которая возвращает массив из 5 функций. Каждая функция должна умножать свой аргумент на свой индекс (0, 1, 2, 3, 4).
+    description: `Функция \`makeStack()\` должна создавать **независимые** стеки. Но сейчас все экземпляры делят одно и то же состояние — операции в одном стеке влияют на другой.
 
-Но в текущей реализации с \`var\` все функции используют одно значение \`i\`.
+Найди причину и почини так, чтобы каждый вызов \`makeStack()\` возвращал стек с собственными данными.`,
+    buggyCode: `const items = [];
 
-**Задача**: реализуйте \`getMultipliers()\` так, чтобы функция с индексом \`i\` умножала аргумент на \`i\`.
+function makeStack() {
+  return {
+    push(x)  { items.push(x); },
+    pop()    { return items.pop(); },
+    peek()   { return items[items.length - 1]; },
+    size()   { return items.length; },
+  };
+}`,
+    functionName: 'jsc_p5_test',
+    bugSummary:
+      '`items` объявлен вне `makeStack` — все экземпляры разделяют один и тот же массив. Решение: перенести `const items = []` внутрь `makeStack`, чтобы каждый вызов создавал замыкание со своим массивом.',
+    testCases: [
+      { id: 'jsc-p5-t1', inputDisplay: 'push(1), push(2) → size() = 2', inputArgs: ['size'], expected: 2 },
+      { id: 'jsc-p5-t2', inputDisplay: 'push("a") → pop() = "a"', inputArgs: ['pop'], expected: 'a' },
+      { id: 'jsc-p5-t3', inputDisplay: 'push(42) → peek() = 42, size не изменился', inputArgs: ['peek'], expected: true },
+      { id: 'jsc-p5-t4', inputDisplay: 'два независимых стека не влияют друг на друга', inputArgs: ['independent'], expected: true },
+      { id: 'jsc-p5-t5', inputDisplay: 'пустой стек → size() = 0', inputArgs: ['empty'], expected: 0 },
+    ],
+    hints: [
+      'Посмотри, где объявлен `items`. Переменная в глобальной области видимости доступна всем вызовам функции.',
+      'Замыкание должно захватывать переменную, созданную при вызове функции — перемести объявление внутрь `makeStack`.',
+    ],
+    solutionCode: `function makeStack() {
+  const items = [];
+  return {
+    push(x)  { items.push(x); },
+    pop()    { return items.pop(); },
+    peek()   { return items[items.length - 1]; },
+    size()   { return items.length; },
+  };
+}`,
+    testHelperCode: `function jsc_p5_test(scenario) {
+  if (scenario === 'size') {
+    const s = makeStack(); s.push(1); s.push(2); return s.size();
+  }
+  if (scenario === 'pop') {
+    const s = makeStack(); s.push('a'); return s.pop();
+  }
+  if (scenario === 'peek') {
+    const s = makeStack(); s.push(42);
+    return s.peek() === 42 && s.size() === 1;
+  }
+  if (scenario === 'independent') {
+    const s1 = makeStack(); const s2 = makeStack();
+    s1.push(1); s1.push(2); s2.push(99);
+    return s1.size() === 2 && s2.size() === 1;
+  }
+  if (scenario === 'empty') return makeStack().size();
+}`,
+  },
+  {
+    id: 'jsc-h1',
+    topicId: 'js-closures',
+    kind: 'implement',
+    title: 'curry — вариадическое каррирование',
+    difficulty: 'hard',
+    isContextual: false,
+    description: `Реализуйте функцию \`curry(fn)\`, которая возвращает каррированную версию \`fn\`.
+
+Каррированная функция может принимать аргументы **частями**. Как только накоплено достаточно аргументов (>= fn.length), она вызывает оригинальную \`fn\`.
 
 Примеры:
 \`\`\`
-const fns = getMultipliers();
-fns[0](10); // → 0   (10 * 0)
-fns[1](10); // → 10  (10 * 1)
-fns[2](10); // → 20  (10 * 2)
-fns[3](10); // → 30  (10 * 3)
-fns[4](10); // → 40  (10 * 4)
-\`\`\``,
-    functionName: 'getMultipliers_test',
-    starterCode: `function getMultipliers() {
-  // Сломанная версия с var:
-  // const fns = [];
-  // for (var i = 0; i < 5; i++) {
-  //   fns.push((x) => x * i); // все замыкаются на одно i
-  // }
-  // return fns;
+const add = curry((a, b, c) => a + b + c);
 
-  // Ваша исправленная версия:
+add(1)(2)(3)    // → 6
+add(1, 2)(3)    // → 6
+add(1)(2, 3)    // → 6
+add(1, 2, 3)    // → 6
+
+const addTo10 = add(10);
+addTo10(5)(2)   // → 17
+\`\`\``,
+    functionName: 'curry_test',
+    starterCode: `function curry(fn) {
+  // ваш код
 }`,
     testCases: [
-      {
-        id: 'jsc-p5-t1',
-        inputDisplay: 'getMultipliers()[0](10)',
-        inputArgs: [0, 10],
-        expected: 0,
-      },
-      {
-        id: 'jsc-p5-t2',
-        inputDisplay: 'getMultipliers()[1](10)',
-        inputArgs: [1, 10],
-        expected: 10,
-      },
-      {
-        id: 'jsc-p5-t3',
-        inputDisplay: 'getMultipliers()[2](10)',
-        inputArgs: [2, 10],
-        expected: 20,
-      },
-      {
-        id: 'jsc-p5-t4',
-        inputDisplay: 'getMultipliers()[3](10)',
-        inputArgs: [3, 10],
-        expected: 30,
-      },
-      {
-        id: 'jsc-p5-t5',
-        inputDisplay: 'getMultipliers()[4](10)',
-        inputArgs: [4, 10],
-        expected: 40,
-      },
+      { id: 'jsc-h1-t1', inputDisplay: 'add(1)(2)(3)', inputArgs: ['one-by-one'], expected: 6 },
+      { id: 'jsc-h1-t2', inputDisplay: 'add(1,2)(3)', inputArgs: ['partial-2-1'], expected: 6 },
+      { id: 'jsc-h1-t3', inputDisplay: 'add(1)(2,3)', inputArgs: ['partial-1-2'], expected: 6 },
+      { id: 'jsc-h1-t4', inputDisplay: 'add(1,2,3)', inputArgs: ['all-at-once'], expected: 6 },
+      { id: 'jsc-h1-t5', inputDisplay: 'частично применённая функция переиспользуется', inputArgs: ['reuse'], expected: [17, 12] },
     ],
     hints: [
-      'Самый простой способ: заменить `var` на `let`. С `let` каждая итерация цикла получает свою копию переменной `i`.',
-      'Альтернатива: использовать IIFE внутри цикла — `(function(j) { fns.push((x) => x * j); })(i)` — создаёт отдельную область для каждого `j`.',
-      'Третий вариант: `fns.push((x) => x * i)` + `bind` или `.map` вместо цикла с `var`.',
+      'Внутри curry возвращайте рекурсивную функцию curried. Она собирает аргументы в массив.',
+      'Если накопленных аргументов >= fn.length — вызывайте fn.apply(this, args).',
+      'Иначе — возвращайте новую функцию, которая принимает ещё аргументы и объединяет их с уже собранными: curried(...prevArgs, ...newArgs).',
     ],
-    solutionCode: `function getMultipliers() {
-  const fns = [];
-  for (let i = 0; i < 5; i++) {
-    fns.push((x) => x * i);
-  }
-  return fns;
+    solutionCode: `function curry(fn) {
+  return function curried(...args) {
+    if (args.length >= fn.length) {
+      return fn.apply(this, args);
+    }
+    return function(...moreArgs) {
+      return curried.apply(this, args.concat(moreArgs));
+    };
+  };
 }`,
-    testHelperCode: `function getMultipliers_test(i, x) { return getMultipliers()[i](x); }`,
+    testHelperCode: `function curry_test(scenario) {
+  const add = curry((a, b, c) => a + b + c);
+  if (scenario === 'one-by-one')   return add(1)(2)(3);
+  if (scenario === 'partial-2-1')  return add(1, 2)(3);
+  if (scenario === 'partial-1-2')  return add(1)(2, 3);
+  if (scenario === 'all-at-once')  return add(1, 2, 3);
+  if (scenario === 'reuse') {
+    const addTo10 = add(10);
+    return [addTo10(5)(2), addTo10(1)(1)];
+  }
+}`,
+  },
+  {
+    id: 'jsc-h2',
+    topicId: 'js-closures',
+    kind: 'implement',
+    title: 'pipe и compose — конвейер функций',
+    difficulty: 'hard',
+    isContextual: false,
+    description: `Реализуйте две функции:
+
+1. \`pipe(...fns)\` — возвращает функцию, которая применяет \`fns\` **слева направо**:
+   \`pipe(f, g, h)(x) === h(g(f(x)))\`
+
+2. \`compose(...fns)\` — то же, но **справа налево**:
+   \`compose(f, g, h)(x) === f(g(h(x)))\`
+
+Каждая функция принимает один аргумент. Если массив функций пуст — верните \`identity\` (функцию, возвращающую аргумент как есть).
+
+Примеры:
+\`\`\`
+const double = x => x * 2;
+const inc    = x => x + 1;
+const square = x => x * x;
+
+pipe(double, inc, square)(3)    // → 49  ((3*2+1)² = 7² = 49)
+compose(square, inc, double)(3) // → 49  (square(inc(double(3))))
+pipe()(5)                       // → 5
+\`\`\``,
+    functionName: 'pipecompose_test',
+    starterCode: `function pipe(...fns) {
+  // ваш код
+}
+
+function compose(...fns) {
+  // ваш код
+}`,
+    testCases: [
+      { id: 'jsc-h2-t1', inputDisplay: 'pipe(double,inc,square)(3)', inputArgs: ['pipe-3'], expected: 49 },
+      { id: 'jsc-h2-t2', inputDisplay: 'compose(square,inc,double)(3)', inputArgs: ['compose-3'], expected: 49 },
+      { id: 'jsc-h2-t3', inputDisplay: 'pipe()(5) → identity', inputArgs: ['pipe-empty'], expected: 5 },
+      { id: 'jsc-h2-t4', inputDisplay: 'compose()(5) → identity', inputArgs: ['compose-empty'], expected: 5 },
+      { id: 'jsc-h2-t5', inputDisplay: 'pipe с одной функцией', inputArgs: ['pipe-single'], expected: 6 },
+    ],
+    hints: [
+      'pipe: используйте Array.prototype.reduce. Начальное значение — аргумент x, аккумулятор — текущий результат.',
+      'compose — это pipe с обратным порядком функций: compose(...fns)(x) === pipe(...fns.slice().reverse())(x).',
+      'Для пустого массива: reduce без начального значения бросит ошибку. Верните x => x явно или через reduceRight.',
+    ],
+    solutionCode: `function pipe(...fns) {
+  if (fns.length === 0) return x => x;
+  return (x) => fns.reduce((acc, fn) => fn(acc), x);
+}
+
+function compose(...fns) {
+  if (fns.length === 0) return x => x;
+  return (x) => fns.reduceRight((acc, fn) => fn(acc), x);
+}`,
+    testHelperCode: `function pipecompose_test(scenario) {
+  const double = x => x * 2;
+  const inc    = x => x + 1;
+  const square = x => x * x;
+  if (scenario === 'pipe-3')       return pipe(double, inc, square)(3);
+  if (scenario === 'compose-3')    return compose(square, inc, double)(3);
+  if (scenario === 'pipe-empty')   return pipe()(5);
+  if (scenario === 'compose-empty') return compose()(5);
+  if (scenario === 'pipe-single')  return pipe(double)(3);
+}`,
   },
 ];

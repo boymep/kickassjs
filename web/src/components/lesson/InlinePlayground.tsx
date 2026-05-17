@@ -46,7 +46,7 @@ export default function InlinePlayground({ playground }: InlinePlaygroundProps) 
     : null;
   const actualNormalised = result ? normalizeOutput(result.output) : null;
   const passed =
-    expectedNormalised !== null && actualNormalised !== null && !result?.error
+    !playground.noValidation && expectedNormalised !== null && actualNormalised !== null && !result?.error
       ? actualNormalised === expectedNormalised
       : null;
 
@@ -60,7 +60,7 @@ export default function InlinePlayground({ playground }: InlinePlaygroundProps) 
         >
           Песочница
         </Typography>
-        {playground.expectedOutput && (
+        {playground.expectedOutput && !playground.noValidation && (
           <Typography
             variant="caption"
             color="text.secondary"

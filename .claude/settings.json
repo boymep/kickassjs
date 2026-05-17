@@ -34,7 +34,13 @@
       "Bash(python3 -c *)",
       "Bash(npx --yes tsx /tmp/audit-bug-hunt.mjs)",
       "Bash(npx tsx *)",
-      "Bash(npx --yes tsx /tmp/sanity-bh.mjs)"
+      "Bash(npx --yes tsx /tmp/sanity-bh.mjs)",
+      "WebFetch(domain:e-maxx.ru)",
+      "WebFetch(domain:web.dev)",
+      "WebFetch(domain:habr.com)",
+      "WebFetch(domain:learn.javascript.ru)",
+      "WebFetch(domain:cp-algorithms.com)",
+      "WebFetch(domain:ru.algorithmica.org)"
     ]
   },
   "hooks": {

@@ -3,6 +3,8 @@ export interface TestCase {
   inputDisplay: string;
   inputArgs: unknown[];
   expected: unknown;
+  /** If set, this test measures execution time instead of return value. Passes if ms ≤ maxMs. */
+  maxMs?: number;
 }
 
 export type ProblemKind = 'implement' | 'predict-output' | 'find-bug' | 'refactor';

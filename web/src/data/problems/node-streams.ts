@@ -641,4 +641,204 @@ console.log('after');`,
   return await countErrors(input);
 }`,
   },
+  {
+    id: 'nods-h1',
+    topicId: 'node-streams',
+    kind: 'implement',
+    title: 'CSV Transform Stream — парсим CSV построчно',
+    difficulty: 'hard',
+    isContextual: false,
+    description: `Реализуйте функцию \`parseCsvStream(readable)\`, которая принимает Node.js Readable stream с CSV-данными и возвращает промис с массивом распарсенных строк (каждая строка — объект).
+
+Первая строка CSV — заголовки. Значения могут быть в кавычках.
+
+Пример CSV:
+\`\`\`
+name,age,city
+Alice,30,Moscow
+Bob,25,"New York"
+\`\`\`
+→ \`[{ name:'Alice', age:'30', city:'Moscow' }, { name:'Bob', age:'25', city:'New York' }]\``,
+    functionName: 'parseCsvStream_test',
+    starterCode: `const { Transform } = require('stream');
+
+async function parseCsvStream(readable) {
+  // ваш код
+}`,
+    testCases: [
+      { id: 'nods-h1-t1', inputDisplay: 'простой CSV', inputArgs: ['simple'], expected: [{ name: 'Alice', age: '30' }, { name: 'Bob', age: '25' }] },
+      { id: 'nods-h1-t2', inputDisplay: 'значения в кавычках', inputArgs: ['quoted'], expected: [{ city: 'New York', code: 'NY' }] },
+      { id: 'nods-h1-t3', inputDisplay: 'пустой CSV (только заголовки)', inputArgs: ['headers-only'], expected: [] },
+    ],
+    hints: [
+      'Используйте readline или Transform stream для построчного чтения.',
+      'Первую строку сохраните как headers. Для каждой следующей: разбейте по запятым, учтите кавычки.',
+      'Парсинг CSV с кавычками: используйте простой state machine или regex /(?:"([^"]*)")|([^,]+)|(?=,)/g.',
+    ],
+    solutionCode: `const { Transform } = require('stream');
+
+function parseCsvLine(line) {
+  const values = [];
+  let val = '';
+  let inQuotes = false;
+  for (let i = 0; i < line.length; i++) {
+    const c = line[i];
+    if (c === '"') {
+      inQuotes = !inQuotes;
+    } else if (c === ',' && !inQuotes) {
+      values.push(val);
+      val = '';
+    } else {
+      val += c;
+    }
+  }
+  values.push(val);
+  return values;
+}
+
+async function parseCsvStream(readable) {
+  return new Promise((resolve, reject) => {
+    const rows = [];
+    let headers = null;
+    let buffer = '';
+
+    readable.on('data', (chunk) => {
+      buffer += chunk.toString();
+      const lines = buffer.split('\\n');
+      buffer = lines.pop(); // последняя неполная строка
+
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed) continue;
+        const values = parseCsvLine(trimmed);
+        if (!headers) {
+          headers = values;
+        } else {
+          const row = {};
+          headers.forEach((h, i) => { row[h] = values[i] ?? ''; });
+          rows.push(row);
+        }
+      }
+    });
+
+    readable.on('end', () => {
+      if (buffer.trim()) {
+        const values = parseCsvLine(buffer.trim());
+        if (headers) {
+          const row = {};
+          headers.forEach((h, i) => { row[h] = values[i] ?? ''; });
+          rows.push(row);
+        }
+      }
+      resolve(rows);
+    });
+
+    readable.on('error', reject);
+  });
+}`,
+    testHelperCode: `const { Readable } = require('stream');
+
+async function parseCsvStream_test(scenario) {
+  function makeStream(str) {
+    return Readable.from([str]);
+  }
+
+  if (scenario === 'simple') {
+    return await parseCsvStream(makeStream('name,age\\nAlice,30\\nBob,25'));
+  }
+  if (scenario === 'quoted') {
+    return await parseCsvStream(makeStream('city,code\\n"New York",NY'));
+  }
+  if (scenario === 'headers-only') {
+    return await parseCsvStream(makeStream('name,age'));
+  }
+}`,
+  },
+  {
+    id: 'nods-h2',
+    topicId: 'node-streams',
+    kind: 'implement',
+    title: 'Stream pipeline с backpressure — ограничение скорости записи',
+    difficulty: 'hard',
+    isContextual: false,
+    description: `Реализуйте функцию \`createThrottledPipeline(readable, writable, bytesPerSecond)\`, которая:
+
+1. Читает данные из \`readable\`
+2. Применяет **backpressure** — если \`writable.write()\` вернул \`false\`, прекращает чтение до события \`drain\`
+3. Записывает в \`writable\` с ограничением скорости (\`bytesPerSecond\`)
+4. Возвращает промис, который резолвится когда всё записано
+
+Это ключевой паттерн Node.js streams — избегать переполнения памяти при разной скорости producer/consumer.`,
+    functionName: 'createThrottledPipeline_test',
+    starterCode: `async function createThrottledPipeline(readable, writable, bytesPerSecond) {
+  // ваш код — используйте backpressure!
+}`,
+    testCases: [
+      { id: 'nods-h2-t1', inputDisplay: 'все данные доходят до writable', inputArgs: ['all-data'], expected: 'hello world' },
+      { id: 'nods-h2-t2', inputDisplay: 'backpressure: readable pauses когда writable.write → false', inputArgs: ['backpressure'], expected: true },
+      { id: 'nods-h2-t3', inputDisplay: 'промис резолвится только после окончания записи', inputArgs: ['complete'], expected: true },
+    ],
+    hints: [
+      'Прослушивайте readable событие "data". При каждом chunk: вызывайте writable.write(chunk).',
+      'Если write() вернул false — вызовите readable.pause() и дождитесь события "drain" на writable, затем readable.resume().',
+      'На событие "end" readable — вызовите writable.end(). Промис резолвится на "finish" writable.',
+    ],
+    solutionCode: `async function createThrottledPipeline(readable, writable, bytesPerSecond) {
+  return new Promise((resolve, reject) => {
+    readable.on('data', (chunk) => {
+      const ok = writable.write(chunk);
+      if (!ok) {
+        readable.pause();
+        writable.once('drain', () => readable.resume());
+      }
+    });
+
+    readable.on('end', () => writable.end());
+    readable.on('error', reject);
+    writable.on('finish', resolve);
+    writable.on('error', reject);
+  });
+}`,
+    testHelperCode: `const { Readable, Writable } = require('stream');
+
+async function createThrottledPipeline_test(scenario) {
+  if (scenario === 'all-data') {
+    const chunks = ['hello', ' ', 'world'];
+    const readable = Readable.from(chunks);
+    const collected = [];
+    const writable = new Writable({
+      write(chunk, enc, cb) { collected.push(chunk.toString()); cb(); }
+    });
+    await createThrottledPipeline(readable, writable, 1000);
+    return collected.join('');
+  }
+
+  if (scenario === 'backpressure') {
+    let paused = false;
+    const data = Array.from({ length: 20 }, (_, i) => Buffer.alloc(100, i));
+    const readable = Readable.from(data);
+    const origPause = readable.pause.bind(readable);
+    readable.pause = () => { paused = true; return origPause(); };
+
+    const writable = new Writable({
+      highWaterMark: 50,
+      write(chunk, enc, cb) { setTimeout(cb, 5); }
+    });
+
+    await createThrottledPipeline(readable, writable, 10000);
+    return paused;
+  }
+
+  if (scenario === 'complete') {
+    const readable = Readable.from(['a', 'b', 'c']);
+    let finished = false;
+    const writable = new Writable({
+      write(chunk, enc, cb) { setTimeout(cb, 10); }
+    });
+    writable.on('finish', () => { finished = true; });
+    await createThrottledPipeline(readable, writable, 1000);
+    return finished;
+  }
+}`,
+  },
 ];

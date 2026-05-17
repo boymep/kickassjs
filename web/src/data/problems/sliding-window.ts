@@ -479,6 +479,123 @@ console.log(lengthOfLongestSubstring("pwwkew"));`,
 }`,
   },
   {
+    id: "sw-h1",
+    topicId: "sliding-window",
+    kind: "implement",
+    title: "Минимальная подстрока, содержащая все символы шаблона",
+    difficulty: "hard",
+    isContextual: false,
+    description: `Даны строки \`s\` и \`t\`. Найдите **минимальную по длине подстроку** строки \`s\`, которая содержит **все символы** строки \`t\` (включая повторения).
+
+Если такой подстроки нет — верните пустую строку \`""\`.
+
+Примеры:
+\`\`\`
+minWindow("ADOBECODEBANC", "ABC")  // → "BANC"
+minWindow("a", "a")                // → "a"
+minWindow("a", "aa")               // → ""  (нет двух 'a')
+minWindow("aa", "aa")              // → "aa"
+\`\`\``,
+    functionName: "minWindow",
+    starterCode: `function minWindow(s, t) {
+  // ваш код
+}`,
+    testCases: [
+      { id: "sw-h1-t1", inputDisplay: 'minWindow("ADOBECODEBANC", "ABC")', inputArgs: ["ADOBECODEBANC", "ABC"], expected: "BANC" },
+      { id: "sw-h1-t2", inputDisplay: 'minWindow("a", "a")', inputArgs: ["a", "a"], expected: "a" },
+      { id: "sw-h1-t3", inputDisplay: 'minWindow("a", "aa") → ""', inputArgs: ["a", "aa"], expected: "" },
+      { id: "sw-h1-t4", inputDisplay: 'minWindow("aa", "aa")', inputArgs: ["aa", "aa"], expected: "aa" },
+      { id: "sw-h1-t5", inputDisplay: 'minWindow("AAABBBCC", "ABC")', inputArgs: ["AAABBBCC", "ABC"], expected: "ABBBC" },
+    ],
+    hints: [
+      "Храните две Map: `need` — требуемые частоты символов из t, `window` — текущие частоты в окне.",
+      "Расширяйте окно вправо. Когда все символы t покрыты (переменная `formed === required`), сужайте слева.",
+      "При сужении обновляйте минимум. Строка покрыта, когда window.get(c) >= need.get(c) для всех c.",
+    ],
+    solutionCode: `function minWindow(s, t) {
+  if (!t.length) return "";
+
+  const need = new Map();
+  for (const c of t) need.set(c, (need.get(c) ?? 0) + 1);
+
+  const window = new Map();
+  let left = 0, formed = 0;
+  const required = need.size;
+  let best = [Infinity, 0, 0]; // [length, left, right]
+
+  for (let right = 0; right < s.length; right++) {
+    const c = s[right];
+    window.set(c, (window.get(c) ?? 0) + 1);
+    if (need.has(c) && window.get(c) === need.get(c)) formed++;
+
+    while (formed === required) {
+      if (right - left + 1 < best[0]) best = [right - left + 1, left, right];
+      const lc = s[left];
+      window.set(lc, window.get(lc) - 1);
+      if (need.has(lc) && window.get(lc) < need.get(lc)) formed--;
+      left++;
+    }
+  }
+
+  return best[0] === Infinity ? "" : s.slice(best[1], best[2] + 1);
+}`,
+  },
+  {
+    id: "sw-h2",
+    topicId: "sliding-window",
+    kind: "implement",
+    title: "Длиннейшая подстрока с не более чем K различными символами",
+    difficulty: "hard",
+    isContextual: false,
+    description: `Дана строка \`s\` и целое число \`k\`. Найдите длину **наидлиннейшей подстроки**, содержащей **не более k** различных символов.
+
+Примеры:
+\`\`\`
+lengthOfLongestSubstringKDistinct("eceba", 2)   // → 3  ("ece")
+lengthOfLongestSubstringKDistinct("aa", 1)      // → 2
+lengthOfLongestSubstringKDistinct("aabbcc", 1)  // → 2
+lengthOfLongestSubstringKDistinct("aabbcc", 2)  // → 4  ("aabb" или "bbcc")
+\`\`\``,
+    functionName: "lengthOfLongestSubstringKDistinct",
+    starterCode: `function lengthOfLongestSubstringKDistinct(s, k) {
+  // ваш код
+}`,
+    testCases: [
+      { id: "sw-h2-t1", inputDisplay: 'lengthOf...("eceba", 2)', inputArgs: ["eceba", 2], expected: 3 },
+      { id: "sw-h2-t2", inputDisplay: 'lengthOf...("aa", 1)', inputArgs: ["aa", 1], expected: 2 },
+      { id: "sw-h2-t3", inputDisplay: 'lengthOf...("aabbcc", 1)', inputArgs: ["aabbcc", 1], expected: 2 },
+      { id: "sw-h2-t4", inputDisplay: 'lengthOf...("aabbcc", 2)', inputArgs: ["aabbcc", 2], expected: 4 },
+      { id: "sw-h2-t5", inputDisplay: 'lengthOf...("abcabcabc", 3)', inputArgs: ["abcabcabc", 3], expected: 9 },
+      { id: "sw-h2-t6", inputDisplay: 'lengthOf...("aabc", 2)', inputArgs: ["aabc", 2], expected: 3 },
+    ],
+    hints: [
+      "Используйте скользящее окно с Map для подсчёта частот символов в текущем окне.",
+      "Расширяйте правую границу. Когда map.size > k — сужайте левую: уменьшайте частоту s[left], при нуле удаляйте из Map.",
+      "Максимум длины окна обновляйте только при map.size <= k.",
+    ],
+    solutionCode: `function lengthOfLongestSubstringKDistinct(s, k) {
+  if (k === 0) return 0;
+  const freq = new Map();
+  let left = 0, maxLen = 0;
+
+  for (let right = 0; right < s.length; right++) {
+    const c = s[right];
+    freq.set(c, (freq.get(c) ?? 0) + 1);
+
+    while (freq.size > k) {
+      const lc = s[left];
+      freq.set(lc, freq.get(lc) - 1);
+      if (freq.get(lc) === 0) freq.delete(lc);
+      left++;
+    }
+
+    maxLen = Math.max(maxLen, right - left + 1);
+  }
+
+  return maxLen;
+}`,
+  },
+  {
     id: "sw-p5",
     topicId: "sliding-window",
     title: "Максимальная выручка за период",

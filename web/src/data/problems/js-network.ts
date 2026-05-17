@@ -696,4 +696,187 @@ router.match('GET', '/unknown');
   if (arg === 'wrong-method') return router.match('POST', '/users/42');
 }`,
   },
+  {
+    id: 'jsnet-h1',
+    topicId: 'js-network',
+    kind: 'implement',
+    title: 'Circuit Breaker — паттерн защиты сервиса',
+    difficulty: 'hard',
+    isContextual: false,
+    description: `Реализуйте класс \`CircuitBreaker\`, который оборачивает ненадёжную функцию и предотвращает каскадные сбои.
+
+Состояния:
+- **CLOSED** (норма): запросы проходят. После \`failureThreshold\` ошибок подряд — переходит в OPEN.
+- **OPEN** (разомкнут): запросы блокируются немедленно с ошибкой "Circuit is OPEN". Через \`resetTimeout\` мс — переходит в HALF_OPEN.
+- **HALF_OPEN** (проверка): пропускает один запрос. Успех → CLOSED, провал → OPEN снова.
+
+\`\`\`js
+const cb = new CircuitBreaker(fn, { failureThreshold: 2, resetTimeout: 1000 });
+await cb.call()  // вызывает fn
+\`\`\``,
+    functionName: 'CircuitBreaker_test',
+    starterCode: `class CircuitBreaker {
+  constructor(fn, { failureThreshold, resetTimeout }) {
+    // ваш код
+  }
+
+  async call(...args) {
+    // ваш код
+  }
+}`,
+    testCases: [
+      { id: 'jsnet-h1-t1', inputDisplay: 'CLOSED: успешные вызовы проходят', inputArgs: ['success-pass'], expected: 'ok' },
+      { id: 'jsnet-h1-t2', inputDisplay: 'после N ошибок → OPEN', inputArgs: ['becomes-open'], expected: 'OPEN' },
+      { id: 'jsnet-h1-t3', inputDisplay: 'OPEN: запросы блокируются без вызова fn', inputArgs: ['open-blocks'], expected: 'Circuit is OPEN' },
+      { id: 'jsnet-h1-t4', inputDisplay: 'сброс счётчика после успеха', inputArgs: ['reset-on-success'], expected: 'CLOSED' },
+    ],
+    hints: [
+      'Храните state ("CLOSED"/"OPEN"/"HALF_OPEN"), счётчик ошибок и timestamp перехода в OPEN.',
+      'В call(): если OPEN — проверьте timestamp. Если прошло resetTimeout — перейдите в HALF_OPEN и пропустите вызов.',
+      'При успехе в HALF_OPEN — перейдите в CLOSED, сбросьте счётчик. При ошибке — обратно в OPEN.',
+    ],
+    solutionCode: `class CircuitBreaker {
+  constructor(fn, { failureThreshold, resetTimeout }) {
+    this.fn = fn;
+    this.failureThreshold = failureThreshold;
+    this.resetTimeout = resetTimeout;
+    this.state = 'CLOSED';
+    this.failures = 0;
+    this.openedAt = null;
+  }
+
+  async call(...args) {
+    if (this.state === 'OPEN') {
+      if (Date.now() - this.openedAt >= this.resetTimeout) {
+        this.state = 'HALF_OPEN';
+      } else {
+        throw new Error('Circuit is OPEN');
+      }
+    }
+
+    try {
+      const result = await this.fn(...args);
+      this.failures = 0;
+      this.state = 'CLOSED';
+      return result;
+    } catch (err) {
+      this.failures++;
+      if (this.state === 'HALF_OPEN' || this.failures >= this.failureThreshold) {
+        this.state = 'OPEN';
+        this.openedAt = Date.now();
+        this.failures = 0;
+      }
+      throw err;
+    }
+  }
+}`,
+    testHelperCode: `async function CircuitBreaker_test(scenario) {
+  if (scenario === 'success-pass') {
+    const cb = new CircuitBreaker(async () => 'ok', { failureThreshold: 3, resetTimeout: 5000 });
+    return await cb.call();
+  }
+  if (scenario === 'becomes-open') {
+    const fail = async () => { throw new Error('fail'); };
+    const cb = new CircuitBreaker(fail, { failureThreshold: 2, resetTimeout: 5000 });
+    try { await cb.call(); } catch(e) {}
+    try { await cb.call(); } catch(e) {}
+    return cb.state;
+  }
+  if (scenario === 'open-blocks') {
+    const fail = async () => { throw new Error('fail'); };
+    const cb = new CircuitBreaker(fail, { failureThreshold: 2, resetTimeout: 5000 });
+    try { await cb.call(); } catch(e) {}
+    try { await cb.call(); } catch(e) {}
+    try { await cb.call(); return 'should not reach'; }
+    catch(e) { return e.message; }
+  }
+  if (scenario === 'reset-on-success') {
+    let calls = 0;
+    const fn = async () => { calls++; if (calls <= 1) throw new Error('fail'); return 'ok'; };
+    const cb = new CircuitBreaker(fn, { failureThreshold: 1, resetTimeout: 5000 });
+    try { await cb.call(); } catch(e) {}
+    return cb.state;
+  }
+}`,
+  },
+  {
+    id: 'jsnet-h2',
+    topicId: 'js-network',
+    kind: 'implement',
+    title: 'Request deduplication — дедупликация параллельных запросов',
+    difficulty: 'hard',
+    isContextual: false,
+    description: `Реализуйте функцию \`dedupeRequest(fetchFn)\`, которая оборачивает \`fetchFn\` и **дедуплицирует** одновременные запросы с одним ключом.
+
+Если в момент выполнения запроса приходит ещё один с тем же ключом — он получает **тот же промис** (а не запускает новый запрос). После завершения кеш очищается.
+
+Примеры:
+\`\`\`js
+let callCount = 0;
+const fetcher = dedupeRequest(async (key) => {
+  callCount++;
+  await delay(50);
+  return key + '_data';
+});
+
+// Параллельно:
+const [r1, r2] = await Promise.all([fetcher('user'), fetcher('user')]);
+// callCount === 1 (один реальный запрос)
+// r1 === r2 === 'user_data'
+\`\`\``,
+    functionName: 'dedupeRequest_test',
+    starterCode: `function dedupeRequest(fetchFn) {
+  // ваш код
+}`,
+    testCases: [
+      { id: 'jsnet-h2-t1', inputDisplay: 'параллельные запросы с одним ключом → один реальный вызов', inputArgs: ['dedup'], expected: 1 },
+      { id: 'jsnet-h2-t2', inputDisplay: 'разные ключи → раздельные запросы', inputArgs: ['diff-keys'], expected: 2 },
+      { id: 'jsnet-h2-t3', inputDisplay: 'повторный запрос после завершения → новый вызов', inputArgs: ['after-complete'], expected: 2 },
+      { id: 'jsnet-h2-t4', inputDisplay: 'все участники получают одинаковый результат', inputArgs: ['same-result'], expected: true },
+    ],
+    hints: [
+      'Храните Map<key, Promise> — кеш активных запросов.',
+      'При вызове: если ключ есть в Map — возвращайте тот же промис. Иначе — создайте новый.',
+      'В .finally() запроса удаляйте ключ из Map — чтобы следующий вызов запустил новый запрос.',
+    ],
+    solutionCode: `function dedupeRequest(fetchFn) {
+  const pending = new Map();
+
+  return function(key, ...args) {
+    if (pending.has(key)) return pending.get(key);
+
+    const promise = fetchFn(key, ...args).finally(() => pending.delete(key));
+    pending.set(key, promise);
+    return promise;
+  };
+}`,
+    testHelperCode: `async function dedupeRequest_test(scenario) {
+  const delay = (ms) => new Promise(res => setTimeout(res, ms));
+
+  if (scenario === 'dedup') {
+    let calls = 0;
+    const fetcher = dedupeRequest(async (key) => { calls++; await delay(20); return key; });
+    await Promise.all([fetcher('a'), fetcher('a'), fetcher('a')]);
+    return calls;
+  }
+  if (scenario === 'diff-keys') {
+    let calls = 0;
+    const fetcher = dedupeRequest(async (key) => { calls++; await delay(10); return key; });
+    await Promise.all([fetcher('a'), fetcher('b')]);
+    return calls;
+  }
+  if (scenario === 'after-complete') {
+    let calls = 0;
+    const fetcher = dedupeRequest(async (key) => { calls++; await delay(10); return key; });
+    await fetcher('a');
+    await fetcher('a');
+    return calls;
+  }
+  if (scenario === 'same-result') {
+    const fetcher = dedupeRequest(async (key) => { await delay(10); return key + '_val'; });
+    const [r1, r2, r3] = await Promise.all([fetcher('x'), fetcher('x'), fetcher('x')]);
+    return r1 === r2 && r2 === r3 && r1 === 'x_val';
+  }
+}`,
+  },
 ];

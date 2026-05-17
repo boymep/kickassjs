@@ -845,4 +845,176 @@ console.log(bfs(tree).join(','));`,
   return result;
 }`,
   },
+  {
+    id: 'tree-h1',
+    topicId: 'trees',
+    kind: 'implement',
+    title: 'Наименьший общий предок (LCA) в бинарном дереве',
+    difficulty: 'hard',
+    isContextual: false,
+    description: `Дано бинарное дерево (не обязательно BST) и значения двух узлов \`p\` и \`q\`. Найдите **наименьшего общего предка** (Lowest Common Ancestor) — самый глубокий узел, являющийся предком обоих.
+
+Дерево представлено узлом с полями \`val\`, \`left\`, \`right\`. Гарантируется, что оба узла существуют в дереве.
+
+Примеры:
+\`\`\`
+//        3
+//       / \\
+//      5   1
+//     / \\ / \\
+//    6  2 0  8
+//      / \\
+//     7   4
+
+lca(root, 5, 1)  // → 3
+lca(root, 5, 4)  // → 5  (5 является предком 4)
+lca(root, 6, 4)  // → 5
+\`\`\``,
+    functionName: 'lca_test',
+    starterCode: `function lca(root, p, q) {
+  // ваш код
+}`,
+    testCases: [
+      { id: 'tree-h1-t1', inputDisplay: 'lca(root, 5, 1) → 3', inputArgs: ['5-1'], expected: 3 },
+      { id: 'tree-h1-t2', inputDisplay: 'lca(root, 5, 4) → 5', inputArgs: ['5-4'], expected: 5 },
+      { id: 'tree-h1-t3', inputDisplay: 'lca(root, 6, 4) → 5', inputArgs: ['6-4'], expected: 5 },
+      { id: 'tree-h1-t4', inputDisplay: 'lca(root, 0, 8) → 1', inputArgs: ['0-8'], expected: 1 },
+      { id: 'tree-h1-t5', inputDisplay: 'lca(root, 7, 4) → 2', inputArgs: ['7-4'], expected: 2 },
+    ],
+    hints: [
+      'Рекурсивный DFS: если корень null или равен p или q — возвращайте корень.',
+      'Рекурсивно ищите p и q в левом и правом поддеревьях.',
+      'Если оба вернули не null — текущий узел и есть LCA. Если одно — возвращайте ненулевой результат.',
+    ],
+    solutionCode: `function lca(root, p, q) {
+  if (!root || root.val === p || root.val === q) return root;
+
+  const left  = lca(root.left, p, q);
+  const right = lca(root.right, p, q);
+
+  if (left && right) return root;
+  return left ?? right;
+}`,
+    testHelperCode: `function buildTree() {
+  function node(val, left = null, right = null) { return { val, left, right }; }
+  return node(3,
+    node(5, node(6), node(2, node(7), node(4))),
+    node(1, node(0), node(8))
+  );
+}
+function lca_test(pair) {
+  const root = buildTree();
+  const [p, q] = pair.split('-').map(Number);
+  const res = lca(root, p, q);
+  return res ? res.val : null;
+}`,
+  },
+  {
+    id: 'tree-h2',
+    topicId: 'trees',
+    kind: 'implement',
+    title: 'Сериализация и десериализация бинарного дерева',
+    difficulty: 'hard',
+    isContextual: false,
+    description: `Реализуйте функции \`serialize(root)\` и \`deserialize(data)\` для бинарного дерева.
+
+- \`serialize(root)\` преобразует дерево в строку
+- \`deserialize(data)\` восстанавливает дерево из строки
+
+Формат строки — на ваш выбор, главное чтобы round-trip работал корректно.
+
+Дерево: узлы с полями \`val\`, \`left\`, \`right\`.
+
+Примеры:
+\`\`\`
+const root = { val: 1, left: { val: 2, left: null, right: null }, right: { val: 3, left: null, right: null } };
+const s = serialize(root);
+const r = deserialize(s);
+r.val         // → 1
+r.left.val    // → 2
+r.right.val   // → 3
+\`\`\``,
+    functionName: 'serdes_test',
+    starterCode: `function serialize(root) {
+  // ваш код
+}
+
+function deserialize(data) {
+  // ваш код
+}`,
+    testCases: [
+      { id: 'tree-h2-t1', inputDisplay: 'serialize→deserialize [1,2,3]', inputArgs: ['simple'], expected: [1, 2, 3] },
+      { id: 'tree-h2-t2', inputDisplay: 'serialize→deserialize [1,null,2,3]', inputArgs: ['right-chain'], expected: [1, null, 2, null, 3] },
+      { id: 'tree-h2-t3', inputDisplay: 'serialize→deserialize null', inputArgs: ['empty'], expected: null },
+      { id: 'tree-h2-t4', inputDisplay: 'serialize→deserialize одного узла [42]', inputArgs: ['single'], expected: [42] },
+    ],
+    hints: [
+      'BFS-сериализация: обходите уровнями, null-узлы кодируйте как "N".',
+      'При десериализации: разбейте строку на массив значений и восстанавливайте уровень за уровнем с помощью очереди.',
+      'Альтернатива: рекурсивный pre-order с разделителем и маркером null.',
+    ],
+    solutionCode: `function serialize(root) {
+  if (!root) return 'N';
+  const res = [];
+  const queue = [root];
+  while (queue.length) {
+    const node = queue.shift();
+    if (!node) { res.push('N'); continue; }
+    res.push(String(node.val));
+    queue.push(node.left);
+    queue.push(node.right);
+  }
+  return res.join(',');
+}
+
+function deserialize(data) {
+  const vals = data.split(',');
+  if (vals[0] === 'N') return null;
+  const root = { val: Number(vals[0]), left: null, right: null };
+  const queue = [root];
+  let i = 1;
+  while (queue.length && i < vals.length) {
+    const node = queue.shift();
+    if (vals[i] !== 'N') {
+      node.left = { val: Number(vals[i]), left: null, right: null };
+      queue.push(node.left);
+    }
+    i++;
+    if (i < vals.length && vals[i] !== 'N') {
+      node.right = { val: Number(vals[i]), left: null, right: null };
+      queue.push(node.right);
+    }
+    i++;
+  }
+  return root;
+}`,
+    testHelperCode: `function serdes_test(scenario) {
+  function node(val, left = null, right = null) { return { val, left, right }; }
+  function bfsVals(root) {
+    if (!root) return null;
+    const result = [], queue = [root];
+    while (queue.length) {
+      const n = queue.shift();
+      if (!n) { result.push(null); continue; }
+      result.push(n.val);
+      if (n.left || n.right || (queue.length > 0)) {
+        queue.push(n.left, n.right);
+      }
+    }
+    // trim trailing nulls
+    while (result.length > 0 && result[result.length - 1] === null) result.pop();
+    return result;
+  }
+  if (scenario === 'empty') {
+    const r = deserialize(serialize(null));
+    return r;
+  }
+  let root;
+  if (scenario === 'simple') root = node(1, node(2), node(3));
+  if (scenario === 'right-chain') root = node(1, null, node(2, node(3)));
+  if (scenario === 'single') root = node(42);
+  const restored = deserialize(serialize(root));
+  return bfsVals(restored);
+}`,
+  },
 ];

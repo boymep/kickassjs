@@ -677,4 +677,234 @@ function jsb_p8_test(arg) {
   }
 }`,
   },
+  {
+    id: 'jsbr-h1',
+    topicId: 'js-browser',
+    kind: 'implement',
+    title: 'Виртуальный скролл — рендерим только видимые элементы',
+    difficulty: 'hard',
+    isContextual: false,
+    description: `Реализуйте функцию \`createVirtualList({ container, itemHeight, items, renderItem })\`, которая реализует **виртуальный скролл**: в DOM в любой момент присутствует только небольшое число видимых элементов.
+
+Параметры:
+- \`container\` — DOM-элемент с фиксированной высотой и \`overflow: auto\`
+- \`itemHeight\` — высота каждого элемента (px, фиксированная)
+- \`items\` — массив данных
+- \`renderItem(data, index)\` — функция создания DOM-узла
+
+Функция должна:
+1. Создать "spacer" нужной высоты (items.length * itemHeight) для корректного скроллбара
+2. При scroll-событии рендерить только видимые элементы (± небольшой overscan = 3)
+3. Позиционировать видимые элементы через \`translateY\`
+
+Верните объект \`{ destroy() }\` для очистки.`,
+    functionName: 'createVirtualList_test',
+    starterCode: `function createVirtualList({ container, itemHeight, items, renderItem }) {
+  // ваш код
+  return { destroy() {} };
+}`,
+    testCases: [
+      { id: 'jsbr-h1-t1', inputDisplay: 'изначально рендерит только видимые + overscan', inputArgs: ['initial-render'], expected: true },
+      { id: 'jsbr-h1-t2', inputDisplay: 'общее число DOM-узлов намного меньше items.length', inputArgs: ['dom-count'], expected: true },
+      { id: 'jsbr-h1-t3', inputDisplay: 'высота spacer = totalHeight', inputArgs: ['spacer-height'], expected: 10000 },
+      { id: 'jsbr-h1-t4', inputDisplay: 'destroy() удаляет все узлы и события', inputArgs: ['destroy'], expected: 0 },
+    ],
+    hints: [
+      'Создайте внутри container два div: spacer (height = items.length * itemHeight) и viewport (position:relative).',
+      'При каждом scroll: startIndex = Math.floor(scrollTop / itemHeight) - overscan. Очищайте viewport и рендерите нужные элементы с translateY(i * itemHeight).',
+      'Добавляйте слушатель scroll на container. В destroy() removeEventListener и innerHTML = "".',
+    ],
+    solutionCode: `function createVirtualList({ container, itemHeight, items, renderItem }) {
+  const overscan = 3;
+  const totalHeight = items.length * itemHeight;
+
+  const spacer = document.createElement('div');
+  spacer.style.height = totalHeight + 'px';
+  spacer.style.position = 'relative';
+  container.appendChild(spacer);
+
+  const viewport = document.createElement('div');
+  viewport.style.position = 'absolute';
+  viewport.style.top = '0';
+  viewport.style.width = '100%';
+  spacer.appendChild(viewport);
+
+  function render() {
+    const scrollTop = container.scrollTop;
+    const containerH = container.clientHeight || 300;
+
+    const startIdx = Math.max(0, Math.floor(scrollTop / itemHeight) - overscan);
+    const endIdx = Math.min(items.length - 1, Math.ceil((scrollTop + containerH) / itemHeight) + overscan);
+
+    viewport.innerHTML = '';
+    for (let i = startIdx; i <= endIdx; i++) {
+      const el = renderItem(items[i], i);
+      el.style.position = 'absolute';
+      el.style.top = '0';
+      el.style.transform = 'translateY(' + (i * itemHeight) + 'px)';
+      el.style.width = '100%';
+      viewport.appendChild(el);
+    }
+  }
+
+  render();
+  container.addEventListener('scroll', render);
+
+  return {
+    destroy() {
+      container.removeEventListener('scroll', render);
+      container.innerHTML = '';
+    }
+  };
+}`,
+    testHelperCode: `function createVirtualList_test(scenario) {
+  const container = document.createElement('div');
+  container.style.height = '300px';
+  container.style.overflow = 'auto';
+  document.body.appendChild(container);
+
+  const ITEM_H = 50;
+  const TOTAL = 200;
+  const items = Array.from({ length: TOTAL }, (_, i) => 'Item ' + i);
+  const renderItem = (data, i) => {
+    const el = document.createElement('div');
+    el.style.height = ITEM_H + 'px';
+    el.textContent = data;
+    el.dataset.idx = String(i);
+    return el;
+  };
+
+  const vl = createVirtualList({ container, itemHeight: ITEM_H, items, renderItem });
+
+  let result;
+  if (scenario === 'initial-render') {
+    const rendered = container.querySelectorAll('[data-idx]').length;
+    result = rendered > 0 && rendered < TOTAL;
+  }
+  if (scenario === 'dom-count') {
+    const rendered = container.querySelectorAll('[data-idx]').length;
+    result = rendered < TOTAL * 0.2; // намного меньше всего списка
+  }
+  if (scenario === 'spacer-height') {
+    const spacer = container.firstChild;
+    result = parseInt(spacer?.style?.height ?? '0');
+  }
+  if (scenario === 'destroy') {
+    vl.destroy();
+    result = container.children.length;
+  }
+
+  if (scenario !== 'destroy') vl.destroy();
+  document.body.removeChild(container);
+  return result ?? null;
+}`,
+  },
+  {
+    id: 'jsbr-h2',
+    topicId: 'js-browser',
+    kind: 'implement',
+    title: 'useFetch — хук для отмены устаревших запросов',
+    difficulty: 'hard',
+    isContextual: false,
+    description: `Реализуйте функцию \`createFetchManager()\`, которая возвращает объект с методом \`fetch(url)\`.
+
+Ключевое требование: если \`fetch\` вызван повторно до завершения предыдущего — предыдущий запрос **отменяется** (через \`AbortController\`) и его результат игнорируется.
+
+Это решает проблему race condition при быстром поиске: пользователь набирает текст, каждый символ запускает запрос, но только последний важен.
+
+\`\`\`js
+const manager = createFetchManager();
+
+// Быстро один за другим:
+manager.fetch('/api?q=h');     // отменяется
+manager.fetch('/api?q=he');    // отменяется
+manager.fetch('/api?q=hel');   // завершается
+\`\`\``,
+    functionName: 'createFetchManager_test',
+    starterCode: `function createFetchManager() {
+  return {
+    fetch(url) {
+      // ваш код — возвращает Promise
+    }
+  };
+}`,
+    testCases: [
+      { id: 'jsbr-h2-t1', inputDisplay: 'последний запрос завершается успешно', inputArgs: ['last-succeeds'], expected: 'last' },
+      { id: 'jsbr-h2-t2', inputDisplay: 'предыдущие запросы отменяются', inputArgs: ['prev-aborted'], expected: true },
+      { id: 'jsbr-h2-t3', inputDisplay: 'одиночный запрос возвращает данные', inputArgs: ['single'], expected: 'data' },
+    ],
+    hints: [
+      'Храните текущий AbortController. При каждом новом вызове: вызовите controller.abort() у предыдущего.',
+      'Создайте новый AbortController и передайте его signal в fetch: `fetch(url, { signal })`.',
+      'Обрабатывайте AbortError: когда запрос отменён, возвращайте промис, который никогда не резолвится (или reject с AbortError).',
+    ],
+    solutionCode: `function createFetchManager() {
+  let currentController = null;
+
+  return {
+    fetch(url) {
+      // Отменяем предыдущий
+      if (currentController) currentController.abort();
+
+      currentController = new AbortController();
+      const { signal } = currentController;
+
+      return globalThis.fetch(url, { signal })
+        .then(r => r.text())
+        .catch(err => {
+          if (err.name === 'AbortError') return new Promise(() => {}); // навсегда pending
+          throw err;
+        });
+    }
+  };
+}`,
+    testHelperCode: `async function createFetchManager_test(scenario) {
+  const delay = (ms) => new Promise(res => setTimeout(res, ms));
+
+  if (scenario === 'single') {
+    const origFetch = globalThis.fetch;
+    globalThis.fetch = async (url, opts) => {
+      await delay(10);
+      if (opts?.signal?.aborted) throw Object.assign(new Error('abort'), { name: 'AbortError' });
+      return { text: async () => 'data' };
+    };
+    const manager = createFetchManager();
+    const result = await manager.fetch('/test');
+    globalThis.fetch = origFetch;
+    return result;
+  }
+
+  if (scenario === 'last-succeeds') {
+    const calls = [];
+    const origFetch = globalThis.fetch;
+    globalThis.fetch = async (url, opts) => {
+      await delay(30);
+      if (opts?.signal?.aborted) throw Object.assign(new Error('abort'), { name: 'AbortError' });
+      return { text: async () => url };
+    };
+    const manager = createFetchManager();
+    const p1 = manager.fetch('first');
+    const p2 = manager.fetch('last');
+    const result = await p2;
+    globalThis.fetch = origFetch;
+    return result;
+  }
+
+  if (scenario === 'prev-aborted') {
+    let abortedCount = 0;
+    const origFetch = globalThis.fetch;
+    globalThis.fetch = async (url, opts) => {
+      await delay(50);
+      if (opts?.signal?.aborted) { abortedCount++; throw Object.assign(new Error('abort'), { name: 'AbortError' }); }
+      return { text: async () => url };
+    };
+    const manager = createFetchManager();
+    manager.fetch('a');
+    manager.fetch('b');
+    await manager.fetch('c');
+    globalThis.fetch = origFetch;
+    return abortedCount >= 1;
+  }
+}`,
+  },
 ];

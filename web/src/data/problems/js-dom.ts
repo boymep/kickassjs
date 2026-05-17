@@ -805,4 +805,232 @@ function attachHandlers_test(arg) {
   }
 }`,
   },
+  {
+    id: 'jsdom-h1',
+    topicId: 'js-dom',
+    kind: 'implement',
+    title: 'querySelectorClosest — найти ближайший предок',
+    difficulty: 'hard',
+    isContextual: false,
+    description: `Реализуйте функцию \`closestBySelector(element, selector)\` — аналог нативного \`Element.closest()\`.
+
+Функция обходит \`element\` и его предков снизу вверх (включая сам element), и возвращает первый, соответствующий \`selector\`. Если такого нет — \`null\`.
+
+Поддерживаемые селекторы:
+- \`'div'\` — по тегу
+- \`'.active'\` — по классу
+- \`'#id'\` — по ID
+- \`'[data-role]'\` — по наличию атрибута
+
+Примеры:
+\`\`\`
+// DOM: section#root > div.container > span.item
+const item = document.querySelector('.item');
+closestBySelector(item, 'div')         // → <div.container>
+closestBySelector(item, '#root')       // → <section#root>
+closestBySelector(item, '.missing')    // → null
+\`\`\``,
+    functionName: 'closestBySelector_test',
+    starterCode: `function closestBySelector(element, selector) {
+  // ваш код — без использования element.closest()!
+}`,
+    testCases: [
+      { id: 'jsdom-h1-t1', inputDisplay: 'closest по тегу', inputArgs: ['tag'], expected: 'DIV' },
+      { id: 'jsdom-h1-t2', inputDisplay: 'closest по классу', inputArgs: ['class'], expected: 'container' },
+      { id: 'jsdom-h1-t3', inputDisplay: 'closest по id', inputArgs: ['id'], expected: 'root' },
+      { id: 'jsdom-h1-t4', inputDisplay: 'сам элемент совпадает → возвращается он', inputArgs: ['self-match'], expected: 'item' },
+      { id: 'jsdom-h1-t5', inputDisplay: 'нет совпадения → null', inputArgs: ['no-match'], expected: null },
+    ],
+    hints: [
+      'Цикл: начните с element, на каждом шаге переходите к element.parentElement.',
+      'Парсите selector: если начинается с "#" — проверяйте el.id, с "." — el.classList.contains, с "[" — el.hasAttribute, иначе — el.tagName.toLowerCase().',
+      'Продолжайте пока element !== null.',
+    ],
+    solutionCode: `function closestBySelector(element, selector) {
+  function matches(el, sel) {
+    if (sel.startsWith('#')) return el.id === sel.slice(1);
+    if (sel.startsWith('.')) return el.classList && el.classList.contains(sel.slice(1));
+    if (sel.startsWith('[')) {
+      const attr = sel.slice(1, -1);
+      return el.hasAttribute && el.hasAttribute(attr);
+    }
+    return el.tagName && el.tagName.toLowerCase() === sel.toLowerCase();
+  }
+
+  let cur = element;
+  while (cur) {
+    if (matches(cur, selector)) return cur;
+    cur = cur.parentElement;
+  }
+  return null;
+}`,
+    testHelperCode: `function closestBySelector_test(scenario) {
+  const root = document.createElement('section');
+  root.id = 'root';
+  const container = document.createElement('div');
+  container.className = 'container';
+  const item = document.createElement('span');
+  item.className = 'item';
+  container.appendChild(item);
+  root.appendChild(container);
+  document.body.appendChild(root);
+
+  let result;
+  if (scenario === 'tag') result = closestBySelector(item, 'div')?.tagName;
+  if (scenario === 'class') result = closestBySelector(item, '.container')?.className;
+  if (scenario === 'id') result = closestBySelector(item, '#root')?.id;
+  if (scenario === 'self-match') result = closestBySelector(item, '.item')?.className;
+  if (scenario === 'no-match') result = closestBySelector(item, '.missing');
+
+  document.body.removeChild(root);
+  return result ?? null;
+}`,
+  },
+  {
+    id: 'jsdom-h2',
+    topicId: 'js-dom',
+    kind: 'implement',
+    title: 'Virtual DOM patch — применение diff к реальному DOM',
+    difficulty: 'hard',
+    isContextual: false,
+    description: `Реализуйте функцию \`patch(realNode, oldVNode, newVNode)\`, которая эффективно обновляет реальный DOM минимальным количеством операций.
+
+VNode — это объект:
+\`\`\`ts
+{ tag: string, attrs?: Record<string,string>, children?: (VNode | string)[] }
+\`\`\`
+
+Правила:
+1. Если тег изменился — заменить узел целиком (\`replaceChild\`)
+2. Если тег тот же — обновить только изменившиеся атрибуты, рекурсивно patch дочерние узлы
+3. Если количество children изменилось — добавить/удалить лишние узлы
+4. Для текстовых узлов (строки): обновить \`textContent\` если изменилось
+
+Примеры:
+\`\`\`js
+// Меняем класс кнопки без пересоздания узла
+patch(btn, { tag:'button', attrs:{class:'old'} }, { tag:'button', attrs:{class:'new'} });
+btn.className // → 'new'
+\`\`\``,
+    functionName: 'patch_test',
+    starterCode: `function patch(parent, oldVNode, newVNode) {
+  // ваш код
+}`,
+    testCases: [
+      { id: 'jsdom-h2-t1', inputDisplay: 'обновляет атрибут без замены узла', inputArgs: ['update-attr'], expected: 'new-class' },
+      { id: 'jsdom-h2-t2', inputDisplay: 'разные теги — заменяет узел', inputArgs: ['replace-tag'], expected: 'SPAN' },
+      { id: 'jsdom-h2-t3', inputDisplay: 'обновляет текстовый узел', inputArgs: ['update-text'], expected: 'updated' },
+      { id: 'jsdom-h2-t4', inputDisplay: 'добавляет новый дочерний узел', inputArgs: ['add-child'], expected: 2 },
+      { id: 'jsdom-h2-t5', inputDisplay: 'удаляет лишний дочерний узел', inputArgs: ['remove-child'], expected: 1 },
+    ],
+    hints: [
+      'Если oldVNode — строка: обновите textContent если изменилась.',
+      'Если теги разные: создайте новый DOM-элемент из newVNode и замените старый через parent.replaceChild.',
+      'Если теги совпадают: итерируйтесь по attrs newVNode (setAttribute) и удалите те, что есть в old но нет в new (removeAttribute). Затем рекурсивно patch каждый child.',
+    ],
+    solutionCode: `function createEl(vnode) {
+  if (typeof vnode === 'string') return document.createTextNode(vnode);
+  const el = document.createElement(vnode.tag);
+  for (const [k, v] of Object.entries(vnode.attrs ?? {})) el.setAttribute(k, v);
+  for (const child of vnode.children ?? []) el.appendChild(createEl(child));
+  return el;
+}
+
+function patch(parent, oldVNode, newVNode, domNode) {
+  domNode = domNode ?? parent.firstChild;
+
+  if (typeof oldVNode === 'string' && typeof newVNode === 'string') {
+    if (oldVNode !== newVNode) domNode.textContent = newVNode;
+    return domNode;
+  }
+
+  if (typeof oldVNode !== typeof newVNode ||
+      (typeof oldVNode === 'object' && oldVNode.tag !== newVNode.tag)) {
+    const newEl = createEl(newVNode);
+    parent.replaceChild(newEl, domNode);
+    return newEl;
+  }
+
+  // Одинаковые теги — патчим in-place
+  const oldAttrs = oldVNode.attrs ?? {};
+  const newAttrs = newVNode.attrs ?? {};
+  for (const [k, v] of Object.entries(newAttrs)) {
+    if (oldAttrs[k] !== v) domNode.setAttribute(k, v);
+  }
+  for (const k of Object.keys(oldAttrs)) {
+    if (!(k in newAttrs)) domNode.removeAttribute(k);
+  }
+
+  const oldChildren = oldVNode.children ?? [];
+  const newChildren = newVNode.children ?? [];
+  const max = Math.max(oldChildren.length, newChildren.length);
+  let childIdx = 0;
+  for (let i = 0; i < max; i++) {
+    if (i >= newChildren.length) {
+      domNode.removeChild(domNode.childNodes[childIdx]);
+    } else if (i >= oldChildren.length) {
+      domNode.appendChild(createEl(newChildren[i]));
+      childIdx++;
+    } else {
+      patch(domNode, oldChildren[i], newChildren[i], domNode.childNodes[childIdx]);
+      childIdx++;
+    }
+  }
+
+  return domNode;
+}`,
+    testHelperCode: `function patch_test(scenario) {
+  function render(vnode) {
+    const el = document.createElement(vnode.tag);
+    for (const [k,v] of Object.entries(vnode.attrs ?? {})) el.setAttribute(k,v);
+    for (const c of vnode.children ?? []) {
+      el.appendChild(typeof c === 'string' ? document.createTextNode(c) : render(c));
+    }
+    return el;
+  }
+
+  const container = document.createElement('div');
+  document.body.appendChild(container);
+  let result;
+
+  if (scenario === 'update-attr') {
+    const old = { tag: 'div', attrs: { class: 'old-class' } };
+    const next = { tag: 'div', attrs: { class: 'new-class' } };
+    const el = render(old); container.appendChild(el);
+    patch(container, old, next, el);
+    result = el.className;
+  }
+  if (scenario === 'replace-tag') {
+    const old = { tag: 'div' };
+    const next = { tag: 'span' };
+    const el = render(old); container.appendChild(el);
+    patch(container, old, next, el);
+    result = container.firstChild.tagName;
+  }
+  if (scenario === 'update-text') {
+    const old = { tag: 'p', children: ['original'] };
+    const next = { tag: 'p', children: ['updated'] };
+    const el = render(old); container.appendChild(el);
+    patch(container, old, next, el);
+    result = el.textContent;
+  }
+  if (scenario === 'add-child') {
+    const old = { tag: 'ul', children: [{ tag: 'li' }] };
+    const next = { tag: 'ul', children: [{ tag: 'li' }, { tag: 'li' }] };
+    const el = render(old); container.appendChild(el);
+    patch(container, old, next, el);
+    result = el.childNodes.length;
+  }
+  if (scenario === 'remove-child') {
+    const old = { tag: 'ul', children: [{ tag: 'li' }, { tag: 'li' }] };
+    const next = { tag: 'ul', children: [{ tag: 'li' }] };
+    const el = render(old); container.appendChild(el);
+    patch(container, old, next, el);
+    result = el.childNodes.length;
+  }
+
+  document.body.removeChild(container);
+  return result ?? null;
+}`,
+  },
 ];

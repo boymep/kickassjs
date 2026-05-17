@@ -482,4 +482,160 @@ found 1,4`,
   return [-1, -1];
 }`,
   },
+  {
+    id: 'tp-h1',
+    topicId: 'two-pointers',
+    kind: 'implement',
+    title: 'Three Sum — все уникальные тройки с нулевой суммой',
+    difficulty: 'hard',
+    isContextual: false,
+    description: `Дан массив целых чисел \`nums\`. Найдите **все уникальные тройки** \`[a, b, c]\` такие, что \`a + b + c === 0\`.
+
+Тройки не должны повторяться: \`[-1, 0, 1]\` и \`[0, -1, 1]\` считаются одинаковыми.
+Верните массив троек, каждая из которых отсортирована по возрастанию. Порядок троек в ответе — любой.
+
+Примеры:
+\`\`\`
+threeSum([-1, 0, 1, 2, -1, -4])
+// → [[-1, -1, 2], [-1, 0, 1]]
+
+threeSum([0, 1, 1])   // → []
+threeSum([0, 0, 0])   // → [[0, 0, 0]]
+\`\`\``,
+    functionName: 'threeSum_test',
+    starterCode: `function threeSum(nums) {
+  // ваш код
+}`,
+    testCases: [
+      {
+        id: 'tp-h1-t1',
+        inputDisplay: 'threeSum([-1,0,1,2,-1,-4])',
+        inputArgs: [[-1, 0, 1, 2, -1, -4]],
+        expected: [[-1, -1, 2], [-1, 0, 1]],
+      },
+      {
+        id: 'tp-h1-t2',
+        inputDisplay: 'threeSum([0,1,1]) → []',
+        inputArgs: [[0, 1, 1]],
+        expected: [],
+      },
+      {
+        id: 'tp-h1-t3',
+        inputDisplay: 'threeSum([0,0,0]) → [[0,0,0]]',
+        inputArgs: [[0, 0, 0]],
+        expected: [[0, 0, 0]],
+      },
+      {
+        id: 'tp-h1-t4',
+        inputDisplay: 'threeSum([-2,0,0,2,2]) → [[-2,0,2]]',
+        inputArgs: [[-2, 0, 0, 2, 2]],
+        expected: [[-2, 0, 2]],
+      },
+      {
+        id: 'tp-h1-t5',
+        inputDisplay: 'threeSum([-4,-2,-2,-2,0,1,2,2,2,3,3,4,4,6,6])',
+        inputArgs: [[-4, -2, -2, -2, 0, 1, 2, 2, 2, 3, 3, 4, 4, 6, 6]],
+        expected: [[-4,-2,6],[-4,0,4],[-4,1,3],[-4,2,2],[-2,-2,4],[-2,0,2]],
+      },
+    ],
+    hints: [
+      'Отсортируйте массив — это позволит пропускать дубликаты и использовать два указателя.',
+      'Для каждого элемента nums[i] зафиксируйте его, а в остатке массива [i+1..n-1] ищите пару двумя указателями с суммой -nums[i].',
+      'Пропускайте дубликаты: после сдвига указателя продвигайте его, пока nums[left] === nums[left-1] (и аналогично для right и внешнего i).',
+    ],
+    solutionCode: `function threeSum(nums) {
+  nums.sort((a, b) => a - b);
+  const result = [];
+
+  for (let i = 0; i < nums.length - 2; i++) {
+    if (i > 0 && nums[i] === nums[i - 1]) continue;
+
+    let left = i + 1, right = nums.length - 1;
+    while (left < right) {
+      const sum = nums[i] + nums[left] + nums[right];
+      if (sum === 0) {
+        result.push([nums[i], nums[left], nums[right]]);
+        while (left < right && nums[left] === nums[left + 1]) left++;
+        while (left < right && nums[right] === nums[right - 1]) right--;
+        left++;
+        right--;
+      } else if (sum < 0) {
+        left++;
+      } else {
+        right--;
+      }
+    }
+  }
+
+  return result;
+}`,
+    testHelperCode: `function threeSum_test(nums) {
+  const res = threeSum(nums);
+  res.sort((a, b) => a[0] - b[0] || a[1] - b[1] || a[2] - b[2]);
+  return res;
+}`,
+  },
+  {
+    id: 'tp-h2',
+    topicId: 'two-pointers',
+    kind: 'implement',
+    title: 'Ловушка для дождевой воды',
+    difficulty: 'hard',
+    isContextual: false,
+    description: `Дан массив \`height\`, где каждый элемент обозначает высоту столбца. Найдите общий объём воды, который задерживается между столбцами после дождя.
+
+Вода держится там, где с обеих сторон есть столбцы выше текущего.
+
+Примеры:
+\`\`\`
+trap([0,1,0,2,1,0,1,3,2,1,2,1])  // → 6
+trap([4,2,0,3,2,5])               // → 9
+trap([3,0,3])                     // → 3
+trap([1,2,3,4,5])                 // → 0  (вода не задерживается)
+\`\`\`
+
+Решение за O(n) времени и O(1) памяти — через два указателя.`,
+    functionName: 'trap',
+    starterCode: `function trap(height) {
+  // ваш код
+}`,
+    testCases: [
+      { id: 'tp-h2-t1', inputDisplay: 'trap([0,1,0,2,1,0,1,3,2,1,2,1])', inputArgs: [[0,1,0,2,1,0,1,3,2,1,2,1]], expected: 6 },
+      { id: 'tp-h2-t2', inputDisplay: 'trap([4,2,0,3,2,5])', inputArgs: [[4,2,0,3,2,5]], expected: 9 },
+      { id: 'tp-h2-t3', inputDisplay: 'trap([3,0,3])', inputArgs: [[3,0,3]], expected: 3 },
+      { id: 'tp-h2-t4', inputDisplay: 'trap([1,2,3,4,5]) → 0', inputArgs: [[1,2,3,4,5]], expected: 0 },
+      { id: 'tp-h2-t5', inputDisplay: 'trap([5,4,3,2,1]) → 0', inputArgs: [[5,4,3,2,1]], expected: 0 },
+      { id: 'tp-h2-t6', inputDisplay: 'trap([2,0,2])', inputArgs: [[2,0,2]], expected: 2 },
+    ],
+    hints: [
+      'Вода над позицией i = min(maxLeft[i], maxRight[i]) - height[i]. Но хранить два массива — O(n) памяти.',
+      'Метод двух указателей: left и right сходятся к центру. Храните maxLeft и maxRight как текущие максимумы.',
+      'Если maxLeft <= maxRight, то вода над left определяется maxLeft: добавьте maxLeft - height[left] и сдвиньте left++. Иначе — аналогично справа.',
+    ],
+    solutionCode: `function trap(height) {
+  let left = 0, right = height.length - 1;
+  let maxLeft = 0, maxRight = 0;
+  let water = 0;
+
+  while (left < right) {
+    if (height[left] <= height[right]) {
+      if (height[left] >= maxLeft) {
+        maxLeft = height[left];
+      } else {
+        water += maxLeft - height[left];
+      }
+      left++;
+    } else {
+      if (height[right] >= maxRight) {
+        maxRight = height[right];
+      } else {
+        water += maxRight - height[right];
+      }
+      right--;
+    }
+  }
+
+  return water;
+}`,
+  },
 ];

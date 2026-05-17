@@ -20,19 +20,20 @@ console.log('4');`,
       type: 'output',
       id: 'jsel-q2',
       description: 'async/await и Event Loop. Что выведет код?',
-      code: `async function foo() {
-  console.log('A');
+      code: `async function load() {
+  console.log('a');
   await Promise.resolve();
-  console.log('B');
+  console.log('b');
 }
 
-console.log('C');
-foo();
-console.log('D');`,
-      options: ['C A D B', 'C A B D', 'A C D B', 'C D A B'],
+console.log('1');
+load();
+Promise.resolve().then(() => console.log('c'));
+console.log('2');`,
+      options: ['1 a 2 b c', '1 a 2 c b', '1 a b 2 c', '1 2 a b c'],
       correctIndex: 0,
       explanation:
-        '"C" — синхронно. foo() вызвана: "A" — синхронно, затем `await` приостанавливает foo() и возвращает управление. "D" — синхронно. Затем микрозадача (продолжение foo): "B". Итог: C → A → D → B.',
+        '"1" — синхронно. load() начинается: "a" — синхронно, затем await приостанавливает load(), кладёт продолжение в microtask queue. Promise.then("c") тоже идёт в очередь. "2" — синхронно. Microtask checkpoint: сначала продолжение load ("b"), затем then ("c"). Итог: 1 → a → 2 → b → c.',
     },
     {
       type: 'output',
@@ -181,21 +182,22 @@ main();`,
     {
       type: 'output',
       id: 'jsel-q10',
-      description: 'Несколько await. Что выведет код?',
-      code: `async function test() {
-  console.log(1);
+      description: 'await и queueMicrotask вперемешку. Что выведет код?',
+      code: `async function run() {
+  console.log('a');
   await null;
-  console.log(2);
+  console.log('b');
   await null;
-  console.log(3);
+  console.log('c');
 }
 
-test();
-console.log(4);`,
-      options: ['1 4 2 3', '1 2 3 4', '4 1 2 3', '1 2 4 3'],
+run();
+queueMicrotask(() => console.log('q'));
+console.log('sync');`,
+      options: ['a sync b q c', 'a sync b c q', 'a q sync b c', 'a sync q b c'],
       correctIndex: 0,
       explanation:
-        '"1" — sync. await null создаёт микрозадачу, приостанавливает test(). "4" — sync. Микрозадача 1: "2", снова await → микрозадача 2. Микрозадача 2: "3". Итог: 1 → 4 → 2 → 3.',
+        '"a" — sync внутри run(), первый await кладёт продолжение в очередь. queueMicrotask("q") тоже в очередь. "sync" — sync. Microtask checkpoint: продолжение run → "b", второй await кладёт следующее продолжение в конец. Затем "q". Затем финальное продолжение run → "c". Итог: a → sync → b → q → c.',
     },
     {
       type: 'fill-blank',

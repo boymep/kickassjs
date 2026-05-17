@@ -632,6 +632,137 @@ console.log(binarySearch([1, 2, 4, 4, 5], 4));`,
 }`,
   },
   {
+    id: 'bs-h1',
+    topicId: 'binary-search',
+    kind: 'implement',
+    title: 'Поиск в повёрнутом отсортированном массиве',
+    difficulty: 'hard',
+    isContextual: false,
+    description: `Дан массив \`arr\`, изначально отсортированный по возрастанию, который был **повёрнут** в некоторой точке (например, \`[4,5,6,7,0,1,2]\`). Дано число \`target\`.
+
+Найдите индекс \`target\` в массиве. Если элемент не найден — верните \`-1\`.
+
+**Решение должно работать за O(log n) — без линейного перебора!**
+
+Примеры:
+\`\`\`
+searchRotated([4, 5, 6, 7, 0, 1, 2], 0)  // → 4
+searchRotated([4, 5, 6, 7, 0, 1, 2], 3)  // → -1
+searchRotated([1], 0)                      // → -1
+searchRotated([3, 1], 1)                   // → 1
+\`\`\``,
+    functionName: 'searchRotated',
+    starterCode: `function searchRotated(arr, target) {
+  // ваш код — только O(log n)!
+}`,
+    testCases: [
+      { id: 'bs-h1-t1', inputDisplay: 'searchRotated([4,5,6,7,0,1,2], 0)', inputArgs: [[4,5,6,7,0,1,2], 0], expected: 4 },
+      { id: 'bs-h1-t2', inputDisplay: 'searchRotated([4,5,6,7,0,1,2], 3)', inputArgs: [[4,5,6,7,0,1,2], 3], expected: -1 },
+      { id: 'bs-h1-t3', inputDisplay: 'searchRotated([1], 0)', inputArgs: [[1], 0], expected: -1 },
+      { id: 'bs-h1-t4', inputDisplay: 'searchRotated([3,1], 1)', inputArgs: [[3,1], 1], expected: 1 },
+      { id: 'bs-h1-t5', inputDisplay: 'searchRotated([5,1,2,3,4], 5)', inputArgs: [[5,1,2,3,4], 5], expected: 0 },
+      { id: 'bs-h1-t6', inputDisplay: 'searchRotated([1,2,3,4,5], 3)', inputArgs: [[1,2,3,4,5], 3], expected: 2 },
+    ],
+    hints: [
+      'На каждой итерации бинарного поиска одна из половин [left..mid] или [mid..right] гарантированно отсортирована.',
+      'Определите, какая половина отсортирована: если arr[left] <= arr[mid], то левая часть отсортирована.',
+      'Проверьте, лежит ли target в пределах отсортированной половины. Если да — ищите там. Если нет — в другой половине.',
+    ],
+    solutionCode: `function searchRotated(arr, target) {
+  let left = 0, right = arr.length - 1;
+
+  while (left <= right) {
+    const mid = Math.floor((left + right) / 2);
+    if (arr[mid] === target) return mid;
+
+    // Левая половина отсортирована
+    if (arr[left] <= arr[mid]) {
+      if (arr[left] <= target && target < arr[mid]) {
+        right = mid - 1;
+      } else {
+        left = mid + 1;
+      }
+    } else {
+      // Правая половина отсортирована
+      if (arr[mid] < target && target <= arr[right]) {
+        left = mid + 1;
+      } else {
+        right = mid - 1;
+      }
+    }
+  }
+
+  return -1;
+}`,
+  },
+  {
+    id: 'bs-h2',
+    topicId: 'binary-search',
+    kind: 'implement',
+    title: 'K-й наименьший элемент в отсортированной матрице',
+    difficulty: 'hard',
+    isContextual: false,
+    description: `Дана матрица \`n × n\`, где каждая строка и каждый столбец отсортированы по возрастанию. Найдите **k-й наименьший** элемент в матрице.
+
+Индекс \`k\` начинается с **1** (k=1 — наименьший элемент).
+
+**Ключевое ограничение**: используйте бинарный поиск по значению, а не сортировку всей матрицы.
+
+Примеры:
+\`\`\`
+kthSmallest([[1,5,9],[10,11,13],[12,13,15]], 8)  // → 13
+kthSmallest([[1,2],[3,3]], 2)                     // → 2
+kthSmallest([[-5]], 1)                            // → -5
+\`\`\``,
+    functionName: 'kthSmallest',
+    starterCode: `function kthSmallest(matrix, k) {
+  // ваш код
+}`,
+    testCases: [
+      { id: 'bs-h2-t1', inputDisplay: 'kthSmallest([[1,5,9],[10,11,13],[12,13,15]], 8)', inputArgs: [[[1,5,9],[10,11,13],[12,13,15]], 8], expected: 13 },
+      { id: 'bs-h2-t2', inputDisplay: 'kthSmallest([[1,2],[3,3]], 2)', inputArgs: [[[1,2],[3,3]], 2], expected: 2 },
+      { id: 'bs-h2-t3', inputDisplay: 'kthSmallest([[-5]], 1)', inputArgs: [[[-5]], 1], expected: -5 },
+      { id: 'bs-h2-t4', inputDisplay: 'kthSmallest([[1,5,9],[10,11,13],[12,13,15]], 1)', inputArgs: [[[1,5,9],[10,11,13],[12,13,15]], 1], expected: 1 },
+      { id: 'bs-h2-t5', inputDisplay: 'kthSmallest([[1,3,5],[6,7,12],[11,14,14]], 6)', inputArgs: [[[1,3,5],[6,7,12],[11,14,14]], 6], expected: 11 },
+    ],
+    hints: [
+      'Бинарный поиск по значению: left = matrix[0][0], right = matrix[n-1][n-1].',
+      'Функция count(mid): сколько элементов матрицы ≤ mid? Идите по строкам: для каждой строки найдите последний элемент ≤ mid (upper bound).',
+      'Если count(mid) >= k, сдвигайте right = mid, иначе left = mid + 1. Ответ — значение при left === right.',
+    ],
+    solutionCode: `function kthSmallest(matrix, k) {
+  const n = matrix.length;
+
+  function countLessOrEqual(mid) {
+    let count = 0;
+    let row = n - 1, col = 0;
+    while (row >= 0 && col < n) {
+      if (matrix[row][col] <= mid) {
+        count += row + 1;
+        col++;
+      } else {
+        row--;
+      }
+    }
+    return count;
+  }
+
+  let left = matrix[0][0];
+  let right = matrix[n - 1][n - 1];
+
+  while (left < right) {
+    const mid = Math.floor((left + right) / 2);
+    if (countLessOrEqual(mid) >= k) {
+      right = mid;
+    } else {
+      left = mid + 1;
+    }
+  }
+
+  return left;
+}`,
+  },
+  {
     id: 'bs-p5',
     topicId: 'binary-search',
     title: 'Минимальная скорость доставки',

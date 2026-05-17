@@ -4,10 +4,10 @@ import type { Problem } from '../../types/problem';
 import { getProblemKind } from '../../types/problem';
 
 const KIND_LABEL: Record<NonNullable<Problem['kind']>, string> = {
-  implement: 'Реализуй',
-  'predict-output': 'Угадай вывод',
-  'find-bug': 'Найди баг',
-  refactor: 'Оптимизируй',
+  implement: 'Реализовать',
+  'predict-output': 'Угадать вывод',
+  'find-bug': 'Найти баг',
+  refactor: 'Оптимизировать',
 };
 
 const DIFFICULTY_LABEL: Record<Problem['difficulty'], string> = {

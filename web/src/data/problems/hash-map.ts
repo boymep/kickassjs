@@ -621,4 +621,127 @@ console.log(set.size);`,
   return count;
 }`,
   },
+  {
+    id: 'hm-h1',
+    topicId: 'hash-map',
+    kind: 'implement',
+    title: 'Длиннейшая последовательная цепочка — O(n)',
+    difficulty: 'hard',
+    isContextual: false,
+    description: `Дан неотсортированный массив целых чисел \`nums\`. Найдите длину **длиннейшей последовательной цепочки** (consecutive sequence).
+
+Например, в \`[100, 4, 200, 1, 3, 2]\` цепочка \`1, 2, 3, 4\` имеет длину **4**.
+
+**Решение должно работать за O(n)** — без сортировки!
+
+Примеры:
+\`\`\`
+longestConsecutive([100, 4, 200, 1, 3, 2])           // → 4
+longestConsecutive([0, 3, 7, 2, 5, 8, 4, 6, 0, 1])  // → 9
+longestConsecutive([1])                               // → 1
+longestConsecutive([])                                // → 0
+\`\`\``,
+    functionName: 'longestConsecutive',
+    starterCode: `function longestConsecutive(nums) {
+  // ваш код — только O(n), без сортировки!
+}`,
+    testCases: [
+      { id: 'hm-h1-t1', inputDisplay: 'longestConsecutive([100,4,200,1,3,2])', inputArgs: [[100, 4, 200, 1, 3, 2]], expected: 4 },
+      { id: 'hm-h1-t2', inputDisplay: 'longestConsecutive([0,3,7,2,5,8,4,6,0,1])', inputArgs: [[0,3,7,2,5,8,4,6,0,1]], expected: 9 },
+      { id: 'hm-h1-t3', inputDisplay: 'longestConsecutive([1])', inputArgs: [[1]], expected: 1 },
+      { id: 'hm-h1-t4', inputDisplay: 'longestConsecutive([])', inputArgs: [[]], expected: 0 },
+      { id: 'hm-h1-t5', inputDisplay: 'longestConsecutive([1,2,0,1])', inputArgs: [[1,2,0,1]], expected: 3 },
+    ],
+    hints: [
+      'Поместите все числа в Set. Это позволит проверять наличие числа за O(1).',
+      'Для каждого числа n: если n-1 НЕТ в Set — это начало цепочки. Начните считать длину, пока n+1 есть в Set.',
+      'Каждый элемент входит ровно в одну цепочку, поэтому суммарная сложность O(n).',
+    ],
+    solutionCode: `function longestConsecutive(nums) {
+  const set = new Set(nums);
+  let maxLen = 0;
+
+  for (const n of set) {
+    if (set.has(n - 1)) continue; // не начало цепочки
+
+    let cur = n, len = 1;
+    while (set.has(cur + 1)) { cur++; len++; }
+    maxLen = Math.max(maxLen, len);
+  }
+
+  return maxLen;
+}`,
+  },
+  {
+    id: 'hm-h2',
+    topicId: 'hash-map',
+    kind: 'implement',
+    title: 'Подмассивы с нулевой суммой — найти все',
+    difficulty: 'hard',
+    isContextual: false,
+    description: `Дан массив целых чисел \`nums\` (могут быть отрицательные). Найдите **все подмассивы с нулевой суммой** и верните массив пар \`[start, end]\` (включительно, 0-based), упорядоченных по start, затем по end.
+
+Если таких подмассивов нет — верните пустой массив.
+
+Примеры:
+\`\`\`
+findZeroSumSubarrays([1, -1, 2, -2])   // → [[0,1], [0,3], [2,3]]
+findZeroSumSubarrays([1, 2, 3])         // → []
+findZeroSumSubarrays([0])               // → [[0,0]]
+\`\`\``,
+    functionName: 'findZeroSumSubarrays',
+    starterCode: `function findZeroSumSubarrays(nums) {
+  // ваш код
+}`,
+    testCases: [
+      {
+        id: 'hm-h2-t1',
+        inputDisplay: 'findZeroSumSubarrays([1,-1,2,-2])',
+        inputArgs: [[1, -1, 2, -2]],
+        expected: [[0,1],[0,3],[2,3]],
+      },
+      {
+        id: 'hm-h2-t2',
+        inputDisplay: 'findZeroSumSubarrays([1,2,3]) → []',
+        inputArgs: [[1, 2, 3]],
+        expected: [],
+      },
+      {
+        id: 'hm-h2-t3',
+        inputDisplay: 'findZeroSumSubarrays([0])',
+        inputArgs: [[0]],
+        expected: [[0,0]],
+      },
+      {
+        id: 'hm-h2-t4',
+        inputDisplay: 'findZeroSumSubarrays([1,-1,1,-1])',
+        inputArgs: [[1,-1,1,-1]],
+        expected: [[0,1],[0,3],[2,3]],
+      },
+    ],
+    hints: [
+      'Ключевая идея: prefix sum. Если prefixSum[i] === prefixSum[j] (j > i), то подмассив [i+1..j] имеет нулевую сумму.',
+      'Храните Map<sum, number[]> — все индексы, где встречалась данная префиксная сумма (включая индекс -1 для суммы 0).',
+      'Для каждого нового prefixSum смотрите в Map: если уже встречалась — добавьте все пары.',
+    ],
+    solutionCode: `function findZeroSumSubarrays(nums) {
+  const map = new Map([[0, [-1]]]);
+  let sum = 0;
+  const result = [];
+
+  for (let i = 0; i < nums.length; i++) {
+    sum += nums[i];
+    if (map.has(sum)) {
+      for (const j of map.get(sum)) {
+        result.push([j + 1, i]);
+      }
+    }
+    if (!map.has(sum)) map.set(sum, []);
+    map.get(sum).push(i);
+  }
+
+  result.sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+  return result;
+}`,
+  },
 ];

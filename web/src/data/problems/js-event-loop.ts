@@ -370,37 +370,37 @@ await runSequentially(fns); // → [1, 2, 3]
     kind: 'predict-output',
     id: 'jsel-p6',
     topicId: 'js-event-loop',
-    title: 'Угадай вывод: setTimeout, Promise и queueMicrotask',
+    title: 'Угадай вывод: async/await и Promise.then вместе',
     difficulty: 'medium',
     isContextual: false,
-    description: `Перед вами классический микс синхронного кода, макро- и микрозадач. Введи каждую напечатанную строку в отдельной строчке поля ответа.
+    description: `Перед вами async-функция рядом с обычным \`Promise.then\`. Введи каждую напечатанную строку в отдельной строчке поля ответа.
 
-Подсказка: помни порядок — сначала весь синхронный код, затем microtask checkpoint опустошает очередь микрозадач, и только потом event loop берёт макрозадачу.`,
-    code: `console.log('1');
+Подсказка: каждый \`await\` ставит продолжение функции в очередь микрозадач и возвращает управление вызывающему коду.`,
+    code: `async function run() {
+  console.log('A');
+  await null;
+  console.log('B');
+  await null;
+  console.log('C');
+}
 
-setTimeout(() => console.log('2'), 0);
-
-Promise.resolve().then(() => {
-  console.log('3');
-  queueMicrotask(() => console.log('4'));
-});
-
-queueMicrotask(() => console.log('5'));
-
-console.log('6');`,
-    expected: '1\n6\n3\n5\n4',
+console.log('1');
+run();
+Promise.resolve().then(() => console.log('2'));
+console.log('3');`,
+    expected: '1\nA\n3\nB\n2\nC',
     hints: [
-      'Синхронный код в порядке появления: 1 и 6.',
-      'queueMicrotask и Promise.then идут в одну и ту же очередь и выполняются в порядке постановки: сначала Promise.then (3), потом второй queueMicrotask (5).',
-      'Микрозадача внутри микрозадачи (4) добавляется в текущий checkpoint и тоже выполняется до setTimeout.',
+      'Синхронный код: 1, затем запускается run() — печатает A и встречает первый await, отдавая управление. Дальше синхронно 3.',
+      'После синхронного кода очередь микрозадач: [продолжение run после первого await, Promise.then(2)].',
+      'Продолжение run выводит B и встречает второй await — ставит своё продолжение в конец очереди. Следующий в очереди — Promise.then: выводит 2. Затем второе продолжение run: C.',
     ],
-    solutionCode: `// 1 — sync
-// 6 — sync
-// 3 — Promise.then (первая микрозадача)
-//   внутри неё ставится новая микрозадача (4)
-// 5 — queueMicrotask (поставлена раньше, чем 4)
-// 4 — микрозадача, добавленная во время чекпоинта; чекпоинт продолжается
-// 2 — setTimeout (макрозадача) — последний`,
+    solutionCode: `// 1  — sync
+// A  — sync внутри run()
+// 3  — sync (run() приостановлена на await)
+// --- microtask checkpoint ---
+// B  — продолжение run() после первого await; ставит второй await в очередь
+// 2  — Promise.then (стоял в очереди перед вторым продолжением run)
+// C  — продолжение run() после второго await`,
   },
   {
     kind: 'find-bug',
@@ -676,6 +676,169 @@ await retryWithDelay(unstable, 3, 0); // → 'success'
     let attempts = 0;
     try { await retryWithDelay(async () => { attempts++; throw new Error('x'); }, 3, 0); } catch(e) {}
     return attempts <= 3;
+  }
+}`,
+  },
+  {
+    id: 'jsel-h1',
+    topicId: 'js-event-loop',
+    kind: 'predict-output',
+    title: 'Предскажи вывод: две async-функции и queueMicrotask',
+    difficulty: 'hard',
+    isContextual: false,
+    description: `Два async-вызова запускаются подряд. Какой порядок вывода?
+
+Введи каждую строку в отдельной строчке поля ответа.`,
+    code: `async function first() {
+  console.log('f1');
+  await null;
+  console.log('f2');
+}
+
+async function second() {
+  console.log('s1');
+  await null;
+  console.log('s2');
+}
+
+console.log('start');
+first();
+second();
+setTimeout(() => console.log('timeout'), 0);
+queueMicrotask(() => console.log('micro'));
+console.log('end');`,
+    expected: 'start\nf1\ns1\nend\nf2\ns2\nmicro\ntimeout',
+    hints: [
+      'Синхронный код: start, f1 (до await в first), s1 (до await в second), end.',
+      'Оба await сразу ставят свои продолжения в очередь микрозадач — в порядке вызова: сначала продолжение first, потом second.',
+      'queueMicrotask("micro") добавляется ПОСЛЕ обоих await, поэтому в очереди: [f2, s2, micro]. Macrotask setTimeout — последний.',
+    ],
+    solutionCode: `// start — sync
+// f1   — sync внутри first() до первого await
+// s1   — sync внутри second() до первого await
+// end  — sync
+// --- microtask checkpoint ---
+// f2   — продолжение first() после await
+// s2   — продолжение second() после await
+// micro — queueMicrotask (поставлен после обоих await)
+// --- macrotask ---
+// timeout — setTimeout`,
+  },
+  {
+    id: 'jsel-h2',
+    topicId: 'js-event-loop',
+    kind: 'implement',
+    title: 'Планировщик задач с ограничением параллелизма',
+    difficulty: 'hard',
+    isContextual: false,
+    description: `Реализуйте класс \`Scheduler\` с методом \`add(task)\`, который принимает асинхронную задачу и возвращает промис её результата.
+
+Планировщик гарантирует, что одновременно выполняется **не более concurrency задач** (задаётся в конструкторе).
+
+Примеры:
+\`\`\`
+const scheduler = new Scheduler(2);
+
+const t = (delay, val) => () =>
+  new Promise(res => setTimeout(() => res(val), delay));
+
+scheduler.add(t(300, 'a')); // запускается сразу (слот 1)
+scheduler.add(t(200, 'b')); // запускается сразу (слот 2)
+scheduler.add(t(100, 'c')); // ждёт освобождения слота
+scheduler.add(t(100, 'd')); // ждёт освобождения слота
+
+// Порядок завершения: b, a, c, d
+\`\`\``,
+    functionName: 'Scheduler_test',
+    starterCode: `class Scheduler {
+  constructor(concurrency) {
+    // ваш код
+  }
+
+  add(task) {
+    // ваш код — возвращает Promise
+  }
+}`,
+    testCases: [
+      {
+        id: 'jsel-h2-t1',
+        inputDisplay: 'все задачи выполняются и возвращают результат',
+        inputArgs: ['all-complete'],
+        expected: ['a', 'b', 'c'],
+      },
+      {
+        id: 'jsel-h2-t2',
+        inputDisplay: 'одновременно не более N задач',
+        inputArgs: ['concurrency-limit'],
+        expected: true,
+      },
+      {
+        id: 'jsel-h2-t3',
+        inputDisplay: 'задачи из очереди стартуют после освобождения слота',
+        inputArgs: ['queue-order'],
+        expected: true,
+      },
+    ],
+    hints: [
+      'Храните счётчик активных задач и очередь ожидающих.',
+      'При добавлении задачи: если активных < concurrency — запускайте сразу, иначе кладите в очередь.',
+      'При завершении задачи: уменьшайте счётчик и если очередь не пуста — запускайте следующую.',
+    ],
+    solutionCode: `class Scheduler {
+  constructor(concurrency) {
+    this.concurrency = concurrency;
+    this.active = 0;
+    this.queue = [];
+  }
+
+  add(task) {
+    return new Promise((resolve, reject) => {
+      const run = () => {
+        this.active++;
+        task()
+          .then(resolve, reject)
+          .finally(() => {
+            this.active--;
+            if (this.queue.length > 0) this.queue.shift()();
+          });
+      };
+
+      if (this.active < this.concurrency) {
+        run();
+      } else {
+        this.queue.push(run);
+      }
+    });
+  }
+}`,
+    testHelperCode: `async function Scheduler_test(scenario) {
+  if (scenario === 'all-complete') {
+    const s = new Scheduler(2);
+    const delay = (ms, val) => () => new Promise(res => setTimeout(() => res(val), ms));
+    const results = await Promise.all([
+      s.add(delay(10, 'a')),
+      s.add(delay(5, 'b')),
+      s.add(delay(1, 'c')),
+    ]);
+    return results;
+  }
+  if (scenario === 'concurrency-limit') {
+    let maxActive = 0, current = 0;
+    const s = new Scheduler(2);
+    const task = () => new Promise(res => {
+      current++;
+      maxActive = Math.max(maxActive, current);
+      setTimeout(() => { current--; res(); }, 20);
+    });
+    await Promise.all([s.add(task), s.add(task), s.add(task), s.add(task)]);
+    return maxActive <= 2;
+  }
+  if (scenario === 'queue-order') {
+    const order = [];
+    const s = new Scheduler(1);
+    const task = (id, ms) => () => new Promise(res => setTimeout(() => { order.push(id); res(); }, ms));
+    await Promise.all([s.add(task(1, 10)), s.add(task(2, 1)), s.add(task(3, 1))]);
+    return order[0] === 1; // 1 стартует первым
   }
 }`,
   },

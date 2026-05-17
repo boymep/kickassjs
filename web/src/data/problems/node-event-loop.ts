@@ -707,4 +707,199 @@ console.log('F');`,
   return total;
 }`,
   },
+  {
+    id: 'nodel-easy1',
+    topicId: 'node-event-loop',
+    kind: 'predict-output',
+    title: 'Предскажи вывод: process.nextTick vs setImmediate vs setTimeout',
+    difficulty: 'easy',
+    isContextual: false,
+    description: `Это базовый вопрос про приоритеты в event loop Node.js. Что выведет этот код?
+
+Введите числа через перенос строки.`,
+    code: `setTimeout(() => console.log(1), 0);
+setImmediate(() => console.log(2));
+process.nextTick(() => console.log(3));
+console.log(4);`,
+    expected: '4\n3\n1\n2',
+    hints: [
+      'Синхронный код выполняется первым: console.log(4) → "4".',
+      'process.nextTick — очередь nextTick, выполняется сразу после текущей операции, до I/O фаз: → "3".',
+      'setTimeout(0) и setImmediate: в Node.js при вызове из основного модуля порядок не детерминирован, но обычно setTimeout → setImmediate. В большинстве сред: "1", затем "2".',
+    ],
+    solutionCode: `// 1. Синхронно: console.log(4) → "4"
+// 2. nextTick очередь (приоритет выше timers): → "3"
+// 3. Timers фаза (setTimeout 0): → "1"
+// 4. Check фаза (setImmediate): → "2"`,
+    acceptable: ['4\n3\n2\n1'],
+  },
+  {
+    id: 'nodel-h1',
+    topicId: 'node-event-loop',
+    kind: 'predict-output',
+    title: 'Предскажи вывод: вложенные nextTick и Promise в Node.js',
+    difficulty: 'hard',
+    isContextual: false,
+    description: `Внимательно проследите порядок: вложенный \`process.nextTick\`, промис и \`setImmediate\` в Node.js.
+
+Что выведет код? Введите числа через перенос строки.`,
+    code: `Promise.resolve().then(() => {
+  console.log(1);
+  process.nextTick(() => console.log(2));
+});
+
+process.nextTick(() => {
+  console.log(3);
+  process.nextTick(() => console.log(4));
+});
+
+setImmediate(() => console.log(5));
+
+console.log(6);`,
+    expected: '6\n3\n4\n1\n2\n5',
+    hints: [
+      'Синхронно: "6". nextTick-очередь выполняется до microtask-очереди в Node.js.',
+      'nextTick: "3". nextTick внутри nextTick добавляется в конец той же очереди: "4".',
+      'Теперь microtasks (Promise.then): "1". process.nextTick внутри .then добавляется в nextTick-очередь, которая опустошается ПЕРЕД следующей microtask: "2".',
+      'setImmediate — check фаза после всех микрозадач: "5".',
+    ],
+    solutionCode: `// 1. Синхронно: "6"
+// 2. nextTick очередь (приоритет выше Promise): "3"
+//    → добавляет вложенный nextTick(4) в конец очереди
+// 3. Продолжаем nextTick очередь: "4"
+// 4. Microtask очередь (Promise.then): "1"
+//    → добавляет nextTick(2), который выполнится до следующей microtask
+// 5. nextTick(2) выполняется: "2"
+// 6. check фаза (setImmediate): "5"`,
+  },
+  {
+    id: 'nodel-h2',
+    topicId: 'node-event-loop',
+    kind: 'implement',
+    title: 'AsyncQueue — очередь с ограничением параллелизма',
+    difficulty: 'hard',
+    isContextual: false,
+    description: `Реализуйте класс \`AsyncQueue\`, который обрабатывает задачи с ограниченным параллелизмом, используя механику event loop Node.js.
+
+Методы:
+- \`push(task)\` — добавить задачу (async функцию), вернуть промис результата
+- \`pause()\` — приостановить обработку (новые задачи не стартуют)
+- \`resume()\` — возобновить
+
+В конструктор передаётся \`concurrency\` — максимальное число одновременно выполняемых задач.
+
+\`\`\`js
+const q = new AsyncQueue(2);
+q.push(async () => 'result'); // вернёт Promise<'result'>
+\`\`\``,
+    functionName: 'AsyncQueue_test',
+    starterCode: `class AsyncQueue {
+  constructor(concurrency) {
+    // ваш код
+  }
+
+  push(task) {
+    // ваш код
+  }
+
+  pause() {
+    // ваш код
+  }
+
+  resume() {
+    // ваш код
+  }
+}`,
+    testCases: [
+      { id: 'nodel-h2-t1', inputDisplay: 'задача выполняется и возвращает результат', inputArgs: ['basic'], expected: 'hello' },
+      { id: 'nodel-h2-t2', inputDisplay: 'параллелизм ограничен', inputArgs: ['concurrency'], expected: true },
+      { id: 'nodel-h2-t3', inputDisplay: 'pause/resume работают', inputArgs: ['pause-resume'], expected: true },
+      { id: 'nodel-h2-t4', inputDisplay: 'результаты возвращаются в промисах', inputArgs: ['multi-results'], expected: [1,2,3] },
+    ],
+    hints: [
+      'Аналог Scheduler из js-event-loop, но с методами pause/resume.',
+      'Добавьте флаг `paused`. Метод `_tick()` запускает задачи из очереди если !paused && active < concurrency.',
+      'pause() выставляет paused=true. resume() сбрасывает и вызывает _tick() несколько раз.',
+    ],
+    solutionCode: `class AsyncQueue {
+  constructor(concurrency) {
+    this.concurrency = concurrency;
+    this.active = 0;
+    this.queue = [];
+    this.paused = false;
+  }
+
+  push(task) {
+    return new Promise((resolve, reject) => {
+      this.queue.push({ task, resolve, reject });
+      this._tick();
+    });
+  }
+
+  pause() {
+    this.paused = true;
+  }
+
+  resume() {
+    this.paused = false;
+    this._tick();
+  }
+
+  _tick() {
+    while (!this.paused && this.active < this.concurrency && this.queue.length > 0) {
+      const { task, resolve, reject } = this.queue.shift();
+      this.active++;
+      task()
+        .then(resolve, reject)
+        .finally(() => {
+          this.active--;
+          this._tick();
+        });
+    }
+  }
+}`,
+    testHelperCode: `async function AsyncQueue_test(scenario) {
+  const delay = (ms) => new Promise(res => setTimeout(res, ms));
+
+  if (scenario === 'basic') {
+    const q = new AsyncQueue(1);
+    return await q.push(async () => 'hello');
+  }
+
+  if (scenario === 'concurrency') {
+    let maxActive = 0, active = 0;
+    const q = new AsyncQueue(2);
+    const task = () => async () => {
+      active++;
+      maxActive = Math.max(maxActive, active);
+      await delay(20);
+      active--;
+    };
+    await Promise.all([q.push(task()), q.push(task()), q.push(task()), q.push(task())]);
+    return maxActive <= 2;
+  }
+
+  if (scenario === 'pause-resume') {
+    const q = new AsyncQueue(2);
+    const order = [];
+    q.pause();
+    q.push(async () => { order.push('a'); });
+    q.push(async () => { order.push('b'); });
+    await delay(10);
+    const beforeResume = order.length === 0;
+    q.resume();
+    await delay(30);
+    return beforeResume && order.length === 2;
+  }
+
+  if (scenario === 'multi-results') {
+    const q = new AsyncQueue(3);
+    return await Promise.all([
+      q.push(async () => 1),
+      q.push(async () => 2),
+      q.push(async () => 3),
+    ]);
+  }
+}`,
+  },
 ];

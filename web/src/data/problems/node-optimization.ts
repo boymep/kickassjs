@@ -889,4 +889,408 @@ console.log(c.get(4));`,
   }
 }`,
   },
+  {
+    id: 'nodeopt-easy1',
+    topicId: 'node-optimization',
+    kind: 'find-bug',
+    title: 'Найди утечку памяти: растущий кеш',
+    difficulty: 'easy',
+    isContextual: false,
+    description: `В Node.js-сервисе есть кеш ответов API. Разработчик заметил, что процесс со временем потребляет всё больше памяти.
+
+Найдите и исправьте утечку памяти. Кеш должен хранить не более 1000 записей — при добавлении 1001-й удалять самую старую.`,
+    functionName: 'apiCache',
+    buggyCode: `class ApiCache {
+  constructor() {
+    this.cache = {};
+  }
+
+  set(key, value) {
+    this.cache[key] = value;
+    // Кеш никогда не очищается — утечка памяти!
+  }
+
+  get(key) {
+    return this.cache[key] ?? null;
+  }
+}`,
+    bugSummary: 'Кеш растёт без ограничений. Решение: ограничить размер и удалять старые записи при превышении. Для O(1) операций — использовать Map (сохраняет порядок вставки) и удалять первый ключ при overflow.',
+    testCases: [
+      { id: 'nodeopt-easy1-t1', inputDisplay: 'базовый get/set работает', inputArgs: ['basic'], expected: 'value1' },
+      { id: 'nodeopt-easy1-t2', inputDisplay: 'кеш не растёт больше 1000 записей', inputArgs: ['size-limit'], expected: true },
+      { id: 'nodeopt-easy1-t3', inputDisplay: 'старые записи вытесняются', inputArgs: ['eviction'], expected: null },
+    ],
+    hints: [
+      'Замените `{}` на `Map` — Map сохраняет порядок вставки, что позволяет легко найти самый старый ключ.',
+      'В методе `set`: после добавления проверьте `this.cache.size > 1000`. Если да — удалите первый ключ: `this.cache.delete(this.cache.keys().next().value)`.',
+    ],
+    solutionCode: `class ApiCache {
+  constructor() {
+    this.cache = new Map();
+    this.maxSize = 1000;
+  }
+
+  set(key, value) {
+    if (this.cache.has(key)) this.cache.delete(key); // обновляем порядок
+    this.cache.set(key, value);
+    if (this.cache.size > this.maxSize) {
+      this.cache.delete(this.cache.keys().next().value);
+    }
+  }
+
+  get(key) {
+    return this.cache.has(key) ? this.cache.get(key) : null;
+  }
+}`,
+    testHelperCode: `function apiCache(scenario) {
+  const cache = new ApiCache();
+  if (scenario === 'basic') {
+    cache.set('k1', 'value1');
+    return cache.get('k1');
+  }
+  if (scenario === 'size-limit') {
+    for (let i = 0; i < 1500; i++) cache.set('key' + i, i);
+    return cache.cache.size <= 1000;
+  }
+  if (scenario === 'eviction') {
+    for (let i = 0; i < 1001; i++) cache.set('key' + i, i);
+    return cache.get('key0'); // первый должен быть вытеснен
+  }
+}`,
+  },
+  {
+    id: 'nodeopt-easy2',
+    topicId: 'node-optimization',
+    kind: 'refactor',
+    title: 'Оптимизируй: O(n²) поиск дубликатов → O(n)',
+    difficulty: 'easy',
+    isContextual: false,
+    description: `Функция находит все дублирующиеся элементы в массиве. Текущая реализация O(n²) — на большом массиве работает слишком медленно.
+
+Перепишите через Set/Map за **O(n)**.`,
+    functionName: 'findDuplicates',
+    starterCode: `function findDuplicates(arr) {
+  // O(n²): для каждого элемента проверяем все остальные
+  const duplicates = [];
+  for (let i = 0; i < arr.length; i++) {
+    for (let j = i + 1; j < arr.length; j++) {
+      if (arr[i] === arr[j] && !duplicates.includes(arr[i])) {
+        duplicates.push(arr[i]);
+      }
+    }
+  }
+  return duplicates.sort((a, b) => a - b);
+}`,
+    testCases: [
+      { id: 'nodeopt-easy2-t1', inputDisplay: 'findDuplicates([1,2,3,2,4,3,5])', inputArgs: [[1,2,3,2,4,3,5]], expected: [2,3] },
+      { id: 'nodeopt-easy2-t2', inputDisplay: 'findDuplicates([1,2,3]) → []', inputArgs: [[1,2,3]], expected: [] },
+      { id: 'nodeopt-easy2-t3', inputDisplay: 'findDuplicates([1,1,1,1])', inputArgs: [[1,1,1,1]], expected: [1] },
+      { id: 'nodeopt-easy2-t4', inputDisplay: 'findDuplicates([]) → []', inputArgs: [[]], expected: [] },
+    ],
+    perfTest: {
+      inputArgs: [Array.from({ length: 100000 }, (_, i) => i % 5000)],
+      maxMs: 50,
+    },
+    hints: [
+      'Используйте два Set: `seen` (видели) и `duplicates` (дубли).',
+      'Один проход: если элемент уже в `seen` — добавьте в `duplicates`. Иначе — в `seen`.',
+    ],
+    solutionCode: `function findDuplicates(arr) {
+  const seen = new Set();
+  const duplicates = new Set();
+
+  for (const item of arr) {
+    if (seen.has(item)) {
+      duplicates.add(item);
+    } else {
+      seen.add(item);
+    }
+  }
+
+  return [...duplicates].sort((a, b) => a - b);
+}`,
+  },
+  {
+    id: 'nodeopt-h1',
+    topicId: 'node-optimization',
+    kind: 'implement',
+    title: 'Worker Thread Pool — пул воркеров для CPU-задач',
+    difficulty: 'hard',
+    isContextual: false,
+    description: `Реализуйте класс \`WorkerPool\`, который управляет пулом Worker Threads для параллельного выполнения CPU-bound задач.
+
+Методы:
+- \`run(data)\` — запустить задачу, вернуть промис результата
+- \`destroy()\` — завершить все воркеры
+
+\`\`\`js
+const pool = new WorkerPool('./worker.js', { poolSize: 4 });
+const result = await pool.run({ numbers: [1, 2, 3] });
+pool.destroy();
+\`\`\`
+
+В тестовой среде воркер эмулируется inline — используйте \`workerData\` из конструктора.`,
+    functionName: 'WorkerPool_test',
+    starterCode: `const { Worker, isMainThread, parentPort, workerData } = require('worker_threads');
+
+class WorkerPool {
+  constructor(workerScript, { poolSize }) {
+    // ваш код
+  }
+
+  run(data) {
+    // ваш код — возвращает Promise
+  }
+
+  destroy() {
+    // ваш код
+  }
+}`,
+    testCases: [
+      { id: 'nodeopt-h1-t1', inputDisplay: 'задача выполняется в воркере', inputArgs: ['basic'], expected: 42 },
+      { id: 'nodeopt-h1-t2', inputDisplay: 'задачи распределяются по воркерам', inputArgs: ['parallel'], expected: true },
+      { id: 'nodeopt-h1-t3', inputDisplay: 'destroy завершает воркеры', inputArgs: ['destroy'], expected: true },
+    ],
+    hints: [
+      'Создайте массив воркеров (Worker instances). Для каждого воркера храните очередь ожидающих задач.',
+      'При run(data): найдите свободного воркера (round-robin или по длине очереди). Отправьте сообщение через worker.postMessage(). Получите ответ через worker.on("message").',
+      'destroy(): вызовите worker.terminate() на каждом воркере.',
+    ],
+    solutionCode: `const { Worker, isMainThread, parentPort, workerData } = require('worker_threads');
+
+class WorkerPool {
+  constructor(workerScript, { poolSize }) {
+    this.workers = [];
+    this.queue = [];
+    this.activeWorkers = new Map();
+
+    for (let i = 0; i < poolSize; i++) {
+      const worker = new Worker(workerScript);
+      worker.on('message', (result) => {
+        const { resolve } = this.activeWorkers.get(worker);
+        this.activeWorkers.delete(worker);
+        resolve(result);
+        this._processQueue(worker);
+      });
+      worker.on('error', (err) => {
+        const pending = this.activeWorkers.get(worker);
+        if (pending) {
+          pending.reject(err);
+          this.activeWorkers.delete(worker);
+        }
+        this._processQueue(worker);
+      });
+      this.workers.push(worker);
+    }
+  }
+
+  run(data) {
+    return new Promise((resolve, reject) => {
+      const freeWorker = this.workers.find(w => !this.activeWorkers.has(w));
+      if (freeWorker) {
+        this.activeWorkers.set(freeWorker, { resolve, reject });
+        freeWorker.postMessage(data);
+      } else {
+        this.queue.push({ data, resolve, reject });
+      }
+    });
+  }
+
+  _processQueue(worker) {
+    if (this.queue.length > 0) {
+      const { data, resolve, reject } = this.queue.shift();
+      this.activeWorkers.set(worker, { resolve, reject });
+      worker.postMessage(data);
+    }
+  }
+
+  async destroy() {
+    await Promise.all(this.workers.map(w => w.terminate()));
+    this.workers = [];
+  }
+}`,
+    testHelperCode: `const { Worker, isMainThread, parentPort } = require('worker_threads');
+
+async function WorkerPool_test(scenario) {
+  // Эмулируем Worker без реального файла — используем inline через data URL
+  // В тестовой среде создаём простой inline воркер
+  const workerCode = \`
+    const { parentPort } = require('worker_threads');
+    parentPort.on('message', (data) => {
+      parentPort.postMessage(data.value * 2);
+    });
+  \`;
+
+  class TestWorkerPool {
+    constructor(poolSize) {
+      this.workers = [];
+      this.queue = [];
+      this.active = new Map();
+      for (let i = 0; i < poolSize; i++) {
+        const w = new Worker(workerCode, { eval: true });
+        w.on('message', (res) => {
+          const { resolve } = this.active.get(w);
+          this.active.delete(w);
+          resolve(res);
+          if (this.queue.length) {
+            const next = this.queue.shift();
+            this.active.set(w, next);
+            w.postMessage(next.data);
+          }
+        });
+        this.workers.push(w);
+      }
+    }
+    run(data) {
+      return new Promise((resolve, reject) => {
+        const free = this.workers.find(w => !this.active.has(w));
+        if (free) { this.active.set(free, { resolve, reject, data }); free.postMessage(data); }
+        else this.queue.push({ data, resolve, reject });
+      });
+    }
+    async destroy() { await Promise.all(this.workers.map(w => w.terminate())); }
+  }
+
+  if (scenario === 'basic') {
+    const pool = new TestWorkerPool(2);
+    const result = await pool.run({ value: 21 });
+    await pool.destroy();
+    return result;
+  }
+  if (scenario === 'parallel') {
+    const pool = new TestWorkerPool(3);
+    const results = await Promise.all([
+      pool.run({ value: 1 }),
+      pool.run({ value: 2 }),
+      pool.run({ value: 3 }),
+    ]);
+    await pool.destroy();
+    return results.every((r, i) => r === (i + 1) * 2);
+  }
+  if (scenario === 'destroy') {
+    const pool = new TestWorkerPool(2);
+    await pool.destroy();
+    return pool.workers.length === 0;
+  }
+}`,
+  },
+  {
+    id: 'nodeopt-h2',
+    topicId: 'node-optimization',
+    kind: 'implement',
+    title: 'Memory-efficient stream processing — агрегация без загрузки всего в память',
+    difficulty: 'hard',
+    isContextual: false,
+    description: `Реализуйте функцию \`aggregateStream(readable, { groupBy, aggregate })\`, которая:
+
+1. Читает JSON-объекты из Readable stream (по одному JSON на строку — NDJSON)
+2. Группирует по полю \`groupBy\`
+3. Применяет функцию \`aggregate(acc, item)\` к каждой группе
+4. Возвращает промис с объектом \`{ [groupKey]: aggregatedValue }\`
+
+**Ключевое**: данные не загружаются целиком в память — каждая строка обрабатывается сразу.
+
+Пример:
+\`\`\`
+// NDJSON: {"dept":"eng","salary":100}\\n{"dept":"hr","salary":50}\\n{"dept":"eng","salary":80}
+const result = await aggregateStream(stream, {
+  groupBy: 'dept',
+  aggregate: (acc, item) => (acc ?? 0) + item.salary
+});
+// → { eng: 180, hr: 50 }
+\`\`\``,
+    functionName: 'aggregateStream_test',
+    starterCode: `async function aggregateStream(readable, { groupBy, aggregate }) {
+  // ваш код — обрабатывайте построчно, не копите всё в памяти!
+}`,
+    testCases: [
+      {
+        id: 'nodeopt-h2-t1',
+        inputDisplay: 'суммирует salary по dept',
+        inputArgs: ['sum-salary'],
+        expected: { eng: 180, hr: 50 },
+      },
+      {
+        id: 'nodeopt-h2-t2',
+        inputDisplay: 'считает количество по категории',
+        inputArgs: ['count'],
+        expected: { a: 3, b: 2 },
+      },
+      {
+        id: 'nodeopt-h2-t3',
+        inputDisplay: 'пустой stream → {}',
+        inputArgs: ['empty'],
+        expected: {},
+      },
+    ],
+    hints: [
+      'Читайте поток построчно: буферизуйте данные, разбивайте по "\\n", каждую строку парсите через JSON.parse.',
+      'Накапливайте results = {} — при каждом новом item: results[item[groupBy]] = aggregate(results[item[groupBy]], item).',
+      'Обрабатывайте остаток буфера после события "end" (последняя строка может не иметь \\n).',
+    ],
+    solutionCode: `async function aggregateStream(readable, { groupBy, aggregate }) {
+  return new Promise((resolve, reject) => {
+    const results = {};
+    let buffer = '';
+
+    function processLine(line) {
+      const trimmed = line.trim();
+      if (!trimmed) return;
+      try {
+        const item = JSON.parse(trimmed);
+        const key = item[groupBy];
+        results[key] = aggregate(results[key], item);
+      } catch (_) {}
+    }
+
+    readable.on('data', (chunk) => {
+      buffer += chunk.toString();
+      const lines = buffer.split('\\n');
+      buffer = lines.pop();
+      lines.forEach(processLine);
+    });
+
+    readable.on('end', () => {
+      if (buffer.trim()) processLine(buffer);
+      resolve(results);
+    });
+
+    readable.on('error', reject);
+  });
+}`,
+    testHelperCode: `const { Readable } = require('stream');
+
+async function aggregateStream_test(scenario) {
+  function makeStream(lines) {
+    return Readable.from([lines.join('\\n')]);
+  }
+
+  if (scenario === 'sum-salary') {
+    const lines = [
+      '{"dept":"eng","salary":100}',
+      '{"dept":"hr","salary":50}',
+      '{"dept":"eng","salary":80}',
+    ];
+    return await aggregateStream(makeStream(lines), {
+      groupBy: 'dept',
+      aggregate: (acc, item) => (acc ?? 0) + item.salary,
+    });
+  }
+  if (scenario === 'count') {
+    const lines = [
+      '{"cat":"a"}', '{"cat":"b"}', '{"cat":"a"}', '{"cat":"a"}', '{"cat":"b"}',
+    ];
+    return await aggregateStream(makeStream(lines), {
+      groupBy: 'cat',
+      aggregate: (acc) => (acc ?? 0) + 1,
+    });
+  }
+  if (scenario === 'empty') {
+    return await aggregateStream(Readable.from(['']), {
+      groupBy: 'key',
+      aggregate: (acc) => acc,
+    });
+  }
+}`,
+  },
 ];

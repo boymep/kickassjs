@@ -621,4 +621,113 @@ console.log(stackTop + ',' + queueHead + ',' + buf.join(''));`,
   return res;
 }`,
   },
+  {
+    id: 'sq-h1',
+    topicId: 'stacks-queues',
+    kind: 'implement',
+    title: 'Максимальный прямоугольник в гистограмме',
+    difficulty: 'hard',
+    isContextual: false,
+    description: `Дан массив \`heights\`, где \`heights[i]\` — высота i-го столбца гистограммы (ширина каждого столбца = 1). Найдите площадь **наибольшего прямоугольника**, который можно вписать в гистограмму.
+
+Примеры:
+\`\`\`
+largestRectangle([2, 1, 5, 6, 2, 3])  // → 10  (столбцы 5 и 6, высота 5)
+largestRectangle([2, 4])               // → 4
+largestRectangle([1])                  // → 1
+largestRectangle([0])                  // → 0
+\`\`\``,
+    functionName: 'largestRectangle',
+    starterCode: `function largestRectangle(heights) {
+  // ваш код
+}`,
+    testCases: [
+      { id: 'sq-h1-t1', inputDisplay: 'largestRectangle([2,1,5,6,2,3])', inputArgs: [[2,1,5,6,2,3]], expected: 10 },
+      { id: 'sq-h1-t2', inputDisplay: 'largestRectangle([2,4])', inputArgs: [[2,4]], expected: 4 },
+      { id: 'sq-h1-t3', inputDisplay: 'largestRectangle([1])', inputArgs: [[1]], expected: 1 },
+      { id: 'sq-h1-t4', inputDisplay: 'largestRectangle([0])', inputArgs: [[0]], expected: 0 },
+      { id: 'sq-h1-t5', inputDisplay: 'largestRectangle([6,2,5,4,5,1,6])', inputArgs: [[6,2,5,4,5,1,6]], expected: 12 },
+    ],
+    hints: [
+      'Используйте монотонный стек возрастающих высот. Храните индексы столбцов.',
+      'Когда встречаете столбец ниже вершины стека — вытолкните вершину: это правая граница прямоугольника с высотой heights[popped]. Ширина = current_index - stack_top - 1.',
+      'После цикла допроцессируйте оставшиеся в стеке элементы (их правая граница = n).',
+    ],
+    solutionCode: `function largestRectangle(heights) {
+  const stack = []; // монотонный стек индексов (возрастающий)
+  let maxArea = 0;
+  const n = heights.length;
+
+  for (let i = 0; i <= n; i++) {
+    const h = i === n ? 0 : heights[i];
+
+    while (stack.length > 0 && h < heights[stack[stack.length - 1]]) {
+      const height = heights[stack.pop()];
+      const width = stack.length === 0 ? i : i - stack[stack.length - 1] - 1;
+      maxArea = Math.max(maxArea, height * width);
+    }
+
+    stack.push(i);
+  }
+
+  return maxArea;
+}`,
+  },
+  {
+    id: 'sq-h2',
+    topicId: 'stacks-queues',
+    kind: 'implement',
+    title: 'Максимум в скользящем окне (Sliding Window Maximum)',
+    difficulty: 'hard',
+    isContextual: false,
+    description: `Дан массив \`nums\` и число \`k\` — размер скользящего окна. Верните массив максимальных значений для каждого окна.
+
+Решение за O(n) — с помощью двусторонней очереди (deque).
+
+Примеры:
+\`\`\`
+slidingWindowMax([1,3,-1,-3,5,3,6,7], 3)
+// → [3, 3, 5, 5, 6, 7]
+
+slidingWindowMax([1], 1)   // → [1]
+slidingWindowMax([9,8,7,6], 2)  // → [9, 8, 7]
+\`\`\``,
+    functionName: 'slidingWindowMax',
+    starterCode: `function slidingWindowMax(nums, k) {
+  // ваш код — O(n) с deque
+}`,
+    testCases: [
+      { id: 'sq-h2-t1', inputDisplay: 'slidingWindowMax([1,3,-1,-3,5,3,6,7], 3)', inputArgs: [[1,3,-1,-3,5,3,6,7], 3], expected: [3,3,5,5,6,7] },
+      { id: 'sq-h2-t2', inputDisplay: 'slidingWindowMax([1], 1)', inputArgs: [[1], 1], expected: [1] },
+      { id: 'sq-h2-t3', inputDisplay: 'slidingWindowMax([9,8,7,6], 2)', inputArgs: [[9,8,7,6], 2], expected: [9,8,7] },
+      { id: 'sq-h2-t4', inputDisplay: 'slidingWindowMax([1,2,3,4,5], 3)', inputArgs: [[1,2,3,4,5], 3], expected: [3,4,5] },
+      { id: 'sq-h2-t5', inputDisplay: 'slidingWindowMax([-1,-3,-5,-2,-4], 3)', inputArgs: [[-1,-3,-5,-2,-4], 3], expected: [-1,-2,-2] },
+    ],
+    hints: [
+      'Deque хранит индексы. Инвариант: элементы в deque убывают по значению (deque монотонно убывающий).',
+      'При добавлении нового элемента: выталкивайте из хвоста все элементы, меньшие текущего.',
+      'При выходе окна: если голова deque вышла за пределы окна (deque[0] < i - k + 1) — удалите голову.',
+    ],
+    solutionCode: `function slidingWindowMax(nums, k) {
+  const deque = []; // хранит индексы
+  const result = [];
+
+  for (let i = 0; i < nums.length; i++) {
+    // Убираем элементы вне окна
+    if (deque.length > 0 && deque[0] < i - k + 1) deque.shift();
+
+    // Убираем элементы меньше текущего из хвоста
+    while (deque.length > 0 && nums[deque[deque.length - 1]] < nums[i]) {
+      deque.pop();
+    }
+
+    deque.push(i);
+
+    // Окно полностью сформировано
+    if (i >= k - 1) result.push(nums[deque[0]]);
+  }
+
+  return result;
+}`,
+  },
 ];

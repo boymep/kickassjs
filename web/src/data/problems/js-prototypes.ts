@@ -601,4 +601,150 @@ Object.getPrototypeOf(noProto); // → null
   }
 }`,
   },
+  {
+    id: 'jsp-h1',
+    topicId: 'js-prototypes',
+    kind: 'implement',
+    title: 'Реализуй оператор new как функцию',
+    difficulty: 'hard',
+    isContextual: false,
+    description: `Реализуйте функцию \`myNew(Constructor, ...args)\`, которая воспроизводит поведение оператора \`new\`:
+
+1. Создаёт новый объект с прототипом \`Constructor.prototype\`
+2. Вызывает \`Constructor\` с этим объектом в качестве \`this\`
+3. Если конструктор вернул объект — возвращает его; иначе возвращает новый объект
+
+Примеры:
+\`\`\`
+function Person(name, age) {
+  this.name = name;
+  this.age = age;
+}
+Person.prototype.greet = function() {
+  return 'Hi, ' + this.name;
+};
+
+const p = myNew(Person, 'Alice', 30);
+p.name       // → 'Alice'
+p.greet()    // → 'Hi, Alice'
+p instanceof Person  // → true
+\`\`\``,
+    functionName: 'myNew_test',
+    starterCode: `function myNew(Constructor, ...args) {
+  // ваш код
+}`,
+    testCases: [
+      { id: 'jsp-h1-t1', inputDisplay: 'own свойства задаются через this', inputArgs: ['own-props'], expected: 'Alice' },
+      { id: 'jsp-h1-t2', inputDisplay: 'методы прототипа доступны', inputArgs: ['proto-method'], expected: 'Hi, Alice' },
+      { id: 'jsp-h1-t3', inputDisplay: 'instanceof работает', inputArgs: ['instanceof'], expected: true },
+      { id: 'jsp-h1-t4', inputDisplay: 'конструктор возвращает объект — используется он', inputArgs: ['return-obj'], expected: 'custom' },
+      { id: 'jsp-h1-t5', inputDisplay: 'конструктор возвращает примитив — игнорируется', inputArgs: ['return-prim'], expected: 42 },
+    ],
+    hints: [
+      'Шаг 1: создайте объект через `Object.create(Constructor.prototype)`.',
+      'Шаг 2: вызовите `Constructor.apply(obj, args)` и сохраните результат.',
+      'Шаг 3: если результат — объект (не null), возвращайте его. Иначе возвращайте `obj`.',
+    ],
+    solutionCode: `function myNew(Constructor, ...args) {
+  const obj = Object.create(Constructor.prototype);
+  const result = Constructor.apply(obj, args);
+  return (result !== null && typeof result === 'object') ? result : obj;
+}`,
+    testHelperCode: `function myNew_test(scenario) {
+  function Person(name, age) { this.name = name; this.age = age; }
+  Person.prototype.greet = function() { return 'Hi, ' + this.name; };
+
+  if (scenario === 'own-props') return myNew(Person, 'Alice', 30).name;
+  if (scenario === 'proto-method') return myNew(Person, 'Alice', 30).greet();
+  if (scenario === 'instanceof') return myNew(Person, 'Alice', 30) instanceof Person;
+  if (scenario === 'return-obj') {
+    function Weird() { return { kind: 'custom' }; }
+    return myNew(Weird).kind;
+  }
+  if (scenario === 'return-prim') {
+    function WithNum() { this.val = 42; return 100; } // возвращает примитив
+    return myNew(WithNum).val;
+  }
+}`,
+  },
+  {
+    id: 'jsp-h2',
+    topicId: 'js-prototypes',
+    kind: 'implement',
+    title: 'Mixin — множественное наследование через примеси',
+    difficulty: 'hard',
+    isContextual: false,
+    description: `Реализуйте функцию \`applyMixins(Base, ...mixins)\`, которая создаёт новый класс, унаследованный от \`Base\` и включающий все методы из \`mixins\` (массив объектов с методами).
+
+Если метод определён в нескольких миксинах — более поздний перекрывает ранний.
+
+Примеры:
+\`\`\`
+class Animal {
+  constructor(name) { this.name = name; }
+  speak() { return this.name + ' speaks'; }
+}
+
+const Swimmer = { swim() { return this.name + ' swims'; } };
+const Flyer   = { fly() { return this.name + ' flies'; } };
+
+const Duck = applyMixins(Animal, Swimmer, Flyer);
+const d = new Duck('Donald');
+
+d.speak()  // → 'Donald speaks'
+d.swim()   // → 'Donald swims'
+d.fly()    // → 'Donald flies'
+d instanceof Animal  // → true
+\`\`\``,
+    functionName: 'applyMixins_test',
+    starterCode: `function applyMixins(Base, ...mixins) {
+  // ваш код
+}`,
+    testCases: [
+      { id: 'jsp-h2-t1', inputDisplay: 'методы Base сохраняются', inputArgs: ['base-method'], expected: 'Donald speaks' },
+      { id: 'jsp-h2-t2', inputDisplay: 'методы миксинов доступны', inputArgs: ['mixin-methods'], expected: ['Donald swims', 'Donald flies'] },
+      { id: 'jsp-h2-t3', inputDisplay: 'instanceof Base работает', inputArgs: ['instanceof'], expected: true },
+      { id: 'jsp-h2-t4', inputDisplay: 'поздний миксин перекрывает ранний', inputArgs: ['override'], expected: 'v2' },
+    ],
+    hints: [
+      'Создайте новый класс, расширяющий Base: `class Mixed extends Base {}`.',
+      'Скопируйте методы из каждого миксина в прототип: `Object.assign(Mixed.prototype, mixin)`.',
+      'Порядок миксинов: перебирайте слева направо, каждый последующий перекрывает предыдущий.',
+    ],
+    solutionCode: `function applyMixins(Base, ...mixins) {
+  class Mixed extends Base {}
+  for (const mixin of mixins) {
+    Object.assign(Mixed.prototype, mixin);
+  }
+  return Mixed;
+}`,
+    testHelperCode: `function applyMixins_test(scenario) {
+  class Animal {
+    constructor(name) { this.name = name; }
+    speak() { return this.name + ' speaks'; }
+  }
+  const Swimmer = { swim() { return this.name + ' swims'; } };
+  const Flyer   = { fly()  { return this.name + ' flies'; } };
+
+  if (scenario === 'base-method') {
+    const Duck = applyMixins(Animal, Swimmer, Flyer);
+    return new Duck('Donald').speak();
+  }
+  if (scenario === 'mixin-methods') {
+    const Duck = applyMixins(Animal, Swimmer, Flyer);
+    const d = new Duck('Donald');
+    return [d.swim(), d.fly()];
+  }
+  if (scenario === 'instanceof') {
+    const Duck = applyMixins(Animal, Swimmer, Flyer);
+    return new Duck('Donald') instanceof Animal;
+  }
+  if (scenario === 'override') {
+    const M1 = { tag() { return 'v1'; } };
+    const M2 = { tag() { return 'v2'; } };
+    const C = applyMixins(Animal, M1, M2);
+    return new C('x').tag();
+  }
+}`,
+  },
 ];

@@ -2,171 +2,91 @@ import { useCallback, useEffect, useState } from 'react';
 import {
   Box,
   Button,
-  Chip,
   Divider,
   LinearProgress,
   Paper,
   Typography,
 } from '@mui/material';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import ReplayIcon from '@mui/icons-material/Replay';
+import DoneAllIcon from '@mui/icons-material/DoneAll';
 import CodeBlock from '../theory/CodeBlock';
 import { Inline } from '../../utils/renderInline';
 import type { Flashcard } from '../../types/flashcard';
 
-type Score = 'knew' | 'partial' | 'missed';
-
 interface FlashcardDeckProps {
   cards: Flashcard[];
-  /** Heading shown above the deck. */
   title?: string;
 }
 
-interface CardResult {
-  card: Flashcard;
-  score: Score;
-}
-
-const SCORE_LABEL: Record<Score, string> = {
-  knew: 'Знал',
-  partial: 'Частично',
-  missed: 'Не знал',
-};
-
-const SCORE_COLOR: Record<Score, 'success' | 'warning' | 'error'> = {
-  knew: 'success',
-  partial: 'warning',
-  missed: 'error',
-};
-
 export default function FlashcardDeck({ cards, title }: FlashcardDeckProps) {
-  const [queue, setQueue] = useState<Flashcard[]>(cards);
   const [idx, setIdx] = useState(0);
   const [revealed, setRevealed] = useState(false);
-  const [results, setResults] = useState<CardResult[]>([]);
   const [done, setDone] = useState(false);
-  const [reviewMode, setReviewMode] = useState(false);
 
-  // Reset when the source deck changes (e.g. user navigates between topics).
   useEffect(() => {
-    setQueue(cards);
     setIdx(0);
     setRevealed(false);
-    setResults([]);
     setDone(false);
-    setReviewMode(false);
   }, [cards]);
 
-  const total = queue.length;
-  const card = queue[idx];
+  const total = cards.length;
+  const card = cards[idx];
 
-  const handleScore = useCallback(
-    (score: Score) => {
-      if (!card) return;
-      const newResults = [...results, { card, score }];
-      setResults(newResults);
+  const handleNext = useCallback(() => {
+    if (idx + 1 >= total) {
+      setDone(true);
+    } else {
+      setIdx((i) => i + 1);
+      setRevealed(false);
+    }
+  }, [idx, total]);
 
-      const nextIdx = idx + 1;
-      if (nextIdx >= total) {
-        setDone(true);
-      } else {
-        setIdx(nextIdx);
-        setRevealed(false);
-      }
-    },
-    [card, idx, results, total],
-  );
+  const handlePrev = useCallback(() => {
+    if (idx === 0) return;
+    setIdx((i) => i - 1);
+    setRevealed(false);
+  }, [idx]);
 
-  const handleRestartWeak = useCallback(() => {
-    const weak = results.filter((r) => r.score !== 'knew').map((r) => r.card);
-    if (weak.length === 0) return;
-    setQueue(weak);
+  const handleRestart = useCallback(() => {
     setIdx(0);
     setRevealed(false);
-    setResults([]);
     setDone(false);
-    setReviewMode(true);
-  }, [results]);
+  }, []);
 
-  const handleRestartAll = useCallback(() => {
-    setQueue(cards);
-    setIdx(0);
-    setRevealed(false);
-    setResults([]);
-    setDone(false);
-    setReviewMode(false);
-  }, [cards]);
-
-  if (total === 0) {
-    return null;
-  }
+  if (total === 0) return null;
 
   if (done) {
-    const knew = results.filter((r) => r.score === 'knew').length;
-    const partial = results.filter((r) => r.score === 'partial').length;
-    const missed = results.filter((r) => r.score === 'missed').length;
-    const weakCount = partial + missed;
-
     return (
       <Box>
         {title && <Typography variant="h5" sx={{ mb: 1.5 }}>{title}</Typography>}
-        <Paper sx={{ p: 4, textAlign: 'center', mb: 3 }}>
-          <Typography variant="h6" gutterBottom>
-            {reviewMode ? 'Повторение завершено' : 'Все карточки пройдены'}
+        <Paper sx={{ p: 5, textAlign: 'center' }}>
+          <Box
+            sx={{
+              width: 72,
+              height: 72,
+              borderRadius: '50%',
+              bgcolor: 'success.main',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              mx: 'auto',
+              mb: 2.5,
+            }}
+          >
+            <DoneAllIcon sx={{ fontSize: 40, color: 'white' }} />
+          </Box>
+          <Typography variant="h5" sx={{ fontWeight: 600 }} gutterBottom>
+            Все карточки пройдены
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-            Результат за {total} {total === 1 ? 'карточку' : total < 5 ? 'карточки' : 'карточек'}
+            {total} {total === 1 ? 'карточка' : total < 5 ? 'карточки' : 'карточек'} изучено
           </Typography>
-          <Box sx={{ display: 'flex', justifyContent: 'center', gap: 4, mb: 3 }}>
-            <Stat value={knew} label="Знал" color="success.main" />
-            <Stat value={partial} label="Частично" color="warning.main" />
-            <Stat value={missed} label="Не знал" color="error.main" />
-          </Box>
-          <Box sx={{ display: 'flex', gap: 1.5, justifyContent: 'center', flexWrap: 'wrap' }}>
-            {weakCount > 0 && (
-              <Button
-                variant="contained"
-                color="error"
-                startIcon={<ReplayIcon />}
-                onClick={handleRestartWeak}
-                sx={{ textTransform: 'none' }}
-              >
-                Повторить слабые ({weakCount})
-              </Button>
-            )}
-            <Button variant="outlined" onClick={handleRestartAll} sx={{ textTransform: 'none' }}>
-              Начать заново
-            </Button>
-          </Box>
+          <Button variant="outlined" startIcon={<ReplayIcon />} onClick={handleRestart}>
+            Пройти ещё раз
+          </Button>
         </Paper>
-        <Box>
-          {results.map((r, i) => (
-            <Box
-              key={r.card.id}
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 1.5,
-                py: 1,
-                borderBottom: '1px solid',
-                borderColor: 'divider',
-              }}
-            >
-              <Typography variant="caption" color="text.secondary" sx={{ minWidth: 20 }}>
-                {i + 1}.
-              </Typography>
-              <Typography variant="body2" sx={{ flex: 1 }}>
-                <Inline>{r.card.question}</Inline>
-              </Typography>
-              <Chip
-                label={SCORE_LABEL[r.score]}
-                size="small"
-                color={SCORE_COLOR[r.score]}
-                variant="outlined"
-                sx={{ fontSize: '0.7rem' }}
-              />
-            </Box>
-          ))}
-        </Box>
       </Box>
     );
   }
@@ -178,7 +98,7 @@ export default function FlashcardDeck({ cards, title }: FlashcardDeckProps) {
       {title && <Typography variant="h5" sx={{ mb: 1.5 }}>{title}</Typography>}
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
         <Typography variant="body2" color="text.secondary">
-          {reviewMode ? 'Повторение слабых' : `Карточка ${idx + 1} из ${total}`}
+          Карточка {idx + 1} из {total}
         </Typography>
       </Box>
       <LinearProgress variant="determinate" value={progress} sx={{ mb: 3, borderRadius: 1 }} />
@@ -229,40 +149,23 @@ export default function FlashcardDeck({ cards, title }: FlashcardDeckProps) {
         )}
       </Paper>
 
-      {revealed && (
-        <Box>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5, textAlign: 'center' }}>
-            Насколько хорошо ты это знал?
-          </Typography>
-          <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap' }}>
-            <ScoreButton label="Знал" sub="Уверенно" color="success" onClick={() => handleScore('knew')} />
-            <ScoreButton label="Частично" sub="С подсказкой" color="warning" onClick={() => handleScore('partial')} />
-            <ScoreButton label="Не знал" sub="Надо повторить" color="error" onClick={() => handleScore('missed')} />
-          </Box>
-        </Box>
-      )}
-    </Box>
-  );
-}
-
-function Stat({ value, label, color }: { value: number; label: string; color: string }) {
-  return (
-    <Box sx={{ textAlign: 'center' }}>
-      <Typography variant="h3" sx={{ color }}>{value}</Typography>
-      <Typography variant="caption" color="text.secondary">{label}</Typography>
-    </Box>
-  );
-}
-
-function ScoreButton({
-  label, sub, color, onClick,
-}: { label: string; sub: string; color: 'success' | 'warning' | 'error'; onClick: () => void }) {
-  return (
-    <Button variant="outlined" color={color} onClick={onClick} sx={{ flex: 1, textTransform: 'none', py: 1.5 }}>
-      <Box>
-        <Box sx={{ fontWeight: 700 }}>{label}</Box>
-        <Box sx={{ fontSize: '0.75rem', opacity: 0.8 }}>{sub}</Box>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+        <Button
+          startIcon={<ArrowBackIcon />}
+          disabled={idx === 0}
+          onClick={handlePrev}
+          size="small"
+        >
+          Назад
+        </Button>
+        <Button
+          variant="contained"
+          endIcon={<ArrowForwardIcon />}
+          onClick={revealed ? handleNext : () => setRevealed(true)}
+        >
+          {!revealed ? 'Показать ответ' : idx + 1 >= total ? 'Завершить' : 'Далее'}
+        </Button>
       </Box>
-    </Button>
+    </Box>
   );
 }

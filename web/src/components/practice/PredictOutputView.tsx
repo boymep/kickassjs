@@ -5,9 +5,10 @@ import VisibilityIcon from '@mui/icons-material/Visibility';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import HighlightOffIcon from '@mui/icons-material/HighlightOff';
 import CodeBlock from '../theory/CodeBlock';
-import HintsPanel from './HintsPanel';
+import { HintsButton, HintsDisplay } from './HintsPanel';
 import ProblemHeader from './ProblemHeader';
 import { useStdoutRunner } from '../../hooks/useStdoutRunner';
+import { useHints } from '../../hooks/useHints';
 import { normalizeOutput } from '../../utils/stdoutRunner';
 import type { PredictOutputProblem } from '../../types/problem';
 import { useProgress } from '../../hooks/useProgress';
@@ -29,6 +30,7 @@ export default function PredictOutputView({ problem }: PredictOutputViewProps) {
   const [actualRun, setActualRun] = useState<string | null>(null);
   const { result, running, run } = useStdoutRunner();
   const { markSolved } = useProgress(problem.topicId);
+  const { hintIndex, showNext } = useHints(problem.id);
 
   useEffect(() => {
     setAnswer('');
@@ -76,33 +78,23 @@ export default function PredictOutputView({ problem }: PredictOutputViewProps) {
         />
       </Paper>
 
-      <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'flex-start' }}>
-        <Button
-          variant="contained"
-          startIcon={<CheckCircleIcon />}
-          onClick={handleSubmit}
-          disabled={!answer.trim()}
-        >
-          Проверить
-        </Button>
-        <Button
-          variant="outlined"
-          startIcon={<PlayArrowIcon />}
-          onClick={handleRunActual}
-          disabled={running}
-        >
-          {running ? 'Запускается…' : 'Запустить реально'}
-        </Button>
-        <HintsPanel hints={problem.hints} />
-        <Button
-          variant="outlined"
-          color="secondary"
-          startIcon={<VisibilityIcon />}
-          onClick={() => setShowSolution((s) => !s)}
-        >
-          {showSolution ? 'Скрыть разбор' : 'Показать разбор'}
-        </Button>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 2, flexWrap: 'wrap', mt: 2 }}>
+        <Box sx={{ display: 'flex', gap: 1.5 }}>
+          <Button variant="contained" startIcon={<CheckCircleIcon />} onClick={handleSubmit} disabled={!answer.trim()}>
+            Проверить
+          </Button>
+          <Button variant="outlined" startIcon={<PlayArrowIcon />} onClick={handleRunActual} disabled={running}>
+            {running ? 'Запускается…' : 'Запустить'}
+          </Button>
+        </Box>
+        <Box sx={{ display: 'flex', gap: 1.5 }}>
+          <HintsButton hints={problem.hints} hintIndex={hintIndex} onNext={() => showNext(problem.hints.length)} />
+          <Button variant="outlined" color="secondary" startIcon={<VisibilityIcon />} onClick={() => setShowSolution((s) => !s)}>
+            {showSolution ? 'Скрыть разбор' : 'Показать разбор'}
+          </Button>
+        </Box>
       </Box>
+      <HintsDisplay hints={problem.hints} hintIndex={hintIndex} />
 
       {submitted && (
         <Box sx={{ mt: 2 }}>

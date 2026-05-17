@@ -44,16 +44,49 @@ export default function FinalQuiz({ questions }: FinalQuizProps) {
   if (done) {
     const correctCount = log.filter((l) => l.correct).length;
     const wrongCount = log.length - correctCount;
+    const percent = Math.round((correctCount / log.length) * 100);
+    const isPerfect = wrongCount === 0;
+    const resultColor = isPerfect ? 'success' : percent >= 70 ? 'warning' : 'error';
+    const resultLabel = isPerfect ? 'Идеальный результат!' : percent >= 70 ? 'Хороший результат' : 'Есть куда расти';
 
     return (
-      <Paper sx={{ p: 4, textAlign: 'center' }}>
-        <Stack direction="row" justifyContent="center" alignItems="center" spacing={1} sx={{ mb: 1 }}>
-          <EmojiEventsIcon color="warning" />
-          <Typography variant="h5">Финальный квиз пройден</Typography>
-        </Stack>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-          Правильно {correctCount} из {log.length}
+      <Paper sx={{ p: { xs: 3, sm: 5 }, textAlign: 'center' }}>
+        <Box
+          sx={{
+            width: 80,
+            height: 80,
+            borderRadius: '50%',
+            bgcolor: `${resultColor}.main`,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            mx: 'auto',
+            mb: 2.5,
+          }}
+        >
+          <EmojiEventsIcon sx={{ fontSize: 44, color: 'white' }} />
+        </Box>
+
+        <Typography variant="h5" sx={{ fontWeight: 600 }} gutterBottom>
+          {resultLabel}
         </Typography>
+
+        <Typography variant="h2" sx={{ fontWeight: 700, lineHeight: 1.1 }} color={`${resultColor}.main`}>
+          {correctCount}/{log.length}
+        </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+          правильных ответов
+        </Typography>
+
+        <Box sx={{ maxWidth: 240, mx: 'auto', mb: 4 }}>
+          <LinearProgress
+            variant="determinate"
+            value={percent}
+            color={resultColor}
+            sx={{ height: 8, borderRadius: 4 }}
+          />
+        </Box>
+
         <Stack direction="row" spacing={2} justifyContent="center">
           {wrongCount > 0 && (
             <Button
@@ -73,6 +106,7 @@ export default function FinalQuiz({ questions }: FinalQuizProps) {
           )}
           <Button
             variant="outlined"
+            startIcon={<ReplayIcon />}
             onClick={() => {
               setWeakOnly(false);
               setCurrent(0);
