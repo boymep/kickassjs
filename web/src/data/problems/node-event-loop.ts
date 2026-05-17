@@ -1,11 +1,11 @@
-import type { Problem } from '../../types/problem';
+import type { Problem } from "../../types/problem";
 
 export const nodeEventLoopProblems: Problem[] = [
   {
-    id: 'nodel-p1',
-    topicId: 'node-event-loop',
-    title: 'EventEmitter — реализация',
-    difficulty: 'medium',
+    id: "nodel-p1",
+    topicId: "node-event-loop",
+    title: "EventEmitter — реализация",
+    difficulty: "medium",
     isContextual: false,
     description: `Реализуйте класс \`EventEmitter\` с методами:
 - \`on(event, handler)\` — подписаться на событие
@@ -27,7 +27,7 @@ ee.once('end', () => console.log('end!'));
 ee.emit('end'); // 'end!'
 ee.emit('end'); // ничего
 \`\`\``,
-    functionName: 'EventEmitter',
+    functionName: "EventEmitter",
     starterCode: `class EventEmitter {
   constructor() {
     // ваш код
@@ -51,40 +51,40 @@ ee.emit('end'); // ничего
 }`,
     testCases: [
       {
-        id: 'nodel-p1-t1',
-        inputDisplay: 'on/emit — handler вызван',
-        inputArgs: ['on-emit'],
+        id: "nodel-p1-t1",
+        inputDisplay: "on/emit — handler вызван",
+        inputArgs: ["on-emit"],
         expected: [1, 2],
       },
       {
-        id: 'nodel-p1-t2',
-        inputDisplay: 'off — handler больше не вызывается',
-        inputArgs: ['off'],
+        id: "nodel-p1-t2",
+        inputDisplay: "off — handler больше не вызывается",
+        inputArgs: ["off"],
         expected: [1],
       },
       {
-        id: 'nodel-p1-t3',
-        inputDisplay: 'once — вызван только один раз',
-        inputArgs: ['once'],
+        id: "nodel-p1-t3",
+        inputDisplay: "once — вызван только один раз",
+        inputArgs: ["once"],
         expected: 1,
       },
       {
-        id: 'nodel-p1-t4',
-        inputDisplay: 'несколько подписчиков на одно событие',
-        inputArgs: ['multiple'],
+        id: "nodel-p1-t4",
+        inputDisplay: "несколько подписчиков на одно событие",
+        inputArgs: ["multiple"],
         expected: 2,
       },
       {
-        id: 'nodel-p1-t5',
-        inputDisplay: 'emit несуществующего события — не бросает ошибку',
-        inputArgs: ['no-event'],
+        id: "nodel-p1-t5",
+        inputDisplay: "emit несуществующего события — не бросает ошибку",
+        inputArgs: ["no-event"],
         expected: true,
       },
     ],
     hints: [
-      'Используйте Map для хранения: `this.listeners = new Map()`. Ключ — имя события, значение — Set или Array handlers.',
-      'once: создайте обёртку, которая вызывает `this.off(event, wrapper)` перед вызовом оригинального handler.',
-      'emit: перебирайте копию массива handlers (`[...handlers]`), чтобы избежать проблем при off внутри handler.',
+      "Как хранить список обработчиков по имени события, и как эффективно их добавлять и удалять?",
+      "once должен сработать только раз. Как автоматически снять подписку после первого вызова?",
+      "Что произойдёт, если обработчик вызывает off во время emit? Как защититься?",
     ],
     solutionCode: `class EventEmitter {
   constructor() {
@@ -121,10 +121,10 @@ ee.emit('end'); // ничего
 }`,
   },
   {
-    id: 'nodel-p2',
-    topicId: 'node-event-loop',
-    title: 'processChunked — обработка без блокировки',
-    difficulty: 'medium',
+    id: "nodel-p2",
+    topicId: "node-event-loop",
+    title: "processChunked — обработка без блокировки",
+    difficulty: "medium",
     isContextual: true,
     description: `Реализуйте функцию \`processChunked(arr, chunkSize, processor)\`:
 - Обрабатывает массив \`arr\` чанками по \`chunkSize\` элементов
@@ -144,45 +144,45 @@ const result = await processChunked(
 \`\`\`
 
 В тестах \`processChunked\` вызывается через хелпер \`nodel_p2_test\`.`,
-    functionName: 'nodel_p2_test',
+    functionName: "nodel_p2_test",
     starterCode: `function processChunked(arr, chunkSize, processor) {
   // ваш код — используйте setTimeout для yield
 }`,
     testCases: [
       {
-        id: 'nodel-p2-t1',
-        inputDisplay: '[1,2,3] → [1,4,9]',
-        inputArgs: [[1, 2, 3], 2, 'square'],
+        id: "nodel-p2-t1",
+        inputDisplay: "[1,2,3] → [1,4,9]",
+        inputArgs: [[1, 2, 3], 2, "square"],
         expected: [1, 4, 9],
       },
       {
-        id: 'nodel-p2-t2',
-        inputDisplay: 'пустой массив → []',
-        inputArgs: [[], 5, 'identity'],
+        id: "nodel-p2-t2",
+        inputDisplay: "пустой массив → []",
+        inputArgs: [[], 5, "identity"],
         expected: [],
       },
       {
-        id: 'nodel-p2-t3',
-        inputDisplay: 'chunkSize > arr.length — один чанк',
-        inputArgs: [[1, 2], 100, 'double'],
+        id: "nodel-p2-t3",
+        inputDisplay: "chunkSize > arr.length — один чанк",
+        inputArgs: [[1, 2], 100, "double"],
         expected: [2, 4],
       },
       {
-        id: 'nodel-p2-t4',
-        inputDisplay: 'возвращает Promise',
-        inputArgs: ['is-promise'],
+        id: "nodel-p2-t4",
+        inputDisplay: "возвращает Promise",
+        inputArgs: ["is-promise"],
         expected: true,
       },
       {
-        id: 'nodel-p2-t5',
-        inputDisplay: 'порядок результатов сохраняется',
-        inputArgs: [[5, 4, 3, 2, 1], 2, 'identity'],
+        id: "nodel-p2-t5",
+        inputDisplay: "порядок результатов сохраняется",
+        inputArgs: [[5, 4, 3, 2, 1], 2, "identity"],
         expected: [5, 4, 3, 2, 1],
       },
     ],
     hints: [
-      'Используйте `new Promise((resolve) => {...})`. Внутри объявите `index = 0` и `results = []`.',
-      'Функция `processNext`: обработайте chunkSize элементов, затем `setTimeout(processNext, 0)` если ещё есть элементы, иначе `resolve(results)`.',
+      "Как разбить синхронный цикл на части, отдавая управление event loop между ними?",
+      "Как сигнализировать вызывающему коду о завершении асинхронной обработки?",
     ],
     solutionCode: `function processChunked(arr, chunkSize, processor) {
   return new Promise((resolve) => {
@@ -220,10 +220,10 @@ const result = await processChunked(
 }`,
   },
   {
-    id: 'nodel-p3',
-    topicId: 'node-event-loop',
-    title: 'AsyncQueue — очередь задач с concurrency',
-    difficulty: 'medium',
+    id: "nodel-p3",
+    topicId: "node-event-loop",
+    title: "AsyncQueue — очередь задач с concurrency",
+    difficulty: "medium",
     isContextual: true,
     description: `Реализуйте класс \`AsyncQueue\`:
 - \`constructor(concurrency)\` — максимальное количество одновременных задач
@@ -241,7 +241,7 @@ const results = await Promise.all([
 ]);
 // → [1, 2, 3]
 \`\`\``,
-    functionName: 'AsyncQueue',
+    functionName: "AsyncQueue",
     starterCode: `class AsyncQueue {
   constructor(concurrency) {
     // ваш код
@@ -253,40 +253,40 @@ const results = await Promise.all([
 }`,
     testCases: [
       {
-        id: 'nodel-p3-t1',
-        inputDisplay: '3 задачи, concurrency=2 → все выполняются',
-        inputArgs: ['all-complete'],
+        id: "nodel-p3-t1",
+        inputDisplay: "3 задачи, concurrency=2 → все выполняются",
+        inputArgs: ["all-complete"],
         expected: [1, 2, 3],
       },
       {
-        id: 'nodel-p3-t2',
-        inputDisplay: 'push возвращает Promise',
-        inputArgs: ['returns-promise'],
+        id: "nodel-p3-t2",
+        inputDisplay: "push возвращает Promise",
+        inputArgs: ["returns-promise"],
         expected: true,
       },
       {
-        id: 'nodel-p3-t3',
-        inputDisplay: 'concurrency=1 → последовательно',
-        inputArgs: ['sequential'],
+        id: "nodel-p3-t3",
+        inputDisplay: "concurrency=1 → последовательно",
+        inputArgs: ["sequential"],
         expected: [1, 2, 3],
       },
       {
-        id: 'nodel-p3-t4',
-        inputDisplay: 'ошибка в задаче → reject промиса push',
-        inputArgs: ['error'],
-        expected: 'Error: task-error',
+        id: "nodel-p3-t4",
+        inputDisplay: "ошибка в задаче → reject промиса push",
+        inputArgs: ["error"],
+        expected: "Error: task-error",
       },
       {
-        id: 'nodel-p3-t5',
-        inputDisplay: 'одновременно не более concurrency задач',
-        inputArgs: ['max-concurrent'],
+        id: "nodel-p3-t5",
+        inputDisplay: "одновременно не более concurrency задач",
+        inputArgs: ["max-concurrent"],
         expected: true,
       },
     ],
     hints: [
-      'Храните `this.running = 0`, `this.queue = []`. При push: если running < concurrency — запускайте сразу, иначе добавляйте в queue.',
-      'После завершения задачи: running--, и если queue.length > 0 — берите следующую из очереди.',
-      'push возвращает Promise: передавайте resolve/reject в объект задачи и вызывайте их после выполнения asyncFn.',
+      "Что нужно знать очереди, чтобы решить — запустить задачу немедленно или поставить в ожидание?",
+      "Когда задача завершается — кто должен запустить следующую из очереди?",
+      "push возвращает Promise. Как «связать» этот промис с результатом asyncFn, которая ещё не запустилась?",
     ],
     solutionCode: `class AsyncQueue {
   constructor(concurrency) {
@@ -317,10 +317,10 @@ const results = await Promise.all([
 }`,
   },
   {
-    id: 'nodel-p4',
-    topicId: 'node-event-loop',
-    title: 'PriorityQueue — очередь с приоритетами',
-    difficulty: 'medium',
+    id: "nodel-p4",
+    topicId: "node-event-loop",
+    title: "PriorityQueue — очередь с приоритетами",
+    difficulty: "medium",
     isContextual: false,
     description: `Реализуйте \`PriorityQueue\`:
 - \`enqueue(task, priority)\` — добавить задачу с приоритетом (меньше = важнее)
@@ -339,7 +339,7 @@ pq.dequeue(); // → 'high' (приоритет 1)
 pq.dequeue(); // → 'medium' (приоритет 2)
 pq.dequeue(); // → 'low' (приоритет 3)
 \`\`\``,
-    functionName: 'PriorityQueue',
+    functionName: "PriorityQueue",
     starterCode: `class PriorityQueue {
   constructor() {
     // ваш код
@@ -363,39 +363,39 @@ pq.dequeue(); // → 'low' (приоритет 3)
 }`,
     testCases: [
       {
-        id: 'nodel-p4-t1',
-        inputDisplay: 'dequeue возвращает элемент с наименьшим приоритетом',
-        inputArgs: ['min-priority'],
-        expected: 'high',
+        id: "nodel-p4-t1",
+        inputDisplay: "dequeue возвращает элемент с наименьшим приоритетом",
+        inputArgs: ["min-priority"],
+        expected: "high",
       },
       {
-        id: 'nodel-p4-t2',
-        inputDisplay: 'порядок dequeue: 1,2,3',
-        inputArgs: ['order'],
-        expected: ['high', 'medium', 'low'],
+        id: "nodel-p4-t2",
+        inputDisplay: "порядок dequeue: 1,2,3",
+        inputArgs: ["order"],
+        expected: ["high", "medium", "low"],
       },
       {
-        id: 'nodel-p4-t3',
-        inputDisplay: 'size() после enqueue',
-        inputArgs: ['size'],
+        id: "nodel-p4-t3",
+        inputDisplay: "size() после enqueue",
+        inputArgs: ["size"],
         expected: 3,
       },
       {
-        id: 'nodel-p4-t4',
-        inputDisplay: 'isEmpty() на пустой очереди',
-        inputArgs: ['empty'],
+        id: "nodel-p4-t4",
+        inputDisplay: "isEmpty() на пустой очереди",
+        inputArgs: ["empty"],
         expected: true,
       },
       {
-        id: 'nodel-p4-t5',
-        inputDisplay: 'dequeue из пустой → undefined',
-        inputArgs: ['dequeue-empty'],
+        id: "nodel-p4-t5",
+        inputDisplay: "dequeue из пустой → undefined",
+        inputArgs: ["dequeue-empty"],
         expected: undefined,
       },
     ],
     hints: [
-      'Простейшая реализация: массив `{ task, priority }`. При dequeue: найдите элемент с min priority через reduce.',
-      'Более эффективная: сортируйте при вставке или используйте binary heap (но для интервью простой массив ок).',
+      "Как хранить задачи вместе с их приоритетом и извлекать наиболее приоритетную?",
+      "Есть несколько подходов — с разными трейдоффами по сложности реализации и производительности.",
     ],
     solutionCode: `class PriorityQueue {
   constructor() {
@@ -421,10 +421,10 @@ pq.dequeue(); // → 'low' (приоритет 3)
 }`,
   },
   {
-    id: 'nodel-p5',
-    topicId: 'node-event-loop',
-    title: 'withTimeout — таймаут для промиса',
-    difficulty: 'easy',
+    id: "nodel-p5",
+    topicId: "node-event-loop",
+    title: "withTimeout — таймаут для промиса",
+    difficulty: "easy",
     isContextual: true,
     description: `Реализуйте функцию \`withTimeout(asyncFn, ms, fallback)\`:
 - Вызывает \`asyncFn()\`
@@ -440,45 +440,45 @@ await withTimeout(slow, 1000, 'default'); // → 'data' (вовремя)
 \`\`\`
 
 В тестах \`withTimeout\` вызывается через хелпер \`nodel_p5_test\`.`,
-    functionName: 'nodel_p5_test',
+    functionName: "nodel_p5_test",
     starterCode: `async function withTimeout(asyncFn, ms, fallback) {
   // ваш код
 }`,
     testCases: [
       {
-        id: 'nodel-p5-t1',
-        inputDisplay: 'промис вовремя → его результат',
-        inputArgs: ['in-time'],
-        expected: 'result',
+        id: "nodel-p5-t1",
+        inputDisplay: "промис вовремя → его результат",
+        inputArgs: ["in-time"],
+        expected: "result",
       },
       {
-        id: 'nodel-p5-t2',
-        inputDisplay: 'таймаут → fallback',
-        inputArgs: ['timeout'],
-        expected: 'default',
+        id: "nodel-p5-t2",
+        inputDisplay: "таймаут → fallback",
+        inputArgs: ["timeout"],
+        expected: "default",
       },
       {
-        id: 'nodel-p5-t3',
-        inputDisplay: 'fallback = null',
-        inputArgs: ['null-fallback'],
+        id: "nodel-p5-t3",
+        inputDisplay: "fallback = null",
+        inputArgs: ["null-fallback"],
         expected: null,
       },
       {
-        id: 'nodel-p5-t4',
-        inputDisplay: 'fallback = 0',
-        inputArgs: ['zero-fallback'],
+        id: "nodel-p5-t4",
+        inputDisplay: "fallback = 0",
+        inputArgs: ["zero-fallback"],
         expected: 0,
       },
       {
-        id: 'nodel-p5-t5',
-        inputDisplay: 'не бросает ошибку при таймауте',
-        inputArgs: ['no-throw'],
+        id: "nodel-p5-t5",
+        inputDisplay: "не бросает ошибку при таймауте",
+        inputArgs: ["no-throw"],
         expected: true,
       },
     ],
     hints: [
-      'Используйте Promise.race с двумя промисами: asyncFn() и таймер с fallback.',
-      'Таймер: `new Promise(r => setTimeout(() => r(fallback), ms))` — резолвится (не реджектится!) с fallback.',
+      "Задача сводится к гонке: кто «финишировал» первым — оригинальная функция или таймер?",
+      "В случае таймаута нужно вернуть fallback, а не бросить ошибку. Как построить промис-таймер, который резолвится (а не реджектится)?",
     ],
     solutionCode: `async function withTimeout(asyncFn, ms, fallback) {
   const timer = new Promise((resolve) => setTimeout(() => resolve(fallback), ms));
@@ -510,11 +510,11 @@ await withTimeout(slow, 1000, 'default'); // → 'data' (вовремя)
 }`,
   },
   {
-    kind: 'predict-output',
-    id: 'nodel-p6',
-    topicId: 'node-event-loop',
-    title: 'Угадай вывод: микрозадачи и таймер',
-    difficulty: 'medium',
+    kind: "predict-output",
+    id: "nodel-p6",
+    topicId: "node-event-loop",
+    title: "Определи вывод: микрозадачи и таймер",
+    difficulty: "medium",
     isContextual: false,
     description: `Что выведет этот код в среде, где доступны \`queueMicrotask\`, \`Promise\` и \`setTimeout\`? Запишите каждое значение на отдельной строке в порядке вывода.
 
@@ -531,11 +531,11 @@ queueMicrotask(() => {
 Promise.resolve().then(() => console.log('E'));
 
 console.log('F');`,
-    expected: 'A\nF\nC\nE\nD\nB',
+    expected: "A\nF\nC\nE\nD\nB",
     hints: [
-      'Сначала выполняется весь синхронный код — это «A» и «F».',
-      'Затем microtask checkpoint опустошает очередь полностью, включая микрозадачи, добавленные внутри других микрозадач.',
-      'setTimeout — макрозадача и выполняется после всех микрозадач.',
+      "Сначала выполняется весь синхронный код — это «A» и «F».",
+      "Затем microtask checkpoint опустошает очередь полностью, включая микрозадачи, добавленные внутри других микрозадач.",
+      "setTimeout — макрозадача и выполняется после всех микрозадач.",
     ],
     solutionCode: `// Порядок:
 // 1. 'A'  — синхронный console.log.
@@ -546,18 +546,18 @@ console.log('F');`,
 // 6. 'B'  — макрозадача setTimeout, выполняется после microtask checkpoint.`,
   },
   {
-    kind: 'find-bug',
-    id: 'nodel-p7',
-    topicId: 'node-event-loop',
-    title: 'Найди баг: рекурсивная очередь блокирует таймер',
-    difficulty: 'medium',
+    kind: "find-bug",
+    id: "nodel-p7",
+    topicId: "node-event-loop",
+    title: "Найди баг: очередь задач не завершается",
+    difficulty: "medium",
     isContextual: true,
     description: `Функция \`runWithDelay(initialQueue, work)\` должна:
 1. Выполнить \`work(item)\` для каждого элемента из \`initialQueue\` через очередь микрозадач (имитация \`process.nextTick\`).
-2. После полной обработки очереди — вернуть промис, который резолвится массивом результатов.
-3. Гарантировать, что \`setTimeout\` с задержкой 0 (имитация I/O) выполнится **до** того, как промис зарезолвится, если очередь оказалась пустой.
+2. После полной обработки очереди — вернуть промис с массивом результатов.
+3. Не блокировать event loop — \`setTimeout\` с задержкой 0 должен успеть выполниться до резолва промиса.
 
-В текущей реализации \`runWithDelay([], () => 0)\` зависает: цикл проверки очереди добавляет себя в микрозадачи, не давая таймеру шанса выполниться. Найдите и исправьте баг — нужно правильно завершать пустую очередь.
+Но с пустой очередью что-то идёт не так. Найдите и исправьте.
 
 В тестах \`runWithDelay\` вызывается через хелпер \`nodel_p7_test\`.`,
     buggyCode: `function runWithDelay(initialQueue, work) {
@@ -567,8 +567,6 @@ console.log('F');`,
   return new Promise((resolve) => {
     function step() {
       if (queue.length === 0) {
-        // BUG: бесконечно перепланируем себя через микрозадачу,
-        // вместо того чтобы зарезолвить промис.
         queueMicrotask(step);
         return;
       }
@@ -579,38 +577,38 @@ console.log('F');`,
     queueMicrotask(step);
   });
 }`,
-    functionName: 'nodel_p7_test',
+    functionName: "nodel_p7_test",
     bugSummary:
-      'При пустой очереди функция перепланировала саму себя через `queueMicrotask`, создавая бесконечный microtask checkpoint и не отпуская event loop. Правильное поведение — резолвить промис, как только очередь опустела.',
+      "При пустой очереди функция перепланировала саму себя через `queueMicrotask`, создавая бесконечный microtask checkpoint и не отпуская event loop. Правильное поведение — резолвить промис, как только очередь опустела.",
     testCases: [
       {
-        id: 'nodel-p7-t1',
-        inputDisplay: 'пустая очередь резолвится []',
-        inputArgs: ['empty'],
-        expected: '[]',
+        id: "nodel-p7-t1",
+        inputDisplay: "пустая очередь резолвится []",
+        inputArgs: ["empty"],
+        expected: "[]",
       },
       {
-        id: 'nodel-p7-t2',
-        inputDisplay: 'очередь [1,2,3] и x*2 → [2,4,6]',
-        inputArgs: ['simple'],
-        expected: '[2,4,6]',
+        id: "nodel-p7-t2",
+        inputDisplay: "очередь [1,2,3] и x*2 → [2,4,6]",
+        inputArgs: ["simple"],
+        expected: "[2,4,6]",
       },
       {
-        id: 'nodel-p7-t3',
-        inputDisplay: 'таймер успевает выполниться, потом промис резолвится',
-        inputArgs: ['timer-not-starved'],
-        expected: 'timer-first',
+        id: "nodel-p7-t3",
+        inputDisplay: "таймер успевает выполниться, потом промис резолвится",
+        inputArgs: ["timer-not-starved"],
+        expected: "timer-first",
       },
       {
-        id: 'nodel-p7-t4',
-        inputDisplay: 'очередь [10] резолвится [10]',
-        inputArgs: ['single'],
-        expected: '[10]',
+        id: "nodel-p7-t4",
+        inputDisplay: "очередь [10] резолвится [10]",
+        inputArgs: ["single"],
+        expected: "[10]",
       },
     ],
     hints: [
-      'Посмотрите на ветку `if (queue.length === 0)`. Что должна делать функция, когда обрабатывать больше нечего?',
-      'Замените `queueMicrotask(step)` в этой ветке на `resolve(results)` — это завершит промис и не даст microtask checkpoint зависнуть.',
+      "Найди ветку, которая выполняется при пустой очереди. Что должна делать функция в этом случае — продолжать работу или завершаться?",
+      "Что конкретно мешает промису когда-либо зарезолвиться?",
     ],
     solutionCode: `function runWithDelay(initialQueue, work) {
   const queue = [...initialQueue];
@@ -653,11 +651,11 @@ console.log('F');`,
 }`,
   },
   {
-    kind: 'refactor',
-    id: 'nodel-p8',
-    topicId: 'node-event-loop',
-    title: 'Оптимизируй: батчинг тяжёлой обработки массива',
-    difficulty: 'medium',
+    kind: "refactor",
+    id: "nodel-p8",
+    topicId: "node-event-loop",
+    title: "Оптимизируй: батчинг тяжёлой обработки массива",
+    difficulty: "medium",
     isContextual: true,
     description: `Функция \`sumOfSquares(arr)\` корректна, но в текущем виде содержит вложенный цикл O(n²) и при больших массивах блокирует event loop на сотни миллисекунд.
 
@@ -667,7 +665,7 @@ console.log('F');`,
 3. Perf-тест на массиве из 50 000 элементов укладывался в 200 мс.
 
 Это типовая задача для Node.js-сервера: один такой запрос на горячем пути в исходном виде задержит обработку всех остальных соединений.`,
-    functionName: 'sumOfSquares',
+    functionName: "sumOfSquares",
     starterCode: `function sumOfSquares(arr) {
   // Корректно, но O(n²): для каждого элемента заново суммируем префикс.
   let total = 0;
@@ -684,20 +682,44 @@ console.log('F');`,
   return total;
 }`,
     testCases: [
-      { id: 'nodel-p8-t1', inputDisplay: 'sumOfSquares([])', inputArgs: [[]], expected: 0 },
-      { id: 'nodel-p8-t2', inputDisplay: 'sumOfSquares([1,2,3])', inputArgs: [[1, 2, 3]], expected: 14 },
-      { id: 'nodel-p8-t3', inputDisplay: 'sumOfSquares([5])', inputArgs: [[5]], expected: 25 },
-      { id: 'nodel-p8-t4', inputDisplay: 'sumOfSquares([1,1,1,1,1])', inputArgs: [[1, 1, 1, 1, 1]], expected: 5 },
-      { id: 'nodel-p8-t5', inputDisplay: 'sumOfSquares([10, -10])', inputArgs: [[10, -10]], expected: 200 },
+      {
+        id: "nodel-p8-t1",
+        inputDisplay: "sumOfSquares([])",
+        inputArgs: [[]],
+        expected: 0,
+      },
+      {
+        id: "nodel-p8-t2",
+        inputDisplay: "sumOfSquares([1,2,3])",
+        inputArgs: [[1, 2, 3]],
+        expected: 14,
+      },
+      {
+        id: "nodel-p8-t3",
+        inputDisplay: "sumOfSquares([5])",
+        inputArgs: [[5]],
+        expected: 25,
+      },
+      {
+        id: "nodel-p8-t4",
+        inputDisplay: "sumOfSquares([1,1,1,1,1])",
+        inputArgs: [[1, 1, 1, 1, 1]],
+        expected: 5,
+      },
+      {
+        id: "nodel-p8-t5",
+        inputDisplay: "sumOfSquares([10, -10])",
+        inputArgs: [[10, -10]],
+        expected: 200,
+      },
     ],
     perfTest: {
       inputArgs: [Array.from({ length: 50000 }, (_, i) => i + 1)],
       maxMs: 200,
     },
     hints: [
-      'Префиксная сумма не нужна для результата — это «лишний» вложенный цикл, который и даёт O(n²).',
-      'Оставьте только один проход: на каждой итерации добавляйте `arr[i] * arr[i]` к total.',
-      'В реальном сервере, если бы тяжёлая логика была обоснована, её разбили бы на чанки через `setImmediate` (или `setTimeout(0)` в браузере), чтобы не блокировать event loop. Здесь достаточно убрать лишний цикл.',
+      "Как часто вычисляется каждое значение `arr[i] * arr[i]`? Нужно ли для этого отдельный вспомогательный массив?",
+      "Есть ли лишняя работа, которую алгоритм делает на каждой итерации?",
     ],
     solutionCode: `function sumOfSquares(arr) {
   let total = 0;
@@ -708,11 +730,11 @@ console.log('F');`,
 }`,
   },
   {
-    id: 'nodel-easy1',
-    topicId: 'node-event-loop',
-    kind: 'predict-output',
-    title: 'Предскажи вывод: process.nextTick vs setImmediate vs setTimeout',
-    difficulty: 'easy',
+    id: "nodel-easy1",
+    topicId: "node-event-loop",
+    kind: "predict-output",
+    title: "Предскажи вывод: process.nextTick vs setImmediate vs setTimeout",
+    difficulty: "easy",
     isContextual: false,
     description: `Это базовый вопрос про приоритеты в event loop Node.js. Что выведет этот код?
 
@@ -721,7 +743,7 @@ console.log('F');`,
 setImmediate(() => console.log(2));
 process.nextTick(() => console.log(3));
 console.log(4);`,
-    expected: '4\n3\n1\n2',
+    expected: "4\n3\n1\n2",
     hints: [
       'Синхронный код выполняется первым: console.log(4) → "4".',
       'process.nextTick — очередь nextTick, выполняется сразу после текущей операции, до I/O фаз: → "3".',
@@ -731,14 +753,14 @@ console.log(4);`,
 // 2. nextTick очередь (приоритет выше timers): → "3"
 // 3. Timers фаза (setTimeout 0): → "1"
 // 4. Check фаза (setImmediate): → "2"`,
-    acceptable: ['4\n3\n2\n1'],
+    acceptable: ["4\n3\n2\n1"],
   },
   {
-    id: 'nodel-h1',
-    topicId: 'node-event-loop',
-    kind: 'predict-output',
-    title: 'Предскажи вывод: вложенные nextTick и Promise в Node.js',
-    difficulty: 'hard',
+    id: "nodel-h1",
+    topicId: "node-event-loop",
+    kind: "predict-output",
+    title: "Предскажи вывод: вложенные nextTick и Promise в Node.js",
+    difficulty: "hard",
     isContextual: false,
     description: `Внимательно проследите порядок: вложенный \`process.nextTick\`, промис и \`setImmediate\` в Node.js.
 
@@ -756,7 +778,7 @@ process.nextTick(() => {
 setImmediate(() => console.log(5));
 
 console.log(6);`,
-    expected: '6\n3\n4\n1\n2\n5',
+    expected: "6\n3\n4\n1\n2\n5",
     hints: [
       'Синхронно: "6". nextTick-очередь выполняется до microtask-очереди в Node.js.',
       'nextTick: "3". nextTick внутри nextTick добавляется в конец той же очереди: "4".',
@@ -773,11 +795,11 @@ console.log(6);`,
 // 6. check фаза (setImmediate): "5"`,
   },
   {
-    id: 'nodel-h2',
-    topicId: 'node-event-loop',
-    kind: 'implement',
-    title: 'AsyncQueue — очередь с ограничением параллелизма',
-    difficulty: 'hard',
+    id: "nodel-h2",
+    topicId: "node-event-loop",
+    kind: "implement",
+    title: "AsyncQueue — очередь с ограничением параллелизма",
+    difficulty: "hard",
     isContextual: false,
     description: `Реализуйте класс \`AsyncQueue\`, который обрабатывает задачи с ограниченным параллелизмом, используя механику event loop Node.js.
 
@@ -792,7 +814,7 @@ console.log(6);`,
 const q = new AsyncQueue(2);
 q.push(async () => 'result'); // вернёт Promise<'result'>
 \`\`\``,
-    functionName: 'AsyncQueue_test',
+    functionName: "AsyncQueue_test",
     starterCode: `class AsyncQueue {
   constructor(concurrency) {
     // ваш код
@@ -811,15 +833,34 @@ q.push(async () => 'result'); // вернёт Promise<'result'>
   }
 }`,
     testCases: [
-      { id: 'nodel-h2-t1', inputDisplay: 'задача выполняется и возвращает результат', inputArgs: ['basic'], expected: 'hello' },
-      { id: 'nodel-h2-t2', inputDisplay: 'параллелизм ограничен', inputArgs: ['concurrency'], expected: true },
-      { id: 'nodel-h2-t3', inputDisplay: 'pause/resume работают', inputArgs: ['pause-resume'], expected: true },
-      { id: 'nodel-h2-t4', inputDisplay: 'результаты возвращаются в промисах', inputArgs: ['multi-results'], expected: [1,2,3] },
+      {
+        id: "nodel-h2-t1",
+        inputDisplay: "задача выполняется и возвращает результат",
+        inputArgs: ["basic"],
+        expected: "hello",
+      },
+      {
+        id: "nodel-h2-t2",
+        inputDisplay: "параллелизм ограничен",
+        inputArgs: ["concurrency"],
+        expected: true,
+      },
+      {
+        id: "nodel-h2-t3",
+        inputDisplay: "pause/resume работают",
+        inputArgs: ["pause-resume"],
+        expected: true,
+      },
+      {
+        id: "nodel-h2-t4",
+        inputDisplay: "результаты возвращаются в промисах",
+        inputArgs: ["multi-results"],
+        expected: [1, 2, 3],
+      },
     ],
     hints: [
-      'Аналог Scheduler из js-event-loop, но с методами pause/resume.',
-      'Добавьте флаг `paused`. Метод `_tick()` запускает задачи из очереди если !paused && active < concurrency.',
-      'pause() выставляет paused=true. resume() сбрасывает и вызывает _tick() несколько раз.',
+      "Кроме лимита параллелизма, нужно контролировать паузу. Что нужно проверять перед запуском следующей задачи?",
+      "pause() и resume() меняют состояние. Что должен делать resume(), помимо снятия паузы?",
     ],
     solutionCode: `class AsyncQueue {
   constructor(concurrency) {

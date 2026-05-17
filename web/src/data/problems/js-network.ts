@@ -396,38 +396,15 @@ async function load(status) {
   {
     id: 'jsn-p2',
     topicId: 'js-network',
-    title: 'searchClient — race condition в поиске',
+    title: 'searchClient — поиск иногда показывает устаревший результат',
     difficulty: 'medium',
     isContextual: true,
     kind: 'find-bug',
-    description: `Реализован клиент поиска: при каждом нажатии клавиши вызывается \`search(query)\`, который дёргает мок \`api(query)\` и кладёт результат в \`state.lastResult\`.
+    description: `Реализован клиент поиска: при каждом вызове \`search(query)\` выполняется запрос к \`api(query)\`, а результат сохраняется в \`state.lastResult\`.
 
-В коде есть **race condition**: если ответ для предыдущего запроса приходит **позже**, чем ответ для нового, состояние затирается устаревшими данными. Найдите и исправьте баг.
+Проблема: если быстро вызвать \`search\` несколько раз подряд, в \`state.lastResult\` может оказаться результат не последнего, а более раннего вызова. Найдите причину и исправьте.
 
-Контракт:
-- При каждом вызове \`search(query)\` нужно отменять/игнорировать результат предыдущего вызова.
-- В \`state.lastResult\` всегда лежит результат **последнего** вызова \`search\`.
-- Тестовый раннер вызывает \`search('a')\` (медленный, 30 мс) и сразу \`search('ab')\` (быстрый, 5 мс), затем ждёт 60 мс и читает \`state.lastResult\`. Должно быть значение для 'ab', а не для 'a'.
-
-\`\`\`js
-const state = { lastResult: null };
-
-function api(query) {
-  // Мок: для 'a' имитирует медленный ответ.
-  const delay = query === 'a' ? 30 : 5;
-  return new Promise((resolve) => {
-    setTimeout(() => resolve('result-' + query), delay);
-  });
-}
-
-// 🐞 Баг здесь:
-async function search(query) {
-  const result = await api(query);
-  state.lastResult = result; // затирает состояние, даже если уже не актуально
-}
-\`\`\`
-
-Подсказка: используйте счётчик последнего запроса или храните ссылку на «активный» ID.`,
+Контракт: в \`state.lastResult\` всегда должен лежать результат **последнего** вызова \`search\`.`,
     buggyCode: `const state = { lastResult: null };
 
 function api(query) {
@@ -465,9 +442,8 @@ async function search(query) {
       },
     ],
     hints: [
-      'Заведите счётчик `let activeId = 0`. На входе: `const myId = ++activeId`.',
-      'После `await api(query)` проверяйте `if (myId !== activeId) return;` — мы устарели.',
-      'Альтернатива — AbortController, но для мока проще монотонный счётчик.',
+      'Запросы выполняются с разной скоростью. Как узнать, является ли конкретный ответ всё ещё «актуальным» к моменту его получения?',
+      'Как игнорировать результат запроса, если после него уже был запущен более свежий?',
     ],
     solutionCode: `const state = { lastResult: null };
 

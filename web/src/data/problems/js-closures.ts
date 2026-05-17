@@ -1,12 +1,12 @@
-import type { Problem } from '../../types/problem';
+import type { Problem } from "../../types/problem";
 
 export const jsClosuresProblems: Problem[] = [
   {
-    kind: 'predict-output',
-    id: 'jsc-p6',
-    topicId: 'js-closures',
-    title: 'Угадай вывод: счётчик и независимые замыкания',
-    difficulty: 'easy',
+    kind: "predict-output",
+    id: "jsc-p6",
+    topicId: "js-closures",
+    title: "Определи вывод: счётчик и независимые замыкания",
+    difficulty: "easy",
     isContextual: false,
     description: `Что выведет этот код по строкам? Введи каждую строку в отдельной строчке поля ответа.`,
     code: `function makeCounter() {
@@ -21,23 +21,23 @@ console.log(a()); // ?
 console.log(a()); // ?
 console.log(b()); // ?
 console.log(a()); // ?`,
-    expected: '1\n2\n1\n3',
+    expected: "1\n2\n1\n3",
     hints: [
-      'Каждый вызов makeCounter() создаёт свой замыкание со своей переменной n.',
-      'a и b независимы. Прибавляй к каждому только то, что относится к нему.',
+      "Каждый вызов makeCounter() порождает отдельное замыкание. Что это означает для переменной n?",
+      "Следи за состоянием a и b независимо — они никогда не пересекаются.",
     ],
     solutionCode: `// a имеет свой n=0; вызовы a(): 1, 2, ..., 3.
 // b имеет свой n=0; первый вызов b(): 1.
 // a и b не пересекаются — это и есть смысл замыкания.`,
   },
   {
-    kind: 'find-bug',
-    id: 'jsc-p7',
-    topicId: 'js-closures',
-    title: 'Найди баг: счётчики в цикле',
-    difficulty: 'easy',
+    kind: "find-bug",
+    id: "jsc-p7",
+    topicId: "js-closures",
+    title: "Найди баг: счётчики в цикле",
+    difficulty: "easy",
     isContextual: false,
-    sourceBugHuntId: 'bh-01',
+    sourceBugHuntId: "bh-01",
     description: `Эта функция должна возвращать массив из 5 функций, где \`fns[i]() === i\`. Но что-то не так. Найди баг и почини, чтобы все 5 тестов прошли.`,
     buggyCode: `function getCounterFns() {
   const fns = [];
@@ -48,19 +48,44 @@ console.log(a()); // ?`,
   }
   return fns;
 }`,
-    functionName: 'jsc_p7_test',
+    functionName: "jsc_p7_test",
     bugSummary:
-      '`var` создаёт одну переменную на весь цикл, и все пять функций замыкаются на неё. К моменту вызова цикл завершён и `i === 5`. Решение — заменить `var` на `let`: каждая итерация получит свой binding.',
+      "`var` создаёт одну переменную на весь цикл, и все пять функций замыкаются на неё. К моменту вызова цикл завершён и `i === 5`. Решение — заменить `var` на `let`: каждая итерация получит свой binding.",
     testCases: [
-      { id: 'jsc-p7-t1', inputDisplay: 'fns[0]()', inputArgs: [0], expected: 0 },
-      { id: 'jsc-p7-t2', inputDisplay: 'fns[1]()', inputArgs: [1], expected: 1 },
-      { id: 'jsc-p7-t3', inputDisplay: 'fns[2]()', inputArgs: [2], expected: 2 },
-      { id: 'jsc-p7-t4', inputDisplay: 'fns[3]()', inputArgs: [3], expected: 3 },
-      { id: 'jsc-p7-t5', inputDisplay: 'fns[4]()', inputArgs: [4], expected: 4 },
+      {
+        id: "jsc-p7-t1",
+        inputDisplay: "fns[0]()",
+        inputArgs: [0],
+        expected: 0,
+      },
+      {
+        id: "jsc-p7-t2",
+        inputDisplay: "fns[1]()",
+        inputArgs: [1],
+        expected: 1,
+      },
+      {
+        id: "jsc-p7-t3",
+        inputDisplay: "fns[2]()",
+        inputArgs: [2],
+        expected: 2,
+      },
+      {
+        id: "jsc-p7-t4",
+        inputDisplay: "fns[3]()",
+        inputArgs: [3],
+        expected: 3,
+      },
+      {
+        id: "jsc-p7-t5",
+        inputDisplay: "fns[4]()",
+        inputArgs: [4],
+        expected: 4,
+      },
     ],
     hints: [
-      'Подумай, какую область видимости создаёт `var` и какую — `let` в цикле for.',
-      'Замени один символ — этого достаточно.',
+      "Подумай, какую область видимости создаёт `var` в цикле `for` и чем она отличается от блочной.",
+      "В ES6 появилось ключевое слово, которое даёт переменной блочную область видимости.",
     ],
     solutionCode: `function getCounterFns() {
   const fns = [];
@@ -74,33 +99,43 @@ console.log(a()); // ?`,
     testHelperCode: `function jsc_p7_test(i) { return getCounterFns()[i](); }`,
   },
   {
-    kind: 'refactor',
-    id: 'jsc-p8',
-    topicId: 'js-closures',
-    title: 'Оптимизируй: мемоизация Фибоначчи',
-    difficulty: 'medium',
+    kind: "refactor",
+    id: "jsc-p8",
+    topicId: "js-closures",
+    title: "Оптимизируй: мемоизация Фибоначчи",
+    difficulty: "medium",
     isContextual: false,
     description: `Дан наивный рекурсивный fib(n) — он работает, но при n=40 мучительно медленный (~165 млн рекурсивных вызовов).
 
 Перепиши через замыкание + кеш так, чтобы \`fib(40)\` выполнялся быстрее 200 мс. Сигнатура функции — \`fib(n)\` — должна остаться.
 
 Tip: можно использовать вспомогательное замыкание или \`Map\`-кеш на уровне модуля.`,
-    functionName: 'fib',
+    functionName: "fib",
     starterCode: `function fib(n) {
   if (n < 2) return n;
   return fib(n - 1) + fib(n - 2);
 }`,
     testCases: [
-      { id: 'jsc-p8-t1', inputDisplay: 'fib(0)', inputArgs: [0], expected: 0 },
-      { id: 'jsc-p8-t2', inputDisplay: 'fib(1)', inputArgs: [1], expected: 1 },
-      { id: 'jsc-p8-t3', inputDisplay: 'fib(10)', inputArgs: [10], expected: 55 },
-      { id: 'jsc-p8-t4', inputDisplay: 'fib(20)', inputArgs: [20], expected: 6765 },
+      { id: "jsc-p8-t1", inputDisplay: "fib(0)", inputArgs: [0], expected: 0 },
+      { id: "jsc-p8-t2", inputDisplay: "fib(1)", inputArgs: [1], expected: 1 },
+      {
+        id: "jsc-p8-t3",
+        inputDisplay: "fib(10)",
+        inputArgs: [10],
+        expected: 55,
+      },
+      {
+        id: "jsc-p8-t4",
+        inputDisplay: "fib(20)",
+        inputArgs: [20],
+        expected: 6765,
+      },
     ],
     perfTest: { inputArgs: [40], maxMs: 200 },
     hints: [
-      'Создай Map-кеш в замыкании. На каждый n проверяй кеш перед рекурсией.',
-      'Рекурсия должна вызывать ту же мемоизированную функцию, иначе кеш не сработает.',
-      'Альтернатива — итеративный вариант с двумя переменными a, b. Тоже укладывается легко.',
+      "Попробуй вручную посчитать, сколько раз вычисляется fib(5) при наивном fib(7). Чем больше n, тем хуже.",
+      "Если кешировать уже вычисленные значения, повторный вызов превращается в простой lookup.",
+      "Убедись, что внутри рекурсии вызывается именно «умная» версия функции, а не исходная.",
     ],
     solutionCode: `const fib = (() => {
   const cache = new Map([[0, 0], [1, 1]]);
@@ -114,10 +149,10 @@ Tip: можно использовать вспомогательное замы
 })();`,
   },
   {
-    id: 'jsc-p1',
-    topicId: 'js-closures',
-    title: 'Счётчик с замыканием',
-    difficulty: 'easy',
+    id: "jsc-p1",
+    topicId: "js-closures",
+    title: "Счётчик с замыканием",
+    difficulty: "easy",
     isContextual: false,
     description: `Напишите функцию \`createCounter()\`, которая возвращает объект с тремя методами:
 - \`increment()\` — увеличивает счётчик на 1
@@ -134,46 +169,45 @@ c.increment(); // count = 2
 c.decrement(); // count = 1
 c.getCount();  // → 1
 \`\`\``,
-    functionName: 'createCounter_test',
+    functionName: "createCounter_test",
     starterCode: `function createCounter() {
   // ваш код
 }`,
     testCases: [
       {
-        id: 'jsc-p1-t1',
-        inputDisplay: 'c.increment() × 2, getCount()',
-        inputArgs: ['increment-2'],
+        id: "jsc-p1-t1",
+        inputDisplay: "c.increment() × 2, getCount()",
+        inputArgs: ["increment-2"],
         expected: 2,
       },
       {
-        id: 'jsc-p1-t2',
-        inputDisplay: 'c.increment() × 3, decrement() × 1, getCount()',
-        inputArgs: ['increment-3-decrement-1'],
+        id: "jsc-p1-t2",
+        inputDisplay: "c.increment() × 3, decrement() × 1, getCount()",
+        inputArgs: ["increment-3-decrement-1"],
         expected: 2,
       },
       {
-        id: 'jsc-p1-t3',
-        inputDisplay: 'c.getCount() без вызовов',
-        inputArgs: ['zero'],
+        id: "jsc-p1-t3",
+        inputDisplay: "c.getCount() без вызовов",
+        inputArgs: ["zero"],
         expected: 0,
       },
       {
-        id: 'jsc-p1-t4',
-        inputDisplay: 'c.decrement() × 1, getCount()',
-        inputArgs: ['decrement-1'],
+        id: "jsc-p1-t4",
+        inputDisplay: "c.decrement() × 1, getCount()",
+        inputArgs: ["decrement-1"],
         expected: -1,
       },
       {
-        id: 'jsc-p1-t5',
-        inputDisplay: 'два независимых счётчика не влияют друг на друга',
-        inputArgs: ['independent'],
+        id: "jsc-p1-t5",
+        inputDisplay: "два независимых счётчика не влияют друг на друга",
+        inputArgs: ["independent"],
         expected: true,
       },
     ],
     hints: [
-      'Объявите переменную `count` внутри функции. Методы объекта, имея доступ к этой переменной, образуют замыкание.',
-      'Возвращайте объект с методами `increment`, `decrement` и `getCount`. Все они будут "видеть" одну и ту же переменную `count`.',
-      'Для теста независимости создайте два счётчика и убедитесь, что их состояния не пересекаются.',
+      "Как сделать переменную, которую видят все три метода, но которая недоступна снаружи функции?",
+      "Функция может возвращать объект. Методы этого объекта имеют доступ к переменным, объявленным в той же функции.",
     ],
     solutionCode: `function createCounter() {
   let count = 0;
@@ -204,10 +238,10 @@ c.getCount();  // → 1
 }`,
   },
   {
-    id: 'jsc-p2',
-    topicId: 'js-closures',
-    title: 'Мемоизация функции',
-    difficulty: 'easy',
+    id: "jsc-p2",
+    topicId: "js-closures",
+    title: "Мемоизация функции",
+    difficulty: "easy",
     isContextual: false,
     description: `Напишите функцию \`memoize(fn)\`, которая принимает функцию \`fn\` и возвращает её мемоизированную версию.
 
@@ -226,46 +260,46 @@ fast(4);  // → 16, callCount = 1 (из кеша)
 fast(5);  // → 25, callCount = 2
 fast(5);  // → 25, callCount = 2 (из кеша)
 \`\`\``,
-    functionName: 'memoize_test',
+    functionName: "memoize_test",
     starterCode: `function memoize(fn) {
   // ваш код
 }`,
     testCases: [
       {
-        id: 'jsc-p2-t1',
-        inputDisplay: 'memoize(fn)(4) дважды — fn вызвана 1 раз',
-        inputArgs: ['call-twice-same'],
+        id: "jsc-p2-t1",
+        inputDisplay: "memoize(fn)(4) дважды — fn вызвана 1 раз",
+        inputArgs: ["call-twice-same"],
         expected: 1,
       },
       {
-        id: 'jsc-p2-t2',
-        inputDisplay: 'memoize(fn)(4), (5) — fn вызвана 2 раза',
-        inputArgs: ['call-diff'],
+        id: "jsc-p2-t2",
+        inputDisplay: "memoize(fn)(4), (5) — fn вызвана 2 раза",
+        inputArgs: ["call-diff"],
         expected: 2,
       },
       {
-        id: 'jsc-p2-t3',
-        inputDisplay: 'memoize(fn)(4) возвращает корректный результат',
-        inputArgs: ['result-4'],
+        id: "jsc-p2-t3",
+        inputDisplay: "memoize(fn)(4) возвращает корректный результат",
+        inputArgs: ["result-4"],
         expected: 16,
       },
       {
-        id: 'jsc-p2-t4',
-        inputDisplay: 'разные экземпляры memoize независимы',
-        inputArgs: ['independent'],
+        id: "jsc-p2-t4",
+        inputDisplay: "разные экземпляры memoize независимы",
+        inputArgs: ["independent"],
         expected: true,
       },
       {
-        id: 'jsc-p2-t5',
-        inputDisplay: 'аргументы (1,2) и (2,1) — разные ключи кеша',
-        inputArgs: ['order-matters'],
+        id: "jsc-p2-t5",
+        inputDisplay: "аргументы (1,2) и (2,1) — разные ключи кеша",
+        inputArgs: ["order-matters"],
         expected: true,
       },
     ],
     hints: [
-      'Создайте Map или объект внутри `memoize` для хранения кеша — это будет замыкание.',
-      'Ключ кеша — сериализованные аргументы: `JSON.stringify(args)`. Это работает для примитивов и массивов.',
-      'Возвращаемая функция должна: 1) проверить кеш, 2) если есть — вернуть, 3) если нет — вызвать fn, сохранить и вернуть результат.',
+      "Нужно хранить результаты предыдущих вызовов. Какая структура данных подходит для хранения пар «вход → результат»?",
+      "Как превратить произвольный набор аргументов в один уникальный ключ?",
+      "Порядок действий при каждом вызове: сначала проверить кеш, и только при промахе — обратиться к оригинальной функции.",
     ],
     solutionCode: `function memoize(fn) {
   const cache = new Map();
@@ -301,10 +335,10 @@ fast(5);  // → 25, callCount = 2 (из кеша)
 }`,
   },
   {
-    id: 'jsc-p3',
-    topicId: 'js-closures',
-    title: 'once — однократный вызов',
-    difficulty: 'easy',
+    id: "jsc-p3",
+    topicId: "js-closures",
+    title: "once — однократный вызов",
+    difficulty: "easy",
     isContextual: false,
     description: `Напишите функцию \`once(fn)\`, которая возвращает обёртку над \`fn\`.
 Обёртка гарантирует, что \`fn\` будет вызвана **не более одного раза**.
@@ -321,46 +355,45 @@ fn(); // → 1 (fn не вызвана снова)
 fn(); // → 1
 count; // → 1 — fn вызвана ровно один раз
 \`\`\``,
-    functionName: 'once_test',
+    functionName: "once_test",
     starterCode: `function once(fn) {
   // ваш код
 }`,
     testCases: [
       {
-        id: 'jsc-p3-t1',
-        inputDisplay: 'fn вызвана 3 раза, оригинал выполнен 1 раз',
-        inputArgs: ['call-count'],
+        id: "jsc-p3-t1",
+        inputDisplay: "fn вызвана 3 раза, оригинал выполнен 1 раз",
+        inputArgs: ["call-count"],
         expected: 1,
       },
       {
-        id: 'jsc-p3-t2',
-        inputDisplay: 'возвращает результат первого вызова при повторных',
-        inputArgs: ['return-value'],
+        id: "jsc-p3-t2",
+        inputDisplay: "возвращает результат первого вызова при повторных",
+        inputArgs: ["return-value"],
         expected: 42,
       },
       {
-        id: 'jsc-p3-t3',
-        inputDisplay: 'работает с аргументами первого вызова',
-        inputArgs: ['with-args'],
+        id: "jsc-p3-t3",
+        inputDisplay: "работает с аргументами первого вызова",
+        inputArgs: ["with-args"],
         expected: 10,
       },
       {
-        id: 'jsc-p3-t4',
-        inputDisplay: 'разные экземпляры once независимы',
-        inputArgs: ['independent'],
+        id: "jsc-p3-t4",
+        inputDisplay: "разные экземпляры once независимы",
+        inputArgs: ["independent"],
         expected: true,
       },
       {
-        id: 'jsc-p3-t5',
-        inputDisplay: 'второй вызов с другими аргументами игнорирует их',
-        inputArgs: ['ignore-args'],
+        id: "jsc-p3-t5",
+        inputDisplay: "второй вызов с другими аргументами игнорирует их",
+        inputArgs: ["ignore-args"],
         expected: 5,
       },
     ],
     hints: [
-      'Нужно два флага: `called` (bool) и `result` — хранятся в замыкании.',
-      'При первом вызове: установить `called = true`, выполнить `fn`, сохранить и вернуть результат.',
-      'При повторных вызовах: `called === true` — просто вернуть `result`, не вызывая fn.',
+      "Функция-обёртка должна «помнить» между вызовами, выполнялась ли уже оригинальная функция.",
+      "Что нужно сохранить после первого вызова, чтобы при повторных вернуть то же значение без повторного выполнения?",
     ],
     solutionCode: `function once(fn) {
   let called = false;
@@ -403,10 +436,10 @@ count; // → 1 — fn вызвана ровно один раз
 }`,
   },
   {
-    id: 'jsc-p4',
-    topicId: 'js-closures',
-    title: 'makeAdder — частичное применение',
-    difficulty: 'easy',
+    id: "jsc-p4",
+    topicId: "js-closures",
+    title: "makeAdder — частичное применение",
+    difficulty: "easy",
     isContextual: false,
     description: `Напишите функцию \`makeAdder(x)\`, которая возвращает функцию, прибавляющую \`x\` к своему аргументу.
 
@@ -422,45 +455,45 @@ add5(7);   // → 12
 add10(3);  // → 13
 add10(-5); // → 5
 \`\`\``,
-    functionName: 'makeAdder_test',
+    functionName: "makeAdder_test",
     starterCode: `function makeAdder(x) {
   // ваш код
 }`,
     testCases: [
       {
-        id: 'jsc-p4-t1',
-        inputDisplay: 'makeAdder(5)(3)',
+        id: "jsc-p4-t1",
+        inputDisplay: "makeAdder(5)(3)",
         inputArgs: [5, 3],
         expected: 8,
       },
       {
-        id: 'jsc-p4-t2',
-        inputDisplay: 'makeAdder(10)(-5)',
+        id: "jsc-p4-t2",
+        inputDisplay: "makeAdder(10)(-5)",
         inputArgs: [10, -5],
         expected: 5,
       },
       {
-        id: 'jsc-p4-t3',
-        inputDisplay: 'makeAdder(0)(100)',
+        id: "jsc-p4-t3",
+        inputDisplay: "makeAdder(0)(100)",
         inputArgs: [0, 100],
         expected: 100,
       },
       {
-        id: 'jsc-p4-t4',
-        inputDisplay: 'makeAdder(-3)(3)',
+        id: "jsc-p4-t4",
+        inputDisplay: "makeAdder(-3)(3)",
         inputArgs: [-3, 3],
         expected: 0,
       },
       {
-        id: 'jsc-p4-t5',
-        inputDisplay: 'makeAdder(7)(7)',
+        id: "jsc-p4-t5",
+        inputDisplay: "makeAdder(7)(7)",
         inputArgs: [7, 7],
         expected: 14,
       },
     ],
     hints: [
       '`makeAdder` возвращает функцию. Внутренняя функция "видит" `x` из замыкания.',
-      'Это простейшая форма каррирования: разделить функцию двух аргументов на две функции одного аргумента каждая.',
+      "Это простейшая форма каррирования: разделить функцию двух аргументов на две функции одного аргумента каждая.",
     ],
     solutionCode: `function makeAdder(x) {
   return function(y) {
@@ -470,11 +503,11 @@ add10(-5); // → 5
     testHelperCode: `function makeAdder_test(x, y) { return makeAdder(x)(y); }`,
   },
   {
-    kind: 'find-bug',
-    id: 'jsc-p5',
-    topicId: 'js-closures',
-    title: 'Найди баг: стек с общим состоянием',
-    difficulty: 'easy',
+    kind: "find-bug",
+    id: "jsc-p5",
+    topicId: "js-closures",
+    title: "Найди баг: стек с общим состоянием",
+    difficulty: "easy",
     isContextual: false,
     description: `Функция \`makeStack()\` должна создавать **независимые** стеки. Но сейчас все экземпляры делят одно и то же состояние — операции в одном стеке влияют на другой.
 
@@ -489,19 +522,44 @@ function makeStack() {
     size()   { return items.length; },
   };
 }`,
-    functionName: 'jsc_p5_test',
+    functionName: "jsc_p5_test",
     bugSummary:
-      '`items` объявлен вне `makeStack` — все экземпляры разделяют один и тот же массив. Решение: перенести `const items = []` внутрь `makeStack`, чтобы каждый вызов создавал замыкание со своим массивом.',
+      "`items` объявлен вне `makeStack` — все экземпляры разделяют один и тот же массив. Решение: перенести `const items = []` внутрь `makeStack`, чтобы каждый вызов создавал замыкание со своим массивом.",
     testCases: [
-      { id: 'jsc-p5-t1', inputDisplay: 'push(1), push(2) → size() = 2', inputArgs: ['size'], expected: 2 },
-      { id: 'jsc-p5-t2', inputDisplay: 'push("a") → pop() = "a"', inputArgs: ['pop'], expected: 'a' },
-      { id: 'jsc-p5-t3', inputDisplay: 'push(42) → peek() = 42, size не изменился', inputArgs: ['peek'], expected: true },
-      { id: 'jsc-p5-t4', inputDisplay: 'два независимых стека не влияют друг на друга', inputArgs: ['independent'], expected: true },
-      { id: 'jsc-p5-t5', inputDisplay: 'пустой стек → size() = 0', inputArgs: ['empty'], expected: 0 },
+      {
+        id: "jsc-p5-t1",
+        inputDisplay: "push(1), push(2) → size() = 2",
+        inputArgs: ["size"],
+        expected: 2,
+      },
+      {
+        id: "jsc-p5-t2",
+        inputDisplay: 'push("a") → pop() = "a"',
+        inputArgs: ["pop"],
+        expected: "a",
+      },
+      {
+        id: "jsc-p5-t3",
+        inputDisplay: "push(42) → peek() = 42, size не изменился",
+        inputArgs: ["peek"],
+        expected: true,
+      },
+      {
+        id: "jsc-p5-t4",
+        inputDisplay: "два независимых стека не влияют друг на друга",
+        inputArgs: ["independent"],
+        expected: true,
+      },
+      {
+        id: "jsc-p5-t5",
+        inputDisplay: "пустой стек → size() = 0",
+        inputArgs: ["empty"],
+        expected: 0,
+      },
     ],
     hints: [
-      'Посмотри, где объявлен `items`. Переменная в глобальной области видимости доступна всем вызовам функции.',
-      'Замыкание должно захватывать переменную, созданную при вызове функции — перемести объявление внутрь `makeStack`.',
+      "Найди, где объявлен `items`. Какую область видимости он имеет относительно функции `makeStack`?",
+      "Должно ли хранилище стека существовать до первого вызова `makeStack`, или создаваться при каждом вызове?",
     ],
     solutionCode: `function makeStack() {
   const items = [];
@@ -532,11 +590,11 @@ function makeStack() {
 }`,
   },
   {
-    id: 'jsc-h1',
-    topicId: 'js-closures',
-    kind: 'implement',
-    title: 'curry — вариадическое каррирование',
-    difficulty: 'hard',
+    id: "jsc-h1",
+    topicId: "js-closures",
+    kind: "implement",
+    title: "curry — вариадическое каррирование",
+    difficulty: "hard",
     isContextual: false,
     description: `Реализуйте функцию \`curry(fn)\`, которая возвращает каррированную версию \`fn\`.
 
@@ -554,21 +612,46 @@ add(1, 2, 3)    // → 6
 const addTo10 = add(10);
 addTo10(5)(2)   // → 17
 \`\`\``,
-    functionName: 'curry_test',
+    functionName: "curry_test",
     starterCode: `function curry(fn) {
   // ваш код
 }`,
     testCases: [
-      { id: 'jsc-h1-t1', inputDisplay: 'add(1)(2)(3)', inputArgs: ['one-by-one'], expected: 6 },
-      { id: 'jsc-h1-t2', inputDisplay: 'add(1,2)(3)', inputArgs: ['partial-2-1'], expected: 6 },
-      { id: 'jsc-h1-t3', inputDisplay: 'add(1)(2,3)', inputArgs: ['partial-1-2'], expected: 6 },
-      { id: 'jsc-h1-t4', inputDisplay: 'add(1,2,3)', inputArgs: ['all-at-once'], expected: 6 },
-      { id: 'jsc-h1-t5', inputDisplay: 'частично применённая функция переиспользуется', inputArgs: ['reuse'], expected: [17, 12] },
+      {
+        id: "jsc-h1-t1",
+        inputDisplay: "add(1)(2)(3)",
+        inputArgs: ["one-by-one"],
+        expected: 6,
+      },
+      {
+        id: "jsc-h1-t2",
+        inputDisplay: "add(1,2)(3)",
+        inputArgs: ["partial-2-1"],
+        expected: 6,
+      },
+      {
+        id: "jsc-h1-t3",
+        inputDisplay: "add(1)(2,3)",
+        inputArgs: ["partial-1-2"],
+        expected: 6,
+      },
+      {
+        id: "jsc-h1-t4",
+        inputDisplay: "add(1,2,3)",
+        inputArgs: ["all-at-once"],
+        expected: 6,
+      },
+      {
+        id: "jsc-h1-t5",
+        inputDisplay: "частично применённая функция переиспользуется",
+        inputArgs: ["reuse"],
+        expected: [17, 12],
+      },
     ],
     hints: [
-      'Внутри curry возвращайте рекурсивную функцию curried. Она собирает аргументы в массив.',
-      'Если накопленных аргументов >= fn.length — вызывайте fn.apply(this, args).',
-      'Иначе — возвращайте новую функцию, которая принимает ещё аргументы и объединяет их с уже собранными: curried(...prevArgs, ...newArgs).',
+      "Как накапливать аргументы между вызовами, не зная заранее, когда их станет достаточно?",
+      "Что является критерием «достаточности» аргументов — когда пора вызывать оригинальную функцию?",
+      "Если аргументов пока не хватает — что нужно вернуть, чтобы можно было передать ещё?",
     ],
     solutionCode: `function curry(fn) {
   return function curried(...args) {
@@ -593,11 +676,11 @@ addTo10(5)(2)   // → 17
 }`,
   },
   {
-    id: 'jsc-h2',
-    topicId: 'js-closures',
-    kind: 'implement',
-    title: 'pipe и compose — конвейер функций',
-    difficulty: 'hard',
+    id: "jsc-h2",
+    topicId: "js-closures",
+    kind: "implement",
+    title: "pipe и compose — конвейер функций",
+    difficulty: "hard",
     isContextual: false,
     description: `Реализуйте две функции:
 
@@ -619,7 +702,7 @@ pipe(double, inc, square)(3)    // → 49  ((3*2+1)² = 7² = 49)
 compose(square, inc, double)(3) // → 49  (square(inc(double(3))))
 pipe()(5)                       // → 5
 \`\`\``,
-    functionName: 'pipecompose_test',
+    functionName: "pipecompose_test",
     starterCode: `function pipe(...fns) {
   // ваш код
 }
@@ -628,16 +711,41 @@ function compose(...fns) {
   // ваш код
 }`,
     testCases: [
-      { id: 'jsc-h2-t1', inputDisplay: 'pipe(double,inc,square)(3)', inputArgs: ['pipe-3'], expected: 49 },
-      { id: 'jsc-h2-t2', inputDisplay: 'compose(square,inc,double)(3)', inputArgs: ['compose-3'], expected: 49 },
-      { id: 'jsc-h2-t3', inputDisplay: 'pipe()(5) → identity', inputArgs: ['pipe-empty'], expected: 5 },
-      { id: 'jsc-h2-t4', inputDisplay: 'compose()(5) → identity', inputArgs: ['compose-empty'], expected: 5 },
-      { id: 'jsc-h2-t5', inputDisplay: 'pipe с одной функцией', inputArgs: ['pipe-single'], expected: 6 },
+      {
+        id: "jsc-h2-t1",
+        inputDisplay: "pipe(double,inc,square)(3)",
+        inputArgs: ["pipe-3"],
+        expected: 49,
+      },
+      {
+        id: "jsc-h2-t2",
+        inputDisplay: "compose(square,inc,double)(3)",
+        inputArgs: ["compose-3"],
+        expected: 49,
+      },
+      {
+        id: "jsc-h2-t3",
+        inputDisplay: "pipe()(5) → identity",
+        inputArgs: ["pipe-empty"],
+        expected: 5,
+      },
+      {
+        id: "jsc-h2-t4",
+        inputDisplay: "compose()(5) → identity",
+        inputArgs: ["compose-empty"],
+        expected: 5,
+      },
+      {
+        id: "jsc-h2-t5",
+        inputDisplay: "pipe с одной функцией",
+        inputArgs: ["pipe-single"],
+        expected: 6,
+      },
     ],
     hints: [
-      'pipe: используйте Array.prototype.reduce. Начальное значение — аргумент x, аккумулятор — текущий результат.',
-      'compose — это pipe с обратным порядком функций: compose(...fns)(x) === pipe(...fns.slice().reverse())(x).',
-      'Для пустого массива: reduce без начального значения бросит ошибку. Верните x => x явно или через reduceRight.',
+      "Как последовательно применить набор функций, где каждая принимает результат предыдущей?",
+      "Чем compose отличается от pipe — только ли в порядке применения функций?",
+      "Как обработать вызов без функций, чтобы поведение оставалось предсказуемым?",
     ],
     solutionCode: `function pipe(...fns) {
   if (fns.length === 0) return x => x;

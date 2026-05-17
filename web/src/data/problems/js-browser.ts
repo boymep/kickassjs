@@ -1,11 +1,11 @@
-import type { Problem } from '../../types/problem';
+import type { Problem } from "../../types/problem";
 
 export const jsBrowserProblems: Problem[] = [
   {
-    id: 'jsbr-p1',
-    topicId: 'js-browser',
-    title: 'virtualScroll — вычисление видимых элементов',
-    difficulty: 'medium',
+    id: "jsbr-p1",
+    topicId: "js-browser",
+    title: "virtualScroll — вычисление видимых элементов",
+    difficulty: "medium",
     isContextual: true,
     description: `Реализуйте функцию \`getVisibleRange(scrollTop, containerHeight, itemHeight, totalItems)\`, которая вычисляет, какие элементы списка видимы в данный момент.
 
@@ -23,46 +23,45 @@ getVisibleRange(0, 300, 50, 100);
 getVisibleRange(200, 300, 50, 100);
 // → { startIndex: 4, endIndex: 10, offsetY: 200 }
 \`\`\``,
-    functionName: 'getVisibleRange',
+    functionName: "getVisibleRange",
     starterCode: `function getVisibleRange(scrollTop, containerHeight, itemHeight, totalItems) {
   // ваш код
 }`,
     testCases: [
       {
-        id: 'jsbr-p1-t1',
-        inputDisplay: 'scrollTop=0, height=300, itemH=50 → start=0',
+        id: "jsbr-p1-t1",
+        inputDisplay: "scrollTop=0, height=300, itemH=50 → start=0",
         inputArgs: [0, 300, 50, 100],
         expected: { startIndex: 0, endIndex: 6, offsetY: 0 },
       },
       {
-        id: 'jsbr-p1-t2',
-        inputDisplay: 'scrollTop=200, height=300, itemH=50 → start=4',
+        id: "jsbr-p1-t2",
+        inputDisplay: "scrollTop=200, height=300, itemH=50 → start=4",
         inputArgs: [200, 300, 50, 100],
         expected: { startIndex: 4, endIndex: 10, offsetY: 200 },
       },
       {
-        id: 'jsbr-p1-t3',
-        inputDisplay: 'scrollTop=100, height=100, itemH=50 → 2 элемента',
+        id: "jsbr-p1-t3",
+        inputDisplay: "scrollTop=100, height=100, itemH=50 → 2 элемента",
         inputArgs: [100, 100, 50, 100],
         expected: { startIndex: 2, endIndex: 4, offsetY: 100 },
       },
       {
-        id: 'jsbr-p1-t4',
-        inputDisplay: 'endIndex не превышает totalItems',
+        id: "jsbr-p1-t4",
+        inputDisplay: "endIndex не превышает totalItems",
         inputArgs: [4800, 300, 50, 100],
         expected: { startIndex: 96, endIndex: 100, offsetY: 4800 },
       },
       {
-        id: 'jsbr-p1-t5',
-        inputDisplay: 'scrollTop=150, height=200, itemH=50 → start=3',
+        id: "jsbr-p1-t5",
+        inputDisplay: "scrollTop=150, height=200, itemH=50 → start=3",
         inputArgs: [150, 200, 50, 20],
         expected: { startIndex: 3, endIndex: 7, offsetY: 150 },
       },
     ],
     hints: [
-      '`startIndex = Math.floor(scrollTop / itemHeight)`. `offsetY = startIndex * itemHeight`.',
-      '`visibleCount = Math.ceil(containerHeight / itemHeight)` (количество видимых элементов).',
-      '`endIndex = Math.min(startIndex + visibleCount, totalItems)` (не включительно).',
+      "Как определить, какой элемент находится в верхней части видимой области при заданном scrollTop?",
+      "Сколько элементов помещается в контейнер одновременно? Как это помогает найти endIndex?",
     ],
     solutionCode: `function getVisibleRange(scrollTop, containerHeight, itemHeight, totalItems) {
   const startIndex = Math.floor(scrollTop / itemHeight);
@@ -73,10 +72,10 @@ getVisibleRange(200, 300, 50, 100);
 }`,
   },
   {
-    id: 'jsbr-p2',
-    topicId: 'js-browser',
-    title: 'lazyImages — определить видимые изображения',
-    difficulty: 'easy',
+    id: "jsbr-p2",
+    topicId: "js-browser",
+    title: "lazyImages — определить видимые изображения",
+    difficulty: "easy",
     isContextual: true,
     description: `Реализуйте функцию \`getVisibleImages(images, viewport, threshold)\`:
 - \`images\` — массив объектов \`{ url, top, height }\` (top — расстояние от начала страницы)
@@ -94,49 +93,68 @@ getVisibleImages(
 );
 // → ['a.jpg'] (b.jpg at 500 не в viewport + threshold 100)
 \`\`\``,
-    functionName: 'getVisibleImages',
+    functionName: "getVisibleImages",
     starterCode: `function getVisibleImages(images, viewport, threshold = 0) {
   // ваш код
 }`,
     testCases: [
       {
-        id: 'jsbr-p2-t1',
-        inputDisplay: 'изображение в viewport → включается',
-        inputArgs: [[{ url: 'a.jpg', top: 0, height: 200 }], { scrollY: 0, height: 400 }, 0],
-        expected: ['a.jpg'],
-      },
-      {
-        id: 'jsbr-p2-t2',
-        inputDisplay: 'изображение ниже viewport → не включается',
-        inputArgs: [[{ url: 'b.jpg', top: 600, height: 200 }], { scrollY: 0, height: 400 }, 0],
-        expected: [],
-      },
-      {
-        id: 'jsbr-p2-t3',
-        inputDisplay: 'threshold=200: загружать за 200px до появления',
-        inputArgs: [[{ url: 'c.jpg', top: 550, height: 200 }], { scrollY: 0, height: 400 }, 200],
-        expected: ['c.jpg'],
-      },
-      {
-        id: 'jsbr-p2-t4',
-        inputDisplay: 'scrollY=300: изображения выше уже прошли',
-        inputArgs: [[{ url: 'd.jpg', top: 0, height: 200 }], { scrollY: 300, height: 400 }, 0],
-        expected: [],
-      },
-      {
-        id: 'jsbr-p2-t5',
-        inputDisplay: 'несколько видимых изображений',
+        id: "jsbr-p2-t1",
+        inputDisplay: "изображение в viewport → включается",
         inputArgs: [
-          [{ url: 'e.jpg', top: 100, height: 100 }, { url: 'f.jpg', top: 250, height: 100 }],
+          [{ url: "a.jpg", top: 0, height: 200 }],
           { scrollY: 0, height: 400 },
           0,
         ],
-        expected: ['e.jpg', 'f.jpg'],
+        expected: ["a.jpg"],
+      },
+      {
+        id: "jsbr-p2-t2",
+        inputDisplay: "изображение ниже viewport → не включается",
+        inputArgs: [
+          [{ url: "b.jpg", top: 600, height: 200 }],
+          { scrollY: 0, height: 400 },
+          0,
+        ],
+        expected: [],
+      },
+      {
+        id: "jsbr-p2-t3",
+        inputDisplay: "threshold=200: загружать за 200px до появления",
+        inputArgs: [
+          [{ url: "c.jpg", top: 550, height: 200 }],
+          { scrollY: 0, height: 400 },
+          200,
+        ],
+        expected: ["c.jpg"],
+      },
+      {
+        id: "jsbr-p2-t4",
+        inputDisplay: "scrollY=300: изображения выше уже прошли",
+        inputArgs: [
+          [{ url: "d.jpg", top: 0, height: 200 }],
+          { scrollY: 300, height: 400 },
+          0,
+        ],
+        expected: [],
+      },
+      {
+        id: "jsbr-p2-t5",
+        inputDisplay: "несколько видимых изображений",
+        inputArgs: [
+          [
+            { url: "e.jpg", top: 100, height: 100 },
+            { url: "f.jpg", top: 250, height: 100 },
+          ],
+          { scrollY: 0, height: 400 },
+          0,
+        ],
+        expected: ["e.jpg", "f.jpg"],
       },
     ],
     hints: [
-      'Элемент видим если: `image.top < viewport.scrollY + viewport.height + threshold` (нижний край viewport + threshold) AND `image.top + image.height > viewport.scrollY` (верхний край viewport).',
-      'Фильтруйте массив по этому условию и возвращайте `.map(img => img.url)`.',
+      "Элемент виден, когда его верхний или нижний край попадает в диапазон видимой области. Учитывай threshold как расширение этого диапазона.",
+      "Сначала отфильтруй подходящие изображения, потом верни нужное поле.",
     ],
     solutionCode: `function getVisibleImages(images, viewport, threshold = 0) {
   const viewBottom = viewport.scrollY + viewport.height + threshold;
@@ -148,10 +166,10 @@ getVisibleImages(
 }`,
   },
   {
-    id: 'jsbr-p3',
-    topicId: 'js-browser',
-    title: 'srcsetPicker — выбор оптимального изображения',
-    difficulty: 'medium',
+    id: "jsbr-p3",
+    topicId: "js-browser",
+    title: "srcsetPicker — выбор оптимального изображения",
+    difficulty: "medium",
     isContextual: true,
     description: `Напишите функцию \`pickSrcset(srcset, viewportWidth, dpr)\`:
 - \`srcset\` — массив объектов \`{ url, width }\` (ширина изображения в пикселях)
@@ -171,61 +189,81 @@ pickSrcset(srcset, 375, 2); // нужно 750px → 'img-800.jpg'
 pickSrcset(srcset, 375, 1); // нужно 375px → 'img-400.jpg'
 pickSrcset(srcset, 600, 2); // нужно 1200px → 'img-1200.jpg'
 \`\`\``,
-    functionName: 'pickSrcset',
+    functionName: "pickSrcset",
     starterCode: `function pickSrcset(srcset, viewportWidth, dpr) {
   // ваш код
 }`,
     testCases: [
       {
-        id: 'jsbr-p3-t1',
-        inputDisplay: 'viewport=375, dpr=2 → нужно 750px → img-800.jpg',
+        id: "jsbr-p3-t1",
+        inputDisplay: "viewport=375, dpr=2 → нужно 750px → img-800.jpg",
         inputArgs: [
-          [{ url: 'img-400.jpg', width: 400 }, { url: 'img-800.jpg', width: 800 }, { url: 'img-1200.jpg', width: 1200 }],
-          375, 2,
+          [
+            { url: "img-400.jpg", width: 400 },
+            { url: "img-800.jpg", width: 800 },
+            { url: "img-1200.jpg", width: 1200 },
+          ],
+          375,
+          2,
         ],
-        expected: 'img-800.jpg',
+        expected: "img-800.jpg",
       },
       {
-        id: 'jsbr-p3-t2',
-        inputDisplay: 'viewport=375, dpr=1 → нужно 375px → img-400.jpg',
+        id: "jsbr-p3-t2",
+        inputDisplay: "viewport=375, dpr=1 → нужно 375px → img-400.jpg",
         inputArgs: [
-          [{ url: 'img-400.jpg', width: 400 }, { url: 'img-800.jpg', width: 800 }],
-          375, 1,
+          [
+            { url: "img-400.jpg", width: 400 },
+            { url: "img-800.jpg", width: 800 },
+          ],
+          375,
+          1,
         ],
-        expected: 'img-400.jpg',
+        expected: "img-400.jpg",
       },
       {
-        id: 'jsbr-p3-t3',
-        inputDisplay: 'нужно больше максимального → взять максимальный',
+        id: "jsbr-p3-t3",
+        inputDisplay: "нужно больше максимального → взять максимальный",
         inputArgs: [
-          [{ url: 'img-400.jpg', width: 400 }, { url: 'img-800.jpg', width: 800 }],
-          600, 2,
+          [
+            { url: "img-400.jpg", width: 400 },
+            { url: "img-800.jpg", width: 800 },
+          ],
+          600,
+          2,
         ],
-        expected: 'img-800.jpg',
+        expected: "img-800.jpg",
       },
       {
-        id: 'jsbr-p3-t4',
-        inputDisplay: 'точное совпадение по ширине',
+        id: "jsbr-p3-t4",
+        inputDisplay: "точное совпадение по ширине",
         inputArgs: [
-          [{ url: 'img-400.jpg', width: 400 }, { url: 'img-800.jpg', width: 800 }],
-          400, 1,
+          [
+            { url: "img-400.jpg", width: 400 },
+            { url: "img-800.jpg", width: 800 },
+          ],
+          400,
+          1,
         ],
-        expected: 'img-400.jpg',
+        expected: "img-400.jpg",
       },
       {
-        id: 'jsbr-p3-t5',
-        inputDisplay: 'dpr=1.5, viewport=600 → нужно 900px',
+        id: "jsbr-p3-t5",
+        inputDisplay: "dpr=1.5, viewport=600 → нужно 900px",
         inputArgs: [
-          [{ url: 'img-800.jpg', width: 800 }, { url: 'img-1200.jpg', width: 1200 }],
-          600, 1.5,
+          [
+            { url: "img-800.jpg", width: 800 },
+            { url: "img-1200.jpg", width: 1200 },
+          ],
+          600,
+          1.5,
         ],
-        expected: 'img-1200.jpg',
+        expected: "img-1200.jpg",
       },
     ],
     hints: [
-      'Вычислите нужную ширину: `const needed = viewportWidth * dpr`.',
-      'Отсортируйте srcset по ширине и найдите первый элемент с `width >= needed`.',
-      'Если не нашли — вернуть последний (максимальный).',
+      "Физических пикселей больше, чем CSS-пикселей. Как dpr влияет на нужную ширину изображения?",
+      "Среди вариантов нужно найти наименьший, который ещё достаточно крупный для экрана.",
     ],
     solutionCode: `function pickSrcset(srcset, viewportWidth, dpr) {
   const needed = viewportWidth * dpr;
@@ -235,10 +273,10 @@ pickSrcset(srcset, 600, 2); // нужно 1200px → 'img-1200.jpg'
 }`,
   },
   {
-    id: 'jsbr-p4',
-    topicId: 'js-browser',
-    title: 'criticalCSS — фильтрация используемых стилей',
-    difficulty: 'medium',
+    id: "jsbr-p4",
+    topicId: "js-browser",
+    title: "criticalCSS — фильтрация используемых стилей",
+    difficulty: "medium",
     isContextual: true,
     description: `Напишите функцию \`extractCriticalCSS(rules, usedClasses)\`:
 - \`rules\` — массив объектов \`{ selector, styles }\`
@@ -258,61 +296,64 @@ extractCriticalCSS(
 );
 // → [{ selector: '.btn', ... }, { selector: '.btn.active', ... }]
 \`\`\``,
-    functionName: 'extractCriticalCSS',
+    functionName: "extractCriticalCSS",
     starterCode: `function extractCriticalCSS(rules, usedClasses) {
   // ваш код
 }`,
     testCases: [
       {
-        id: 'jsbr-p4-t1',
-        inputDisplay: 'используется только .btn — .unused отфильтрован',
+        id: "jsbr-p4-t1",
+        inputDisplay: "используется только .btn — .unused отфильтрован",
         inputArgs: [
-          [{ selector: '.btn', styles: 'a' }, { selector: '.unused', styles: 'b' }],
-          ['btn'],
+          [
+            { selector: ".btn", styles: "a" },
+            { selector: ".unused", styles: "b" },
+          ],
+          ["btn"],
         ],
-        expected: [{ selector: '.btn', styles: 'a' }],
+        expected: [{ selector: ".btn", styles: "a" }],
       },
       {
-        id: 'jsbr-p4-t2',
-        inputDisplay: '.btn.active: оба класса — включается если хоть один используется',
-        inputArgs: [
-          [{ selector: '.btn.active', styles: 'a' }],
-          ['btn'],
-        ],
-        expected: [{ selector: '.btn.active', styles: 'a' }],
+        id: "jsbr-p4-t2",
+        inputDisplay:
+          ".btn.active: оба класса — включается если хоть один используется",
+        inputArgs: [[{ selector: ".btn.active", styles: "a" }], ["btn"]],
+        expected: [{ selector: ".btn.active", styles: "a" }],
       },
       {
-        id: 'jsbr-p4-t3',
-        inputDisplay: 'нет используемых классов → пустой массив',
-        inputArgs: [
-          [{ selector: '.btn', styles: 'a' }],
-          [],
-        ],
+        id: "jsbr-p4-t3",
+        inputDisplay: "нет используемых классов → пустой массив",
+        inputArgs: [[{ selector: ".btn", styles: "a" }], []],
         expected: [],
       },
       {
-        id: 'jsbr-p4-t4',
-        inputDisplay: 'все классы используются → все правила',
+        id: "jsbr-p4-t4",
+        inputDisplay: "все классы используются → все правила",
         inputArgs: [
-          [{ selector: '.a', styles: 'x' }, { selector: '.b', styles: 'y' }],
-          ['a', 'b'],
+          [
+            { selector: ".a", styles: "x" },
+            { selector: ".b", styles: "y" },
+          ],
+          ["a", "b"],
         ],
-        expected: [{ selector: '.a', styles: 'x' }, { selector: '.b', styles: 'y' }],
+        expected: [
+          { selector: ".a", styles: "x" },
+          { selector: ".b", styles: "y" },
+        ],
       },
       {
-        id: 'jsbr-p4-t5',
-        inputDisplay: 'возвращает правильный selector',
+        id: "jsbr-p4-t5",
+        inputDisplay: "возвращает правильный selector",
         inputArgs: [
-          [{ selector: '.hero', styles: 'font-size: 24px' }],
-          ['hero'],
+          [{ selector: ".hero", styles: "font-size: 24px" }],
+          ["hero"],
         ],
-        expected: [{ selector: '.hero', styles: 'font-size: 24px' }],
+        expected: [{ selector: ".hero", styles: "font-size: 24px" }],
       },
     ],
     hints: [
-      'Для каждого rule: извлеките классы из selector через regex: `/\\.([\\w-]+)/g`.',
-      'Проверьте, есть ли хоть один из этих классов в usedClasses (используйте Set для O(1) поиска).',
-      'Верните отфильтрованный массив.',
+      "Как извлечь имена классов из CSS-селектора вида `.foo`, `.bar-item`?",
+      "Как эффективно проверить, используется ли хоть один класс правила на странице?",
     ],
     solutionCode: `function extractCriticalCSS(rules, usedClasses) {
   const usedSet = new Set(usedClasses);
@@ -323,10 +364,10 @@ extractCriticalCSS(
 }`,
   },
   {
-    id: 'jsbr-p5',
-    topicId: 'js-browser',
-    title: 'batchDOMOps — минимизация reflow',
-    difficulty: 'easy',
+    id: "jsbr-p5",
+    topicId: "js-browser",
+    title: "batchDOMOps — минимизация reflow",
+    difficulty: "easy",
     isContextual: true,
     description: `Напишите функцию \`batchRead(elements, reader)\`, которая:
 1. **Сначала** читает свойство у всех элементов через \`reader(el)\`
@@ -347,7 +388,7 @@ applyStyles(elements, (el, i) => {
 });
 // Все записано — 1 reflow
 \`\`\``,
-    functionName: 'batchRead_test',
+    functionName: "batchRead_test",
     starterCode: `function batchRead(elements, reader) {
   // ваш код
 }
@@ -357,39 +398,39 @@ function applyStyles(elements, stylesFn) {
 }`,
     testCases: [
       {
-        id: 'jsbr-p5-t1',
-        inputDisplay: 'batchRead читает все значения',
-        inputArgs: ['read-all'],
+        id: "jsbr-p5-t1",
+        inputDisplay: "batchRead читает все значения",
+        inputArgs: ["read-all"],
         expected: [10, 20, 30],
       },
       {
-        id: 'jsbr-p5-t2',
-        inputDisplay: 'batchRead возвращает массив',
-        inputArgs: ['returns-array'],
+        id: "jsbr-p5-t2",
+        inputDisplay: "batchRead возвращает массив",
+        inputArgs: ["returns-array"],
         expected: true,
       },
       {
-        id: 'jsbr-p5-t3',
-        inputDisplay: 'applyStyles вызывает fn для каждого элемента',
-        inputArgs: ['apply-all'],
+        id: "jsbr-p5-t3",
+        inputDisplay: "applyStyles вызывает fn для каждого элемента",
+        inputArgs: ["apply-all"],
         expected: 3,
       },
       {
-        id: 'jsbr-p5-t4',
-        inputDisplay: 'applyStyles передаёт правильный индекс',
-        inputArgs: ['correct-index'],
+        id: "jsbr-p5-t4",
+        inputDisplay: "applyStyles передаёт правильный индекс",
+        inputArgs: ["correct-index"],
         expected: [0, 1, 2],
       },
       {
-        id: 'jsbr-p5-t5',
-        inputDisplay: 'пустой массив — 0 вызовов',
-        inputArgs: ['empty'],
+        id: "jsbr-p5-t5",
+        inputDisplay: "пустой массив — 0 вызовов",
+        inputArgs: ["empty"],
         expected: [],
       },
     ],
     hints: [
-      '`batchRead` — это `elements.map(reader)`.',
-      '`applyStyles` — это `elements.forEach((el, i) => stylesFn(el, i))`.',
+      "batchRead должна вернуть результаты для каждого элемента. Какой метод массива трансформирует каждый элемент?",
+      "applyStyles применяет функцию к каждому элементу с его индексом. Какой метод массива для этого подходит?",
     ],
     solutionCode: `function batchRead(elements, reader) {
   return elements.map(reader);
@@ -417,11 +458,11 @@ function applyStyles(elements, stylesFn) {
 }`,
   },
   {
-    kind: 'predict-output',
-    id: 'jsb-p6',
-    topicId: 'js-browser',
-    title: 'Угадай вывод: getBoundingClientRect в цикле и счётчик reflow',
-    difficulty: 'medium',
+    kind: "predict-output",
+    id: "jsb-p6",
+    topicId: "js-browser",
+    title: "Определи вывод: getBoundingClientRect в цикле и счётчик reflow",
+    difficulty: "medium",
     isContextual: false,
     description: `Перед вами модель браузера: переменная \`reflows\` инкрементируется каждый раз, когда **читается** геометрия элемента после того, как layout стал «грязным» (\`layoutDirty = true\`). Запись стиля устанавливает \`layoutDirty = true\`. Чтение \`offsetWidth\` сбрасывает флаг и при необходимости добавляет +1 к \`reflows\`.
 
@@ -452,11 +493,10 @@ elements.forEach((el) => {
 });
 
 console.log('reflows', reflows, 'total', total);`,
-    expected: 'reflows 3 total 60',
+    expected: "reflows 3 total 60",
     hints: [
-      'На первой итерации layoutDirty = true → readWidth → reflow #1, читаем 10, total=10, пишем 11 → dirty.',
-      'На каждой следующей итерации опять layoutDirty = true (после write предыдущей итерации), значит снова reflow.',
-      '3 итерации, на каждой по reflow → 3. Total = 10 + 20 + 30 = 60.',
+      "Когда происходит reflow — при каждом чтении, или только когда после записи идёт чтение?",
+      "Проследи значение layoutDirty на каждой итерации. Как меняется total?",
     ],
     solutionCode: `// Это predict-output, кода-решения нет. Правильный ответ:
 // reflows 3 total 60
@@ -464,57 +504,53 @@ console.log('reflows', reflows, 'total', total);`,
 // поэтому каждое чтение принудительно вызывает reflow.`,
   },
   {
-    kind: 'find-bug',
-    id: 'jsb-p7',
-    topicId: 'js-browser',
-    title: 'Найди баг: layout thrashing — read/write в одном цикле',
-    difficulty: 'easy',
+    kind: "find-bug",
+    id: "jsb-p7",
+    topicId: "js-browser",
+    title: "Найди баг: слишком много reflow при обходе элементов",
+    difficulty: "easy",
     isContextual: false,
-    description: `Функция \`doubleWidths(elements)\` должна удвоить ширину каждого элемента: прочитать текущее \`width\` и записать удвоенное. Корректность не страдает — все значения удваиваются. Но **производительно** функция плохая: на каждой итерации происходит forced reflow.
+    description: `Функция \`doubleWidths(elements)\` должна удвоить ширину каждого элемента. Корректность не страдает, но с производительностью что-то не так.
 
-Тестовый счётчик \`getReflowCount()\` считает, сколько раз произошёл reflow. Для массива из 5 элементов правильная (батчевая) реализация делает **ровно 1** reflow, а не 5. Перепиши функцию: разнеси все READ в первый цикл, все WRITE — во второй.`,
+Тестовый счётчик \`getReflowCount()\` считает reflow-ы. Для массива из 5 элементов функция должна вызывать **ровно 1** reflow. Найди причину и исправь.`,
     buggyCode: `function doubleWidths(elements) {
-  // Антипаттерн: чтение и запись чередуются.
-  // На каждой итерации writeWidth делает layout dirty,
-  // а следующий readWidth принудительно вызывает reflow.
   elements.forEach((el) => {
     const w = readWidth(el);
     writeWidth(el, w * 2);
   });
 }`,
-    functionName: 'jsb_p7_test',
+    functionName: "jsb_p7_test",
     bugSummary:
-      'Layout thrashing: чередование read/write в одном цикле вынуждает браузер пересчитывать layout на каждой итерации. Решение — разделить фазы: сначала собрать все ширины через map, затем во втором проходе записать удвоенные значения. Тогда reflow срабатывает один раз — на первом READ.',
+      "Layout thrashing: чередование read/write в одном цикле вынуждает браузер пересчитывать layout на каждой итерации. Решение — разделить фазы: сначала собрать все ширины через map, затем во втором проходе записать удвоенные значения. Тогда reflow срабатывает один раз — на первом READ.",
     testCases: [
       {
-        id: 'jsb-p7-t1',
-        inputDisplay: 'все ширины удвоены',
-        inputArgs: ['values'],
+        id: "jsb-p7-t1",
+        inputDisplay: "все ширины удвоены",
+        inputArgs: ["values"],
         expected: [20, 40, 60, 80, 100],
       },
       {
-        id: 'jsb-p7-t2',
-        inputDisplay: '5 элементов → ровно 1 reflow (батчинг)',
-        inputArgs: ['reflows'],
+        id: "jsb-p7-t2",
+        inputDisplay: "5 элементов → ровно 1 reflow (батчинг)",
+        inputArgs: ["reflows"],
         expected: 1,
       },
       {
-        id: 'jsb-p7-t3',
-        inputDisplay: 'пустой массив → 0 reflow',
-        inputArgs: ['empty'],
+        id: "jsb-p7-t3",
+        inputDisplay: "пустой массив → 0 reflow",
+        inputArgs: ["empty"],
         expected: 0,
       },
       {
-        id: 'jsb-p7-t4',
-        inputDisplay: '1 элемент → ровно 1 reflow',
-        inputArgs: ['single'],
+        id: "jsb-p7-t4",
+        inputDisplay: "1 элемент → ровно 1 reflow",
+        inputArgs: ["single"],
         expected: 1,
       },
     ],
     hints: [
-      'Каждый writeWidth ставит layoutDirty = true. Следующее readWidth тогда триггерит reflow.',
-      'Чтобы избежать thrashing, прочитай все значения сначала: const widths = elements.map(readWidth).',
-      'Затем во втором проходе: elements.forEach((el, i) => writeWidth(el, widths[i] * 2)).',
+      "Layout thrashing происходит, когда чтение и запись перемежаются. Что изменится, если разделить их на два отдельных прохода?",
+      "Сначала прочитай всё необходимое, потом запиши всё за один проход.",
     ],
     solutionCode: `function doubleWidths(elements) {
   // Сначала все READ — один reflow на всю партию.
@@ -557,18 +593,18 @@ function jsb_p7_test(arg) {
 }`,
   },
   {
-    kind: 'refactor',
-    id: 'jsb-p8',
-    topicId: 'js-browser',
-    title: 'Оптимизируй: серия insertBefore → DocumentFragment',
-    difficulty: 'medium',
+    kind: "refactor",
+    id: "jsb-p8",
+    topicId: "js-browser",
+    title: "Оптимизируй: серия insertBefore → DocumentFragment",
+    difficulty: "medium",
     isContextual: false,
     description: `Функция \`buildList(parent, items, createNode)\` вставляет в \`parent\` новые узлы в порядке \`items\`, используя \`createNode(item)\` для создания каждого. Текущая реализация делает \`parent.insertBefore(node, null)\` в цикле — каждая вставка отдельной операцией. В реальном DOM это запускает reflow и paint после **каждой** вставки.
 
 Перепиши функцию так, чтобы все узлы сначала собирались в **DocumentFragment**, а в конце фрагмент **одной операцией** вставлялся в \`parent\`. Корректность: финальное содержимое \`parent.children\` должно совпадать с прежним порядок-в-порядок.
 
 В тестах используется mock-DOM со счётчиком \`getInsertCount()\`. Правильная реализация делает ровно **1** вставку в \`parent\` (фрагмент), независимо от количества items.`,
-    functionName: 'jsb_p8_test',
+    functionName: "jsb_p8_test",
     starterCode: `function buildList(parent, items, createNode) {
   // Антипаттерн: N отдельных вставок в parent.
   // Каждая insertBefore = отдельный reflow в реальном DOM.
@@ -579,40 +615,39 @@ function jsb_p7_test(arg) {
 }`,
     testCases: [
       {
-        id: 'jsb-p8-t1',
-        inputDisplay: 'порядок вставок сохранён',
-        inputArgs: ['order'],
-        expected: ['a', 'b', 'c', 'd'],
+        id: "jsb-p8-t1",
+        inputDisplay: "порядок вставок сохранён",
+        inputArgs: ["order"],
+        expected: ["a", "b", "c", "d"],
       },
       {
-        id: 'jsb-p8-t2',
-        inputDisplay: '4 items → ровно 1 вставка в parent (фрагмент)',
-        inputArgs: ['inserts'],
+        id: "jsb-p8-t2",
+        inputDisplay: "4 items → ровно 1 вставка в parent (фрагмент)",
+        inputArgs: ["inserts"],
         expected: 1,
       },
       {
-        id: 'jsb-p8-t3',
-        inputDisplay: 'пустой массив → 0 вставок',
-        inputArgs: ['empty-inserts'],
+        id: "jsb-p8-t3",
+        inputDisplay: "пустой массив → 0 вставок",
+        inputArgs: ["empty-inserts"],
         expected: 0,
       },
       {
-        id: 'jsb-p8-t4',
-        inputDisplay: 'пустой массив → пустой parent',
-        inputArgs: ['empty-children'],
+        id: "jsb-p8-t4",
+        inputDisplay: "пустой массив → пустой parent",
+        inputArgs: ["empty-children"],
         expected: [],
       },
       {
-        id: 'jsb-p8-t5',
-        inputDisplay: '1 item → 1 вставка',
-        inputArgs: ['single'],
+        id: "jsb-p8-t5",
+        inputDisplay: "1 item → 1 вставка",
+        inputArgs: ["single"],
         expected: 1,
       },
     ],
     hints: [
-      'Создай контейнер: const fragment = document.createDocumentFragment().',
-      'В цикле добавляй узлы во фрагмент: fragment.appendChild(createNode(item)).',
-      'В конце одной операцией: parent.appendChild(fragment) — все дети фрагмента переносятся в parent за один reflow.',
+      "Что даёт DocumentFragment в сравнении с прямым appendChild в parent на каждой итерации?",
+      "Сначала собери все узлы в одном месте, потом вставь всё разом.",
     ],
     solutionCode: `function buildList(parent, items, createNode) {
   const fragment = document.createDocumentFragment();
@@ -678,11 +713,11 @@ function jsb_p8_test(arg) {
 }`,
   },
   {
-    id: 'jsbr-h1',
-    topicId: 'js-browser',
-    kind: 'implement',
-    title: 'Виртуальный скролл — рендерим только видимые элементы',
-    difficulty: 'hard',
+    id: "jsbr-h1",
+    topicId: "js-browser",
+    kind: "implement",
+    title: "Виртуальный скролл — рендерим только видимые элементы",
+    difficulty: "hard",
     isContextual: false,
     description: `Реализуйте функцию \`createVirtualList({ container, itemHeight, items, renderItem })\`, которая реализует **виртуальный скролл**: в DOM в любой момент присутствует только небольшое число видимых элементов.
 
@@ -698,21 +733,41 @@ function jsb_p8_test(arg) {
 3. Позиционировать видимые элементы через \`translateY\`
 
 Верните объект \`{ destroy() }\` для очистки.`,
-    functionName: 'createVirtualList_test',
+    functionName: "createVirtualList_test",
     starterCode: `function createVirtualList({ container, itemHeight, items, renderItem }) {
   // ваш код
   return { destroy() {} };
 }`,
     testCases: [
-      { id: 'jsbr-h1-t1', inputDisplay: 'изначально рендерит только видимые + overscan', inputArgs: ['initial-render'], expected: true },
-      { id: 'jsbr-h1-t2', inputDisplay: 'общее число DOM-узлов намного меньше items.length', inputArgs: ['dom-count'], expected: true },
-      { id: 'jsbr-h1-t3', inputDisplay: 'высота spacer = totalHeight', inputArgs: ['spacer-height'], expected: 10000 },
-      { id: 'jsbr-h1-t4', inputDisplay: 'destroy() удаляет все узлы и события', inputArgs: ['destroy'], expected: 0 },
+      {
+        id: "jsbr-h1-t1",
+        inputDisplay: "изначально рендерит только видимые + overscan",
+        inputArgs: ["initial-render"],
+        expected: true,
+      },
+      {
+        id: "jsbr-h1-t2",
+        inputDisplay: "общее число DOM-узлов намного меньше items.length",
+        inputArgs: ["dom-count"],
+        expected: true,
+      },
+      {
+        id: "jsbr-h1-t3",
+        inputDisplay: "высота spacer = totalHeight",
+        inputArgs: ["spacer-height"],
+        expected: 10000,
+      },
+      {
+        id: "jsbr-h1-t4",
+        inputDisplay: "destroy() удаляет все узлы и события",
+        inputArgs: ["destroy"],
+        expected: 0,
+      },
     ],
     hints: [
-      'Создайте внутри container два div: spacer (height = items.length * itemHeight) и viewport (position:relative).',
-      'При каждом scroll: startIndex = Math.floor(scrollTop / itemHeight) - overscan. Очищайте viewport и рендерите нужные элементы с translateY(i * itemHeight).',
-      'Добавляйте слушатель scroll на container. В destroy() removeEventListener и innerHTML = "".',
+      "Как создать иллюзию полного списка, не рендеря все элементы? Что задаёт суммарную высоту прокручиваемой области?",
+      "При скролле нужно пересчитать, какие элементы сейчас видны, и позиционировать их абсолютно.",
+      "Убедись, что destroy() корректно убирает все побочные эффекты.",
     ],
     solutionCode: `function createVirtualList({ container, itemHeight, items, renderItem }) {
   const overscan = 3;
@@ -800,11 +855,11 @@ function jsb_p8_test(arg) {
 }`,
   },
   {
-    id: 'jsbr-h2',
-    topicId: 'js-browser',
-    kind: 'implement',
-    title: 'useFetch — хук для отмены устаревших запросов',
-    difficulty: 'hard',
+    id: "jsbr-h2",
+    topicId: "js-browser",
+    kind: "implement",
+    title: "useFetch — хук для отмены устаревших запросов",
+    difficulty: "hard",
     isContextual: false,
     description: `Реализуйте функцию \`createFetchManager()\`, которая возвращает объект с методом \`fetch(url)\`.
 
@@ -820,7 +875,7 @@ manager.fetch('/api?q=h');     // отменяется
 manager.fetch('/api?q=he');    // отменяется
 manager.fetch('/api?q=hel');   // завершается
 \`\`\``,
-    functionName: 'createFetchManager_test',
+    functionName: "createFetchManager_test",
     starterCode: `function createFetchManager() {
   return {
     fetch(url) {
@@ -829,14 +884,28 @@ manager.fetch('/api?q=hel');   // завершается
   };
 }`,
     testCases: [
-      { id: 'jsbr-h2-t1', inputDisplay: 'последний запрос завершается успешно', inputArgs: ['last-succeeds'], expected: 'last' },
-      { id: 'jsbr-h2-t2', inputDisplay: 'предыдущие запросы отменяются', inputArgs: ['prev-aborted'], expected: true },
-      { id: 'jsbr-h2-t3', inputDisplay: 'одиночный запрос возвращает данные', inputArgs: ['single'], expected: 'data' },
+      {
+        id: "jsbr-h2-t1",
+        inputDisplay: "последний запрос завершается успешно",
+        inputArgs: ["last-succeeds"],
+        expected: "last",
+      },
+      {
+        id: "jsbr-h2-t2",
+        inputDisplay: "предыдущие запросы отменяются",
+        inputArgs: ["prev-aborted"],
+        expected: true,
+      },
+      {
+        id: "jsbr-h2-t3",
+        inputDisplay: "одиночный запрос возвращает данные",
+        inputArgs: ["single"],
+        expected: "data",
+      },
     ],
     hints: [
-      'Храните текущий AbortController. При каждом новом вызове: вызовите controller.abort() у предыдущего.',
-      'Создайте новый AbortController и передайте его signal в fetch: `fetch(url, { signal })`.',
-      'Обрабатывайте AbortError: когда запрос отменён, возвращайте промис, который никогда не резолвится (или reject с AbortError).',
+      "Как отменить предыдущий запрос, когда приходит новый? Что нужно хранить между вызовами?",
+      "fetch принимает параметр, позволяющий прервать запрос извне. Как его подключить к механизму отмены?",
     ],
     solutionCode: `function createFetchManager() {
   let currentController = null;

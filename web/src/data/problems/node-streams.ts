@@ -1,11 +1,11 @@
-import type { Problem } from '../../types/problem';
+import type { Problem } from "../../types/problem";
 
 export const nodeStreamsProblems: Problem[] = [
   {
-    id: 'nodes-p1',
-    topicId: 'node-streams',
-    title: 'Pipeline — цепочка трансформаций',
-    difficulty: 'easy',
+    id: "nodes-p1",
+    topicId: "node-streams",
+    title: "Pipeline — цепочка трансформаций",
+    difficulty: "easy",
     isContextual: false,
     description: `Реализуйте функцию \`createPipeline(...fns)\`:
 - Принимает набор функций-трансформаций
@@ -27,45 +27,45 @@ const normalize = createPipeline(
 );
 normalize('  Hello World  '); // 'hello-world'
 \`\`\``,
-    functionName: '__runPipeline',
+    functionName: "__runPipeline",
     starterCode: `function createPipeline(...fns) {
   // ваш код
 }`,
     testCases: [
       {
-        id: 'nodes-p1-t1',
-        inputDisplay: 'x*2 → x+1 → x*x : process(3) = 49',
-        inputArgs: ['math', 3],
+        id: "nodes-p1-t1",
+        inputDisplay: "x*2 → x+1 → x*x : process(3) = 49",
+        inputArgs: ["math", 3],
         expected: 49,
       },
       {
-        id: 'nodes-p1-t2',
-        inputDisplay: 'trim → toLowerCase → replace spaces',
-        inputArgs: ['string', '  Hello World  '],
-        expected: 'hello-world',
+        id: "nodes-p1-t2",
+        inputDisplay: "trim → toLowerCase → replace spaces",
+        inputArgs: ["string", "  Hello World  "],
+        expected: "hello-world",
       },
       {
-        id: 'nodes-p1-t3',
-        inputDisplay: 'пустой pipeline — identity',
-        inputArgs: ['empty', 42],
+        id: "nodes-p1-t3",
+        inputDisplay: "пустой pipeline — identity",
+        inputArgs: ["empty", 42],
         expected: 42,
       },
       {
-        id: 'nodes-p1-t4',
-        inputDisplay: 'одна функция',
-        inputArgs: ['single', 5],
+        id: "nodes-p1-t4",
+        inputDisplay: "одна функция",
+        inputArgs: ["single", 5],
         expected: 10,
       },
       {
-        id: 'nodes-p1-t5',
-        inputDisplay: 'порядок применения слева направо',
-        inputArgs: ['order', 10],
+        id: "nodes-p1-t5",
+        inputDisplay: "порядок применения слева направо",
+        inputArgs: ["order", 10],
         expected: 3,
       },
     ],
     hints: [
-      'Используйте `Array.prototype.reduce`: начните с начального значения и последовательно применяйте каждую функцию.',
-      'Если `fns` пустой — верните функцию `x => x` (identity).',
+      "Как применить последовательность функций, где каждая получает результат предыдущей?",
+      "Что возвращать, если список функций пуст?",
     ],
     solutionCode: `function createPipeline(...fns) {
   return (value) => fns.reduce((acc, fn) => fn(acc), value);
@@ -89,10 +89,10 @@ normalize('  Hello World  '); // 'hello-world'
 }`,
   },
   {
-    id: 'nodes-p2',
-    topicId: 'node-streams',
-    title: 'chunk — разбивка строки на части',
-    difficulty: 'easy',
+    id: "nodes-p2",
+    topicId: "node-streams",
+    title: "chunk — разбивка строки на части",
+    difficulty: "easy",
     isContextual: false,
     description: `Реализуйте функцию \`chunkString(str, size)\`:
 - Разбивает строку \`str\` на части по \`size\` символов
@@ -106,45 +106,44 @@ chunkString('hello', 2);     // ['he', 'll', 'o']
 chunkString('', 3);          // []
 chunkString('ab', 10);       // ['ab']
 \`\`\``,
-    functionName: 'chunkString',
+    functionName: "chunkString",
     starterCode: `function chunkString(str, size) {
   // ваш код
 }`,
     testCases: [
       {
-        id: 'nodes-p2-t1',
+        id: "nodes-p2-t1",
         inputDisplay: '"abcdefghi", 3 → ["abc","def","ghi"]',
-        inputArgs: ['abcdefghi', 3],
-        expected: ['abc', 'def', 'ghi'],
+        inputArgs: ["abcdefghi", 3],
+        expected: ["abc", "def", "ghi"],
       },
       {
-        id: 'nodes-p2-t2',
+        id: "nodes-p2-t2",
         inputDisplay: '"hello", 2 → ["he","ll","o"]',
-        inputArgs: ['hello', 2],
-        expected: ['he', 'll', 'o'],
+        inputArgs: ["hello", 2],
+        expected: ["he", "ll", "o"],
       },
       {
-        id: 'nodes-p2-t3',
+        id: "nodes-p2-t3",
         inputDisplay: '"", 3 → []',
-        inputArgs: ['', 3],
+        inputArgs: ["", 3],
         expected: [],
       },
       {
-        id: 'nodes-p2-t4',
+        id: "nodes-p2-t4",
         inputDisplay: '"ab", 10 → ["ab"]',
-        inputArgs: ['ab', 10],
-        expected: ['ab'],
+        inputArgs: ["ab", 10],
+        expected: ["ab"],
       },
       {
-        id: 'nodes-p2-t5',
+        id: "nodes-p2-t5",
         inputDisplay: '"12345", 1 → ["1","2","3","4","5"]',
-        inputArgs: ['12345', 1],
-        expected: ['1', '2', '3', '4', '5'],
+        inputArgs: ["12345", 1],
+        expected: ["1", "2", "3", "4", "5"],
       },
     ],
     hints: [
-      'Используйте цикл `while (i < str.length)` и `str.slice(i, i + size)`, увеличивая `i` на `size` каждую итерацию.',
-      'Или: `str.match(/.{1,size}/g)` с шаблоном в виде RegExp.',
+      "Как пройти по строке фиксированными шагами размером size и собирать отрезки?",
     ],
     solutionCode: `function chunkString(str, size) {
   if (!str) return [];
@@ -156,10 +155,10 @@ chunkString('ab', 10);       // ['ab']
 }`,
   },
   {
-    id: 'nodes-p3',
-    topicId: 'node-streams',
-    title: 'TransformStream — класс преобразования данных',
-    difficulty: 'medium',
+    id: "nodes-p3",
+    topicId: "node-streams",
+    title: "TransformStream — класс преобразования данных",
+    difficulty: "medium",
     isContextual: false,
     description: `Реализуйте класс \`TransformStream\`:
 - \`constructor(transformFn)\` — принимает функцию трансформации
@@ -182,7 +181,7 @@ trim.pipe(upper2);
 trim.write('  hello  ');
 upper2.read(); // 'HELLO'
 \`\`\``,
-    functionName: 'TransformStream',
+    functionName: "TransformStream",
     starterCode: `class TransformStream {
   constructor(transformFn) {
     // ваш код
@@ -202,39 +201,39 @@ upper2.read(); // 'HELLO'
 }`,
     testCases: [
       {
-        id: 'nodes-p3-t1',
-        inputDisplay: 'write + read — базовая трансформация',
-        inputArgs: ['basic'],
-        expected: 'HELLO',
+        id: "nodes-p3-t1",
+        inputDisplay: "write + read — базовая трансформация",
+        inputArgs: ["basic"],
+        expected: "HELLO",
       },
       {
-        id: 'nodes-p3-t2',
-        inputDisplay: 'read пустого буфера → null',
-        inputArgs: ['empty-read'],
+        id: "nodes-p3-t2",
+        inputDisplay: "read пустого буфера → null",
+        inputArgs: ["empty-read"],
         expected: null,
       },
       {
-        id: 'nodes-p3-t3',
-        inputDisplay: 'pipe — цепочка двух TransformStream',
-        inputArgs: ['pipe'],
-        expected: 'HELLO',
+        id: "nodes-p3-t3",
+        inputDisplay: "pipe — цепочка двух TransformStream",
+        inputArgs: ["pipe"],
+        expected: "HELLO",
       },
       {
-        id: 'nodes-p3-t4',
-        inputDisplay: 'несколько write → правильный порядок read',
-        inputArgs: ['order'],
-        expected: ['A', 'B', 'C'],
+        id: "nodes-p3-t4",
+        inputDisplay: "несколько write → правильный порядок read",
+        inputArgs: ["order"],
+        expected: ["A", "B", "C"],
       },
       {
-        id: 'nodes-p3-t5',
-        inputDisplay: 'pipe в несколько стримов',
-        inputArgs: ['multi-pipe'],
-        expected: '!!!HELLO!!!',
+        id: "nodes-p3-t5",
+        inputDisplay: "pipe в несколько стримов",
+        inputArgs: ["multi-pipe"],
+        expected: "!!!HELLO!!!",
       },
     ],
     hints: [
-      'Храните буфер обработанных чанков: `this.buffer = []`. `write` → `this.buffer.push(transformFn(chunk))`.',
-      '`pipe`: когда `this.write` вызывается, автоматически вызывайте `otherStream.write()` с результатом. Храните `this.pipeTo` и вызывайте его в `write`.',
+      "write должен трансформировать чанк и куда-то его сохранять. Где?",
+      "pipe — это подключение выхода одного стрима ко входу другого. Что должно происходить при вызове write после pipe?",
     ],
     solutionCode: `class TransformStream {
   constructor(transformFn) {
@@ -262,10 +261,10 @@ upper2.read(); // 'HELLO'
 }`,
   },
   {
-    id: 'nodes-p4',
-    topicId: 'node-streams',
-    title: 'BufferedWriter — буферизованная запись',
-    difficulty: 'medium',
+    id: "nodes-p4",
+    topicId: "node-streams",
+    title: "BufferedWriter — буферизованная запись",
+    difficulty: "medium",
     isContextual: false,
     description: `Реализуйте класс \`BufferedWriter\`:
 - \`constructor(flushFn, bufferSize)\` — \`flushFn(data)\` вызывается при сбросе; \`bufferSize\` — максимальный размер буфера в символах
@@ -286,7 +285,7 @@ writer.write('!');
 writer.flush(); // явный flush
 // written → ['helloworld', '!']
 \`\`\``,
-    functionName: 'BufferedWriter',
+    functionName: "BufferedWriter",
     starterCode: `class BufferedWriter {
   constructor(flushFn, bufferSize) {
     // ваш код
@@ -306,39 +305,39 @@ writer.flush(); // явный flush
 }`,
     testCases: [
       {
-        id: 'nodes-p4-t1',
-        inputDisplay: 'auto-flush при достижении bufferSize',
-        inputArgs: ['auto-flush'],
-        expected: ['helloworld'],
+        id: "nodes-p4-t1",
+        inputDisplay: "auto-flush при достижении bufferSize",
+        inputArgs: ["auto-flush"],
+        expected: ["helloworld"],
       },
       {
-        id: 'nodes-p4-t2',
-        inputDisplay: 'явный flush сбрасывает оставшееся',
-        inputArgs: ['manual-flush'],
-        expected: ['helloworld', '!'],
+        id: "nodes-p4-t2",
+        inputDisplay: "явный flush сбрасывает оставшееся",
+        inputArgs: ["manual-flush"],
+        expected: ["helloworld", "!"],
       },
       {
-        id: 'nodes-p4-t3',
-        inputDisplay: 'getBufferSize() после записи',
-        inputArgs: ['buffer-size'],
+        id: "nodes-p4-t3",
+        inputDisplay: "getBufferSize() после записи",
+        inputArgs: ["buffer-size"],
         expected: 5,
       },
       {
-        id: 'nodes-p4-t4',
-        inputDisplay: 'flush пустого буфера — flushFn не вызывается',
-        inputArgs: ['flush-empty'],
+        id: "nodes-p4-t4",
+        inputDisplay: "flush пустого буфера — flushFn не вызывается",
+        inputArgs: ["flush-empty"],
         expected: 0,
       },
       {
-        id: 'nodes-p4-t5',
-        inputDisplay: 'данные больше bufferSize — flush сразу',
-        inputArgs: ['overflow'],
-        expected: ['hello world!'],
+        id: "nodes-p4-t5",
+        inputDisplay: "данные больше bufferSize — flush сразу",
+        inputArgs: ["overflow"],
+        expected: ["hello world!"],
       },
     ],
     hints: [
-      'Храните `this.buffer = ""`. При `write`: `this.buffer += data`, затем проверяйте `this.buffer.length >= this.bufferSize`.',
-      '`flush`: если `this.buffer.length > 0` — вызовите `this.flushFn(this.buffer)` и очистите `this.buffer = ""`.',
+      "Данные накапливаются между вызовами write. Что нужно хранить между вызовами и когда «сбрасывать» накопленное?",
+      "flush должен обработать то, что осталось в буфере. Что делать, если буфер пустой?",
     ],
     solutionCode: `class BufferedWriter {
   constructor(flushFn, bufferSize) {
@@ -367,10 +366,10 @@ writer.flush(); // явный flush
 }`,
   },
   {
-    id: 'nodes-p5',
-    topicId: 'node-streams',
-    title: 'splitLines — разбивка текста на строки',
-    difficulty: 'easy',
+    id: "nodes-p5",
+    topicId: "node-streams",
+    title: "splitLines — разбивка текста на строки",
+    difficulty: "easy",
     isContextual: false,
     description: `Реализуйте функцию \`splitLines(text)\`:
 - Разбивает текст на строки (по \`\\n\`)
@@ -388,44 +387,44 @@ splitLines("line1\\n\\n  line2  \\nline3\\n");
 splitLines("");
 // → []
 \`\`\``,
-    functionName: 'splitLines',
+    functionName: "splitLines",
     starterCode: `function splitLines(text) {
   // ваш код
 }`,
     testCases: [
       {
-        id: 'nodes-p5-t1',
+        id: "nodes-p5-t1",
         inputDisplay: '"hello\\nworld\\nfoo" → ["hello","world","foo"]',
-        inputArgs: ['hello\nworld\nfoo'],
-        expected: ['hello', 'world', 'foo'],
+        inputArgs: ["hello\nworld\nfoo"],
+        expected: ["hello", "world", "foo"],
       },
       {
-        id: 'nodes-p5-t2',
-        inputDisplay: 'пустые строки пропускаются',
-        inputArgs: ['line1\n\n  line2  \nline3\n'],
-        expected: ['line1', 'line2', 'line3'],
+        id: "nodes-p5-t2",
+        inputDisplay: "пустые строки пропускаются",
+        inputArgs: ["line1\n\n  line2  \nline3\n"],
+        expected: ["line1", "line2", "line3"],
       },
       {
-        id: 'nodes-p5-t3',
-        inputDisplay: 'пустая строка → []',
-        inputArgs: [''],
+        id: "nodes-p5-t3",
+        inputDisplay: "пустая строка → []",
+        inputArgs: [""],
         expected: [],
       },
       {
-        id: 'nodes-p5-t4',
-        inputDisplay: 'одна строка без \\n',
-        inputArgs: ['hello'],
-        expected: ['hello'],
+        id: "nodes-p5-t4",
+        inputDisplay: "одна строка без \\n",
+        inputArgs: ["hello"],
+        expected: ["hello"],
       },
       {
-        id: 'nodes-p5-t5',
-        inputDisplay: 'строки с пробелами обрезаются',
-        inputArgs: ['  a  \n  b  \n  c  '],
-        expected: ['a', 'b', 'c'],
+        id: "nodes-p5-t5",
+        inputDisplay: "строки с пробелами обрезаются",
+        inputArgs: ["  a  \n  b  \n  c  "],
+        expected: ["a", "b", "c"],
       },
     ],
     hints: [
-      '`text.split("\\n")` — разбить на строки. Затем `.map(l => l.trim())` и `.filter(l => l.length > 0)`.',
+      "Как разбить текст на строки и отфильтровать пустые?",
     ],
     solutionCode: `function splitLines(text) {
   return text
@@ -435,11 +434,11 @@ splitLines("");
 }`,
   },
   {
-    kind: 'predict-output',
-    id: 'ns-p6',
-    topicId: 'node-streams',
-    title: 'Угадай вывод: трассировка событий стрима',
-    difficulty: 'medium',
+    kind: "predict-output",
+    id: "ns-p6",
+    topicId: "node-streams",
+    title: "Определи вывод: трассировка событий стрима",
+    difficulty: "medium",
     isContextual: false,
     description: `Перед вами эмуляция Readable-стрима через массив. \`emit\` срабатывает синхронно — как у настоящего EventEmitter в Node.js. Введи каждую напечатанную строку в отдельной строчке поля ответа.
 
@@ -469,9 +468,9 @@ stream.push('A');
 stream.push('B');
 stream.push(null);
 console.log('after');`,
-    expected: 'before\ndata: A\ndata: B\nafter\nend',
+    expected: "before\ndata: A\ndata: B\nafter\nend",
     hints: [
-      '«before» — синхронный console.log до первого push.',
+      "«before» — синхронный console.log до первого push.",
       'push("A") и push("B") синхронно вызывают обработчик data — это flowing mode.',
       'push(null) ставит end-обработчик в микрозадачу через Promise.resolve().then. Микрозадачи выполняются после текущего синхронного кода, поэтому "after" печатается раньше "end".',
     ],
@@ -482,59 +481,57 @@ console.log('after');`,
 // end     — микрозадача после текущего стека`,
   },
   {
-    kind: 'find-bug',
-    id: 'ns-p7',
-    topicId: 'node-streams',
-    title: 'Найди баг: pipe без обработки ошибок',
-    difficulty: 'medium',
+    kind: "find-bug",
+    id: "ns-p7",
+    topicId: "node-streams",
+    title: "Найди баг: часть элементов теряется при обработке",
+    difficulty: "medium",
     isContextual: false,
-    description: `Функция \`runPipeline(source, transform, sink)\` должна последовательно «протолкнуть» каждый элемент из \`source\` (массив) через \`transform\` (функция) в \`sink\` (массив-приёмник через push), и вернуть массив элементов, на которые \`transform\` бросил ошибку (то есть skipped).
+    description: `Функция \`runPipeline(source, transform, sink)\` должна пройти по всем элементам \`source\`, применить \`transform\` и положить результат в \`sink\`. Если \`transform\` бросает ошибку — элемент пропускается, а сообщение ошибки добавляется в возвращаемый массив. Обработка при этом должна продолжаться для остальных элементов.
 
-В коде классический баг: ошибка в \`transform\` для одного элемента **роняет всю обработку**, остальные элементы теряются — это аналог \`pipe\` без \`.on('error')\` в реальных стримах. Найди баг и почини так, чтобы при ошибке элемент пропускался, попадал в массив errors и обработка продолжалась.
+Что-то идёт не так. Найди и исправь.
 
 Сигнатура: \`runPipeline(source, transform, sink) → string[]\` (массив сообщений ошибок в порядке появления).`,
     buggyCode: `function runPipeline(source, transform, sink) {
   const errors = [];
   for (const item of source) {
-    // Баг: одна ошибка прерывает весь цикл, sink теряет последующие элементы.
     const out = transform(item);
     sink.push(out);
   }
   return errors;
 }`,
-    functionName: 'ns_p7_test',
+    functionName: "ns_p7_test",
     bugSummary:
-      'Вызов transform(item) не обёрнут в try/catch — это аналог `.pipe()` без подписки на error. Любая ошибка прерывает цикл и оставляет приёмник в неполном состоянии. Решение — обернуть transform/push в try/catch, в catch добавлять сообщение в errors и продолжать цикл.',
+      "Вызов transform(item) не обёрнут в try/catch — это аналог `.pipe()` без подписки на error. Любая ошибка прерывает цикл и оставляет приёмник в неполном состоянии. Решение — обернуть transform/push в try/catch, в catch добавлять сообщение в errors и продолжать цикл.",
     testCases: [
       {
-        id: 'ns-p7-t1',
-        inputDisplay: 'все элементы успешны → sink заполнен, errors пуст',
-        inputArgs: ['all-ok'],
-        expected: '[2,4,6]|[]',
+        id: "ns-p7-t1",
+        inputDisplay: "все элементы успешны → sink заполнен, errors пуст",
+        inputArgs: ["all-ok"],
+        expected: "[2,4,6]|[]",
       },
       {
-        id: 'ns-p7-t2',
-        inputDisplay: 'ошибка в середине — обработка продолжается',
-        inputArgs: ['middle-error'],
-        expected: '[4,8]|[bad:3]',
+        id: "ns-p7-t2",
+        inputDisplay: "ошибка в середине — обработка продолжается",
+        inputArgs: ["middle-error"],
+        expected: "[4,8]|[bad:3]",
       },
       {
-        id: 'ns-p7-t3',
-        inputDisplay: 'несколько ошибок подряд',
-        inputArgs: ['multi-errors'],
-        expected: '[4,8]|[bad:3,bad:5]',
+        id: "ns-p7-t3",
+        inputDisplay: "несколько ошибок подряд",
+        inputArgs: ["multi-errors"],
+        expected: "[4,8]|[bad:3,bad:5]",
       },
       {
-        id: 'ns-p7-t4',
-        inputDisplay: 'все элементы вызывают ошибку',
-        inputArgs: ['all-bad'],
-        expected: '[]|[bad:1,bad:2,bad:3]',
+        id: "ns-p7-t4",
+        inputDisplay: "все элементы вызывают ошибку",
+        inputArgs: ["all-bad"],
+        expected: "[]|[bad:1,bad:2,bad:3]",
       },
     ],
     hints: [
-      'В реальных стримах эта проблема решается переходом с `pipe` на `pipeline` — он ловит ошибки и не теряет данные.',
-      'Здесь нужно обернуть тело цикла в try/catch и в catch делать `errors.push(err.message)`.',
-      'После catch цикл должен продолжиться — никакого `throw` или `break`.',
+      "Как обработать ошибку так, чтобы она не прервала обработку остальных элементов?",
+      "Что нужно сделать с ошибкой — игнорировать, сохранить, пробросить?",
     ],
     solutionCode: `function runPipeline(source, transform, sink) {
   const errors = [];
@@ -571,18 +568,18 @@ console.log('after');`,
 }`,
   },
   {
-    kind: 'refactor',
-    id: 'ns-p8',
-    topicId: 'node-streams',
-    title: 'Рефактор: загрузка всего файла → потоковая обработка',
-    difficulty: 'medium',
+    kind: "refactor",
+    id: "ns-p8",
+    topicId: "node-streams",
+    title: "Рефактор: загрузка всего файла → потоковая обработка",
+    difficulty: "medium",
     isContextual: false,
     description: `Функция \`countErrors(lines)\` должна посчитать количество строк, содержащих подстроку "ERROR". Текущая реализация — наивный аналог \`fs.readFileSync\` + \`split\`: материализует весь массив, делает несколько проходов, аллоцирует промежуточные структуры. На больших объёмах это аналог OOM в Node.js.
 
 Перепиши так, чтобы обработка шла **за один проход** через async generator (потоковый аналог Transform-стрима в Node.js). Сигнатура: \`countErrors(lines) → Promise<number>\`. \`lines\` — массив (в реальном Node.js это был бы Readable-стрим).
 
 Корректность: результат должен совпадать. Производительность не критична (тест на корректность только) — главное, не делать лишних проходов и промежуточных массивов размером O(N).`,
-    functionName: 'countErrors_test',
+    functionName: "countErrors_test",
     starterCode: `async function countErrors(lines) {
   // ❌ Аналог readFileSync: всё в памяти, два прохода, лишние массивы.
   const trimmed = lines.map((l) => l.trim());
@@ -591,40 +588,40 @@ console.log('after');`,
 }`,
     testCases: [
       {
-        id: 'ns-p8-t1',
-        inputDisplay: 'смешанные строки — считаются только ERROR',
-        inputArgs: [['INFO ok', 'ERROR fail', 'WARN low', 'ERROR boom']],
+        id: "ns-p8-t1",
+        inputDisplay: "смешанные строки — считаются только ERROR",
+        inputArgs: [["INFO ok", "ERROR fail", "WARN low", "ERROR boom"]],
         expected: 2,
       },
       {
-        id: 'ns-p8-t2',
-        inputDisplay: 'пустой массив → 0',
+        id: "ns-p8-t2",
+        inputDisplay: "пустой массив → 0",
         inputArgs: [[]],
         expected: 0,
       },
       {
-        id: 'ns-p8-t3',
-        inputDisplay: 'все строки — ERROR',
-        inputArgs: [['ERROR a', 'ERROR b', 'ERROR c']],
+        id: "ns-p8-t3",
+        inputDisplay: "все строки — ERROR",
+        inputArgs: [["ERROR a", "ERROR b", "ERROR c"]],
         expected: 3,
       },
       {
-        id: 'ns-p8-t4',
-        inputDisplay: 'нет ERROR — ноль',
-        inputArgs: [['INFO 1', 'INFO 2']],
+        id: "ns-p8-t4",
+        inputDisplay: "нет ERROR — ноль",
+        inputArgs: [["INFO 1", "INFO 2"]],
         expected: 0,
       },
       {
-        id: 'ns-p8-t5',
-        inputDisplay: 'строки с пробелами вокруг — trim не должен убирать совпадение',
-        inputArgs: [['  ERROR  ', 'ok', '\\tERROR']],
+        id: "ns-p8-t5",
+        inputDisplay:
+          "строки с пробелами вокруг — trim не должен убирать совпадение",
+        inputArgs: [["  ERROR  ", "ok", "\\tERROR"]],
         expected: 2,
       },
     ],
     hints: [
-      'Превратите массив в async iterable: `async function* source() { for (const l of lines) yield l; }`.',
-      'Считайте через `for await (const line of source())` и инкрементируйте счётчик при `line.includes("ERROR")` — без map/filter.',
-      'В реальном Node.js это был бы `pipeline(fs.createReadStream, readline.createInterface, async function* (src) {...})`.',
+      "Как обработать массив строк так, словно это стрим данных?",
+      "Как асинхронно итерироваться по источнику данных в JavaScript?",
     ],
     solutionCode: `async function countErrors(lines) {
   // ✅ Потоковая обработка: один проход, без промежуточных массивов.
@@ -642,11 +639,11 @@ console.log('after');`,
 }`,
   },
   {
-    id: 'nods-h1',
-    topicId: 'node-streams',
-    kind: 'implement',
-    title: 'CSV Transform Stream — парсим CSV построчно',
-    difficulty: 'hard',
+    id: "nods-h1",
+    topicId: "node-streams",
+    kind: "implement",
+    title: "CSV Transform Stream — парсим CSV построчно",
+    difficulty: "hard",
     isContextual: false,
     description: `Реализуйте функцию \`parseCsvStream(readable)\`, которая принимает Node.js Readable stream с CSV-данными и возвращает промис с массивом распарсенных строк (каждая строка — объект).
 
@@ -659,21 +656,38 @@ Alice,30,Moscow
 Bob,25,"New York"
 \`\`\`
 → \`[{ name:'Alice', age:'30', city:'Moscow' }, { name:'Bob', age:'25', city:'New York' }]\``,
-    functionName: 'parseCsvStream_test',
+    functionName: "parseCsvStream_test",
     starterCode: `const { Transform } = require('stream');
 
 async function parseCsvStream(readable) {
   // ваш код
 }`,
     testCases: [
-      { id: 'nods-h1-t1', inputDisplay: 'простой CSV', inputArgs: ['simple'], expected: [{ name: 'Alice', age: '30' }, { name: 'Bob', age: '25' }] },
-      { id: 'nods-h1-t2', inputDisplay: 'значения в кавычках', inputArgs: ['quoted'], expected: [{ city: 'New York', code: 'NY' }] },
-      { id: 'nods-h1-t3', inputDisplay: 'пустой CSV (только заголовки)', inputArgs: ['headers-only'], expected: [] },
+      {
+        id: "nods-h1-t1",
+        inputDisplay: "простой CSV",
+        inputArgs: ["simple"],
+        expected: [
+          { name: "Alice", age: "30" },
+          { name: "Bob", age: "25" },
+        ],
+      },
+      {
+        id: "nods-h1-t2",
+        inputDisplay: "значения в кавычках",
+        inputArgs: ["quoted"],
+        expected: [{ city: "New York", code: "NY" }],
+      },
+      {
+        id: "nods-h1-t3",
+        inputDisplay: "пустой CSV (только заголовки)",
+        inputArgs: ["headers-only"],
+        expected: [],
+      },
     ],
     hints: [
-      'Используйте readline или Transform stream для построчного чтения.',
-      'Первую строку сохраните как headers. Для каждой следующей: разбейте по запятым, учтите кавычки.',
-      'Парсинг CSV с кавычками: используйте простой state machine или regex /(?:"([^"]*)")|([^,]+)|(?=,)/g.',
+      "Первая строка CSV — заголовки. Как связать значения из последующих строк с именами полей?",
+      "Запятые внутри кавычек не являются разделителями. Как правильно разбить строку по полям?",
     ],
     solutionCode: `const { Transform } = require('stream');
 
@@ -755,11 +769,11 @@ async function parseCsvStream_test(scenario) {
 }`,
   },
   {
-    id: 'nods-h2',
-    topicId: 'node-streams',
-    kind: 'implement',
-    title: 'Stream pipeline с backpressure — ограничение скорости записи',
-    difficulty: 'hard',
+    id: "nods-h2",
+    topicId: "node-streams",
+    kind: "implement",
+    title: "Stream pipeline с backpressure — ограничение скорости записи",
+    difficulty: "hard",
     isContextual: false,
     description: `Реализуйте функцию \`createThrottledPipeline(readable, writable, bytesPerSecond)\`, которая:
 
@@ -769,19 +783,34 @@ async function parseCsvStream_test(scenario) {
 4. Возвращает промис, который резолвится когда всё записано
 
 Это ключевой паттерн Node.js streams — избегать переполнения памяти при разной скорости producer/consumer.`,
-    functionName: 'createThrottledPipeline_test',
+    functionName: "createThrottledPipeline_test",
     starterCode: `async function createThrottledPipeline(readable, writable, bytesPerSecond) {
   // ваш код — используйте backpressure!
 }`,
     testCases: [
-      { id: 'nods-h2-t1', inputDisplay: 'все данные доходят до writable', inputArgs: ['all-data'], expected: 'hello world' },
-      { id: 'nods-h2-t2', inputDisplay: 'backpressure: readable pauses когда writable.write → false', inputArgs: ['backpressure'], expected: true },
-      { id: 'nods-h2-t3', inputDisplay: 'промис резолвится только после окончания записи', inputArgs: ['complete'], expected: true },
+      {
+        id: "nods-h2-t1",
+        inputDisplay: "все данные доходят до writable",
+        inputArgs: ["all-data"],
+        expected: "hello world",
+      },
+      {
+        id: "nods-h2-t2",
+        inputDisplay:
+          "backpressure: readable pauses когда writable.write → false",
+        inputArgs: ["backpressure"],
+        expected: true,
+      },
+      {
+        id: "nods-h2-t3",
+        inputDisplay: "промис резолвится только после окончания записи",
+        inputArgs: ["complete"],
+        expected: true,
+      },
     ],
     hints: [
-      'Прослушивайте readable событие "data". При каждом chunk: вызывайте writable.write(chunk).',
-      'Если write() вернул false — вызовите readable.pause() и дождитесь события "drain" на writable, затем readable.resume().',
-      'На событие "end" readable — вызовите writable.end(). Промис резолвится на "finish" writable.',
+      "Writable.write возвращает false, если буфер заполнен. Что должен делать readable в этот момент?",
+      "Как узнать, что writable снова готов принимать данные? И как сигнализировать о полном завершении записи?",
     ],
     solutionCode: `async function createThrottledPipeline(readable, writable, bytesPerSecond) {
   return new Promise((resolve, reject) => {

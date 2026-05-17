@@ -1,11 +1,11 @@
-import type { Problem } from '../../types/problem';
+import type { Problem } from "../../types/problem";
 
 export const jsEventLoopProblems: Problem[] = [
   {
-    id: 'jsel-p1',
-    topicId: 'js-event-loop',
-    title: 'delay — промис-пауза',
-    difficulty: 'easy',
+    id: "jsel-p1",
+    topicId: "js-event-loop",
+    title: "delay — промис-пауза",
+    difficulty: "easy",
     isContextual: false,
     description: `Напишите функцию \`delay(ms)\`, которая возвращает Promise, который резолвится через \`ms\` миллисекунд.
 
@@ -21,45 +21,45 @@ await delay(50);
 await delay(50);
 // итого ~100ms
 \`\`\``,
-    functionName: 'delay_test',
+    functionName: "delay_test",
     starterCode: `function delay(ms) {
   // ваш код
 }`,
     testCases: [
       {
-        id: 'jsel-p1-t1',
-        inputDisplay: 'delay(0) резолвится (возвращает Promise)',
-        inputArgs: ['resolves'],
+        id: "jsel-p1-t1",
+        inputDisplay: "delay(0) резолвится (возвращает Promise)",
+        inputArgs: ["resolves"],
         expected: true,
       },
       {
-        id: 'jsel-p1-t2',
-        inputDisplay: 'delay(10) резолвится примерно через 10ms',
-        inputArgs: ['timing'],
+        id: "jsel-p1-t2",
+        inputDisplay: "delay(10) резолвится примерно через 10ms",
+        inputArgs: ["timing"],
         expected: true,
       },
       {
-        id: 'jsel-p1-t3',
-        inputDisplay: 'delay возвращает Promise',
-        inputArgs: ['is-promise'],
+        id: "jsel-p1-t3",
+        inputDisplay: "delay возвращает Promise",
+        inputArgs: ["is-promise"],
         expected: true,
       },
       {
-        id: 'jsel-p1-t4',
-        inputDisplay: 'два delay выполняются последовательно',
-        inputArgs: ['sequential'],
+        id: "jsel-p1-t4",
+        inputDisplay: "два delay выполняются последовательно",
+        inputArgs: ["sequential"],
         expected: true,
       },
       {
-        id: 'jsel-p1-t5',
-        inputDisplay: 'delay резолвится с undefined',
-        inputArgs: ['resolves-undefined'],
+        id: "jsel-p1-t5",
+        inputDisplay: "delay резолвится с undefined",
+        inputArgs: ["resolves-undefined"],
         expected: true,
       },
     ],
     hints: [
-      '`delay` — обёртка над `setTimeout` в Promise. Внутри `new Promise((resolve) => setTimeout(resolve, ms))`.',
-      'Promise не принимает значение — просто резолвится без аргументов (или с `undefined`).',
+      "Есть Promise-конструктор и механизм отложенного вызова. Как связать их так, чтобы промис выполнился через ms миллисекунд?",
+      "Promise должен резолвиться сам по себе — без передачи какого-либо значения.",
     ],
     solutionCode: `function delay(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -77,10 +77,10 @@ await delay(50);
 }`,
   },
   {
-    id: 'jsel-p2',
-    topicId: 'js-event-loop',
-    title: 'debounce',
-    difficulty: 'medium',
+    id: "jsel-p2",
+    topicId: "js-event-loop",
+    title: "debounce",
+    difficulty: "medium",
     isContextual: false,
     description: `Реализуйте функцию \`debounce(fn, ms)\`.
 
@@ -95,46 +95,45 @@ debouncedSearch('h');
 debouncedSearch('he');
 debouncedSearch('hel'); // только этот вызов выполнится через 300ms
 \`\`\``,
-    functionName: 'debounce_test',
+    functionName: "debounce_test",
     starterCode: `function debounce(fn, ms) {
   // ваш код
 }`,
     testCases: [
       {
-        id: 'jsel-p2-t1',
-        inputDisplay: '3 быстрых вызова → fn вызвана 1 раз',
-        inputArgs: ['call-count-3'],
+        id: "jsel-p2-t1",
+        inputDisplay: "3 быстрых вызова → fn вызвана 1 раз",
+        inputArgs: ["call-count-3"],
         expected: 1,
       },
       {
-        id: 'jsel-p2-t2',
-        inputDisplay: 'fn вызвана с последними аргументами',
-        inputArgs: ['last-args'],
-        expected: 'hello',
+        id: "jsel-p2-t2",
+        inputDisplay: "fn вызвана с последними аргументами",
+        inputArgs: ["last-args"],
+        expected: "hello",
       },
       {
-        id: 'jsel-p2-t3',
-        inputDisplay: 'два вызова с паузой > ms → fn вызвана 2 раза',
-        inputArgs: ['two-separate-calls'],
+        id: "jsel-p2-t3",
+        inputDisplay: "два вызова с паузой > ms → fn вызвана 2 раза",
+        inputArgs: ["two-separate-calls"],
         expected: 2,
       },
       {
-        id: 'jsel-p2-t4',
-        inputDisplay: 'debounce возвращает функцию',
-        inputArgs: ['returns-function'],
+        id: "jsel-p2-t4",
+        inputDisplay: "debounce возвращает функцию",
+        inputArgs: ["returns-function"],
         expected: true,
       },
       {
-        id: 'jsel-p2-t5',
-        inputDisplay: 'один вызов → fn вызвана ровно 1 раз через ms',
-        inputArgs: ['single-call'],
+        id: "jsel-p2-t5",
+        inputDisplay: "один вызов → fn вызвана ровно 1 раз через ms",
+        inputArgs: ["single-call"],
         expected: 1,
       },
     ],
     hints: [
-      'Внутри debounce объявите переменную `timer`. Возвращаемая функция должна: сначала `clearTimeout(timer)`, затем `timer = setTimeout(() => fn(...args), ms)`.',
-      'Используйте замыкание — `timer` живёт между вызовами благодаря замыканию на внешний scope функции debounce.',
-      'Для передачи контекста: `fn.apply(this, args)` вместо `fn(...args)`, если нужно сохранить `this`.',
+      "Как «отменить» предыдущий запланированный вызов, если пришёл новый до истечения паузы?",
+      "Функция должна «помнить» таймер между вызовами — где хранить это состояние?",
     ],
     solutionCode: `function debounce(fn, ms) {
   let timer = null;
@@ -181,10 +180,10 @@ debouncedSearch('hel'); // только этот вызов выполнится
 }`,
   },
   {
-    id: 'jsel-p3',
-    topicId: 'js-event-loop',
-    title: 'throttle',
-    difficulty: 'medium',
+    id: "jsel-p3",
+    topicId: "js-event-loop",
+    title: "throttle",
+    difficulty: "medium",
     isContextual: false,
     description: `Реализуйте функцию \`throttle(fn, ms)\`.
 
@@ -199,45 +198,45 @@ throttled(); // игнорируется
 // ... через 100ms ...
 throttled(); // выполнится снова
 \`\`\``,
-    functionName: 'throttle_test',
+    functionName: "throttle_test",
     starterCode: `function throttle(fn, ms) {
   // ваш код
 }`,
     testCases: [
       {
-        id: 'jsel-p3-t1',
-        inputDisplay: '5 немедленных вызовов → fn вызвана 1 раз',
-        inputArgs: ['burst-5'],
+        id: "jsel-p3-t1",
+        inputDisplay: "5 немедленных вызовов → fn вызвана 1 раз",
+        inputArgs: ["burst-5"],
         expected: 1,
       },
       {
-        id: 'jsel-p3-t2',
-        inputDisplay: 'первый вызов выполняется немедленно',
-        inputArgs: ['first-immediate'],
+        id: "jsel-p3-t2",
+        inputDisplay: "первый вызов выполняется немедленно",
+        inputArgs: ["first-immediate"],
         expected: true,
       },
       {
-        id: 'jsel-p3-t3',
-        inputDisplay: 'throttle возвращает функцию',
-        inputArgs: ['returns-function'],
+        id: "jsel-p3-t3",
+        inputDisplay: "throttle возвращает функцию",
+        inputArgs: ["returns-function"],
         expected: true,
       },
       {
-        id: 'jsel-p3-t4',
-        inputDisplay: 'fn передаются правильные аргументы',
-        inputArgs: ['correct-args'],
+        id: "jsel-p3-t4",
+        inputDisplay: "fn передаются правильные аргументы",
+        inputArgs: ["correct-args"],
         expected: 42,
       },
       {
-        id: 'jsel-p3-t5',
-        inputDisplay: '2 вызова с паузой > ms → fn вызвана 2 раза',
-        inputArgs: ['two-windows'],
+        id: "jsel-p3-t5",
+        inputDisplay: "2 вызова с паузой > ms → fn вызвана 2 раза",
+        inputArgs: ["two-windows"],
         expected: 2,
       },
     ],
     hints: [
-      'Сохраните время последнего вызова: `let lastCall = 0`. При каждом вызове сравнивайте `Date.now() - lastCall` с `ms`.',
-      'Если прошло достаточно времени — обновить `lastCall = Date.now()` и вызвать `fn`.',
+      "Как понять, прошло ли достаточно времени с последнего реального вызова функции?",
+      "Что нужно сохранять между вызовами, чтобы принять решение: выполнить или проигнорировать?",
     ],
     solutionCode: `function throttle(fn, ms) {
   let lastCall = 0;
@@ -281,10 +280,10 @@ throttled(); // выполнится снова
 }`,
   },
   {
-    id: 'jsel-p4',
-    topicId: 'js-event-loop',
-    title: 'runSequentially — последовательные промисы',
-    difficulty: 'medium',
+    id: "jsel-p4",
+    topicId: "js-event-loop",
+    title: "runSequentially — последовательные промисы",
+    difficulty: "medium",
     isContextual: false,
     description: `Напишите функцию \`runSequentially(asyncFns)\`, которая принимает массив функций, каждая из которых возвращает Promise, и выполняет их **строго по очереди** — следующая запускается только после завершения предыдущей.
 
@@ -301,46 +300,45 @@ const fns = [
 await runSequentially(fns); // → [1, 2, 3]
 // Общее время: ~30ms (последовательно, не параллельно)
 \`\`\``,
-    functionName: 'runSequentially_test',
+    functionName: "runSequentially_test",
     starterCode: `async function runSequentially(asyncFns) {
   // ваш код
 }`,
     testCases: [
       {
-        id: 'jsel-p4-t1',
-        inputDisplay: '[() => 1, () => 2, () => 3] → [1, 2, 3]',
-        inputArgs: ['simple-3'],
+        id: "jsel-p4-t1",
+        inputDisplay: "[() => 1, () => 2, () => 3] → [1, 2, 3]",
+        inputArgs: ["simple-3"],
         expected: [1, 2, 3],
       },
       {
-        id: 'jsel-p4-t2',
-        inputDisplay: 'пустой массив → []',
-        inputArgs: ['empty'],
+        id: "jsel-p4-t2",
+        inputDisplay: "пустой массив → []",
+        inputArgs: ["empty"],
         expected: [],
       },
       {
-        id: 'jsel-p4-t3',
-        inputDisplay: 'выполняются строго последовательно (порядок сохранён)',
-        inputArgs: ['order'],
-        expected: ['a', 'b', 'c'],
+        id: "jsel-p4-t3",
+        inputDisplay: "выполняются строго последовательно (порядок сохранён)",
+        inputArgs: ["order"],
+        expected: ["a", "b", "c"],
       },
       {
-        id: 'jsel-p4-t4',
-        inputDisplay: '[() => 42] → [42]',
-        inputArgs: ['single'],
+        id: "jsel-p4-t4",
+        inputDisplay: "[() => 42] → [42]",
+        inputArgs: ["single"],
         expected: [42],
       },
       {
-        id: 'jsel-p4-t5',
-        inputDisplay: 'промисы с разными задержками — порядок не нарушается',
-        inputArgs: ['async-order'],
+        id: "jsel-p4-t5",
+        inputDisplay: "промисы с разными задержками — порядок не нарушается",
+        inputArgs: ["async-order"],
         expected: [1, 2, 3],
       },
     ],
     hints: [
-      'Используйте цикл `for...of` с `await`: `for (const fn of asyncFns) { results.push(await fn()); }`',
-      'Альтернатива через `reduce`: `asyncFns.reduce(async (prev, fn) => [...(await prev), await fn()], Promise.resolve([]))`',
-      'В отличие от `Promise.all` — здесь строго по одному. `Promise.all` запускает все параллельно.',
+      "Как дождаться результата одной async-операции, прежде чем запустить следующую?",
+      "Чем этот подход принципиально отличается от Promise.all?",
     ],
     solutionCode: `async function runSequentially(asyncFns) {
   const results = [];
@@ -367,11 +365,11 @@ await runSequentially(fns); // → [1, 2, 3]
 }`,
   },
   {
-    kind: 'predict-output',
-    id: 'jsel-p6',
-    topicId: 'js-event-loop',
-    title: 'Угадай вывод: async/await и Promise.then вместе',
-    difficulty: 'medium',
+    kind: "predict-output",
+    id: "jsel-p6",
+    topicId: "js-event-loop",
+    title: "Определи вывод: async/await и Promise.then вместе",
+    difficulty: "medium",
     isContextual: false,
     description: `Перед вами async-функция рядом с обычным \`Promise.then\`. Введи каждую напечатанную строку в отдельной строчке поля ответа.
 
@@ -388,11 +386,10 @@ console.log('1');
 run();
 Promise.resolve().then(() => console.log('2'));
 console.log('3');`,
-    expected: '1\nA\n3\nB\n2\nC',
+    expected: "1\nA\n3\nB\n2\nC",
     hints: [
-      'Синхронный код: 1, затем запускается run() — печатает A и встречает первый await, отдавая управление. Дальше синхронно 3.',
-      'После синхронного кода очередь микрозадач: [продолжение run после первого await, Promise.then(2)].',
-      'Продолжение run выводит B и встречает второй await — ставит своё продолжение в конец очереди. Следующий в очереди — Promise.then: выводит 2. Затем второе продолжение run: C.',
+      "Выдели, что выполняется синхронно, а что — после microtask checkpoint.",
+      "Каждый `await` ставит продолжение функции в очередь микрозадач. В каком порядке микрозадачи встают в очередь?",
     ],
     solutionCode: `// 1  — sync
 // A  — sync внутри run()
@@ -403,18 +400,16 @@ console.log('3');`,
 // C  — продолжение run() после второго await`,
   },
   {
-    kind: 'find-bug',
-    id: 'jsel-p7',
-    topicId: 'js-event-loop',
-    title: 'Найди баг: забытый await в последовательной загрузке',
-    difficulty: 'easy',
+    kind: "find-bug",
+    id: "jsel-p7",
+    topicId: "js-event-loop",
+    title: "Найди баг: последовательная загрузка двух значений",
+    difficulty: "easy",
     isContextual: false,
-    description: `Функция должна загрузить два значения **последовательно** и вернуть массив \`[первое, второе]\`. Тесты проверяют, что результат — реальные значения, а не \`Promise\`-объекты.
-
-В коде есть распространённая ошибка: забыт \`await\`, из-за чего в массив попадают непрорезолвенные промисы. Найди баг и почини.`,
+    description: `Функция \`loadBoth()\` должна последовательно загрузить два значения и вернуть их в массиве. Оба элемента должны быть строками. Что-то пошло не так — найди и исправь.`,
     buggyCode: `async function loadBoth() {
   const a = await fetchValue('a');
-  const b = fetchValue('b'); // <-- баг здесь
+  const b = fetchValue('b');
   return [a, b];
 }
 
@@ -423,39 +418,38 @@ function fetchValue(label) {
     setTimeout(() => resolve('value-' + label), 5),
   );
 }`,
-    functionName: 'jsel_p7_test',
+    functionName: "jsel_p7_test",
     bugSummary:
       'Забыт `await` перед вторым `fetchValue`. В результате `b` — это `Promise`, а не разрешённое значение. Решение — добавить `await`: `const b = await fetchValue("b")`.',
     testCases: [
       {
-        id: 'jsel-p7-t1',
-        inputDisplay: 'loadBoth() возвращает массив строк, не промисов',
-        inputArgs: ['types'],
-        expected: 'string,string',
+        id: "jsel-p7-t1",
+        inputDisplay: "оба элемента имеют тип string",
+        inputArgs: ["types"],
+        expected: "string,string",
       },
       {
-        id: 'jsel-p7-t2',
+        id: "jsel-p7-t2",
         inputDisplay: 'первый элемент = "value-a"',
-        inputArgs: ['first'],
-        expected: 'value-a',
+        inputArgs: ["first"],
+        expected: "value-a",
       },
       {
-        id: 'jsel-p7-t3',
-        inputDisplay: 'второй элемент = "value-b" (а не [object Promise])',
-        inputArgs: ['second'],
-        expected: 'value-b',
+        id: "jsel-p7-t3",
+        inputDisplay: 'второй элемент = "value-b"',
+        inputArgs: ["second"],
+        expected: "value-b",
       },
       {
-        id: 'jsel-p7-t4',
-        inputDisplay: 'длина массива = 2',
-        inputArgs: ['length'],
+        id: "jsel-p7-t4",
+        inputDisplay: "длина массива = 2",
+        inputArgs: ["length"],
         expected: 2,
       },
     ],
     hints: [
-      'Сравни строки `const a = ...` и `const b = ...`. Что-то отличается между ними.',
-      'Async-функция возвращает Promise. Чтобы получить значение, нужен `await`.',
-      'Если в массиве оказался непрорезолвенный Promise, типичный признак — `typeof b === "object"` и `b instanceof Promise`.',
+      "Сравни объявления `a` и `b`. Есть ли разница в том, как они получают значение?",
+      "Что окажется в переменной, если не дождаться промиса?",
     ],
     solutionCode: `async function loadBoth() {
   const a = await fetchValue('a');
@@ -477,18 +471,18 @@ function fetchValue(label) {
 }`,
   },
   {
-    kind: 'refactor',
-    id: 'jsel-p8',
-    topicId: 'js-event-loop',
-    title: 'Оптимизируй: блокирующий цикл → батчинг через setTimeout',
-    difficulty: 'medium',
+    kind: "refactor",
+    id: "jsel-p8",
+    topicId: "js-event-loop",
+    title: "Оптимизируй: блокирующий цикл → батчинг через setTimeout",
+    difficulty: "medium",
     isContextual: false,
     description: `Функция \`processAllChunked(items, transform, chunkSize)\` обрабатывает каждый элемент и возвращает массив результатов. Текущая реализация делает всё в одном синхронном цикле — это блокирует event loop, и страница «зависает», пока работа идёт.
 
 Перепиши функцию так, чтобы она возвращала **Promise** с тем же массивом результатов, но при этом разбивала работу на чанки по \`chunkSize\` элементов и отдавала управление event loop через \`setTimeout(fn, 0)\` между чанками. Это позволит браузеру обрабатывать ввод и рисовать кадры, пока идёт обработка.
 
 Корректность: результат должен совпадать с прежним по элементам и порядку. Сигнатура функции остаётся \`processAllChunked(items, transform, chunkSize)\` и должна возвращать Promise.`,
-    functionName: 'processAllChunked_test',
+    functionName: "processAllChunked_test",
     starterCode: `function processAllChunked(items, transform, chunkSize) {
   // Текущая реализация — синхронный блокирующий цикл.
   // Перепиши её через рекурсивный setTimeout с чанкованием
@@ -501,47 +495,47 @@ function fetchValue(label) {
 }`,
     testCases: [
       {
-        id: 'jsel-p8-t1',
-        inputDisplay: 'processAllChunked([1,2,3], x => x * 2, 100) → [2, 4, 6]',
-        inputArgs: [[1, 2, 3], 'double', 100],
+        id: "jsel-p8-t1",
+        inputDisplay: "processAllChunked([1,2,3], x => x * 2, 100) → [2, 4, 6]",
+        inputArgs: [[1, 2, 3], "double", 100],
         expected: [2, 4, 6],
       },
       {
-        id: 'jsel-p8-t2',
-        inputDisplay: 'пустой массив → []',
-        inputArgs: [[], 'double', 100],
+        id: "jsel-p8-t2",
+        inputDisplay: "пустой массив → []",
+        inputArgs: [[], "double", 100],
         expected: [],
       },
       {
-        id: 'jsel-p8-t3',
-        inputDisplay: 'один элемент с маленьким chunk → [identity]',
-        inputArgs: [[42], 'double', 1],
+        id: "jsel-p8-t3",
+        inputDisplay: "один элемент с маленьким chunk → [identity]",
+        inputArgs: [[42], "double", 1],
         expected: [84],
       },
       {
-        id: 'jsel-p8-t4',
-        inputDisplay: 'результат — Promise',
-        inputArgs: [[1, 2, 3], 'is-promise', 2],
+        id: "jsel-p8-t4",
+        inputDisplay: "результат — Promise",
+        inputArgs: [[1, 2, 3], "is-promise", 2],
         expected: true,
       },
       {
-        id: 'jsel-p8-t5',
-        inputDisplay: '300 элементов с chunkSize=50 → корректная сумма',
-        inputArgs: [Array.from({ length: 300 }, (_, i) => i), 'sum', 50],
+        id: "jsel-p8-t5",
+        inputDisplay: "300 элементов с chunkSize=50 → корректная сумма",
+        inputArgs: [Array.from({ length: 300 }, (_, i) => i), "sum", 50],
         expected: (300 * 299) / 2,
       },
       {
-        id: 'jsel-p8-t6',
-        inputDisplay: 'порядок элементов сохранён при chunkSize=3 на массиве из 10',
-        inputArgs: [Array.from({ length: 10 }, (_, i) => i), 'double', 3],
+        id: "jsel-p8-t6",
+        inputDisplay:
+          "порядок элементов сохранён при chunkSize=3 на массиве из 10",
+        inputArgs: [Array.from({ length: 10 }, (_, i) => i), "double", 3],
         expected: [0, 2, 4, 6, 8, 10, 12, 14, 16, 18],
       },
     ],
     hints: [
-      'Верни `new Promise((resolve) => { ... })`. Внутри объяви функцию `step()`, которая обрабатывает один чанк размера `chunkSize` и через `setTimeout(step, 0)` запускает следующий.',
-      'Когда обработаны все элементы — вызови `resolve(result)`.',
-      'Чтобы убедиться, что управление действительно отдано event loop — между чанками должен успеть выполниться внешний `setTimeout(fn, 0)`, заведённый снаружи.',
-      'Помни, что `setTimeout` — макрозадача. Если использовать `queueMicrotask`, paint всё равно будет заблокирован, потому что microtask checkpoint не завершается.',
+      "Как разбить синхронный цикл на части, отдавая управление event loop между ними?",
+      "Какой механизм позволяет «поставить в очередь» следующий шаг, не блокируя текущий поток?",
+      "Чем setTimeout отличается от queueMicrotask с точки зрения возможности рендеринга между шагами?",
     ],
     solutionCode: `function processAllChunked(items, transform, chunkSize) {
   return new Promise((resolve) => {
@@ -579,10 +573,10 @@ async function processAllChunked_test(items, mode, chunkSize) {
 }`,
   },
   {
-    id: 'jsel-p5',
-    topicId: 'js-event-loop',
-    title: 'retryWithDelay — повтор с паузой',
-    difficulty: 'medium',
+    id: "jsel-p5",
+    topicId: "js-event-loop",
+    title: "retryWithDelay — повтор с паузой",
+    difficulty: "medium",
     isContextual: true,
     description: `В продакшн-коде часто нужно повторить запрос при ошибке. Реализуйте функцию \`retryWithDelay(fn, retries, ms)\`:
 - Вызывает \`fn()\` (асинхронная функция, возвращает Promise)
@@ -602,46 +596,45 @@ const unstable = () => {
 await retryWithDelay(unstable, 3, 0); // → 'success'
 // attempt = 3 (два провала, третья — успех)
 \`\`\``,
-    functionName: 'retryWithDelay_test',
+    functionName: "retryWithDelay_test",
     starterCode: `async function retryWithDelay(fn, retries, ms) {
   // ваш код
 }`,
     testCases: [
       {
-        id: 'jsel-p5-t1',
+        id: "jsel-p5-t1",
         inputDisplay: 'fn падает 2 раза, 3-я успешна → "success"',
-        inputArgs: ['fail-2-then-ok'],
-        expected: 'success',
+        inputArgs: ["fail-2-then-ok"],
+        expected: "success",
       },
       {
-        id: 'jsel-p5-t2',
-        inputDisplay: 'fn всегда успешна → 1 попытка',
-        inputArgs: ['always-ok'],
+        id: "jsel-p5-t2",
+        inputDisplay: "fn всегда успешна → 1 попытка",
+        inputArgs: ["always-ok"],
         expected: 42,
       },
       {
-        id: 'jsel-p5-t3',
-        inputDisplay: 'fn всегда падает → throws после retries попыток',
-        inputArgs: ['always-fail'],
-        expected: 'Error: always-fail',
+        id: "jsel-p5-t3",
+        inputDisplay: "fn всегда падает → throws после retries попыток",
+        inputArgs: ["always-fail"],
+        expected: "Error: always-fail",
       },
       {
-        id: 'jsel-p5-t4',
-        inputDisplay: 'retries=1: одна попытка, при ошибке бросает',
-        inputArgs: ['retries-1'],
-        expected: 'Error',
+        id: "jsel-p5-t4",
+        inputDisplay: "retries=1: одна попытка, при ошибке бросает",
+        inputArgs: ["retries-1"],
+        expected: "Error",
       },
       {
-        id: 'jsel-p5-t5',
-        inputDisplay: 'количество попыток ≤ retries',
-        inputArgs: ['attempt-count'],
+        id: "jsel-p5-t5",
+        inputDisplay: "количество попыток ≤ retries",
+        inputArgs: ["attempt-count"],
         expected: true,
       },
     ],
     hints: [
-      'Используйте цикл `for` от 0 до retries. Оберните вызов fn в try/catch. Если это не последняя попытка — делайте `await delay(ms)` и продолжайте.',
-      'После цикла бросайте последнюю пойманную ошибку: сохраните её в переменной `lastError` и бросьте `throw lastError` после цикла.',
-      'Паузу реализуйте через `await new Promise(r => setTimeout(r, ms))`.',
+      "Как поймать ошибку и продолжить попытки, не прерывая выполнение?",
+      "Что делать, если попытки ещё есть — подождать и попробовать снова. А если исчерпаны?",
     ],
     solutionCode: `async function retryWithDelay(fn, retries, ms) {
   let lastError;
@@ -680,11 +673,11 @@ await retryWithDelay(unstable, 3, 0); // → 'success'
 }`,
   },
   {
-    id: 'jsel-h1',
-    topicId: 'js-event-loop',
-    kind: 'predict-output',
-    title: 'Предскажи вывод: две async-функции и queueMicrotask',
-    difficulty: 'hard',
+    id: "jsel-h1",
+    topicId: "js-event-loop",
+    kind: "predict-output",
+    title: "Предскажи вывод: две async-функции и queueMicrotask",
+    difficulty: "hard",
     isContextual: false,
     description: `Два async-вызова запускаются подряд. Какой порядок вывода?
 
@@ -707,11 +700,10 @@ second();
 setTimeout(() => console.log('timeout'), 0);
 queueMicrotask(() => console.log('micro'));
 console.log('end');`,
-    expected: 'start\nf1\ns1\nend\nf2\ns2\nmicro\ntimeout',
+    expected: "start\nf1\ns1\nend\nf2\ns2\nmicro\ntimeout",
     hints: [
-      'Синхронный код: start, f1 (до await в first), s1 (до await в second), end.',
-      'Оба await сразу ставят свои продолжения в очередь микрозадач — в порядке вызова: сначала продолжение first, потом second.',
-      'queueMicrotask("micro") добавляется ПОСЛЕ обоих await, поэтому в очереди: [f2, s2, micro]. Macrotask setTimeout — последний.',
+      "Сколько синхронных шагов выполнится до первого microtask checkpoint?",
+      "В каком порядке продолжения двух async-функций встают в очередь микрозадач? Когда в ней появляется queueMicrotask?",
     ],
     solutionCode: `// start — sync
 // f1   — sync внутри first() до первого await
@@ -725,11 +717,11 @@ console.log('end');`,
 // timeout — setTimeout`,
   },
   {
-    id: 'jsel-h2',
-    topicId: 'js-event-loop',
-    kind: 'implement',
-    title: 'Планировщик задач с ограничением параллелизма',
-    difficulty: 'hard',
+    id: "jsel-h2",
+    topicId: "js-event-loop",
+    kind: "implement",
+    title: "Планировщик задач с ограничением параллелизма",
+    difficulty: "hard",
     isContextual: false,
     description: `Реализуйте класс \`Scheduler\` с методом \`add(task)\`, который принимает асинхронную задачу и возвращает промис её результата.
 
@@ -749,7 +741,7 @@ scheduler.add(t(100, 'd')); // ждёт освобождения слота
 
 // Порядок завершения: b, a, c, d
 \`\`\``,
-    functionName: 'Scheduler_test',
+    functionName: "Scheduler_test",
     starterCode: `class Scheduler {
   constructor(concurrency) {
     // ваш код
@@ -761,28 +753,27 @@ scheduler.add(t(100, 'd')); // ждёт освобождения слота
 }`,
     testCases: [
       {
-        id: 'jsel-h2-t1',
-        inputDisplay: 'все задачи выполняются и возвращают результат',
-        inputArgs: ['all-complete'],
-        expected: ['a', 'b', 'c'],
+        id: "jsel-h2-t1",
+        inputDisplay: "все задачи выполняются и возвращают результат",
+        inputArgs: ["all-complete"],
+        expected: ["a", "b", "c"],
       },
       {
-        id: 'jsel-h2-t2',
-        inputDisplay: 'одновременно не более N задач',
-        inputArgs: ['concurrency-limit'],
+        id: "jsel-h2-t2",
+        inputDisplay: "одновременно не более N задач",
+        inputArgs: ["concurrency-limit"],
         expected: true,
       },
       {
-        id: 'jsel-h2-t3',
-        inputDisplay: 'задачи из очереди стартуют после освобождения слота',
-        inputArgs: ['queue-order'],
+        id: "jsel-h2-t3",
+        inputDisplay: "задачи из очереди стартуют после освобождения слота",
+        inputArgs: ["queue-order"],
         expected: true,
       },
     ],
     hints: [
-      'Храните счётчик активных задач и очередь ожидающих.',
-      'При добавлении задачи: если активных < concurrency — запускайте сразу, иначе кладите в очередь.',
-      'При завершении задачи: уменьшайте счётчик и если очередь не пуста — запускайте следующую.',
+      "Что нужно знать планировщику, чтобы решить — запустить задачу сразу или поставить в очередь?",
+      "Что происходит, когда задача завершается? Кто должен запустить следующую из очереди?",
     ],
     solutionCode: `class Scheduler {
   constructor(concurrency) {

@@ -1,11 +1,11 @@
-import type { Problem } from '../../types/problem';
+import type { Problem } from "../../types/problem";
 
 export const nodeNetworkProblems: Problem[] = [
   {
-    id: 'nodenet-p1',
-    topicId: 'node-network',
-    title: 'parseURL — разбор URL',
-    difficulty: 'easy',
+    id: "nodenet-p1",
+    topicId: "node-network",
+    title: "parseURL — разбор URL",
+    difficulty: "easy",
     isContextual: false,
     description: `Реализуйте функцию \`parseURL(url)\`:
 - Разбирает URL на компоненты
@@ -25,46 +25,71 @@ parseURL('https://example.com/users?id=1&role=admin');
 parseURL('http://localhost:3000/api');
 // → { protocol: 'http', host: 'localhost:3000', pathname: '/api', searchParams: {} }
 \`\`\``,
-    functionName: 'parseURL',
+    functionName: "parseURL",
     starterCode: `function parseURL(url) {
   // ваш код
 }`,
     testCases: [
       {
-        id: 'nodenet-p1-t1',
-        inputDisplay: 'https://example.com/users?id=1&role=admin',
-        inputArgs: ['https://example.com/users?id=1&role=admin'],
-        expected: { protocol: 'https', host: 'example.com', pathname: '/users', searchParams: { id: '1', role: 'admin' } },
+        id: "nodenet-p1-t1",
+        inputDisplay: "https://example.com/users?id=1&role=admin",
+        inputArgs: ["https://example.com/users?id=1&role=admin"],
+        expected: {
+          protocol: "https",
+          host: "example.com",
+          pathname: "/users",
+          searchParams: { id: "1", role: "admin" },
+        },
       },
       {
-        id: 'nodenet-p1-t2',
-        inputDisplay: 'http://localhost:3000/api — нет параметров',
-        inputArgs: ['http://localhost:3000/api'],
-        expected: { protocol: 'http', host: 'localhost:3000', pathname: '/api', searchParams: {} },
+        id: "nodenet-p1-t2",
+        inputDisplay: "http://localhost:3000/api — нет параметров",
+        inputArgs: ["http://localhost:3000/api"],
+        expected: {
+          protocol: "http",
+          host: "localhost:3000",
+          pathname: "/api",
+          searchParams: {},
+        },
       },
       {
-        id: 'nodenet-p1-t3',
-        inputDisplay: 'корень пути /',
-        inputArgs: ['https://example.com/'],
-        expected: { protocol: 'https', host: 'example.com', pathname: '/', searchParams: {} },
+        id: "nodenet-p1-t3",
+        inputDisplay: "корень пути /",
+        inputArgs: ["https://example.com/"],
+        expected: {
+          protocol: "https",
+          host: "example.com",
+          pathname: "/",
+          searchParams: {},
+        },
       },
       {
-        id: 'nodenet-p1-t4',
-        inputDisplay: 'один параметр',
-        inputArgs: ['https://api.io/search?q=hello'],
-        expected: { protocol: 'https', host: 'api.io', pathname: '/search', searchParams: { q: 'hello' } },
+        id: "nodenet-p1-t4",
+        inputDisplay: "один параметр",
+        inputArgs: ["https://api.io/search?q=hello"],
+        expected: {
+          protocol: "https",
+          host: "api.io",
+          pathname: "/search",
+          searchParams: { q: "hello" },
+        },
       },
       {
-        id: 'nodenet-p1-t5',
-        inputDisplay: 'URL с портом',
-        inputArgs: ['http://localhost:8080/health'],
-        expected: { protocol: 'http', host: 'localhost:8080', pathname: '/health', searchParams: {} },
+        id: "nodenet-p1-t5",
+        inputDisplay: "URL с портом",
+        inputArgs: ["http://localhost:8080/health"],
+        expected: {
+          protocol: "http",
+          host: "localhost:8080",
+          pathname: "/health",
+          searchParams: {},
+        },
       },
     ],
     hints: [
-      'Используйте встроенный браузерный `URL` класс: `new URL(url)`. Он имеет свойства `protocol`, `host`, `pathname`, `searchParams`.',
-      'Для searchParams: `Object.fromEntries(new URL(url).searchParams)` конвертирует URLSearchParams в обычный объект.',
-      'protocol из URL включает двоеточие ("https:") — уберите его через `.slice(0, -1)` или `.replace(":", "")`.',
+      "В JavaScript есть встроенный класс для разбора URL. Он предоставляет все нужные части как свойства.",
+      "searchParams — это специальный объект. Как преобразовать его в обычный JS-объект с парами ключ-значение?",
+      "protocol в стандарте включает символ-разделитель. Нужно ли его возвращать в результате?",
     ],
     solutionCode: `function parseURL(url) {
   const u = new URL(url);
@@ -77,10 +102,10 @@ parseURL('http://localhost:3000/api');
 }`,
   },
   {
-    id: 'nodenet-p2',
-    topicId: 'node-network',
-    title: 'buildQueryString — сборка query строки',
-    difficulty: 'easy',
+    id: "nodenet-p2",
+    topicId: "node-network",
+    title: "buildQueryString — сборка query строки",
+    difficulty: "easy",
     isContextual: false,
     description: `Реализуйте функцию \`buildQueryString(params)\`:
 - Принимает объект параметров
@@ -99,44 +124,45 @@ buildQueryString({ q: 'hello world', page: 2, limit: null });
 buildQueryString({});
 // → ''
 \`\`\``,
-    functionName: 'buildQueryString',
+    functionName: "buildQueryString",
     starterCode: `function buildQueryString(params) {
   // ваш код
 }`,
     testCases: [
       {
-        id: 'nodenet-p2-t1',
+        id: "nodenet-p2-t1",
         inputDisplay: '{ id: 1, name: "John Doe" }',
-        inputArgs: [{ id: 1, name: 'John Doe' }],
-        expected: 'id=1&name=John%20Doe',
+        inputArgs: [{ id: 1, name: "John Doe" }],
+        expected: "id=1&name=John%20Doe",
       },
       {
-        id: 'nodenet-p2-t2',
-        inputDisplay: 'null значения пропускаются',
-        inputArgs: [{ q: 'hello', page: 2, limit: null }],
-        expected: 'q=hello&page=2',
+        id: "nodenet-p2-t2",
+        inputDisplay: "null значения пропускаются",
+        inputArgs: [{ q: "hello", page: 2, limit: null }],
+        expected: "q=hello&page=2",
       },
       {
-        id: 'nodenet-p2-t3',
+        id: "nodenet-p2-t3",
         inputDisplay: 'пустой объект → ""',
         inputArgs: [{}],
-        expected: '',
+        expected: "",
       },
       {
-        id: 'nodenet-p2-t4',
-        inputDisplay: 'спецсимволы кодируются',
-        inputArgs: [{ url: 'https://a.com?x=1' }],
-        expected: 'url=https%3A%2F%2Fa.com%3Fx%3D1',
+        id: "nodenet-p2-t4",
+        inputDisplay: "спецсимволы кодируются",
+        inputArgs: [{ url: "https://a.com?x=1" }],
+        expected: "url=https%3A%2F%2Fa.com%3Fx%3D1",
       },
       {
-        id: 'nodenet-p2-t5',
-        inputDisplay: 'undefined значения пропускаются',
-        inputArgs: [{ a: 'x', b: undefined, c: 'y' }],
-        expected: 'a=x&c=y',
+        id: "nodenet-p2-t5",
+        inputDisplay: "undefined значения пропускаются",
+        inputArgs: [{ a: "x", b: undefined, c: "y" }],
+        expected: "a=x&c=y",
       },
     ],
     hints: [
-      '`Object.entries(params)` — получить пары [key, value]. Отфильтровать `null`/`undefined`. Применить `encodeURIComponent` к значениям. Соединить через `&`.',
+      "Как перебрать все ключи объекта и построить строку вида `key=value&key2=value2`?",
+      "Значения нужно закодировать для безопасной передачи в URL. Какая стандартная функция это делает?",
     ],
     solutionCode: `function buildQueryString(params) {
   return Object.entries(params)
@@ -146,10 +172,10 @@ buildQueryString({});
 }`,
   },
   {
-    id: 'nodenet-p3',
-    topicId: 'node-network',
-    title: 'createRateLimiter — ограничитель запросов',
-    difficulty: 'medium',
+    id: "nodenet-p3",
+    topicId: "node-network",
+    title: "createRateLimiter — ограничитель запросов",
+    difficulty: "medium",
     isContextual: false,
     description: `Реализуйте функцию \`createRateLimiter(limit, windowMs)\`:
 - Возвращает функцию \`check(userId)\`
@@ -167,44 +193,45 @@ limiter.check('user1'); // true (3/3)
 limiter.check('user1'); // false (превышен!)
 limiter.check('user2'); // true (другой пользователь)
 \`\`\``,
-    functionName: 'createRateLimiter',
+    functionName: "createRateLimiter",
     starterCode: `function createRateLimiter(limit, windowMs) {
   // ваш код — возвращает объект с методом check
 }`,
     testCases: [
       {
-        id: 'nodenet-p3-t1',
-        inputDisplay: '3 запроса в лимит → все true',
-        inputArgs: ['within-limit'],
+        id: "nodenet-p3-t1",
+        inputDisplay: "3 запроса в лимит → все true",
+        inputArgs: ["within-limit"],
         expected: [true, true, true],
       },
       {
-        id: 'nodenet-p3-t2',
-        inputDisplay: '4-й запрос → false',
-        inputArgs: ['exceed'],
+        id: "nodenet-p3-t2",
+        inputDisplay: "4-й запрос → false",
+        inputArgs: ["exceed"],
         expected: false,
       },
       {
-        id: 'nodenet-p3-t3',
-        inputDisplay: 'разные пользователи независимы',
-        inputArgs: ['different-users'],
+        id: "nodenet-p3-t3",
+        inputDisplay: "разные пользователи независимы",
+        inputArgs: ["different-users"],
         expected: true,
       },
       {
-        id: 'nodenet-p3-t4',
-        inputDisplay: 'check возвращает boolean',
-        inputArgs: ['returns-bool'],
+        id: "nodenet-p3-t4",
+        inputDisplay: "check возвращает boolean",
+        inputArgs: ["returns-bool"],
         expected: true,
       },
       {
-        id: 'nodenet-p3-t5',
-        inputDisplay: 'первый запрос всегда разрешён',
-        inputArgs: ['first-request'],
+        id: "nodenet-p3-t5",
+        inputDisplay: "первый запрос всегда разрешён",
+        inputArgs: ["first-request"],
         expected: true,
       },
     ],
     hints: [
-      'Храните Map: `userId → timestamps[]`. В `check`: фильтруйте старые метки (`Date.now() - t < windowMs`), проверяйте длину, добавляйте новую.',
+      "Нужно отслеживать время каждого запроса по пользователю. Какую структуру данных удобно использовать для хранения истории по ключу?",
+      "«Окно» — это временной диапазон. Как определить, какие запросы устарели и уже не считаются?",
     ],
     solutionCode: `function createRateLimiter(limit, windowMs) {
   const requests = new Map();
@@ -253,10 +280,10 @@ createRateLimiter = function (arg) {
 };`,
   },
   {
-    id: 'nodenet-p4',
-    topicId: 'node-network',
-    title: 'Router — простой HTTP-роутер',
-    difficulty: 'medium',
+    id: "nodenet-p4",
+    topicId: "node-network",
+    title: "Router — простой HTTP-роутер",
+    difficulty: "medium",
     isContextual: false,
     description: `Реализуйте класс \`Router\`:
 - \`get(path, handler)\` и \`post(path, handler)\` — регистрация маршрутов
@@ -279,7 +306,7 @@ router.match('GET', '/users/42');
 router.match('DELETE', '/users');
 // → null (метод не зарегистрирован)
 \`\`\``,
-    functionName: 'Router',
+    functionName: "Router",
     starterCode: `class Router {
   constructor() {
     // ваш код
@@ -299,39 +326,39 @@ router.match('DELETE', '/users');
 }`,
     testCases: [
       {
-        id: 'nodenet-p4-t1',
-        inputDisplay: 'точное совпадение GET /users',
-        inputArgs: ['exact'],
+        id: "nodenet-p4-t1",
+        inputDisplay: "точное совпадение GET /users",
+        inputArgs: ["exact"],
         expected: true,
       },
       {
-        id: 'nodenet-p4-t2',
-        inputDisplay: 'динамический параметр :id',
-        inputArgs: ['dynamic'],
-        expected: { id: '42' },
+        id: "nodenet-p4-t2",
+        inputDisplay: "динамический параметр :id",
+        inputArgs: ["dynamic"],
+        expected: { id: "42" },
       },
       {
-        id: 'nodenet-p4-t3',
-        inputDisplay: 'нет совпадения → null',
-        inputArgs: ['no-match'],
+        id: "nodenet-p4-t3",
+        inputDisplay: "нет совпадения → null",
+        inputArgs: ["no-match"],
         expected: null,
       },
       {
-        id: 'nodenet-p4-t4',
-        inputDisplay: 'метод POST',
-        inputArgs: ['post-method'],
+        id: "nodenet-p4-t4",
+        inputDisplay: "метод POST",
+        inputArgs: ["post-method"],
         expected: true,
       },
       {
-        id: 'nodenet-p4-t5',
-        inputDisplay: 'несколько параметров',
-        inputArgs: ['multi-params'],
-        expected: { userId: '1', postId: '2' },
+        id: "nodenet-p4-t5",
+        inputDisplay: "несколько параметров",
+        inputArgs: ["multi-params"],
+        expected: { userId: "1", postId: "2" },
       },
     ],
     hints: [
-      'Храните роуты как `{ method, pattern, paramNames, handler }`. `pattern` — RegExp из пути: `/users/:id` → `/users/([^/]+)`.',
-      'В `match`: итерируйте роуты, проверяйте метод и pattern.test(path), извлекайте params через захватывающие группы.',
+      "Как превратить путь вида `/users/:id` в паттерн, который будет совпадать с конкретными URL и извлекать значения параметров?",
+      "Как при совпадении маршрута восстановить значения именованных параметров из URL?",
     ],
     solutionCode: `class Router {
   constructor() {
@@ -371,10 +398,10 @@ router.match('DELETE', '/users');
 }`,
   },
   {
-    id: 'nodenet-p5',
-    topicId: 'node-network',
-    title: 'fetchWithRetry — повторные запросы',
-    difficulty: 'medium',
+    id: "nodenet-p5",
+    topicId: "node-network",
+    title: "fetchWithRetry — повторные запросы",
+    difficulty: "medium",
     isContextual: true,
     description: `Реализуйте функцию \`fetchWithRetry(url, options, retries)\`:
 - Выполняет запрос через переданную функцию \`fetch\` (или симуляцию)
@@ -395,44 +422,45 @@ const result = await fetchWithRetry(mockFetch, 3);
 await fetchWithRetry(alwaysFails, 2);
 // → throws Error
 \`\`\``,
-    functionName: 'fetchWithRetry',
+    functionName: "fetchWithRetry",
     starterCode: `async function fetchWithRetry(fetchFn, retries, baseDelay = 100) {
   // ваш код
 }`,
     testCases: [
       {
-        id: 'nodenet-p5-t1',
-        inputDisplay: 'успех с первой попытки',
-        inputArgs: ['success-first'],
+        id: "nodenet-p5-t1",
+        inputDisplay: "успех с первой попытки",
+        inputArgs: ["success-first"],
         expected: { ok: true },
       },
       {
-        id: 'nodenet-p5-t2',
-        inputDisplay: '2 ошибки затем успех',
-        inputArgs: ['success-third'],
+        id: "nodenet-p5-t2",
+        inputDisplay: "2 ошибки затем успех",
+        inputArgs: ["success-third"],
         expected: { ok: true },
       },
       {
-        id: 'nodenet-p5-t3',
-        inputDisplay: 'все попытки провалились → throws',
-        inputArgs: ['all-fail'],
-        expected: 'Error: network error',
+        id: "nodenet-p5-t3",
+        inputDisplay: "все попытки провалились → throws",
+        inputArgs: ["all-fail"],
+        expected: "Error: network error",
       },
       {
-        id: 'nodenet-p5-t4',
-        inputDisplay: 'retries=0 — одна попытка',
-        inputArgs: ['no-retry'],
+        id: "nodenet-p5-t4",
+        inputDisplay: "retries=0 — одна попытка",
+        inputArgs: ["no-retry"],
         expected: true,
       },
       {
-        id: 'nodenet-p5-t5',
-        inputDisplay: 'пауза между попытками',
-        inputArgs: ['delay-check'],
+        id: "nodenet-p5-t5",
+        inputDisplay: "пауза между попытками",
+        inputArgs: ["delay-check"],
         expected: true,
       },
     ],
     hints: [
-      'Цикл `for (let i = 0; i <= retries; i++)`. Внутри try/catch: при ошибке — если `i < retries`, ждём `baseDelay * (i + 1)` мс, иначе throw.',
+      "Как повторять попытки при ошибке, не прерывая выполнение? Что делать с ошибкой, если попытки ещё есть — и что, если они исчерпаны?",
+      "Задержка должна расти с каждой попыткой. Как связать её размер с номером попытки?",
     ],
     solutionCode: `async function fetchWithRetry(fetchFn, retries, baseDelay = 100) {
   let lastError;
@@ -501,11 +529,11 @@ fetchWithRetry = async function (arg) {
 };`,
   },
   {
-    kind: 'predict-output',
-    id: 'nn-p6',
-    topicId: 'node-network',
-    title: 'Угадай вывод: middleware-цепочка Express',
-    difficulty: 'medium',
+    kind: "predict-output",
+    id: "nn-p6",
+    topicId: "node-network",
+    title: "Определи вывод: middleware-цепочка Express",
+    difficulty: "medium",
     isContextual: false,
     description: `Перед вами middleware-цепочка в стиле Express: каждый middleware печатает строку до next() и опционально после. Введите каждую напечатанную строку в отдельной строчке поля ответа.
 
@@ -535,12 +563,12 @@ const c = (req, res, next) => {
 };
 
 runPipeline([a, b, c], {}, {});`,
-    expected: 'A in\nB in\nC handler\nB out\nA out',
+    expected: "A in\nB in\nC handler\nB out\nA out",
     hints: [
-      'next() — синхронный вызов следующего middleware. Управление возвращается обратно после его завершения.',
-      'Сначала идём «вглубь»: A in → B in → C handler.',
-      'Затем «всплываем» обратно: B out → A out (LIFO).',
-      'Это тот же порядок, что у вложенных функций — каждый next() как обычный синхронный вызов.',
+      "next() — синхронный вызов следующего middleware. Управление возвращается обратно после его завершения.",
+      "Сначала идём «вглубь»: A in → B in → C handler.",
+      "Затем «всплываем» обратно: B out → A out (LIFO).",
+      "Это тот же порядок, что у вложенных функций — каждый next() как обычный синхронный вызов.",
     ],
     solutionCode: `// A in   — middleware A напечатал и вызвал next()
 // B in   — middleware B напечатал и вызвал next()
@@ -550,20 +578,17 @@ runPipeline([a, b, c], {}, {});`,
 // Итог: A in, B in, C handler, B out, A out`,
   },
   {
-    kind: 'find-bug',
-    id: 'nn-p7',
-    topicId: 'node-network',
-    title: 'Найди баг: middleware не вызывает next()',
-    difficulty: 'easy',
+    kind: "find-bug",
+    id: "nn-p7",
+    topicId: "node-network",
+    title: "Найди баг: конвейер middleware обрывается",
+    difficulty: "easy",
     isContextual: false,
     description: `Функция \`runPipeline(middlewares, req)\` имитирует Express-конвейер: запускает middleware по очереди, и каждый из них дописывает свой идентификатор в \`req.trace\`. Тесты ожидают, что после прогона цепочки \`req.trace === 'AUTH|LOG|HANDLER'\`.
 
-В коде есть распространённый production-баг: один из middleware **забывает** вызвать \`next()\` после своей работы. Из-за этого цепочка обрывается, последующие middleware не выполняются, и в реальном Express-сервере запрос «зависнет» до server-timeout.
-
-Найдите и почините.`,
+Но что-то мешает цепочке отработать полностью. Найдите и исправьте.`,
     buggyCode: `function authMw(req, res, next) {
   req.trace = (req.trace ?? '') + 'AUTH';
-  // Забыли вызвать next() — цепочка обрывается!
 }
 
 function logMw(req, res, next) {
@@ -601,33 +626,32 @@ function nn_p7_test(arg) {
     return req.trace;
   }
 }`,
-    functionName: 'nn_p7_test',
+    functionName: "nn_p7_test",
     bugSummary:
-      'authMw не вызывает next(), поэтому конвейер обрывается на первом же middleware. logMw и handlerMw никогда не выполняются. В реальном Express-сервере это приводит к зависанию запроса до server timeout.',
+      "authMw не вызывает next(), поэтому конвейер обрывается на первом же middleware. logMw и handlerMw никогда не выполняются. В реальном Express-сервере это приводит к зависанию запроса до server timeout.",
     testCases: [
       {
-        id: 'nn-p7-t1',
-        inputDisplay: 'все три middleware выполнились → AUTH|LOG|HANDLER',
-        inputArgs: ['all'],
-        expected: 'AUTH|LOG|HANDLER',
+        id: "nn-p7-t1",
+        inputDisplay: "все три middleware выполнились → AUTH|LOG|HANDLER",
+        inputArgs: ["all"],
+        expected: "AUTH|LOG|HANDLER",
       },
       {
-        id: 'nn-p7-t2',
-        inputDisplay: 'authMw в одиночку → AUTH',
-        inputArgs: ['auth-only'],
-        expected: 'AUTH',
+        id: "nn-p7-t2",
+        inputDisplay: "authMw в одиночку → AUTH",
+        inputArgs: ["auth-only"],
+        expected: "AUTH",
       },
       {
-        id: 'nn-p7-t3',
-        inputDisplay: 'auth+log выполнились → AUTH|LOG',
-        inputArgs: ['auth+log'],
-        expected: 'AUTH|LOG',
+        id: "nn-p7-t3",
+        inputDisplay: "auth+log выполнились → AUTH|LOG",
+        inputArgs: ["auth+log"],
+        expected: "AUTH|LOG",
       },
     ],
     hints: [
-      'Запустите код мысленно: authMw добавил "AUTH", и… что дальше? Цепочка управления должна перейти к следующему middleware, но как?',
-      'В middleware-pipeline следующий middleware вызывается через next(). Если его не вызвать — конвейер заморожен.',
-      'Допишите next() в конце authMw.',
+      'Пройди по коду мысленно: что происходит после того, как authMw выполнил свою работу? Управление должно перейти дальше — что для этого нужно вызвать?',
+      'Сравни authMw с logMw. Что делает logMw, чего нет в authMw?',
     ],
     solutionCode: `function authMw(req, res, next) {
   req.trace = (req.trace ?? '') + 'AUTH';
@@ -671,16 +695,16 @@ function nn_p7_test(arg) {
 }`,
   },
   {
-    kind: 'refactor',
-    id: 'nn-p8',
-    topicId: 'node-network',
-    title: 'Оптимизируй: цепочка if-ов → словарь маршрутов',
-    difficulty: 'easy',
+    kind: "refactor",
+    id: "nn-p8",
+    topicId: "node-network",
+    title: "Оптимизируй: цепочка if-ов → словарь маршрутов",
+    difficulty: "easy",
     isContextual: false,
     description: `Функция \`route(method, path)\` — наивный роутер на цепочке \`if/else if\`. С каждым новым маршрутом конструкция растёт линейно и плохо читается. Перепишите функцию так, чтобы маршруты хранились в **словаре** (\`Map\` или объекте) с ключом \`\`\${method} \${path}\`\`, а \`route\` делал \`O(1)\` lookup.
 
 Сигнатура остаётся: \`route(method, path)\` возвращает строку — имя обработчика — или \`'404'\`, если маршрут не зарегистрирован. Корректность: результат должен совпадать со starter-кодом для всех тест-кейсов.`,
-    functionName: 'route',
+    functionName: "route",
     starterCode: `function route(method, path) {
   if (method === 'GET' && path === '/users') return 'getAllUsers';
   if (method === 'POST' && path === '/users') return 'createUser';
@@ -693,40 +717,39 @@ function nn_p7_test(arg) {
 }`,
     testCases: [
       {
-        id: 'nn-p8-t1',
-        inputDisplay: 'GET /users → getAllUsers',
-        inputArgs: ['GET', '/users'],
-        expected: 'getAllUsers',
+        id: "nn-p8-t1",
+        inputDisplay: "GET /users → getAllUsers",
+        inputArgs: ["GET", "/users"],
+        expected: "getAllUsers",
       },
       {
-        id: 'nn-p8-t2',
-        inputDisplay: 'POST /posts → createPost',
-        inputArgs: ['POST', '/posts'],
-        expected: 'createPost',
+        id: "nn-p8-t2",
+        inputDisplay: "POST /posts → createPost",
+        inputArgs: ["POST", "/posts"],
+        expected: "createPost",
       },
       {
-        id: 'nn-p8-t3',
-        inputDisplay: 'DELETE /cache → clearCache',
-        inputArgs: ['DELETE', '/cache'],
-        expected: 'clearCache',
+        id: "nn-p8-t3",
+        inputDisplay: "DELETE /cache → clearCache",
+        inputArgs: ["DELETE", "/cache"],
+        expected: "clearCache",
       },
       {
-        id: 'nn-p8-t4',
-        inputDisplay: 'GET /unknown → 404',
-        inputArgs: ['GET', '/unknown'],
-        expected: '404',
+        id: "nn-p8-t4",
+        inputDisplay: "GET /unknown → 404",
+        inputArgs: ["GET", "/unknown"],
+        expected: "404",
       },
       {
-        id: 'nn-p8-t5',
-        inputDisplay: 'PUT /users → 404 (метод не зарегистрирован)',
-        inputArgs: ['PUT', '/users'],
-        expected: '404',
+        id: "nn-p8-t5",
+        inputDisplay: "PUT /users → 404 (метод не зарегистрирован)",
+        inputArgs: ["PUT", "/users"],
+        expected: "404",
       },
     ],
     hints: [
-      'Создайте `Map` (или обычный объект) один раз вне функции `route`. Ключ — `` `${method} ${path}` ``, значение — имя обработчика.',
-      'Внутри `route` соберите тот же ключ и сделайте `routes.get(key) ?? "404"`.',
-      'Если используете обычный объект — `routes[key]` тоже работает, но Map предпочтительнее: ключи изолированы от прототипа.',
+      "Маршруты нужно зарегистрировать один раз и искать по запросу. Как уникально идентифицировать маршрут по методу и пути?",
+      "Поиск по комбинированному ключу — распространённый паттерн. Какая структура данных даёт быстрый поиск по произвольному ключу?",
     ],
     solutionCode: `const routes = new Map([
   ['GET /users', 'getAllUsers'],
@@ -743,11 +766,11 @@ function route(method, path) {
 }`,
   },
   {
-    id: 'nodn-h1',
-    topicId: 'node-network',
-    kind: 'implement',
-    title: 'Rate Limiter — ограничение запросов по IP',
-    difficulty: 'hard',
+    id: "nodn-h1",
+    topicId: "node-network",
+    kind: "implement",
+    title: "Rate Limiter — ограничение запросов по IP",
+    difficulty: "hard",
     isContextual: false,
     description: `Реализуйте функцию \`createRateLimiter({ windowMs, maxRequests })\`, которая возвращает middleware-функцию \`(req, res, next)\` для Express-подобного сервера.
 
@@ -757,7 +780,7 @@ Middleware:
 - Иначе — вызывает \`next()\`
 
 Используйте скользящее окно (sliding window log) — точный алгоритм на основе временных меток.`,
-    functionName: 'createRateLimiter_test',
+    functionName: "createRateLimiter_test",
     starterCode: `function createRateLimiter({ windowMs, maxRequests }) {
   // ваш код
   return function(req, res, next) {
@@ -765,15 +788,34 @@ Middleware:
   };
 }`,
     testCases: [
-      { id: 'nodn-h1-t1', inputDisplay: 'запросы в пределах лимита проходят', inputArgs: ['within-limit'], expected: 'next-called' },
-      { id: 'nodn-h1-t2', inputDisplay: 'превышение лимита → 429', inputArgs: ['over-limit'], expected: 429 },
-      { id: 'nodn-h1-t3', inputDisplay: 'разные IP — независимые счётчики', inputArgs: ['diff-ip'], expected: 'next-called' },
-      { id: 'nodn-h1-t4', inputDisplay: 'старые запросы выходят из окна', inputArgs: ['window-slide'], expected: 'next-called' },
+      {
+        id: "nodn-h1-t1",
+        inputDisplay: "запросы в пределах лимита проходят",
+        inputArgs: ["within-limit"],
+        expected: "next-called",
+      },
+      {
+        id: "nodn-h1-t2",
+        inputDisplay: "превышение лимита → 429",
+        inputArgs: ["over-limit"],
+        expected: 429,
+      },
+      {
+        id: "nodn-h1-t3",
+        inputDisplay: "разные IP — независимые счётчики",
+        inputArgs: ["diff-ip"],
+        expected: "next-called",
+      },
+      {
+        id: "nodn-h1-t4",
+        inputDisplay: "старые запросы выходят из окна",
+        inputArgs: ["window-slide"],
+        expected: "next-called",
+      },
     ],
     hints: [
-      'Храните Map<ip, number[]> — список timestamp запросов для каждого IP.',
-      'При каждом запросе: удалите из массива timestamps старше Date.now() - windowMs.',
-      'Если timestamps.length >= maxRequests — отправьте 429. Иначе — добавьте timestamp и вызовите next().',
+      "Нужно помнить историю запросов каждого IP. Как хранить список временных меток по ключу?",
+      "«Скользящее окно» означает, что старые запросы перестают считаться. Как отсечь устаревшие отметки?",
     ],
     solutionCode: `function createRateLimiter({ windowMs, maxRequests }) {
   const requests = new Map(); // ip → timestamps[]
@@ -857,11 +899,11 @@ Middleware:
 }`,
   },
   {
-    id: 'nodn-h2',
-    topicId: 'node-network',
-    kind: 'implement',
-    title: 'Connection Pool — пул TCP/HTTP соединений',
-    difficulty: 'hard',
+    id: "nodn-h2",
+    topicId: "node-network",
+    kind: "implement",
+    title: "Connection Pool — пул TCP/HTTP соединений",
+    difficulty: "hard",
     isContextual: false,
     description: `Реализуйте класс \`ConnectionPool\`, который управляет пулом переиспользуемых соединений.
 
@@ -877,7 +919,7 @@ const pool = new ConnectionPool({
   maxSize: 3,
 });
 \`\`\``,
-    functionName: 'ConnectionPool_test',
+    functionName: "ConnectionPool_test",
     starterCode: `class ConnectionPool {
   constructor({ create, destroy, maxSize }) {
     // ваш код
@@ -896,15 +938,34 @@ const pool = new ConnectionPool({
   }
 }`,
     testCases: [
-      { id: 'nodn-h2-t1', inputDisplay: 'acquire возвращает соединение', inputArgs: ['basic'], expected: true },
-      { id: 'nodn-h2-t2', inputDisplay: 'release возвращает соединение в пул', inputArgs: ['reuse'], expected: true },
-      { id: 'nodn-h2-t3', inputDisplay: 'ожидание при заполненном пуле', inputArgs: ['wait'], expected: true },
-      { id: 'nodn-h2-t4', inputDisplay: 'destroy закрывает все соединения', inputArgs: ['destroy'], expected: true },
+      {
+        id: "nodn-h2-t1",
+        inputDisplay: "acquire возвращает соединение",
+        inputArgs: ["basic"],
+        expected: true,
+      },
+      {
+        id: "nodn-h2-t2",
+        inputDisplay: "release возвращает соединение в пул",
+        inputArgs: ["reuse"],
+        expected: true,
+      },
+      {
+        id: "nodn-h2-t3",
+        inputDisplay: "ожидание при заполненном пуле",
+        inputArgs: ["wait"],
+        expected: true,
+      },
+      {
+        id: "nodn-h2-t4",
+        inputDisplay: "destroy закрывает все соединения",
+        inputArgs: ["destroy"],
+        expected: true,
+      },
     ],
     hints: [
-      'Храните: массив idle соединений, счётчик total (всего создано), очередь waiters (resolve-функции).',
-      'acquire(): если есть idle — вернуть. Если total < maxSize — создать новое. Иначе — вернуть new Promise(resolve => waiters.push(resolve)).',
-      'release(conn): если есть waiters — передать им conn напрямую. Иначе — добавить в idle.',
+      "Пул управляет тремя вещами: свободными соединениями, общим количеством и ожидающими запросами. Что нужно знать, чтобы решить — выдать соединение сразу или поставить в очередь?",
+      "Когда соединение возвращается — его нужно или отдать ожидающему, или вернуть в пул. Как проверить, есть ли кто-то в очереди?",
     ],
     solutionCode: `class ConnectionPool {
   constructor({ create, destroy: destroyFn, maxSize }) {

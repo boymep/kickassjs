@@ -65,9 +65,9 @@ createElement({
       },
     ],
     hints: [
-      'Создайте элемент: `const el = document.createElement(descriptor.tag)`.',
-      'Добавьте атрибуты: `for (const [key, val] of Object.entries(attrs)) el.setAttribute(key, val)`.',
-      'Рекурсивно обработайте children: если строка — `document.createTextNode(child)`, если объект — рекурсивный вызов `createElement(child)`.',
+      'Как создать DOM-узел, зная только его тег?',
+      'Дочерние элементы могут быть либо строками, либо вложенными дескрипторами. Как различить эти два случая при обходе?',
+      'Структура дескриптора рекурсивна — какой подход лучше всего подходит для таких задач?',
     ],
     solutionCode: `function createElement(descriptor) {
   const el = document.createElement(descriptor.tag);
@@ -154,9 +154,9 @@ delegate(list, 'li', 'click', function(el) {
       },
     ],
     hints: [
-      'Добавьте обработчик на `parent`. В нём: `const target = e.target.closest(selector)` — ищет ближайшего предка, соответствующего selector.',
-      'Проверьте, что target не null и является потомком parent: `parent.contains(target)`.',
-      'Вызовите `handler.call(target, target)` — передаём найденный элемент как this и аргумент.',
+      'Обработчик ставится один раз на родителя. Как из события определить, на каком именно дочернем элементе кликнул пользователь?',
+      'Клик мог прийти от глубоко вложенного потомка. Как найти ближайший элемент, соответствующий нужному селектору?',
+      'Что если кликнули за пределами ожидаемых элементов? Как убедиться, что найденный target действительно принадлежит parent?',
     ],
     solutionCode: `function delegate(parent, selector, eventType, handler) {
   parent.addEventListener(eventType, function(e) {
@@ -259,9 +259,9 @@ serialize(form) → { username: 'alice', age: '25', agree: 'on' }
       },
     ],
     hints: [
-      'Используйте `form.elements` — HTMLCollection всех полей формы.',
-      'Для каждого поля: проверьте `el.name`, `el.disabled`, для checkbox — `el.checked`.',
-      'Или используйте `new FormData(form)` → `Object.fromEntries(formData.entries())`.',
+      'Как получить список всех интерактивных полей формы?',
+      'Какие поля нужно пропустить? Подумайте о полях без имени, отключённых полях, а также о флажках в разных состояниях.',
+      'Чем значение checkbox отличается от значения текстового поля — и как это отразится в итоговом объекте?',
     ],
     solutionCode: `function serialize(form) {
   const result = {};
@@ -356,9 +356,9 @@ highlight(div, 'hello');
       },
     ],
     hints: [
-      'Используйте `TreeWalker` или рекурсивный обход. `document.createTreeWalker(root, NodeFilter.SHOW_TEXT)` — итератор по текстовым узлам.',
-      'Для каждого текстового узла: найдите вхождения с помощью regex. Разбейте узел на части через `splitText`, оберните найденную часть в `<mark>`.',
-      'Важно: при разбиении текстовых узлов TreeWalker может "потерять" позицию — собирайте все нужные узлы сначала в массив, потом обрабатывайте.',
+      'Выделение работает на уровне текстовых узлов. Как обойти только их, не трогая элементы?',
+      'Найдя нужный текстовый узел, как разделить его на части, чтобы обернуть только совпадающий фрагмент?',
+      'Изменение текстовых узлов во время обхода может сбить итератор. Как это обойти?',
     ],
     solutionCode: `function highlight(root, word) {
   const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
@@ -479,9 +479,9 @@ clone !== original;                     // true (другой объект)
       },
     ],
     hints: [
-      'Для текстовых узлов: `document.createTextNode(node.textContent)`.',
-      'Для элементов: `document.createElement(el.tagName)`, затем скопируйте атрибуты через `el.attributes`.',
-      'Рекурсивно обойдите `el.childNodes` (не `children` — включает текстовые узлы).',
+      'Узлы бывают разных типов. Как клонирование элемента отличается от клонирования текстового узла?',
+      'После создания нового элемента — какие данные исходного узла нужно перенести?',
+      'Как обойти всех потомков, включая текстовые узлы (не только дочерние элементы)?',
     ],
     solutionCode: `function deepCloneNode(el) {
   if (el.nodeType === Node.TEXT_NODE) {
@@ -565,15 +565,13 @@ btn.click();`,
   {
     id: 'jsd-p2',
     topicId: 'js-dom',
-    title: 'Найди баг: removeEventListener',
+    title: 'Найди баг: отписка от события не работает',
     difficulty: 'medium',
     isContextual: false,
     kind: 'find-bug',
-    description: `Функция \`subscribe(emitter, type, fn)\` должна повесить обработчик на эмиттер и вернуть функцию-отписку. После вызова отписки обработчик НЕ должен срабатывать.
+    description: `Функция \`subscribe(emitter, type, fn)\` вешает обработчик на эмиттер и возвращает функцию-отписку. После вызова отписки обработчик **не должен** срабатывать.
 
-Тесты используют упрощённый эмиттер с API \`addEventListener\` / \`removeEventListener\`. Найдите и исправьте баг.
-
-Подсказка: при вызове \`removeEventListener\` важно передать **ту же** ссылку на функцию, что и при добавлении.`,
+Тесты используют упрощённый эмиттер с API \`addEventListener\` / \`removeEventListener\`. Найдите и исправьте баг.`,
     functionName: 'subscribe_test',
     buggyCode: `function subscribe(emitter, type, fn) {
   emitter.addEventListener(type, (e) => fn(e));
@@ -616,9 +614,8 @@ btn.click();`,
       },
     ],
     hints: [
-      'Сохраните единственную ссылку на обработчик в переменной до addEventListener.',
-      'В замыкании верните функцию, вызывающую removeEventListener с этой же переменной.',
-      'Стрелочная функция, созданная заново, — это другой объект, removeEventListener его не найдёт.',
+      'Посмотри внимательно на то, что передаётся в addEventListener и removeEventListener. Это одно и то же?',
+      'removeEventListener удаляет обработчик по ссылке. Что происходит при создании новой функции на каждой строке?',
     ],
     solutionCode: `function subscribe(emitter, type, fn) {
   const handler = (e) => fn(e);
@@ -738,9 +735,9 @@ API контейнера в тестах:
       },
     ],
     hints: [
-      'Регистрируйте обработчик ОДИН раз — на container, не на каждом item.',
-      'В обработчике event.target — это item, который сгенерировал клик. Используйте его id.',
-      'Перед вызовом onPick проверьте, что target присутствует в массиве items (защита от чужих кликов).',
+      'Нужно ли вешать обработчик на каждый item? Есть ли более эффективный подход?',
+      'Как из события клика на container понять, по какому именно item кликнули?',
+      'Что если клик пришёл от элемента, которого нет в списке? Как защититься от лишних вызовов onPick?',
     ],
     solutionCode: `function attachHandlers(container, items, onPick) {
   const known = new Set(items);
@@ -842,9 +839,8 @@ closestBySelector(item, '.missing')    // → null
       { id: 'jsdom-h1-t5', inputDisplay: 'нет совпадения → null', inputArgs: ['no-match'], expected: null },
     ],
     hints: [
-      'Цикл: начните с element, на каждом шаге переходите к element.parentElement.',
-      'Парсите selector: если начинается с "#" — проверяйте el.id, с "." — el.classList.contains, с "[" — el.hasAttribute, иначе — el.tagName.toLowerCase().',
-      'Продолжайте пока element !== null.',
+      'Как двигаться от элемента вверх по дереву DOM, пока не найдёшь совпадение или не достигнешь вершины?',
+      'Селектор может быть тегом, классом, id или атрибутом. По какому признаку понять, что именно задано?',
     ],
     solutionCode: `function closestBySelector(element, selector) {
   function matches(el, sel) {
@@ -924,9 +920,9 @@ btn.className // → 'new'
       { id: 'jsdom-h2-t5', inputDisplay: 'удаляет лишний дочерний узел', inputArgs: ['remove-child'], expected: 1 },
     ],
     hints: [
-      'Если oldVNode — строка: обновите textContent если изменилась.',
-      'Если теги разные: создайте новый DOM-элемент из newVNode и замените старый через parent.replaceChild.',
-      'Если теги совпадают: итерируйтесь по attrs newVNode (setAttribute) и удалите те, что есть в old но нет в new (removeAttribute). Затем рекурсивно patch каждый child.',
+      'Какие три принципиально разных ситуации могут возникнуть при сравнении старого и нового виртуального узла?',
+      'Если структура узла не изменилась — что именно нужно обновить в реальном DOM, а что можно оставить?',
+      'Как обработать разницу в количестве дочерних узлов между старым и новым деревом?',
     ],
     solutionCode: `function createEl(vnode) {
   if (typeof vnode === 'string') return document.createTextNode(vnode);

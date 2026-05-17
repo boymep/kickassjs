@@ -1,12 +1,12 @@
-import type { Problem } from '../../types/problem';
+import type { Problem } from "../../types/problem";
 
 export const jsPrototypesProblems: Problem[] = [
   {
-    kind: 'predict-output',
-    id: 'jsp-p6',
-    topicId: 'js-prototypes',
-    title: 'Угадай вывод: переопределение метода в цепочке',
-    difficulty: 'easy',
+    kind: "predict-output",
+    id: "jsp-p6",
+    topicId: "js-prototypes",
+    title: "Определи вывод: переопределение метода в цепочке",
+    difficulty: "easy",
     isContextual: false,
     description: `Что выведет этот код по строкам? Введи каждую строку в отдельной строчке поля ответа.`,
     code: `class Animal {
@@ -25,11 +25,11 @@ console.log(a.speak());
 console.log(d.speak());
 console.log(p.speak());
 console.log(p instanceof Animal);`,
-    expected: 'generic\ngeneric → woof\ngeneric → woof\ntrue',
+    expected: "generic\ngeneric → woof\ngeneric → woof\ntrue",
     hints: [
-      'Поиск метода идёт по цепочке: p → Poodle.prototype → Dog.prototype → Animal.prototype.',
-      'Poodle не переопределяет speak, поэтому используется Dog.prototype.speak с super = Animal.prototype.speak.',
-      'instanceof проверяет всю цепочку прототипов до Object.prototype.',
+      "Поиск метода идёт по цепочке: p → Poodle.prototype → Dog.prototype → Animal.prototype.",
+      "Poodle не переопределяет speak, поэтому используется Dog.prototype.speak с super = Animal.prototype.speak.",
+      "instanceof проверяет всю цепочку прототипов до Object.prototype.",
     ],
     solutionCode: `// a.speak(): найдено на Animal.prototype → 'generic'.
 // d.speak(): найдено на Dog.prototype, super.speak() = 'generic' → 'generic → woof'.
@@ -37,11 +37,11 @@ console.log(p instanceof Animal);`,
 // p instanceof Animal: цепочка Poodle.prototype → Dog.prototype → Animal.prototype → true.`,
   },
   {
-    kind: 'find-bug',
-    id: 'jsp-p7',
-    topicId: 'js-prototypes',
-    title: 'Найди баг: constructor после наследования через прототип',
-    difficulty: 'medium',
+    kind: "find-bug",
+    id: "jsp-p7",
+    topicId: "js-prototypes",
+    title: "Найди баг: constructor после наследования через прототип",
+    difficulty: "medium",
     isContextual: false,
     description: `Класс Dog наследует от Animal через ручную сборку прототипа. Но что-то не так: после создания экземпляра \`new Dog('Rex').constructor\` указывает не на Dog. Найди и почини баг, чтобы все тесты прошли.`,
     buggyCode: `function Animal(name) {
@@ -59,20 +59,45 @@ Dog.prototype = Object.create(Animal.prototype);
 Dog.prototype.bark = function () {
   return this.name + ' лает!';
 };`,
-    functionName: 'jsp_p7_test',
+    functionName: "jsp_p7_test",
     bugSummary:
-      'После `Dog.prototype = Object.create(Animal.prototype)` свойство `constructor` стало наследоваться от Animal.prototype и указывает на Animal. Это ломает фабричные паттерны вида `new this.constructor()`. Лечится одной строкой: `Dog.prototype.constructor = Dog`.',
+      "После `Dog.prototype = Object.create(Animal.prototype)` свойство `constructor` стало наследоваться от Animal.prototype и указывает на Animal. Это ломает фабричные паттерны вида `new this.constructor()`. Лечится одной строкой: `Dog.prototype.constructor = Dog`.",
     testCases: [
-      { id: 'jsp-p7-t1', inputDisplay: 'new Dog("Rex").bark()', inputArgs: ['bark'], expected: 'Rex лает!' },
-      { id: 'jsp-p7-t2', inputDisplay: 'new Dog("Rex").speak()', inputArgs: ['speak'], expected: 'Rex издаёт звук' },
-      { id: 'jsp-p7-t3', inputDisplay: 'new Dog("Rex").constructor === Dog', inputArgs: ['ctor-dog'], expected: true },
-      { id: 'jsp-p7-t4', inputDisplay: 'new Dog("Rex") instanceof Dog', inputArgs: ['inst-dog'], expected: true },
-      { id: 'jsp-p7-t5', inputDisplay: 'new Dog("Rex") instanceof Animal', inputArgs: ['inst-animal'], expected: true },
+      {
+        id: "jsp-p7-t1",
+        inputDisplay: 'new Dog("Rex").bark()',
+        inputArgs: ["bark"],
+        expected: "Rex лает!",
+      },
+      {
+        id: "jsp-p7-t2",
+        inputDisplay: 'new Dog("Rex").speak()',
+        inputArgs: ["speak"],
+        expected: "Rex издаёт звук",
+      },
+      {
+        id: "jsp-p7-t3",
+        inputDisplay: 'new Dog("Rex").constructor === Dog',
+        inputArgs: ["ctor-dog"],
+        expected: true,
+      },
+      {
+        id: "jsp-p7-t4",
+        inputDisplay: 'new Dog("Rex") instanceof Dog',
+        inputArgs: ["inst-dog"],
+        expected: true,
+      },
+      {
+        id: "jsp-p7-t5",
+        inputDisplay: 'new Dog("Rex") instanceof Animal',
+        inputArgs: ["inst-animal"],
+        expected: true,
+      },
     ],
     hints: [
-      'instanceof работает — значит цепочка прототипов настроена корректно.',
-      'Проблема в том, что `Object.create(Animal.prototype)` создаёт новый объект, у которого `constructor` унаследован от Animal.prototype.',
-      'Допиши одну строку после `Dog.prototype = Object.create(...)`: восстанови `Dog.prototype.constructor`.',
+      "Наследование через прототипы настроено — но экземпляры ведут себя странно. Что именно не работает в тестах?",
+      "Когда вы заменяете весь Dog.prototype новым объектом — какое свойство при этом теряется?",
+      "Как убедиться, что это свойство правильно указывает на нужную функцию после настройки цепочки?",
     ],
     solutionCode: `function Animal(name) {
   this.name = name;
@@ -99,11 +124,11 @@ Dog.prototype.bark = function () {
 }`,
   },
   {
-    kind: 'refactor',
-    id: 'jsp-p8',
-    topicId: 'js-prototypes',
-    title: 'Перепиши: прототипное наследование → ES2015 class',
-    difficulty: 'medium',
+    kind: "refactor",
+    id: "jsp-p8",
+    topicId: "js-prototypes",
+    title: "Перепиши: прототипное наследование → ES2015 class",
+    difficulty: "medium",
     isContextual: false,
     description: `Дан рабочий код с ручным прототипным наследованием в стиле ES5. Перепиши его на современный синтаксис \`class\` / \`extends\` / \`super\`.
 
@@ -113,7 +138,7 @@ Dog.prototype.bark = function () {
 - \`new Square(3) instanceof Shape\` → \`true\`
 
 Используй \`class Shape\`, \`class Square extends Shape\` и \`super(...)\` в конструкторе.`,
-    functionName: 'jsp_p8_test',
+    functionName: "jsp_p8_test",
     starterCode: `function Shape(kind) {
   this.kind = kind;
 }
@@ -134,16 +159,41 @@ Square.prototype.area = function () {
   return this.side * this.side;
 };`,
     testCases: [
-      { id: 'jsp-p8-t1', inputDisplay: 'new Square(3).area()', inputArgs: ['area'], expected: 9 },
-      { id: 'jsp-p8-t2', inputDisplay: 'new Square(4).area()', inputArgs: ['area4'], expected: 16 },
-      { id: 'jsp-p8-t3', inputDisplay: 'new Square(3).describe()', inputArgs: ['describe'], expected: 'Фигура: square, площадь 9' },
-      { id: 'jsp-p8-t4', inputDisplay: 'new Square(3) instanceof Shape', inputArgs: ['inst-shape'], expected: true },
-      { id: 'jsp-p8-t5', inputDisplay: 'new Square(3) instanceof Square', inputArgs: ['inst-square'], expected: true },
+      {
+        id: "jsp-p8-t1",
+        inputDisplay: "new Square(3).area()",
+        inputArgs: ["area"],
+        expected: 9,
+      },
+      {
+        id: "jsp-p8-t2",
+        inputDisplay: "new Square(4).area()",
+        inputArgs: ["area4"],
+        expected: 16,
+      },
+      {
+        id: "jsp-p8-t3",
+        inputDisplay: "new Square(3).describe()",
+        inputArgs: ["describe"],
+        expected: "Фигура: square, площадь 9",
+      },
+      {
+        id: "jsp-p8-t4",
+        inputDisplay: "new Square(3) instanceof Shape",
+        inputArgs: ["inst-shape"],
+        expected: true,
+      },
+      {
+        id: "jsp-p8-t5",
+        inputDisplay: "new Square(3) instanceof Square",
+        inputArgs: ["inst-square"],
+        expected: true,
+      },
     ],
     hints: [
-      'class Shape { constructor(kind) { ... } describe() { ... } area() { ... } }',
-      'class Square extends Shape — в конструкторе вызови super("square") до использования this.',
-      'Метод area переопредели в Square — он перекроет родительский по правилам цепочки прототипов.',
+      "Что нужно сделать в конструкторе дочернего класса перед тем, как обращаться к `this`?",
+      "Как дочерний класс может иметь свою реализацию метода, не убирая его из родительского?",
+      "Метод `describe` в Shape использует `this.area()` — что произойдёт, если Square переопределит `area`?",
     ],
     solutionCode: `class Shape {
   constructor(kind) {
@@ -175,10 +225,10 @@ class Square extends Shape {
 }`,
   },
   {
-    id: 'jsp-p1',
-    topicId: 'js-prototypes',
-    title: 'myInstanceof — реализовать instanceof',
-    difficulty: 'medium',
+    id: "jsp-p1",
+    topicId: "js-prototypes",
+    title: "myInstanceof — реализовать instanceof",
+    difficulty: "medium",
     isContextual: false,
     description: `Реализуйте функцию \`myInstanceof(obj, Constructor)\` без использования оператора \`instanceof\`.
 
@@ -192,46 +242,46 @@ myInstanceof([], String);     // → false
 myInstanceof({}, Object);     // → true
 myInstanceof(null, Object);   // → false
 \`\`\``,
-    functionName: 'myInstanceof_test',
+    functionName: "myInstanceof_test",
     starterCode: `function myInstanceof(obj, Constructor) {
   // ваш код
 }`,
     testCases: [
       {
-        id: 'jsp-p1-t1',
-        inputDisplay: 'myInstanceof([], Array)',
-        inputArgs: [[], 'Array'],
+        id: "jsp-p1-t1",
+        inputDisplay: "myInstanceof([], Array)",
+        inputArgs: [[], "Array"],
         expected: true,
       },
       {
-        id: 'jsp-p1-t2',
-        inputDisplay: 'myInstanceof([], Object)',
-        inputArgs: [[], 'Object'],
+        id: "jsp-p1-t2",
+        inputDisplay: "myInstanceof([], Object)",
+        inputArgs: [[], "Object"],
         expected: true,
       },
       {
-        id: 'jsp-p1-t3',
-        inputDisplay: 'myInstanceof([], String)',
-        inputArgs: [[], 'String'],
+        id: "jsp-p1-t3",
+        inputDisplay: "myInstanceof([], String)",
+        inputArgs: [[], "String"],
         expected: false,
       },
       {
-        id: 'jsp-p1-t4',
-        inputDisplay: 'myInstanceof(null, Object)',
-        inputArgs: [null, 'Object'],
+        id: "jsp-p1-t4",
+        inputDisplay: "myInstanceof(null, Object)",
+        inputArgs: [null, "Object"],
         expected: false,
       },
       {
-        id: 'jsp-p1-t5',
-        inputDisplay: 'myInstanceof(new Date(), Date)',
-        inputArgs: ['date', 'Date'],
+        id: "jsp-p1-t5",
+        inputDisplay: "myInstanceof(new Date(), Date)",
+        inputArgs: ["date", "Date"],
         expected: true,
       },
     ],
     hints: [
-      'Начните с получения прототипа объекта: `let proto = Object.getPrototypeOf(obj)`.',
-      'В цикле while: если `proto === Constructor.prototype` → return true. Иначе: `proto = Object.getPrototypeOf(proto)`.',
-      'Цикл заканчивается когда `proto === null` (достигли конца цепочки) → return false.',
+      "Как `instanceof` проверяет принадлежность? Что именно сравнивается в цепочке прототипов?",
+      "Как двигаться по цепочке прототипов от объекта вверх, шаг за шагом?",
+      "Когда нужно остановиться и вернуть `false`?",
     ],
     solutionCode: `function myInstanceof(obj, Constructor) {
   if (obj === null || obj === undefined) return false;
@@ -249,10 +299,10 @@ myInstanceof(null, Object);   // → false
 }`,
   },
   {
-    id: 'jsp-p2',
-    topicId: 'js-prototypes',
-    title: 'Array.prototype.myMap',
-    difficulty: 'easy',
+    id: "jsp-p2",
+    topicId: "js-prototypes",
+    title: "Array.prototype.myMap",
+    difficulty: "easy",
     isContextual: false,
     description: `Реализуйте свой метод \`Array.prototype.myMap\`, аналог встроенного \`Array.prototype.map\`.
 
@@ -267,46 +317,46 @@ myInstanceof(null, Object);   // → false
 [1, 2, 3].myMap(x => x * 2);  // → [2, 4, 6]
 [1, 2, 3].myMap((x, i) => x + i); // → [1, 3, 5]
 \`\`\``,
-    functionName: 'myMap_test',
+    functionName: "myMap_test",
     starterCode: `Array.prototype.myMap = function(callback) {
   // ваш код
 };`,
     testCases: [
       {
-        id: 'jsp-p2-t1',
-        inputDisplay: '[1,2,3].myMap(x => x * 2)',
-        inputArgs: [[1, 2, 3], 'double'],
+        id: "jsp-p2-t1",
+        inputDisplay: "[1,2,3].myMap(x => x * 2)",
+        inputArgs: [[1, 2, 3], "double"],
         expected: [2, 4, 6],
       },
       {
-        id: 'jsp-p2-t2',
-        inputDisplay: '[].myMap(x => x) → []',
-        inputArgs: [[], 'identity'],
+        id: "jsp-p2-t2",
+        inputDisplay: "[].myMap(x => x) → []",
+        inputArgs: [[], "identity"],
         expected: [],
       },
       {
-        id: 'jsp-p2-t3',
-        inputDisplay: 'callback получает (element, index, array)',
-        inputArgs: [[10, 20], 'index'],
+        id: "jsp-p2-t3",
+        inputDisplay: "callback получает (element, index, array)",
+        inputArgs: [[10, 20], "index"],
         expected: [10, 21],
       },
       {
-        id: 'jsp-p2-t4',
-        inputDisplay: 'не изменяет оригинальный массив',
-        inputArgs: [[1, 2, 3], 'immutable'],
+        id: "jsp-p2-t4",
+        inputDisplay: "не изменяет оригинальный массив",
+        inputArgs: [[1, 2, 3], "immutable"],
         expected: true,
       },
       {
-        id: 'jsp-p2-t5',
+        id: "jsp-p2-t5",
         inputDisplay: "['a','b','c'].myMap(x => x.toUpperCase())",
-        inputArgs: [['a', 'b', 'c'], 'upper'],
-        expected: ['A', 'B', 'C'],
+        inputArgs: [["a", "b", "c"], "upper"],
+        expected: ["A", "B", "C"],
       },
     ],
     hints: [
-      'Создайте новый массив `result = []`. Итерируйте по `this` с помощью for-цикла.',
-      'Проверяйте `hasOwnProperty(i)` для пропуска "дырок" в sparse arrays.',
-      'Вызывайте `callback(this[i], i, this)` для каждого элемента.',
+      "Метод будет вызываться как `arr.myMap(fn)` — как внутри метода получить доступ к исходному массиву?",
+      "Какую сигнатуру имеет callback у стандартного `Array.prototype.map`? Сколько аргументов он принимает?",
+      "Как корректно обработать разреженный массив (sparse array) с «дырками»?",
     ],
     solutionCode: `Array.prototype.myMap = function(callback) {
   const result = new Array(this.length);
@@ -330,10 +380,10 @@ myInstanceof(null, Object);   // → false
 }`,
   },
   {
-    id: 'jsp-p3',
-    topicId: 'js-prototypes',
-    title: 'Наследование без class',
-    difficulty: 'medium',
+    id: "jsp-p3",
+    topicId: "js-prototypes",
+    title: "Наследование без class",
+    difficulty: "medium",
     isContextual: false,
     description: `Реализуйте прототипное наследование без использования ключевого слова \`class\`:
 
@@ -353,7 +403,7 @@ rex.speak();              // → 'Rex издаёт звук'
 rex instanceof Dog;       // → true
 rex instanceof Animal;    // → true
 \`\`\``,
-    functionName: 'Dog_test',
+    functionName: "Dog_test",
     starterCode: `function Animal(name) {
   // ваш код
 }
@@ -366,40 +416,40 @@ function Dog(name) {
 // добавьте Dog.prototype.bark`,
     testCases: [
       {
-        id: 'jsp-p3-t1',
+        id: "jsp-p3-t1",
         inputDisplay: 'new Dog("Rex").bark()',
-        inputArgs: ['bark'],
-        expected: 'Rex лает!',
+        inputArgs: ["bark"],
+        expected: "Rex лает!",
       },
       {
-        id: 'jsp-p3-t2',
+        id: "jsp-p3-t2",
         inputDisplay: 'new Dog("Rex").speak()',
-        inputArgs: ['speak'],
-        expected: 'Rex издаёт звук',
+        inputArgs: ["speak"],
+        expected: "Rex издаёт звук",
       },
       {
-        id: 'jsp-p3-t3',
-        inputDisplay: 'rex instanceof Dog',
-        inputArgs: ['instanceof-dog'],
+        id: "jsp-p3-t3",
+        inputDisplay: "rex instanceof Dog",
+        inputArgs: ["instanceof-dog"],
         expected: true,
       },
       {
-        id: 'jsp-p3-t4',
-        inputDisplay: 'rex instanceof Animal',
-        inputArgs: ['instanceof-animal'],
+        id: "jsp-p3-t4",
+        inputDisplay: "rex instanceof Animal",
+        inputArgs: ["instanceof-animal"],
         expected: true,
       },
       {
-        id: 'jsp-p3-t5',
-        inputDisplay: 'dog.name установлен через Animal',
-        inputArgs: ['name'],
-        expected: 'Rex',
+        id: "jsp-p3-t5",
+        inputDisplay: "dog.name установлен через Animal",
+        inputArgs: ["name"],
+        expected: "Rex",
       },
     ],
     hints: [
-      'В конструкторе Dog: `Animal.call(this, name)` — вызывает Animal как функцию с контекстом нового объекта.',
-      'Настройка цепочки: `Dog.prototype = Object.create(Animal.prototype)` — Dog.prototype наследует от Animal.prototype.',
-      'После этого нужно восстановить конструктор: `Dog.prototype.constructor = Dog`.',
+      "Как вызвать логику конструктора-родителя внутри дочернего конструктора, не создавая новый объект?",
+      "Как настроить цепочку прототипов так, чтобы экземпляры Dog имели доступ к методам Animal?",
+      "После замены Dog.prototype одно важное свойство теряется. Какое?",
     ],
     solutionCode: `function Animal(name) {
   this.name = name;
@@ -425,10 +475,10 @@ Dog.prototype.bark = function() {
 }`,
   },
   {
-    id: 'jsp-p4',
-    topicId: 'js-prototypes',
-    title: 'deepFreeze — глубокая заморозка',
-    difficulty: 'medium',
+    id: "jsp-p4",
+    topicId: "js-prototypes",
+    title: "deepFreeze — глубокая заморозка",
+    difficulty: "medium",
     isContextual: false,
     description: `Напишите функцию \`deepFreeze(obj)\`, которая рекурсивно замораживает объект и все вложенные объекты через \`Object.freeze\`.
 
@@ -445,46 +495,46 @@ config.db.port = 9999; // молча игнорируется (strict mode → T
 config.db.port; // → 5432 — не изменилось
 Object.isFrozen(config.db); // → true
 \`\`\``,
-    functionName: 'deepFreeze_test',
+    functionName: "deepFreeze_test",
     starterCode: `function deepFreeze(obj) {
   // ваш код
 }`,
     testCases: [
       {
-        id: 'jsp-p4-t1',
-        inputDisplay: 'верхний уровень заморожен',
-        inputArgs: ['top-frozen'],
+        id: "jsp-p4-t1",
+        inputDisplay: "верхний уровень заморожен",
+        inputArgs: ["top-frozen"],
         expected: true,
       },
       {
-        id: 'jsp-p4-t2',
-        inputDisplay: 'вложенный объект заморожен',
-        inputArgs: ['nested-frozen'],
+        id: "jsp-p4-t2",
+        inputDisplay: "вложенный объект заморожен",
+        inputArgs: ["nested-frozen"],
         expected: true,
       },
       {
-        id: 'jsp-p4-t3',
-        inputDisplay: 'значение не изменяется после заморозки',
-        inputArgs: ['no-change'],
+        id: "jsp-p4-t3",
+        inputDisplay: "значение не изменяется после заморозки",
+        inputArgs: ["no-change"],
         expected: 5432,
       },
       {
-        id: 'jsp-p4-t4',
-        inputDisplay: 'работает с массивами внутри',
-        inputArgs: ['array-frozen'],
+        id: "jsp-p4-t4",
+        inputDisplay: "работает с массивами внутри",
+        inputArgs: ["array-frozen"],
         expected: true,
       },
       {
-        id: 'jsp-p4-t5',
-        inputDisplay: 'возвращает тот же объект',
-        inputArgs: ['same-ref'],
+        id: "jsp-p4-t5",
+        inputDisplay: "возвращает тот же объект",
+        inputArgs: ["same-ref"],
         expected: true,
       },
     ],
     hints: [
-      'Сначала заморозьте объект: `Object.freeze(obj)`.',
-      'Затем рекурсивно обойдите все свойства. Для каждого значения-объекта (не null, typeof === "object") вызовите deepFreeze.',
-      'Проверяйте `!Object.isFrozen(val)` перед рекурсией, чтобы не попасть в бесконечный цикл с циклическими ссылками.',
+      "Как заморозить объект — и что происходит с его вложенными объектами при этом?",
+      "Что нужно сделать для каждого свойства, значение которого само является объектом?",
+      "Как защититься от зацикливания, если объект содержит циклические ссылки?",
     ],
     solutionCode: `function deepFreeze(obj) {
   Object.freeze(obj);
@@ -518,10 +568,10 @@ Object.isFrozen(config.db); // → true
 }`,
   },
   {
-    id: 'jsp-p5',
-    topicId: 'js-prototypes',
-    title: 'myObjectCreate — реализовать Object.create',
-    difficulty: 'easy',
+    id: "jsp-p5",
+    topicId: "js-prototypes",
+    title: "myObjectCreate — реализовать Object.create",
+    difficulty: "easy",
     isContextual: false,
     description: `Реализуйте функцию \`myObjectCreate(proto)\`, аналог \`Object.create\`:
 - Создаёт новый объект с заданным прототипом
@@ -538,46 +588,46 @@ Object.getPrototypeOf(child) === base; // → true
 const noProto = myObjectCreate(null);
 Object.getPrototypeOf(noProto); // → null
 \`\`\``,
-    functionName: 'myObjectCreate_test',
+    functionName: "myObjectCreate_test",
     starterCode: `function myObjectCreate(proto) {
   // ваш код — нельзя использовать Object.create!
 }`,
     testCases: [
       {
-        id: 'jsp-p5-t1',
-        inputDisplay: 'наследует методы из прототипа',
-        inputArgs: ['method'],
-        expected: 'hello',
+        id: "jsp-p5-t1",
+        inputDisplay: "наследует методы из прототипа",
+        inputArgs: ["method"],
+        expected: "hello",
       },
       {
-        id: 'jsp-p5-t2',
-        inputDisplay: 'Object.getPrototypeOf(child) === proto',
-        inputArgs: ['prototype'],
+        id: "jsp-p5-t2",
+        inputDisplay: "Object.getPrototypeOf(child) === proto",
+        inputArgs: ["prototype"],
         expected: true,
       },
       {
-        id: 'jsp-p5-t3',
-        inputDisplay: 'myObjectCreate(null) → нет прототипа',
-        inputArgs: ['null-proto'],
+        id: "jsp-p5-t3",
+        inputDisplay: "myObjectCreate(null) → нет прототипа",
+        inputArgs: ["null-proto"],
         expected: null,
       },
       {
-        id: 'jsp-p5-t4',
-        inputDisplay: 'у объекта нет собственных свойств',
-        inputArgs: ['no-own'],
+        id: "jsp-p5-t4",
+        inputDisplay: "у объекта нет собственных свойств",
+        inputArgs: ["no-own"],
         expected: 0,
       },
       {
-        id: 'jsp-p5-t5',
-        inputDisplay: 'изменение прото после создания видно в child',
-        inputArgs: ['live-ref'],
-        expected: 'world',
+        id: "jsp-p5-t5",
+        inputDisplay: "изменение прото после создания видно в child",
+        inputArgs: ["live-ref"],
+        expected: "world",
       },
     ],
     hints: [
-      'Используйте конструктор-заглушку: `function F() {}; F.prototype = proto; return new F()`.',
-      'Это классическая реализация до появления стандартного Object.create.',
-      'Случай `proto === null` нужно обработать отдельно: `F.prototype = null` не сработает (движок подставит `Object.prototype`). Используйте `{ __proto__: null }`.',
+      "Что делает `Object.create(proto)` под капотом? Какой механизм языка позволяет «установить» прототип нового объекта?",
+      "Как создать объект и при этом сразу указать ему нужный прототип без использования Object.create?",
+      "Что особенного в случае, когда `proto === null`? Почему его нужно обработать отдельно?",
     ],
     solutionCode: `function myObjectCreate(proto) {
   if (proto === null) {
@@ -602,11 +652,11 @@ Object.getPrototypeOf(noProto); // → null
 }`,
   },
   {
-    id: 'jsp-h1',
-    topicId: 'js-prototypes',
-    kind: 'implement',
-    title: 'Реализуй оператор new как функцию',
-    difficulty: 'hard',
+    id: "jsp-h1",
+    topicId: "js-prototypes",
+    kind: "implement",
+    title: "Реализуй оператор new как функцию",
+    difficulty: "hard",
     isContextual: false,
     description: `Реализуйте функцию \`myNew(Constructor, ...args)\`, которая воспроизводит поведение оператора \`new\`:
 
@@ -629,21 +679,46 @@ p.name       // → 'Alice'
 p.greet()    // → 'Hi, Alice'
 p instanceof Person  // → true
 \`\`\``,
-    functionName: 'myNew_test',
+    functionName: "myNew_test",
     starterCode: `function myNew(Constructor, ...args) {
   // ваш код
 }`,
     testCases: [
-      { id: 'jsp-h1-t1', inputDisplay: 'own свойства задаются через this', inputArgs: ['own-props'], expected: 'Alice' },
-      { id: 'jsp-h1-t2', inputDisplay: 'методы прототипа доступны', inputArgs: ['proto-method'], expected: 'Hi, Alice' },
-      { id: 'jsp-h1-t3', inputDisplay: 'instanceof работает', inputArgs: ['instanceof'], expected: true },
-      { id: 'jsp-h1-t4', inputDisplay: 'конструктор возвращает объект — используется он', inputArgs: ['return-obj'], expected: 'custom' },
-      { id: 'jsp-h1-t5', inputDisplay: 'конструктор возвращает примитив — игнорируется', inputArgs: ['return-prim'], expected: 42 },
+      {
+        id: "jsp-h1-t1",
+        inputDisplay: "own свойства задаются через this",
+        inputArgs: ["own-props"],
+        expected: "Alice",
+      },
+      {
+        id: "jsp-h1-t2",
+        inputDisplay: "методы прототипа доступны",
+        inputArgs: ["proto-method"],
+        expected: "Hi, Alice",
+      },
+      {
+        id: "jsp-h1-t3",
+        inputDisplay: "instanceof работает",
+        inputArgs: ["instanceof"],
+        expected: true,
+      },
+      {
+        id: "jsp-h1-t4",
+        inputDisplay: "конструктор возвращает объект — используется он",
+        inputArgs: ["return-obj"],
+        expected: "custom",
+      },
+      {
+        id: "jsp-h1-t5",
+        inputDisplay: "конструктор возвращает примитив — игнорируется",
+        inputArgs: ["return-prim"],
+        expected: 42,
+      },
     ],
     hints: [
-      'Шаг 1: создайте объект через `Object.create(Constructor.prototype)`.',
-      'Шаг 2: вызовите `Constructor.apply(obj, args)` и сохраните результат.',
-      'Шаг 3: если результат — объект (не null), возвращайте его. Иначе возвращайте `obj`.',
+      "Оператор `new` делает несколько вещей: создаёт объект, вызывает функцию и устанавливает прототип. С чего начать?",
+      "Как вызвать конструктор так, чтобы `this` внутри него указывал на только что созданный объект?",
+      "Конструктор может явно вернуть объект — как `new` решает, что именно вернуть?",
     ],
     solutionCode: `function myNew(Constructor, ...args) {
   const obj = Object.create(Constructor.prototype);
@@ -668,11 +743,11 @@ p instanceof Person  // → true
 }`,
   },
   {
-    id: 'jsp-h2',
-    topicId: 'js-prototypes',
-    kind: 'implement',
-    title: 'Mixin — множественное наследование через примеси',
-    difficulty: 'hard',
+    id: "jsp-h2",
+    topicId: "js-prototypes",
+    kind: "implement",
+    title: "Mixin — множественное наследование через примеси",
+    difficulty: "hard",
     isContextual: false,
     description: `Реализуйте функцию \`applyMixins(Base, ...mixins)\`, которая создаёт новый класс, унаследованный от \`Base\` и включающий все методы из \`mixins\` (массив объектов с методами).
 
@@ -696,20 +771,40 @@ d.swim()   // → 'Donald swims'
 d.fly()    // → 'Donald flies'
 d instanceof Animal  // → true
 \`\`\``,
-    functionName: 'applyMixins_test',
+    functionName: "applyMixins_test",
     starterCode: `function applyMixins(Base, ...mixins) {
   // ваш код
 }`,
     testCases: [
-      { id: 'jsp-h2-t1', inputDisplay: 'методы Base сохраняются', inputArgs: ['base-method'], expected: 'Donald speaks' },
-      { id: 'jsp-h2-t2', inputDisplay: 'методы миксинов доступны', inputArgs: ['mixin-methods'], expected: ['Donald swims', 'Donald flies'] },
-      { id: 'jsp-h2-t3', inputDisplay: 'instanceof Base работает', inputArgs: ['instanceof'], expected: true },
-      { id: 'jsp-h2-t4', inputDisplay: 'поздний миксин перекрывает ранний', inputArgs: ['override'], expected: 'v2' },
+      {
+        id: "jsp-h2-t1",
+        inputDisplay: "методы Base сохраняются",
+        inputArgs: ["base-method"],
+        expected: "Donald speaks",
+      },
+      {
+        id: "jsp-h2-t2",
+        inputDisplay: "методы миксинов доступны",
+        inputArgs: ["mixin-methods"],
+        expected: ["Donald swims", "Donald flies"],
+      },
+      {
+        id: "jsp-h2-t3",
+        inputDisplay: "instanceof Base работает",
+        inputArgs: ["instanceof"],
+        expected: true,
+      },
+      {
+        id: "jsp-h2-t4",
+        inputDisplay: "поздний миксин перекрывает ранний",
+        inputArgs: ["override"],
+        expected: "v2",
+      },
     ],
     hints: [
-      'Создайте новый класс, расширяющий Base: `class Mixed extends Base {}`.',
-      'Скопируйте методы из каждого миксина в прототип: `Object.assign(Mixed.prototype, mixin)`.',
-      'Порядок миксинов: перебирайте слева направо, каждый последующий перекрывает предыдущий.',
+      "Как добавить методы из нескольких источников в один класс, не используя наследование от каждого?",
+      "Какой инструмент позволяет скопировать свойства из одного объекта в другой?",
+      "Что произойдёт, если два миксина определяют метод с одним именем? Какой из них победит — и почему это важно для порядка применения?",
     ],
     solutionCode: `function applyMixins(Base, ...mixins) {
   class Mixed extends Base {}

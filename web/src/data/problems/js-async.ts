@@ -1,11 +1,11 @@
-import type { Problem } from '../../types/problem';
+import type { Problem } from "../../types/problem";
 
 export const jsAsyncProblems: Problem[] = [
   {
-    id: 'jsa-p1',
-    topicId: 'js-async',
-    title: 'myPromiseAll — реализовать Promise.all',
-    difficulty: 'medium',
+    id: "jsa-p1",
+    topicId: "js-async",
+    title: "myPromiseAll — реализовать Promise.all",
+    difficulty: "medium",
     isContextual: false,
     description: `Реализуйте функцию \`myPromiseAll(promises)\`, аналог \`Promise.all\`:
 - Принимает массив промисов (или значений)
@@ -26,46 +26,45 @@ await myPromiseAll([
   Promise.reject(new Error('oops')),
 ]); // → reject 'oops'
 \`\`\``,
-    functionName: 'myPromiseAll_test',
+    functionName: "myPromiseAll_test",
     starterCode: `function myPromiseAll(promises) {
   // ваш код
 }`,
     testCases: [
       {
-        id: 'jsa-p1-t1',
-        inputDisplay: '[resolve(1), resolve(2), resolve(3)] → [1,2,3]',
-        inputArgs: ['all-resolve'],
+        id: "jsa-p1-t1",
+        inputDisplay: "[resolve(1), resolve(2), resolve(3)] → [1,2,3]",
+        inputArgs: ["all-resolve"],
         expected: [1, 2, 3],
       },
       {
-        id: 'jsa-p1-t2',
-        inputDisplay: 'пустой массив → []',
-        inputArgs: ['empty'],
+        id: "jsa-p1-t2",
+        inputDisplay: "пустой массив → []",
+        inputArgs: ["empty"],
         expected: [],
       },
       {
-        id: 'jsa-p1-t3',
-        inputDisplay: 'один reject → reject',
-        inputArgs: ['one-reject'],
-        expected: 'Error: oops',
+        id: "jsa-p1-t3",
+        inputDisplay: "один reject → reject",
+        inputArgs: ["one-reject"],
+        expected: "Error: oops",
       },
       {
-        id: 'jsa-p1-t4',
-        inputDisplay: 'порядок результатов совпадает с порядком ввода',
-        inputArgs: ['order'],
+        id: "jsa-p1-t4",
+        inputDisplay: "порядок результатов совпадает с порядком ввода",
+        inputArgs: ["order"],
         expected: [1, 2, 3],
       },
       {
-        id: 'jsa-p1-t5',
-        inputDisplay: 'не-промисные значения обрабатываются',
-        inputArgs: ['non-promise'],
-        expected: [1, 'hello', true],
+        id: "jsa-p1-t5",
+        inputDisplay: "не-промисные значения обрабатываются",
+        inputArgs: ["non-promise"],
+        expected: [1, "hello", true],
       },
     ],
     hints: [
-      'Создайте `new Promise((resolve, reject) => {...})`. Внутри: массив `results`, счётчик `completed`.',
-      'Для каждого промиса: `Promise.resolve(promises[i]).then(val => { results[i] = val; if (++completed === promises.length) resolve(results); }).catch(reject)`.',
-      'Сохраняйте результат по **индексу** (не push) — иначе порядок будет нарушен при разных скоростях выполнения.',
+      "Как отследить, что все промисы завершились, если они могут завершаться в произвольном порядке?",
+      "Порядок результатов должен соответствовать порядку входных промисов — независимо от того, какой из них завершился быстрее.",
     ],
     solutionCode: `function myPromiseAll(promises) {
   return new Promise((resolve, reject) => {
@@ -101,10 +100,10 @@ await myPromiseAll([
 }`,
   },
   {
-    id: 'jsa-p2',
-    topicId: 'js-async',
-    title: 'myPromiseRace — реализовать Promise.race',
-    difficulty: 'easy',
+    id: "jsa-p2",
+    topicId: "js-async",
+    title: "myPromiseRace — реализовать Promise.race",
+    difficulty: "easy",
     isContextual: false,
     description: `Реализуйте функцию \`myPromiseRace(promises)\`, аналог \`Promise.race\`:
 - Возвращает Promise, который резолвится/реджектится с результатом **первого** завершившегося промиса
@@ -117,45 +116,45 @@ const slow = new Promise(r => setTimeout(() => r('slow'), 200));
 
 await myPromiseRace([fast, slow]); // → 'fast'
 \`\`\``,
-    functionName: 'myPromiseRace_test',
+    functionName: "myPromiseRace_test",
     starterCode: `function myPromiseRace(promises) {
   // ваш код
 }`,
     testCases: [
       {
-        id: 'jsa-p2-t1',
-        inputDisplay: 'быстрый resolve побеждает',
-        inputArgs: ['fast-resolve'],
-        expected: 'fast',
+        id: "jsa-p2-t1",
+        inputDisplay: "быстрый resolve побеждает",
+        inputArgs: ["fast-resolve"],
+        expected: "fast",
       },
       {
-        id: 'jsa-p2-t2',
-        inputDisplay: 'быстрый reject побеждает',
-        inputArgs: ['fast-reject'],
-        expected: 'Error: fast-error',
+        id: "jsa-p2-t2",
+        inputDisplay: "быстрый reject побеждает",
+        inputArgs: ["fast-reject"],
+        expected: "Error: fast-error",
       },
       {
-        id: 'jsa-p2-t3',
-        inputDisplay: 'resolve(1) vs reject — кто быстрее',
-        inputArgs: ['mixed'],
+        id: "jsa-p2-t3",
+        inputDisplay: "resolve(1) vs reject — кто быстрее",
+        inputArgs: ["mixed"],
         expected: 1,
       },
       {
-        id: 'jsa-p2-t4',
-        inputDisplay: 'один промис в массиве',
-        inputArgs: ['single'],
+        id: "jsa-p2-t4",
+        inputDisplay: "один промис в массиве",
+        inputArgs: ["single"],
         expected: 42,
       },
       {
-        id: 'jsa-p2-t5',
-        inputDisplay: 'возвращает Promise',
-        inputArgs: ['is-promise'],
+        id: "jsa-p2-t5",
+        inputDisplay: "возвращает Promise",
+        inputArgs: ["is-promise"],
         expected: true,
       },
     ],
     hints: [
-      'Реализация простая: `return new Promise((resolve, reject) => { promises.forEach(p => Promise.resolve(p).then(resolve).catch(reject)); })`.',
-      'Первый вызов `resolve` или `reject` определяет результат. Последующие вызовы `resolve`/`reject` на уже осевшем промисе — игнорируются автоматически.',
+      "Нужно «подписаться» на каждый промис — и как только любой завершится, завершить общий результат.",
+      "Что происходит, если resolve или reject вызвать несколько раз на одном промисе?",
     ],
     solutionCode: `function myPromiseRace(promises) {
   return new Promise((resolve, reject) => {
@@ -181,10 +180,10 @@ await myPromiseRace([fast, slow]); // → 'fast'
 }`,
   },
   {
-    id: 'jsa-p3',
-    topicId: 'js-async',
-    title: 'fetchWithTimeout — промис с таймаутом',
-    difficulty: 'easy',
+    id: "jsa-p3",
+    topicId: "js-async",
+    title: "fetchWithTimeout — промис с таймаутом",
+    difficulty: "easy",
     isContextual: true,
     description: `Напишите функцию \`fetchWithTimeout(promise, ms)\`, которая:
 - Возвращает результат \`promise\`, если он завершается за \`ms\` миллисекунд
@@ -198,45 +197,45 @@ const slow = new Promise(r => setTimeout(() => r('data'), 500));
 await fetchWithTimeout(slow, 100); // → Error: Timeout
 await fetchWithTimeout(slow, 1000); // → 'data'
 \`\`\``,
-    functionName: 'fetchWithTimeout_test',
+    functionName: "fetchWithTimeout_test",
     starterCode: `function fetchWithTimeout(promise, ms) {
   // ваш код
 }`,
     testCases: [
       {
-        id: 'jsa-p3-t1',
-        inputDisplay: 'промис завершается вовремя → его значение',
-        inputArgs: ['in-time'],
-        expected: 'result',
+        id: "jsa-p3-t1",
+        inputDisplay: "промис завершается вовремя → его значение",
+        inputArgs: ["in-time"],
+        expected: "result",
       },
       {
-        id: 'jsa-p3-t2',
-        inputDisplay: 'промис слишком медленный → Error: Timeout',
-        inputArgs: ['timeout'],
-        expected: 'Error: Timeout',
+        id: "jsa-p3-t2",
+        inputDisplay: "промис слишком медленный → Error: Timeout",
+        inputArgs: ["timeout"],
+        expected: "Error: Timeout",
       },
       {
-        id: 'jsa-p3-t3',
-        inputDisplay: 'reject быстрее таймаута → оригинальный reject',
-        inputArgs: ['reject-first'],
-        expected: 'Error: original',
+        id: "jsa-p3-t3",
+        inputDisplay: "reject быстрее таймаута → оригинальный reject",
+        inputArgs: ["reject-first"],
+        expected: "Error: original",
       },
       {
-        id: 'jsa-p3-t4',
-        inputDisplay: 'ms = 0 — немедленный таймаут',
-        inputArgs: ['zero-timeout'],
-        expected: 'Error: Timeout',
+        id: "jsa-p3-t4",
+        inputDisplay: "ms = 0 — немедленный таймаут",
+        inputArgs: ["zero-timeout"],
+        expected: "Error: Timeout",
       },
       {
-        id: 'jsa-p3-t5',
-        inputDisplay: 'возвращает Promise',
-        inputArgs: ['is-promise'],
+        id: "jsa-p3-t5",
+        inputDisplay: "возвращает Promise",
+        inputArgs: ["is-promise"],
         expected: true,
       },
     ],
     hints: [
-      'Используйте `Promise.race` с двумя промисами: оригинальным и таймером.',
-      'Таймер: `new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), ms))`.',
+      "Задача сводится к гонке: кто «финиширует» первым — оригинальный запрос или таймер?",
+      "Как создать промис, который автоматически отклоняется через заданное время?",
     ],
     solutionCode: `function fetchWithTimeout(promise, ms) {
   const timeout = new Promise((_, reject) =>
@@ -263,10 +262,10 @@ await fetchWithTimeout(slow, 1000); // → 'data'
 }`,
   },
   {
-    id: 'jsa-p4',
-    topicId: 'js-async',
-    title: 'promisify — конвертация callback в Promise',
-    difficulty: 'easy',
+    id: "jsa-p4",
+    topicId: "js-async",
+    title: "promisify — конвертация callback в Promise",
+    difficulty: "easy",
     isContextual: false,
     description: `Напишите функцию \`promisify(fn)\`, которая конвертирует функцию в Node.js callback-стиле в функцию, возвращающую Promise.
 
@@ -285,45 +284,45 @@ const readAsync = promisify(readFile);
 await readAsync('good.txt');  // → 'file content'
 await readAsync('bad.txt');   // → reject Error: not found
 \`\`\``,
-    functionName: 'promisify_test',
+    functionName: "promisify_test",
     starterCode: `function promisify(fn) {
   // ваш код
 }`,
     testCases: [
       {
-        id: 'jsa-p4-t1',
-        inputDisplay: 'успешный callback → resolve с результатом',
-        inputArgs: ['success'],
-        expected: 'file content',
+        id: "jsa-p4-t1",
+        inputDisplay: "успешный callback → resolve с результатом",
+        inputArgs: ["success"],
+        expected: "file content",
       },
       {
-        id: 'jsa-p4-t2',
-        inputDisplay: 'callback с ошибкой → reject',
-        inputArgs: ['error'],
-        expected: 'Error: not found',
+        id: "jsa-p4-t2",
+        inputDisplay: "callback с ошибкой → reject",
+        inputArgs: ["error"],
+        expected: "Error: not found",
       },
       {
-        id: 'jsa-p4-t3',
-        inputDisplay: 'возвращает функцию',
-        inputArgs: ['returns-function'],
+        id: "jsa-p4-t3",
+        inputDisplay: "возвращает функцию",
+        inputArgs: ["returns-function"],
         expected: true,
       },
       {
-        id: 'jsa-p4-t4',
-        inputDisplay: 'результирующая функция возвращает Promise',
-        inputArgs: ['returns-promise'],
+        id: "jsa-p4-t4",
+        inputDisplay: "результирующая функция возвращает Promise",
+        inputArgs: ["returns-promise"],
         expected: true,
       },
       {
-        id: 'jsa-p4-t5',
-        inputDisplay: 'аргументы передаются в оригинальную функцию',
-        inputArgs: ['passes-args'],
-        expected: 'content-42',
+        id: "jsa-p4-t5",
+        inputDisplay: "аргументы передаются в оригинальную функцию",
+        inputArgs: ["passes-args"],
+        expected: "content-42",
       },
     ],
     hints: [
-      'Возвращаемая функция принимает аргументы и возвращает `new Promise`.',
-      'Внутри Promise вызовите `fn(...args, (err, result) => { if (err) reject(err); else resolve(result); })`.',
+      "Node.js callback-конвенция: последний аргумент функции — это callback вида `(err, result)`.",
+      "Как превратить такой callback-вызов в промис?",
     ],
     solutionCode: `function promisify(fn) {
   return function(...args) {
@@ -356,10 +355,10 @@ await readAsync('bad.txt');   // → reject Error: not found
 }`,
   },
   {
-    id: 'jsa-p5',
-    topicId: 'js-async',
-    title: 'limitConcurrency — ограниченный параллелизм',
-    difficulty: 'medium',
+    id: "jsa-p5",
+    topicId: "js-async",
+    title: "limitConcurrency — ограниченный параллелизм",
+    difficulty: "medium",
     isContextual: true,
     description: `Реализуйте функцию \`limitConcurrency(fns, limit)\`:
 - \`fns\` — массив функций, каждая возвращает Promise
@@ -373,46 +372,45 @@ await readAsync('bad.txt');   // → reject Error: not found
 // Выполнить 10 задач, не более 3 одновременно:
 await limitConcurrency(tasks, 3);
 \`\`\``,
-    functionName: 'limitConcurrency_test',
+    functionName: "limitConcurrency_test",
     starterCode: `async function limitConcurrency(fns, limit) {
   // ваш код
 }`,
     testCases: [
       {
-        id: 'jsa-p5-t1',
-        inputDisplay: '[fn1, fn2, fn3], limit=10 → все выполняются',
-        inputArgs: ['all-complete'],
+        id: "jsa-p5-t1",
+        inputDisplay: "[fn1, fn2, fn3], limit=10 → все выполняются",
+        inputArgs: ["all-complete"],
         expected: [1, 2, 3],
       },
       {
-        id: 'jsa-p5-t2',
-        inputDisplay: 'пустой массив → []',
-        inputArgs: ['empty'],
+        id: "jsa-p5-t2",
+        inputDisplay: "пустой массив → []",
+        inputArgs: ["empty"],
         expected: [],
       },
       {
-        id: 'jsa-p5-t3',
-        inputDisplay: 'порядок результатов совпадает с порядком задач',
-        inputArgs: ['order'],
+        id: "jsa-p5-t3",
+        inputDisplay: "порядок результатов совпадает с порядком задач",
+        inputArgs: ["order"],
         expected: [1, 2, 3, 4, 5],
       },
       {
-        id: 'jsa-p5-t4',
-        inputDisplay: 'limit=1 → последовательное выполнение',
-        inputArgs: ['sequential'],
+        id: "jsa-p5-t4",
+        inputDisplay: "limit=1 → последовательное выполнение",
+        inputArgs: ["sequential"],
         expected: [1, 2, 3],
       },
       {
-        id: 'jsa-p5-t5',
-        inputDisplay: 'одновременно не более limit задач',
-        inputArgs: ['concurrency-check'],
+        id: "jsa-p5-t5",
+        inputDisplay: "одновременно не более limit задач",
+        inputArgs: ["concurrency-check"],
         expected: true,
       },
     ],
     hints: [
-      'Используйте очередь: запускайте limit задач одновременно. Когда одна завершается — запускайте следующую из очереди.',
-      'Паттерн с `executing` Set: `const executing = new Set(); for (const fn of fns) { const p = fn().then(result => { executing.delete(p); ... }); executing.add(p); if (executing.size >= limit) await Promise.race(executing); }`',
-      'Результаты сохраняйте по индексу через `results[i] = result`.',
+      "Как запустить не более limit задач одновременно, и стартовать новую только когда освобождается слот?",
+      "Порядок результатов должен соответствовать входному массиву — независимо от того, какая задача завершилась раньше.",
     ],
     solutionCode: `async function limitConcurrency(fns, limit) {
   const results = new Array(fns.length);
@@ -461,11 +459,11 @@ await limitConcurrency(tasks, 3);
 }`,
   },
   {
-    kind: 'predict-output',
-    id: 'jsa-p6',
-    topicId: 'js-async',
-    title: 'Угадай вывод: await, Promise.then и queueMicrotask',
-    difficulty: 'medium',
+    kind: "predict-output",
+    id: "jsa-p6",
+    topicId: "js-async",
+    title: "Определи вывод: await, Promise.then и queueMicrotask",
+    difficulty: "medium",
     isContextual: false,
     description: `Перед вами микс синхронного кода, async/await, Promise.then и queueMicrotask. Введи каждую напечатанную строку в отдельной строчке поля ответа.
 
@@ -483,13 +481,10 @@ run();
 queueMicrotask(() => console.log('Q'));
 Promise.resolve().then(() => console.log('T'));
 console.log('2');`,
-    expected: '1\nA\n2\nB\nQ\nT\nC',
+    expected: "1\nA\n2\nB\nQ\nT\nC",
     hints: [
-      'Синхронный код в порядке появления: 1, затем A (до первого await в run), затем 2.',
-      'После синхронного кода microtask checkpoint опустошает очередь в порядке постановки.',
-      'Первая микрозадача в очереди — продолжение run после первого await: печатает B и регистрирует следующее продолжение для C.',
-      'Затем выполняются queueMicrotask (Q) и Promise.then (T), которые были поставлены в очередь раньше, чем continuation-C.',
-      'Последним выполняется continuation-C, поставленный после Q и T. Итог: 1, A, 2, B, Q, T, C.',
+      "Определи, что выполняется синхронно до первого microtask checkpoint.",
+      "Каждый await ставит продолжение в конец очереди микрозадач. Что уже стоит в очереди к тому моменту, когда run() доходит до второго await?",
     ],
     solutionCode: `// 1 — sync
 // run() начинает выполняться: A — sync (до первого await)
@@ -505,53 +500,48 @@ console.log('2');`,
 // Итог: 1, A, 2, B, Q, T, C`,
   },
   {
-    kind: 'find-bug',
-    id: 'jsa-p7',
-    topicId: 'js-async',
-    title: 'Найди баг: Promise.all передан массив функций',
-    difficulty: 'easy',
+    kind: "find-bug",
+    id: "jsa-p7",
+    topicId: "js-async",
+    title: "Найди баг: параллельный запуск задач",
+    difficulty: "easy",
     isContextual: false,
-    description: `Функция \`runAll(fns)\` должна параллельно вызвать каждую функцию из массива и вернуть массив результатов в исходном порядке. Тесты проверяют, что результат — реальные значения, а не функции или сами Promise.
-
-В коде есть распространённая ошибка: в \`Promise.all\` передан массив **функций**, а не массив промисов — функции не были вызваны. Найди баг и почини.`,
+    description: `Функция \`runAll(fns)\` получает массив async-функций и должна вернуть массив их результатов в исходном порядке. Что-то пошло не так — результаты не те, что ожидаются. Найди и исправь.`,
     buggyCode: `async function runAll(fns) {
-  // Передаём массив функций вместо вызовов.
-  // Promise.all не «знает» про функции — он ждёт промисы.
   return await Promise.all(fns);
 }`,
-    functionName: 'jsa_p7_test',
+    functionName: "jsa_p7_test",
     bugSummary:
-      'Promise.all принимает итерируемое промисов (или значений), а не функций. Чтобы запустить функции, их нужно вызвать: `Promise.all(fns.map((fn) => fn()))`. Без этого Promise.all резолвится массивом самих функций как обычных значений.',
+      "Promise.all принимает итерируемое промисов (или значений), а не функций. Чтобы запустить функции, их нужно вызвать: `Promise.all(fns.map((fn) => fn()))`. Без этого Promise.all резолвится массивом самих функций как обычных значений.",
     testCases: [
       {
-        id: 'jsa-p7-t1',
-        inputDisplay: 'все async-функции выполнены → массив значений',
-        inputArgs: ['basic'],
+        id: "jsa-p7-t1",
+        inputDisplay: "все async-функции выполнены → массив значений",
+        inputArgs: ["basic"],
         expected: [1, 2, 3],
       },
       {
-        id: 'jsa-p7-t2',
-        inputDisplay: 'элементы — числа, не функции',
-        inputArgs: ['types'],
-        expected: 'number,number,number',
+        id: "jsa-p7-t2",
+        inputDisplay: "элементы — числа, не функции",
+        inputArgs: ["types"],
+        expected: "number,number,number",
       },
       {
-        id: 'jsa-p7-t3',
-        inputDisplay: 'порядок результатов соответствует порядку входа',
-        inputArgs: ['order'],
+        id: "jsa-p7-t3",
+        inputDisplay: "порядок результатов соответствует порядку входа",
+        inputArgs: ["order"],
         expected: [10, 20, 30],
       },
       {
-        id: 'jsa-p7-t4',
-        inputDisplay: 'пустой массив → []',
-        inputArgs: ['empty'],
+        id: "jsa-p7-t4",
+        inputDisplay: "пустой массив → []",
+        inputArgs: ["empty"],
         expected: [],
       },
     ],
     hints: [
-      'Что находится в массиве `fns`? Это функции, возвращающие Promise, — а не сами Promise.',
-      'Promise.all ждёт promise-like значения. Нужно сначала вызвать каждую функцию, чтобы получить промис.',
-      'Достаточно одной строки: `fns.map((fn) => fn())` перед передачей в Promise.all.',
+      "Что находится в массиве `fns` — это промисы или что-то другое?",
+      "Promise.all принимает промисы. Что нужно сделать с элементами массива, чтобы получить их?",
     ],
     solutionCode: `async function runAll(fns) {
   return await Promise.all(fns.map((fn) => fn()));
@@ -586,18 +576,18 @@ console.log('2');`,
 }`,
   },
   {
-    kind: 'refactor',
-    id: 'jsa-p8',
-    topicId: 'js-async',
-    title: 'Оптимизируй: sequential await → parallel Promise.all',
-    difficulty: 'easy',
+    kind: "refactor",
+    id: "jsa-p8",
+    topicId: "js-async",
+    title: "Оптимизируй: sequential await → parallel Promise.all",
+    difficulty: "easy",
     isContextual: false,
     description: `Функция \`fetchAllParallel(urls, fetcher)\` загружает данные по списку URL и возвращает массив результатов в исходном порядке. Текущая реализация выполняет загрузку **последовательно** через \`for...of\` + \`await\` — это медленно, так как сумма всех задержек складывается.
 
 Перепиши функцию так, чтобы она запускала все загрузки **параллельно** через \`Promise.all\`, сохраняя порядок результатов. Корректность: результат должен совпадать с прежним элемент-в-элемент.
 
 Сигнатура остаётся: \`fetchAllParallel(urls, fetcher)\` принимает массив строк и async-функцию \`fetcher(url)\`, возвращает Promise с массивом результатов.`,
-    functionName: 'fetchAllParallel_test',
+    functionName: "fetchAllParallel_test",
     starterCode: `async function fetchAllParallel(urls, fetcher) {
   // Текущая реализация — последовательная.
   // Перепиши через Promise.all + map, чтобы запросы шли параллельно.
@@ -609,40 +599,39 @@ console.log('2');`,
 }`,
     testCases: [
       {
-        id: 'jsa-p8-t1',
-        inputDisplay: '3 URL → массив результатов в исходном порядке',
-        inputArgs: ['order'],
-        expected: ['data:a', 'data:b', 'data:c'],
+        id: "jsa-p8-t1",
+        inputDisplay: "3 URL → массив результатов в исходном порядке",
+        inputArgs: ["order"],
+        expected: ["data:a", "data:b", "data:c"],
       },
       {
-        id: 'jsa-p8-t2',
-        inputDisplay: 'пустой массив → []',
-        inputArgs: ['empty'],
+        id: "jsa-p8-t2",
+        inputDisplay: "пустой массив → []",
+        inputArgs: ["empty"],
         expected: [],
       },
       {
-        id: 'jsa-p8-t3',
-        inputDisplay: 'результат — массив значений (не промисов)',
-        inputArgs: ['types'],
-        expected: 'string,string,string',
+        id: "jsa-p8-t3",
+        inputDisplay: "результат — массив значений (не промисов)",
+        inputArgs: ["types"],
+        expected: "string,string,string",
       },
       {
-        id: 'jsa-p8-t4',
-        inputDisplay: 'порядок сохраняется при разных задержках',
-        inputArgs: ['varied-delays'],
+        id: "jsa-p8-t4",
+        inputDisplay: "порядок сохраняется при разных задержках",
+        inputArgs: ["varied-delays"],
         expected: [1, 2, 3],
       },
       {
-        id: 'jsa-p8-t5',
-        inputDisplay: 'параллельность: все запросы стартуют одновременно',
-        inputArgs: ['parallel-check'],
+        id: "jsa-p8-t5",
+        inputDisplay: "параллельность: все запросы стартуют одновременно",
+        inputArgs: ["parallel-check"],
         expected: true,
       },
     ],
     hints: [
-      'Используй `urls.map((url) => fetcher(url))` — это создаст массив промисов, запущенных одновременно.',
-      'Затем оберни в `await Promise.all(...)`, чтобы дождаться всех и получить массив значений.',
-      'Promise.all сохраняет порядок результатов независимо от того, какой промис завершился раньше — индексация по входу.',
+      "Все запросы должны стартовать одновременно — как запустить их все, не ожидая каждого по очереди?",
+      "Как дождаться всех результатов сразу и получить их в порядке входного массива?",
     ],
     solutionCode: `async function fetchAllParallel(urls, fetcher) {
   return await Promise.all(urls.map((url) => fetcher(url)));
@@ -681,11 +670,11 @@ console.log('2');`,
 }`,
   },
   {
-    id: 'jsa-h1',
-    topicId: 'js-async',
-    kind: 'implement',
-    title: 'myPromiseAny — реализовать Promise.any',
-    difficulty: 'hard',
+    id: "jsa-h1",
+    topicId: "js-async",
+    kind: "implement",
+    title: "myPromiseAny — реализовать Promise.any",
+    difficulty: "hard",
     isContextual: false,
     description: `Реализуйте \`myPromiseAny(promises)\` — аналог \`Promise.any\`:
 - Резолвится **первым успешным** результатом из массива
@@ -705,21 +694,45 @@ await myPromiseAny([
   Promise.reject('y'),
 ]); // → AggregateError(['x', 'y'])
 \`\`\``,
-    functionName: 'myPromiseAny_test',
+    functionName: "myPromiseAny_test",
     starterCode: `function myPromiseAny(promises) {
   // ваш код
 }`,
     testCases: [
-      { id: 'jsa-h1-t1', inputDisplay: 'первый успешный resolve', inputArgs: ['first-resolve'], expected: 'b' },
-      { id: 'jsa-h1-t2', inputDisplay: 'все reject → AggregateError', inputArgs: ['all-reject'], expected: 'AggregateError' },
-      { id: 'jsa-h1-t3', inputDisplay: 'пустой массив → AggregateError', inputArgs: ['empty'], expected: 'AggregateError' },
-      { id: 'jsa-h1-t4', inputDisplay: 'победитель — быстрейший resolve', inputArgs: ['fastest'], expected: 'fast' },
-      { id: 'jsa-h1-t5', inputDisplay: 'все resolve → берётся первый', inputArgs: ['all-resolve'], expected: 1 },
+      {
+        id: "jsa-h1-t1",
+        inputDisplay: "первый успешный resolve",
+        inputArgs: ["first-resolve"],
+        expected: "b",
+      },
+      {
+        id: "jsa-h1-t2",
+        inputDisplay: "все reject → AggregateError",
+        inputArgs: ["all-reject"],
+        expected: "AggregateError",
+      },
+      {
+        id: "jsa-h1-t3",
+        inputDisplay: "пустой массив → AggregateError",
+        inputArgs: ["empty"],
+        expected: "AggregateError",
+      },
+      {
+        id: "jsa-h1-t4",
+        inputDisplay: "победитель — быстрейший resolve",
+        inputArgs: ["fastest"],
+        expected: "fast",
+      },
+      {
+        id: "jsa-h1-t5",
+        inputDisplay: "все resolve → берётся первый",
+        inputArgs: ["all-resolve"],
+        expected: 1,
+      },
     ],
     hints: [
-      'Создайте `new Promise`. Внутри: массив errors, счётчик rejections.',
-      'Для каждого промиса: при resolve — сразу resolve всего (первый выигрывает). При reject — сохраните ошибку по индексу.',
-      'Когда rejections === promises.length — reject с new AggregateError(errors).',
+      "Нужна зеркальная логика к Promise.race: успех первого resolve «побеждает», а ошибка учитывается только если все отклонились.",
+      "Как сохранить ошибки всех промисов, сохраняя их порядок, и узнать, что все провалились?",
     ],
     solutionCode: `function myPromiseAny(promises) {
   return new Promise((resolve, reject) => {
@@ -767,11 +780,11 @@ await myPromiseAny([
 }`,
   },
   {
-    id: 'jsa-h2',
-    topicId: 'js-async',
-    kind: 'implement',
-    title: 'Async pool — параллельный перебор с ограничением',
-    difficulty: 'hard',
+    id: "jsa-h2",
+    topicId: "js-async",
+    kind: "implement",
+    title: "Async pool — параллельный перебор с ограничением",
+    difficulty: "hard",
     isContextual: false,
     description: `Реализуйте функцию \`asyncPool(concurrency, items, fn)\`:
 - Применяет асинхронную функцию \`fn\` ко всем элементам \`items\`
@@ -789,19 +802,33 @@ const results = await asyncPool(2, [1, 2, 3, 4, 5],
 );
 // → [2, 4, 6, 8, 10]  (порядок сохранён)
 \`\`\``,
-    functionName: 'asyncPool_test',
+    functionName: "asyncPool_test",
     starterCode: `async function asyncPool(concurrency, items, fn) {
   // ваш код
 }`,
     testCases: [
-      { id: 'jsa-h2-t1', inputDisplay: 'результаты в исходном порядке', inputArgs: ['order'], expected: [2,4,6,8,10] },
-      { id: 'jsa-h2-t2', inputDisplay: 'не более concurrency параллельных задач', inputArgs: ['concurrency'], expected: true },
-      { id: 'jsa-h2-t3', inputDisplay: 'пустой массив → []', inputArgs: ['empty'], expected: [] },
+      {
+        id: "jsa-h2-t1",
+        inputDisplay: "результаты в исходном порядке",
+        inputArgs: ["order"],
+        expected: [2, 4, 6, 8, 10],
+      },
+      {
+        id: "jsa-h2-t2",
+        inputDisplay: "не более concurrency параллельных задач",
+        inputArgs: ["concurrency"],
+        expected: true,
+      },
+      {
+        id: "jsa-h2-t3",
+        inputDisplay: "пустой массив → []",
+        inputArgs: ["empty"],
+        expected: [],
+      },
     ],
     hints: [
-      'Начните первые `concurrency` задач. По мере завершения каждой — стартуйте следующую из очереди.',
-      'Один из способов: используйте Set "running". При добавлении задачи добавьте в Set и при завершении — удалите. Если размер Set >= concurrency — await любой задачи из Set.',
-      'Для сохранения порядка: заранее создайте массив results[items.length] и записывайте результат по индексу.',
+      "Как отслеживать текущее количество параллельно выполняемых задач и «дождаться» освобождения слота?",
+      "Порядок результатов должен соответствовать порядку items, а не порядку завершения задач.",
     ],
     solutionCode: `async function asyncPool(concurrency, items, fn) {
   const results = new Array(items.length);

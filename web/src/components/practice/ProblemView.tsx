@@ -1,6 +1,8 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { Box, Button, Typography } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
+import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import ImplementProblemView from './ImplementProblemView';
 import PredictOutputView from './PredictOutputView';
 import FindBugView from './FindBugView';
@@ -31,15 +33,49 @@ export default function ProblemView() {
   const { slug, problemId } = useParams<{ slug: string; problemId: string }>();
   const navigate = useNavigate();
   const problems = getProblems(slug ?? '');
-  const problem = problems.find((p) => p.id === problemId);
+  const idx = problems.findIndex((p) => p.id === problemId);
+  const problem = idx >= 0 ? problems[idx] : undefined;
+  const prev = idx > 0 ? problems[idx - 1] : null;
+  const next = idx >= 0 && idx < problems.length - 1 ? problems[idx + 1] : null;
 
   if (!problem) return <Typography>Задача не найдена</Typography>;
 
+  const goTo = (id: string) => navigate(`/topic/${slug}/practice/${id}`);
+
+  const navBar = (
+    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+      <Button
+        startIcon={<ArrowBackIcon />}
+        onClick={() => navigate(`/topic/${slug}/practice`)}
+      >
+        К списку
+      </Button>
+      <Box sx={{ flex: 1 }} />
+      <Button
+        startIcon={<ArrowBackIosNewIcon />}
+        disabled={!prev}
+        onClick={() => prev && goTo(prev.id)}
+        size="small"
+      >
+        Предыдущая
+      </Button>
+      <Typography variant="body2" color="text.secondary" sx={{ px: 0.5 }}>
+        {idx + 1} / {problems.length}
+      </Typography>
+      <Button
+        endIcon={<ArrowForwardIosIcon />}
+        disabled={!next}
+        onClick={() => next && goTo(next.id)}
+        size="small"
+      >
+        Следующая
+      </Button>
+    </Box>
+  );
+
   return (
     <Box>
-      <Button startIcon={<ArrowBackIcon />} onClick={() => navigate(`/topic/${slug}/practice`)} sx={{ mb: 2 }}>
-        Назад к списку
-      </Button>
+      <Box sx={{ mb: 2 }}>{navBar}</Box>
       {isImplement(problem) && <ImplementProblemView problem={problem} />}
       {isPredictOutput(problem) && <PredictOutputView problem={problem} />}
       {isFindBug(problem) && <FindBugView problem={problem} />}

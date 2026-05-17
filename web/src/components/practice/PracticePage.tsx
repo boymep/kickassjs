@@ -34,7 +34,7 @@ const DIFFICULTY_COLOR: Record<
 
 const KIND_LABEL: Record<ProblemKind, string> = {
   implement: "Реализовать",
-  "predict-output": "Угадать вывод",
+  "predict-output": "Определить вывод",
   "find-bug": "Найти баг",
   refactor: "Оптимизировать",
 };
@@ -52,7 +52,8 @@ export default function PracticePage() {
   return (
     <Box sx={{ pb: 4 }}>
       <Typography variant='body1' color='text.secondary' sx={{ mb: 2 }}>
-        Разные форматы: реализуй функцию, угадай вывод, найди баг, оптимизируй.
+        Разные форматы: реализуй функцию, Определи вывод, найди баг,
+        оптимизируй.
       </Typography>
       <Paper>
         <List>
