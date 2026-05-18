@@ -408,7 +408,7 @@ console.log('3');`,
     isContextual: false,
     description: `Функция \`loadBoth()\` должна последовательно загрузить два значения и вернуть их в массиве. Оба элемента должны быть строками. Что-то пошло не так — найди и исправь.`,
     buggyCode: `async function loadBoth() {
-  const a = await fetchValue('a');
+  const a = fetchValue('a');
   const b = fetchValue('b');
   return [a, b];
 }
@@ -465,8 +465,8 @@ function fetchValue(label) {
     testHelperCode: `async function jsel_p7_test(arg) {
   const result = await loadBoth();
   if (arg === 'types') return result.map((x) => typeof x).join(',');
-  if (arg === 'first') return result[0];
-  if (arg === 'second') return result[1];
+  if (arg === 'first') return String(result[0]);
+  if (arg === 'second') return String(result[1]);
   if (arg === 'length') return result.length;
 }`,
   },
