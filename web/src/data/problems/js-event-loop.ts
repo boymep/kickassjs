@@ -462,7 +462,10 @@ function fetchValue(label) {
     setTimeout(() => resolve('value-' + label), 5),
   );
 }`,
-    testHelperCode: `async function jsel_p7_test(arg) {
+    testHelperCode: `function fetchValue(label) {
+  return Promise.resolve('value-' + label);
+}
+async function jsel_p7_test(arg) {
   const result = await loadBoth();
   if (arg === 'types') return result.map((x) => typeof x).join(',');
   if (arg === 'first') return String(result[0]);
