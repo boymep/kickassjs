@@ -28,45 +28,7 @@
       "Bash(pgrep *)",
       "Bash(ps *)",
       "Bash(mkdir *)",
-      "Bash(rm /tmp/*)",
-      "Bash(rm /Users/boymep/Projects/interview/web/src/test/problems-runs.test.ts)",
-      "Bash(mv /Users/boymep/Projects/interview/web/*)",
-      "Bash(python3 -c *)",
-      "Bash(npx --yes tsx /tmp/audit-bug-hunt.mjs)",
-      "Bash(npx tsx *)",
-      "Bash(npx --yes tsx /tmp/sanity-bh.mjs)",
-      "WebFetch(domain:e-maxx.ru)",
-      "WebFetch(domain:web.dev)",
-      "WebFetch(domain:habr.com)",
-      "WebFetch(domain:learn.javascript.ru)",
-      "WebFetch(domain:cp-algorithms.com)",
-      "WebFetch(domain:ru.algorithmica.org)"
-    ]
-  },
-  "hooks": {
-    "PostToolUse": [
-      {
-        "matcher": "Edit|Write|Bash",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "code-review-graph update --skip-flows",
-            "timeout": 30
-          }
-        ]
-      }
-    ],
-    "SessionStart": [
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "code-review-graph status",
-            "timeout": 10
-          }
-        ]
-      }
+      "Bash(rm /tmp/*)"
     ]
   }
 }
