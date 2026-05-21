@@ -1,22 +1,10 @@
-import React, { useState } from 'react';
-import { Button, Paper, Typography, Box } from '@mui/material';
-import { useVizColors } from './_colors';
+import { useState } from 'react';
+import { Box, Button, Typography, useTheme } from '@mui/material';
+import RestartAltIcon from '@mui/icons-material/RestartAlt';
+import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 
 const ARRAY = [2, 3, 1, 2, 4, 3];
 const TARGET = 7;
-
-const COLORS = {
-  primary: '#007AFF',
-  success: '#34C759',
-  warning: '#FF9500',
-  bg: '#F2F2F7',
-  cellBg: '#FFFFFF',
-  cellBorder: '#C7C7CC',
-  text: '#1C1C1E',
-  secondaryText: '#8E8E93',
-  windowFill: 'rgba(0, 122, 255, 0.12)',
-  windowStroke: '#007AFF',
-};
 
 interface Step {
   left: number;
@@ -29,354 +17,210 @@ interface Step {
   description: string;
 }
 
-// Simulate: minSubarrayLen(7, [2, 3, 1, 2, 4, 3])
 const steps: Step[] = [
-  {
-    left: 0,
-    right: 0,
-    sum: 2,
-    minLen: Infinity,
-    action: 'expand',
-    conditionMet: false,
-    isNewMin: false,
-    description: 'Расширяем: right=0, добавляем 2, sum=2 < 7',
-  },
-  {
-    left: 0,
-    right: 1,
-    sum: 5,
-    minLen: Infinity,
-    action: 'expand',
-    conditionMet: false,
-    isNewMin: false,
-    description: 'Расширяем: right=1, добавляем 3, sum=5 < 7',
-  },
-  {
-    left: 0,
-    right: 2,
-    sum: 6,
-    minLen: Infinity,
-    action: 'expand',
-    conditionMet: false,
-    isNewMin: false,
-    description: 'Расширяем: right=2, добавляем 1, sum=6 < 7',
-  },
-  {
-    left: 0,
-    right: 3,
-    sum: 8,
-    minLen: 4,
-    action: 'expand',
-    conditionMet: true,
-    isNewMin: true,
-    description: 'Расширяем: right=3, добавляем 2, sum=8 >= 7, длина=4, minLen=4',
-  },
-  {
-    left: 1,
-    right: 3,
-    sum: 6,
-    minLen: 4,
-    action: 'shrink',
-    conditionMet: false,
-    isNewMin: false,
-    description: 'Сужаем: убираем arr[0]=2, sum=6 < 7',
-  },
-  {
-    left: 1,
-    right: 4,
-    sum: 10,
-    minLen: 4,
-    action: 'expand',
-    conditionMet: true,
-    isNewMin: false,
-    description: 'Расширяем: right=4, добавляем 4, sum=10 >= 7, длина=4',
-  },
-  {
-    left: 2,
-    right: 4,
-    sum: 7,
-    minLen: 3,
-    action: 'shrink',
-    conditionMet: true,
-    isNewMin: true,
-    description: 'Сужаем: убираем arr[1]=3, sum=7 >= 7, длина=3, minLen=3',
-  },
-  {
-    left: 3,
-    right: 4,
-    sum: 6,
-    minLen: 3,
-    action: 'shrink',
-    conditionMet: false,
-    isNewMin: false,
-    description: 'Сужаем: убираем arr[2]=1, sum=6 < 7',
-  },
-  {
-    left: 3,
-    right: 5,
-    sum: 9,
-    minLen: 3,
-    action: 'expand',
-    conditionMet: true,
-    isNewMin: false,
-    description: 'Расширяем: right=5, добавляем 3, sum=9 >= 7, длина=3',
-  },
-  {
-    left: 4,
-    right: 5,
-    sum: 7,
-    minLen: 2,
-    action: 'shrink',
-    conditionMet: true,
-    isNewMin: true,
-    description: 'Сужаем: убираем arr[3]=2, sum=7 >= 7, длина=2, minLen=2 — новый минимум!',
-  },
-  {
-    left: 5,
-    right: 5,
-    sum: 3,
-    minLen: 2,
-    action: 'shrink',
-    conditionMet: false,
-    isNewMin: false,
-    description: 'Сужаем: убираем arr[4]=4, sum=3 < 7. Ответ: 2',
-  },
+  { left: 0, right: 0, sum: 2,  minLen: Infinity, action: 'expand', conditionMet: false, isNewMin: false, description: 'Расширяем: +2, сумма = 2 < 7' },
+  { left: 0, right: 1, sum: 5,  minLen: Infinity, action: 'expand', conditionMet: false, isNewMin: false, description: 'Расширяем: +3, сумма = 5 < 7' },
+  { left: 0, right: 2, sum: 6,  minLen: Infinity, action: 'expand', conditionMet: false, isNewMin: false, description: 'Расширяем: +1, сумма = 6 < 7' },
+  { left: 0, right: 3, sum: 8,  minLen: 4,        action: 'expand', conditionMet: true,  isNewMin: true,  description: 'Расширяем: +2, сумма = 8 ≥ 7 → длина = 4, minLen = 4' },
+  { left: 1, right: 3, sum: 6,  minLen: 4,        action: 'shrink', conditionMet: false, isNewMin: false, description: 'Сжимаем: −arr[0]=2, сумма = 6 < 7' },
+  { left: 1, right: 4, sum: 10, minLen: 4,        action: 'expand', conditionMet: true,  isNewMin: false, description: 'Расширяем: +4, сумма = 10 ≥ 7 → длина = 4' },
+  { left: 2, right: 4, sum: 7,  minLen: 3,        action: 'shrink', conditionMet: true,  isNewMin: true,  description: 'Сжимаем: −arr[1]=3, сумма = 7 ≥ 7 → длина = 3, minLen = 3' },
+  { left: 3, right: 4, sum: 6,  minLen: 3,        action: 'shrink', conditionMet: false, isNewMin: false, description: 'Сжимаем: −arr[2]=1, сумма = 6 < 7' },
+  { left: 3, right: 5, sum: 9,  minLen: 3,        action: 'expand', conditionMet: true,  isNewMin: false, description: 'Расширяем: +3, сумма = 9 ≥ 7 → длина = 3' },
+  { left: 4, right: 5, sum: 7,  minLen: 2,        action: 'shrink', conditionMet: true,  isNewMin: true,  description: 'Сжимаем: −arr[3]=2, сумма = 7 ≥ 7 → длина = 2, minLen = 2' },
+  { left: 5, right: 5, sum: 3,  minLen: 2,        action: 'shrink', conditionMet: false, isNewMin: false, description: 'Сжимаем: −arr[4]=4, сумма = 3 < 7. Финальный ответ: 2' },
 ];
 
-const CELL_W = 56;
-const CELL_H = 44;
-const CELL_GAP = 8;
-const SVG_PADDING_X = 32;
-const SVG_PADDING_TOP = 70;
-const SVG_WIDTH = SVG_PADDING_X * 2 + ARRAY.length * (CELL_W + CELL_GAP) - CELL_GAP;
-const SVG_HEIGHT = SVG_PADDING_TOP + CELL_H + 60;
+const CELL = 48;
+const GAP = 6;
 
-const DynamicWindowViz: React.FC = () => {
-  const [currentStep, setCurrentStep] = useState(0);
-  const step = steps[currentStep];
+export default function DynamicWindowViz() {
+  const theme = useTheme();
+  const isDark = theme.palette.mode === 'dark';
+  const [stepIdx, setStepIdx] = useState(0);
+  const step = stepIdx > 0 ? steps[stepIdx - 1]! : null;
+  const windowLen = step ? step.right - step.left + 1 : 0;
 
-  const cellX = (i: number) => SVG_PADDING_X + i * (CELL_W + CELL_GAP);
-  const cellY = SVG_PADDING_TOP;
+  const PALETTE = {
+    cellBg: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.025)',
+    cellBorder: isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.12)',
+    expandBg: isDark ? 'rgba(10,132,255,0.15)' : 'rgba(10,132,255,0.10)',
+    expandBorder: '#0a84ff',
+    validBg: isDark ? 'rgba(52,199,89,0.18)' : 'rgba(52,199,89,0.14)',
+    validBorder: '#34c759',
+    expandColor: '#0a84ff',
+    shrinkColor: '#ff9500',
+    leftColor: '#0a84ff',
+    rightColor: '#ff9500',
+  };
 
-  const windowCells = step.right - step.left + 1;
-  const windowX = cellX(step.left) - 4;
-  const windowWidth = windowCells * (CELL_W + CELL_GAP) - CELL_GAP + 8;
+  const inWindow = (i: number) => step !== null && i >= step.left && i <= step.right;
 
   return (
-    <Paper
-      elevation={0}
+    <Box
       sx={{
-        p: 3,
-        borderRadius: 3,
-        bgcolor: COLORS.bg,
-        border: '1px solid #E5E5EA',
-        maxWidth: 520,
+        p: { xs: 2, sm: 2.5 },
+        borderRadius: 2,
+        border: 1,
+        borderColor: 'divider',
+        backgroundColor: (t) =>
+          t.palette.mode === 'dark' ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.015)',
       }}
     >
-      <Typography variant="h6" sx={{ fontWeight: 700, color: COLORS.text, mb: 0.5 }}>
-        Динамическое окно
-      </Typography>
-      <Typography variant="body2" sx={{ color: COLORS.secondaryText, mb: 2 }}>
-        {'Минимальный подмассив с суммой >= '}{TARGET}
-      </Typography>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', mb: 2, gap: 2, flexWrap: 'wrap' }}>
+        <Typography variant="body2" color="text.secondary">
+          Кратчайший подмассив с суммой ≥ <b>{TARGET}</b>. Массив [{ARRAY.join(', ')}]
+        </Typography>
+        {step && (
+          <Typography
+            variant="body2"
+            sx={{ color: step.isNewMin ? 'success.main' : 'text.secondary', fontWeight: 600 }}
+          >
+            minLen = {step.minLen === Infinity ? '∞' : step.minLen}
+          </Typography>
+        )}
+      </Box>
 
-      <svg
-        width={SVG_WIDTH}
-        height={SVG_HEIGHT}
-        viewBox={`0 0 ${SVG_WIDTH} ${SVG_HEIGHT}`}
-        style={{ display: 'block', margin: '0 auto' }}
-      >
-        {/* Window overlay */}
-        <rect
-          x={windowX}
-          y={cellY - 6}
-          width={windowWidth}
-          height={CELL_H + 12}
-          rx={10}
-          fill={step.conditionMet ? 'rgba(52, 199, 89, 0.12)' : COLORS.windowFill}
-          stroke={step.conditionMet ? COLORS.success : COLORS.windowStroke}
-          strokeWidth={2}
-          strokeDasharray={step.conditionMet ? 'none' : '6 3'}
-        />
-
-        {/* Sum label above window */}
-        <text
-          x={windowX + windowWidth / 2}
-          y={cellY - 18}
-          textAnchor="middle"
-          fontSize={14}
-          fontWeight={700}
-          fill={step.conditionMet ? COLORS.success : COLORS.primary}
-        >
-          sum = {step.sum}
-          {step.conditionMet ? ' >= ' + TARGET : ' < ' + TARGET}
-        </text>
-
-        {/* Stats in top right */}
-        <text
-          x={SVG_WIDTH - SVG_PADDING_X}
-          y={16}
-          textAnchor="end"
-          fontSize={12}
-          fontWeight={600}
-          fill={step.isNewMin ? COLORS.success : COLORS.secondaryText}
-        >
-          minLen = {step.minLen === Infinity ? '\u221E' : step.minLen}
-          {step.isNewMin ? ' \u2713' : ''}
-        </text>
-        <text
-          x={SVG_WIDTH - SVG_PADDING_X}
-          y={32}
-          textAnchor="end"
-          fontSize={12}
-          fontWeight={600}
-          fill={COLORS.secondaryText}
-        >
-          длина = {windowCells}
-        </text>
-
-        {/* Action indicator */}
-        <text
-          x={SVG_PADDING_X}
-          y={24}
-          textAnchor="start"
-          fontSize={12}
-          fontWeight={700}
-          fill={step.action === 'expand' ? COLORS.primary : COLORS.warning}
-        >
-          {step.action === 'expand' ? '\u2192 Расширяем' : '\u2190 Сужаем'}
-        </text>
-
-        {/* Array cells */}
-        {ARRAY.map((val, i) => {
-          const x = cellX(i);
-          const inWindow = i >= step.left && i <= step.right;
-          const isLeft = i === step.left;
-          const isRight = i === step.right;
-
-          let stroke = COLORS.cellBorder;
-          let strokeWidth = 1;
-          if (inWindow && step.conditionMet) {
-            stroke = COLORS.success;
-            strokeWidth = 1.5;
-          } else if (inWindow) {
-            stroke = COLORS.primary;
-            strokeWidth = 1.5;
-          }
-
-          return (
-            <g key={i}>
-              <rect
-                x={x}
-                y={cellY}
-                width={CELL_W}
-                height={CELL_H}
-                rx={8}
-                fill={inWindow ? '#FFFFFF' : '#F9F9FB'}
-                stroke={stroke}
-                strokeWidth={strokeWidth}
-              />
-              <text
-                x={x + CELL_W / 2}
-                y={cellY + CELL_H / 2 + 1}
-                textAnchor="middle"
-                dominantBaseline="central"
-                fontSize={16}
-                fontWeight={inWindow ? 700 : 500}
-                fill={inWindow ? COLORS.text : COLORS.secondaryText}
-              >
-                {val}
-              </text>
-              {/* Index below */}
-              <text
-                x={x + CELL_W / 2}
-                y={cellY + CELL_H + 18}
-                textAnchor="middle"
-                fontSize={11}
-                fill={COLORS.secondaryText}
-              >
-                [{i}]
-              </text>
-              {/* Left/Right pointer labels */}
-              {isLeft && (
-                <text
-                  x={x + CELL_W / 2}
-                  y={cellY + CELL_H + 34}
-                  textAnchor="middle"
-                  fontSize={11}
-                  fontWeight={700}
-                  fill={COLORS.warning}
+      <Box sx={{ overflowX: 'auto', pb: 1 }}>
+        <Box sx={{ display: 'inline-flex', flexDirection: 'column', gap: 0.5, minWidth: '100%' }}>
+          <Box sx={{ display: 'flex', gap: `${GAP}px`, justifyContent: 'center' }}>
+            {ARRAY.map((_, i) => (
+              <Box key={i} sx={{ width: CELL, textAlign: 'center', fontSize: '0.7rem', color: 'text.disabled', fontFamily: 'monospace' }}>
+                {i}
+              </Box>
+            ))}
+          </Box>
+          <Box sx={{ display: 'flex', gap: `${GAP}px`, justifyContent: 'center' }}>
+            {ARRAY.map((v, i) => {
+              const inside = inWindow(i);
+              const bg = inside
+                ? (step!.conditionMet ? PALETTE.validBg : PALETTE.expandBg)
+                : PALETTE.cellBg;
+              const border = inside
+                ? (step!.conditionMet ? PALETTE.validBorder : PALETTE.expandBorder)
+                : PALETTE.cellBorder;
+              return (
+                <Box
+                  key={i}
+                  sx={{
+                    width: CELL,
+                    height: CELL,
+                    borderRadius: 1.5,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontWeight: 600,
+                    fontSize: '1rem',
+                    bgcolor: bg,
+                    border: 1.5,
+                    borderColor: border,
+                    color: 'text.primary',
+                    transition: 'background-color 0.25s, border-color 0.25s',
+                  }}
                 >
-                  L
-                </text>
-              )}
-              {isRight && (
-                <text
-                  x={x + CELL_W / 2}
-                  y={cellY + CELL_H + 34}
-                  textAnchor="middle"
-                  fontSize={11}
-                  fontWeight={700}
-                  fill={COLORS.primary}
-                >
-                  R
-                </text>
-              )}
-            </g>
-          );
-        })}
-      </svg>
+                  {v}
+                </Box>
+              );
+            })}
+          </Box>
+          {/* Pointer pills */}
+          <Box sx={{ display: 'flex', gap: `${GAP}px`, justifyContent: 'center', minHeight: 24, mt: 0.5 }}>
+            {ARRAY.map((_, i) => {
+              const tags: { label: string; color: string }[] = [];
+              if (step) {
+                if (i === step.left) tags.push({ label: 'L', color: PALETTE.leftColor });
+                if (i === step.right && step.right !== step.left) tags.push({ label: 'R', color: PALETTE.rightColor });
+              }
+              return (
+                <Box key={i} sx={{ width: CELL, display: 'flex', justifyContent: 'center', gap: 0.5 }}>
+                  {tags.map((t) => (
+                    <Box
+                      key={t.label}
+                      sx={{
+                        px: 0.6,
+                        borderRadius: 0.5,
+                        fontSize: '0.65rem',
+                        fontWeight: 700,
+                        color: 'white',
+                        bgcolor: t.color,
+                        minWidth: 14,
+                        textAlign: 'center',
+                        lineHeight: 1.4,
+                      }}
+                    >
+                      {t.label}
+                    </Box>
+                  ))}
+                </Box>
+              );
+            })}
+          </Box>
+        </Box>
+      </Box>
 
-      {/* Description */}
+      {step && (
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 2, gap: 2, flexWrap: 'wrap' }}>
+          <Box
+            sx={{
+              px: 1.5,
+              py: 0.5,
+              borderRadius: 1,
+              fontSize: '0.8rem',
+              fontWeight: 700,
+              color: step.action === 'expand' ? PALETTE.expandColor : PALETTE.shrinkColor,
+              border: 1,
+              borderColor: step.action === 'expand' ? PALETTE.expandColor : PALETTE.shrinkColor,
+            }}
+          >
+            {step.action === 'expand' ? '→ расширение' : '← сжатие'}
+          </Box>
+          <Typography variant="body2" sx={{ fontWeight: 600, color: step.conditionMet ? 'success.main' : 'text.secondary' }}>
+            сумма = {step.sum} {step.conditionMet ? `≥ ${TARGET}` : `< ${TARGET}`} · длина = {windowLen}
+          </Typography>
+        </Box>
+      )}
+
       <Box
         sx={{
           mt: 2,
           px: 2,
-          py: 1.2,
-          bgcolor: '#FFFFFF',
-          borderRadius: 2,
-          border: '1px solid #E5E5EA',
-          minHeight: 42,
+          py: 1.25,
+          borderRadius: 1.5,
+          textAlign: 'center',
+          bgcolor: step?.isNewMin
+            ? (t) => (t.palette.mode === 'dark' ? 'rgba(52,199,89,0.15)' : 'rgba(52,199,89,0.12)')
+            : (t) => (t.palette.mode === 'dark' ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)'),
+          color: step?.isNewMin ? 'success.main' : 'text.secondary',
+          fontWeight: step?.isNewMin ? 600 : 400,
         }}
       >
-        <Typography variant="body2" sx={{ color: COLORS.text, fontWeight: 500, fontSize: 13 }}>
-          Шаг {currentStep + 1}/{steps.length}: {step.description}
+        <Typography variant="body2" sx={{ color: 'inherit', fontWeight: 'inherit' }}>
+          {step
+            ? `Шаг ${stepIdx} / ${steps.length}: ${step.description}`
+            : 'Нажмите «Следующий шаг», чтобы начать.'}
         </Typography>
       </Box>
 
-      {/* Buttons */}
-      <Box sx={{ display: 'flex', gap: 1.5, mt: 2 }}>
+      <Box sx={{ display: 'flex', gap: 1, mt: 2, justifyContent: 'center' }}>
         <Button
+          size="small"
           variant="contained"
-          disabled={currentStep >= steps.length - 1}
-          onClick={() => setCurrentStep((s) => Math.min(s + 1, steps.length - 1))}
-          sx={{
-            bgcolor: COLORS.primary,
-            textTransform: 'none',
-            borderRadius: 2,
-            fontWeight: 600,
-            '&:hover': { bgcolor: '#0066D6' },
-          }}
+          disabled={stepIdx >= steps.length}
+          onClick={() => setStepIdx((s) => Math.min(s + 1, steps.length))}
+          endIcon={<ArrowForwardIcon />}
         >
           Следующий шаг
         </Button>
         <Button
+          size="small"
           variant="outlined"
-          disabled={currentStep === 0}
-          onClick={() => setCurrentStep(0)}
-          sx={{
-            borderColor: COLORS.primary,
-            color: COLORS.primary,
-            textTransform: 'none',
-            borderRadius: 2,
-            fontWeight: 600,
-          }}
+          onClick={() => setStepIdx(0)}
+          startIcon={<RestartAltIcon />}
+          disabled={stepIdx === 0}
         >
           Сбросить
         </Button>
       </Box>
-    </Paper>
+    </Box>
   );
-};
-
-export default DynamicWindowViz;
+}

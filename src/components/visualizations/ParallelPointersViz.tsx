@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
-import { Button, Paper, Typography, Box } from '@mui/material';
-import { useVizColors } from './_colors';
+import { useState } from 'react';
+import { Box, Button, Typography, useTheme } from '@mui/material';
+import RestartAltIcon from '@mui/icons-material/RestartAlt';
+import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 
 interface Step {
   slow: number;
@@ -21,13 +22,13 @@ function computeSteps(): Step[] {
   for (let fast = 1; fast < nums.length; fast++) {
     if (nums[fast] !== nums[slow]) {
       slow++;
-      nums[slow] = nums[fast];
+      nums[slow] = nums[fast]!;
       result.push({
         slow,
         fast,
         array: [...nums],
         wrote: true,
-        description: `arr[${fast}] = ${nums[slow]} \u2260 arr[${slow - 1}] = ${nums[slow - 1]} \u2014 slow++, записываем ${nums[slow]} в позицию ${slow}`,
+        description: `nums[${fast}] = ${nums[slow]} ≠ nums[${slow - 1}] = ${nums[slow - 1]} — slow++, записываем ${nums[slow]} в позицию ${slow}`,
         done: false,
       });
     } else {
@@ -36,19 +37,18 @@ function computeSteps(): Step[] {
         fast,
         array: [...nums],
         wrote: false,
-        description: `arr[${fast}] = ${nums[fast]} === arr[${slow}] = ${nums[slow]} \u2014 дубликат, пропускаем`,
+        description: `nums[${fast}] = ${nums[fast]} === nums[${slow}] = ${nums[slow]} — дубликат, пропускаем`,
         done: false,
       });
     }
   }
 
-  // Final step
   result.push({
     slow,
     fast: nums.length - 1,
     array: [...nums],
     wrote: false,
-    description: `Готово! Уникальных элементов: ${slow + 1}. Результат: [${nums.slice(0, slow + 1).join(', ')}]`,
+    description: `Готово. Уникальных элементов: ${slow + 1}, результат: [${nums.slice(0, slow + 1).join(', ')}]`,
     done: true,
   });
 
@@ -56,231 +56,190 @@ function computeSteps(): Step[] {
 }
 
 const allSteps = computeSteps();
-
-const CELL_W = 50;
-const CELL_H = 40;
+const CELL = 44;
 const GAP = 6;
-const START_X = 30;
-const START_Y = 30;
-const POINTER_Y = START_Y + CELL_H + 30;
-
-const baseColors = {
-  primary: '#007AFF',
-  success: '#34C759',
-  red: '#FF3B30',
-  orange: '#FF9500',
-  activeBg: '#E8F0FE',
-  cellBorder: '#C7C7CC',
-  text: '#1C1C1E',
-  lightText: '#8E8E93',
-};
 
 export default function ParallelPointersViz() {
-  const colors = useVizColors(baseColors);
-  const [currentStep, setCurrentStep] = useState(0);
-
-  const step = currentStep > 0 ? allSteps[currentStep - 1] : null;
-
+  const theme = useTheme();
+  const isDark = theme.palette.mode === 'dark';
+  const [stepIdx, setStepIdx] = useState(0);
+  const step = stepIdx > 0 ? allSteps[stepIdx - 1] : null;
   const displayArr = step ? step.array : initialArr;
 
-  const cellX = (i: number) => START_X + i * (CELL_W + GAP);
-  const cellCenterX = (i: number) => cellX(i) + CELL_W / 2;
-
-  const svgWidth = START_X * 2 + initialArr.length * (CELL_W + GAP) - GAP;
-  const svgHeight = POINTER_Y + 40;
-
-  const getCellFill = (i: number) => {
-    if (!step) return '#FFFFFF';
-    if (step.done && i <= step.slow) return '#34C75920';
-    if (i <= step.slow) return '#E8F0FE';
-    return '#FFFFFF';
+  const PALETTE = {
+    cellBg: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.025)',
+    cellBorder: isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.12)',
+    keepBg: isDark ? 'rgba(10,132,255,0.12)' : 'rgba(10,132,255,0.08)',
+    keepBorder: isDark ? 'rgba(10,132,255,0.35)' : 'rgba(10,132,255,0.3)',
+    slowBg: isDark ? 'rgba(10,132,255,0.20)' : 'rgba(10,132,255,0.15)',
+    slowBorder: '#0a84ff',
+    fastBg: isDark ? 'rgba(255,149,0,0.22)' : 'rgba(255,149,0,0.18)',
+    fastBorder: '#ff9500',
+    doneBg: isDark ? 'rgba(52,199,89,0.20)' : 'rgba(52,199,89,0.18)',
+    doneBorder: '#34c759',
+    slowColor: '#0a84ff',
+    fastColor: '#ff9500',
+    doneColor: '#34c759',
   };
 
-  const getCellStroke = (i: number) => {
-    if (!step) return colors.cellBorder;
-    if (step.done && i <= step.slow) return colors.success;
-    if (i === step.slow) return colors.primary;
-    if (i === step.fast) return colors.orange;
-    return colors.cellBorder;
+  type CellState = 'idle' | 'keep' | 'slow' | 'fast' | 'done';
+  const cellState = (i: number): CellState => {
+    if (!step) return 'idle';
+    if (step.done) {
+      if (i <= step.slow) return 'done';
+      return 'idle';
+    }
+    if (i === step.slow && i === step.fast) return 'slow';
+    if (i === step.slow) return 'slow';
+    if (i === step.fast) return 'fast';
+    if (i < step.slow) return 'keep';
+    return 'idle';
   };
 
-  const getCellStrokeWidth = (i: number) => {
-    if (!step) return 1.5;
-    if (i === step.slow || i === step.fast) return 2.5;
-    if (step.done && i <= step.slow) return 2;
-    return 1.5;
-  };
-
-  const renderPointer = (index: number, label: string, color: string) => {
-    const cx = cellCenterX(index);
-    const ty = POINTER_Y;
-    return (
-      <g key={label}>
-        <polygon
-          points={`${cx},${ty - 10} ${cx - 7},${ty + 2} ${cx + 7},${ty + 2}`}
-          fill={color}
-        />
-        <text
-          x={cx}
-          y={ty + 18}
-          textAnchor="middle"
-          fontSize={12}
-          fontWeight={600}
-          fill={color}
-        >
-          {label}
-        </text>
-      </g>
-    );
+  const cellStyle = (s: CellState) => {
+    switch (s) {
+      case 'done':
+        return { bg: PALETTE.doneBg, border: PALETTE.doneBorder };
+      case 'slow':
+        return { bg: PALETTE.slowBg, border: PALETTE.slowBorder };
+      case 'fast':
+        return { bg: PALETTE.fastBg, border: PALETTE.fastBorder };
+      case 'keep':
+        return { bg: PALETTE.keepBg, border: PALETTE.keepBorder };
+      default:
+        return { bg: PALETTE.cellBg, border: PALETTE.cellBorder };
+    }
   };
 
   return (
-    <Paper elevation={1} sx={{ p: 3, borderRadius: 3 }}>
-      <Typography variant="h6" sx={{ mb: 0.5, color: colors.text }}>
-        Параллельные указатели: удаление дубликатов
-      </Typography>
-      <Typography variant="body2" sx={{ mb: 2, color: colors.lightText }}>
-        Массив: [{initialArr.join(', ')}]
+    <Box
+      sx={{
+        p: { xs: 2, sm: 2.5 },
+        borderRadius: 2,
+        border: 1,
+        borderColor: 'divider',
+        backgroundColor: (t) =>
+          t.palette.mode === 'dark' ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.015)',
+      }}
+    >
+      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+        Удаление дубликатов in-place. Исходный массив: [{initialArr.join(', ')}]
       </Typography>
 
-      <Box sx={{ overflowX: 'auto' }}>
-        <svg
-          width={svgWidth}
-          height={svgHeight}
-          style={{ display: 'block', margin: '0 auto' }}
-        >
-          {displayArr.map((val, i) => {
-            const x = cellX(i);
-            return (
-              <g key={i}>
-                <rect
-                  x={x}
-                  y={START_Y}
-                  width={CELL_W}
-                  height={CELL_H}
-                  rx={6}
-                  fill={getCellFill(i)}
-                  stroke={getCellStroke(i)}
-                  strokeWidth={getCellStrokeWidth(i)}
-                />
-                <text
-                  x={x + CELL_W / 2}
-                  y={START_Y + CELL_H / 2 + 5}
-                  textAnchor="middle"
-                  fontSize={16}
-                  fontWeight={500}
-                  fill={colors.text}
+      <Box sx={{ overflowX: 'auto', pb: 1 }}>
+        <Box sx={{ display: 'inline-flex', flexDirection: 'column', gap: 0.5, minWidth: '100%' }}>
+          <Box sx={{ display: 'flex', gap: `${GAP}px`, justifyContent: 'center' }}>
+            {displayArr.map((_, i) => (
+              <Box key={i} sx={{ width: CELL, textAlign: 'center', fontSize: '0.7rem', color: 'text.disabled', fontFamily: 'monospace' }}>
+                {i}
+              </Box>
+            ))}
+          </Box>
+          <Box sx={{ display: 'flex', gap: `${GAP}px`, justifyContent: 'center' }}>
+            {displayArr.map((v, i) => {
+              const cs = cellStyle(cellState(i));
+              return (
+                <Box
+                  key={i}
+                  sx={{
+                    width: CELL,
+                    height: CELL,
+                    borderRadius: 1.5,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontWeight: 600,
+                    fontSize: '0.95rem',
+                    bgcolor: cs.bg,
+                    border: 1.5,
+                    borderColor: cs.border,
+                    color: 'text.primary',
+                    transition: 'background-color 0.25s, border-color 0.25s',
+                  }}
                 >
-                  {val}
-                </text>
-                <text
-                  x={x + CELL_W / 2}
-                  y={START_Y - 8}
-                  textAnchor="middle"
-                  fontSize={11}
-                  fill={colors.lightText}
-                >
-                  {i}
-                </text>
-              </g>
-            );
-          })}
-
-          {step && !step.done && (
-            <>
-              {renderPointer(step.slow, 'slow', colors.primary)}
-              {renderPointer(step.fast, 'fast', colors.orange)}
-            </>
-          )}
-          {step && step.done && (
-            <>
-              {renderPointer(step.slow, 'slow', colors.success)}
-            </>
-          )}
-        </svg>
+                  {v}
+                </Box>
+              );
+            })}
+          </Box>
+          <Box sx={{ display: 'flex', gap: `${GAP}px`, justifyContent: 'center', minHeight: 24, mt: 0.5 }}>
+            {displayArr.map((_, i) => {
+              if (!step) return <Box key={i} sx={{ width: CELL }} />;
+              const tags: { label: string; color: string }[] = [];
+              if (!step.done) {
+                if (i === step.slow) tags.push({ label: 'S', color: PALETTE.slowColor });
+                if (i === step.fast && step.fast !== step.slow) tags.push({ label: 'F', color: PALETTE.fastColor });
+              } else if (i === step.slow) {
+                tags.push({ label: 'end', color: PALETTE.doneColor });
+              }
+              return (
+                <Box key={i} sx={{ width: CELL, display: 'flex', justifyContent: 'center', gap: 0.5 }}>
+                  {tags.map((t) => (
+                    <Box
+                      key={t.label}
+                      sx={{
+                        px: 0.6,
+                        borderRadius: 0.5,
+                        fontSize: '0.65rem',
+                        fontWeight: 700,
+                        color: 'white',
+                        bgcolor: t.color,
+                        minWidth: 14,
+                        textAlign: 'center',
+                        lineHeight: 1.4,
+                      }}
+                    >
+                      {t.label}
+                    </Box>
+                  ))}
+                </Box>
+              );
+            })}
+          </Box>
+        </Box>
       </Box>
 
-      {step && (
-        <Box sx={{ mt: 2, textAlign: 'center' }}>
-          {step.done ? (
-            <Typography
-              variant="h5"
-              sx={{
-                fontWeight: 700,
-                color: colors.success,
-                mb: 1,
-              }}
-            >
-              Результат: [{step.array.slice(0, step.slow + 1).join(', ')}]
-            </Typography>
-          ) : (
-            <Typography
-              variant="h5"
-              sx={{
-                fontWeight: 700,
-                color: step.wrote ? colors.primary : colors.text,
-                mb: 1,
-              }}
-            >
-              {step.wrote ? 'Записано!' : 'Дубликат'}
-            </Typography>
-          )}
-          <Typography
-            variant="body2"
-            sx={{
-              p: 1.5,
-              borderRadius: 2,
-              bgcolor: step.done ? '#34C75918' : '#F2F2F7',
-              color: step.done ? colors.success : colors.text,
-              fontWeight: step.done ? 600 : 400,
-            }}
-          >
-            Шаг {currentStep}: {step.description}
-          </Typography>
-        </Box>
-      )}
-
-      {!step && (
-        <Typography
-          variant="body2"
-          sx={{
-            mt: 2,
-            textAlign: 'center',
-            color: 'text.disabled',
-            fontStyle: 'italic',
-          }}
-        >
-          Нажмите &laquo;Следующий шаг&raquo; для начала
+      <Box
+        sx={{
+          mt: 2,
+          px: 2,
+          py: 1.25,
+          borderRadius: 1.5,
+          textAlign: 'center',
+          bgcolor: step?.done
+            ? (t) => (t.palette.mode === 'dark' ? 'rgba(52,199,89,0.15)' : 'rgba(52,199,89,0.12)')
+            : (t) => (t.palette.mode === 'dark' ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)'),
+          color: step?.done ? 'success.main' : 'text.secondary',
+          fontWeight: step?.done ? 600 : 400,
+        }}
+      >
+        <Typography variant="body2" sx={{ color: 'inherit', fontWeight: 'inherit' }}>
+          {step
+            ? `Шаг ${stepIdx}: ${step.description}`
+            : 'Нажмите «Следующий шаг», чтобы начать. S — slow (позиция для записи), F — fast (читает массив).'}
         </Typography>
-      )}
+      </Box>
 
-      <Box sx={{ display: 'flex', gap: 1.5, mt: 2 }}>
+      <Box sx={{ display: 'flex', gap: 1, mt: 2, justifyContent: 'center' }}>
         <Button
+          size="small"
           variant="contained"
-          disabled={currentStep >= allSteps.length}
-          onClick={() => setCurrentStep((s) => s + 1)}
-          sx={{
-            bgcolor: colors.primary,
-            textTransform: 'none',
-            borderRadius: 2,
-            '&:hover': { bgcolor: '#005EC4' },
-          }}
+          disabled={stepIdx >= allSteps.length}
+          onClick={() => setStepIdx((s) => s + 1)}
+          endIcon={<ArrowForwardIcon />}
         >
           Следующий шаг
         </Button>
         <Button
+          size="small"
           variant="outlined"
-          onClick={() => setCurrentStep(0)}
-          sx={{
-            textTransform: 'none',
-            borderRadius: 2,
-            borderColor: colors.primary,
-            color: colors.primary,
-          }}
+          onClick={() => setStepIdx(0)}
+          startIcon={<RestartAltIcon />}
+          disabled={stepIdx === 0}
         >
           Сбросить
         </Button>
       </Box>
-    </Paper>
+    </Box>
   );
 }

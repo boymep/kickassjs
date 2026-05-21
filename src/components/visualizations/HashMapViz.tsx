@@ -1,21 +1,10 @@
-import React, { useState } from 'react';
-import { Button, Paper, Typography, Box } from '@mui/material';
-import { useVizColors } from './_colors';
+import { useState } from 'react';
+import { Box, Button, Typography, useTheme } from '@mui/material';
+import RestartAltIcon from '@mui/icons-material/RestartAlt';
+import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 
 const ARRAY = [3, 2, 4];
 const TARGET = 6;
-
-const COLORS = {
-  primary: '#007AFF',
-  success: '#34C759',
-  warning: '#FF9500',
-  bg: '#F2F2F7',
-  cellBg: '#FFFFFF',
-  cellBorder: '#C7C7CC',
-  text: '#1C1C1E',
-  secondaryText: '#8E8E93',
-  foundBg: 'rgba(52, 199, 89, 0.12)',
-};
 
 interface MapEntry {
   key: number;
@@ -41,7 +30,7 @@ const steps: Step[] = [
     found: false,
     resultIndices: null,
     mapEntries: [{ key: 3, value: 0, isNew: true }],
-    description: 'i=0, num=3, complement=3, Map пуст → добавляем {3: 0}',
+    description: 'i = 0, num = 3, complement = 3. Map пуст → записываем 3 → 0',
   },
   {
     currentIdx: 1,
@@ -53,7 +42,7 @@ const steps: Step[] = [
       { key: 3, value: 0 },
       { key: 2, value: 1, isNew: true },
     ],
-    description: 'i=1, num=2, complement=4, Map.has(4) = false → добавляем {2: 1}',
+    description: 'i = 1, num = 2, complement = 4. Map.has(4) = false → записываем 2 → 1',
   },
   {
     currentIdx: 2,
@@ -65,343 +54,234 @@ const steps: Step[] = [
       { key: 3, value: 0 },
       { key: 2, value: 1 },
     ],
-    description: 'i=2, num=4, complement=2, Map.has(2) = true → Найдено! [1, 2]',
+    description: 'i = 2, num = 4, complement = 2. Map.has(2) = true → пара найдена: [1, 2]',
   },
 ];
 
-const CELL_W = 56;
-const CELL_H = 44;
-const CELL_GAP = 12;
-const ARR_PADDING_X = 32;
-const ARR_Y = 16;
+const CELL = 48;
+const GAP = 8;
 
-const MAP_X = ARR_PADDING_X;
-const MAP_Y = ARR_Y + CELL_H + 50;
-const MAP_ROW_H = 32;
-const MAP_KEY_W = 60;
-const MAP_VAL_W = 60;
-const MAP_ARROW_W = 30;
-const MAP_TOTAL_W = MAP_KEY_W + MAP_ARROW_W + MAP_VAL_W;
+export default function HashMapViz() {
+  const theme = useTheme();
+  const isDark = theme.palette.mode === 'dark';
+  const [stepIdx, setStepIdx] = useState(0);
+  const step = stepIdx > 0 ? steps[stepIdx - 1]! : null;
 
-const SVG_WIDTH = ARR_PADDING_X * 2 + ARRAY.length * (CELL_W + CELL_GAP) - CELL_GAP + 80;
-const maxMapRows = 3;
-const SVG_HEIGHT = MAP_Y + (maxMapRows + 1) * MAP_ROW_H + 16;
+  const PALETTE = {
+    cellBg: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.025)',
+    cellBorder: isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.12)',
+    currentBg: isDark ? 'rgba(255,149,0,0.18)' : 'rgba(255,149,0,0.14)',
+    currentBorder: '#ff9500',
+    foundBg: isDark ? 'rgba(52,199,89,0.20)' : 'rgba(52,199,89,0.16)',
+    foundBorder: '#34c759',
+    newBg: isDark ? 'rgba(10,132,255,0.15)' : 'rgba(10,132,255,0.10)',
+    newBorder: '#0a84ff',
+    rowBg: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)',
+    rowBorder: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)',
+    newColor: '#0a84ff',
+    foundColor: '#34c759',
+    currentColor: '#ff9500',
+  };
 
-const HashMapViz: React.FC = () => {
-  const [currentStep, setCurrentStep] = useState(0);
-  const step = steps[currentStep];
-
-  const cellX = (i: number) => ARR_PADDING_X + i * (CELL_W + CELL_GAP);
+  const isCurrent = (i: number) => step !== null && i === step.currentIdx && !step.found;
+  const isResult = (i: number) =>
+    step !== null && step.found && step.resultIndices !== null && step.resultIndices.includes(i);
 
   return (
-    <Paper
-      elevation={0}
+    <Box
       sx={{
-        p: 3,
-        borderRadius: 3,
-        bgcolor: COLORS.bg,
-        border: '1px solid #E5E5EA',
-        maxWidth: 520,
+        p: { xs: 2, sm: 2.5 },
+        borderRadius: 2,
+        border: 1,
+        borderColor: 'divider',
+        backgroundColor: (t) =>
+          t.palette.mode === 'dark' ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.015)',
       }}
     >
-      <Typography variant="h6" sx={{ fontWeight: 700, color: COLORS.text, mb: 0.5 }}>
-        Two Sum — хеш-таблица
-      </Typography>
-      <Typography variant="body2" sx={{ color: COLORS.secondaryText, mb: 2 }}>
-        Массив: [{ARRAY.join(', ')}], target = {TARGET}
+      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+        Задача Two Sum: массив [{ARRAY.join(', ')}], target = <b>{TARGET}</b>
       </Typography>
 
-      <svg
-        width={SVG_WIDTH}
-        height={SVG_HEIGHT}
-        viewBox={`0 0 ${SVG_WIDTH} ${SVG_HEIGHT}`}
-        style={{ display: 'block', margin: '0 auto' }}
-      >
-        {/* Array cells */}
-        {ARRAY.map((val, i) => {
-          const x = cellX(i);
-          const isCurrent = i === step.currentIdx;
-          const isResult =
-            step.found && step.resultIndices !== null && step.resultIndices.includes(i);
-
-          let stroke = COLORS.cellBorder;
-          let strokeWidth = 1;
-          let fill = COLORS.cellBg;
-
-          if (isResult) {
-            stroke = COLORS.success;
-            strokeWidth = 2.5;
-            fill = COLORS.foundBg;
-          } else if (isCurrent) {
-            stroke = COLORS.warning;
-            strokeWidth = 2.5;
-          }
-
-          return (
-            <g key={i}>
-              <rect
-                x={x}
-                y={ARR_Y}
-                width={CELL_W}
-                height={CELL_H}
-                rx={8}
-                fill={fill}
-                stroke={stroke}
-                strokeWidth={strokeWidth}
-              />
-              <text
-                x={x + CELL_W / 2}
-                y={ARR_Y + CELL_H / 2 + 1}
-                textAnchor="middle"
-                dominantBaseline="central"
-                fontSize={16}
-                fontWeight={isCurrent || isResult ? 700 : 500}
-                fill={isResult ? COLORS.success : isCurrent ? COLORS.warning : COLORS.text}
-              >
-                {val}
-              </text>
-              <text
-                x={x + CELL_W / 2}
-                y={ARR_Y + CELL_H + 16}
-                textAnchor="middle"
-                fontSize={11}
-                fill={COLORS.secondaryText}
-              >
-                [{i}]
-              </text>
-            </g>
-          );
-        })}
-
-        {/* Complement label */}
-        <text
-          x={cellX(ARRAY.length - 1) + CELL_W + 24}
-          y={ARR_Y + CELL_H / 2 + 1}
-          dominantBaseline="central"
-          fontSize={12}
-          fontWeight={600}
-          fill={step.found ? COLORS.success : COLORS.secondaryText}
-        >
-          complement = {step.complement}
-        </text>
-
-        {/* Map header */}
-        <text
-          x={MAP_X}
-          y={MAP_Y - 6}
-          fontSize={13}
-          fontWeight={700}
-          fill={COLORS.text}
-        >
-          HashMap
-        </text>
-
-        {/* Map table */}
-        {/* Header row */}
-        <rect
-          x={MAP_X}
-          y={MAP_Y}
-          width={MAP_TOTAL_W}
-          height={MAP_ROW_H}
-          rx={6}
-          fill="#E5E5EA"
-        />
-        <text
-          x={MAP_X + MAP_KEY_W / 2}
-          y={MAP_Y + MAP_ROW_H / 2 + 1}
-          textAnchor="middle"
-          dominantBaseline="central"
-          fontSize={12}
-          fontWeight={700}
-          fill={COLORS.secondaryText}
-        >
-          key
-        </text>
-        <text
-          x={MAP_X + MAP_KEY_W + MAP_ARROW_W + MAP_VAL_W / 2}
-          y={MAP_Y + MAP_ROW_H / 2 + 1}
-          textAnchor="middle"
-          dominantBaseline="central"
-          fontSize={12}
-          fontWeight={700}
-          fill={COLORS.secondaryText}
-        >
-          value
-        </text>
-
-        {/* Map entries */}
-        {step.mapEntries.map((entry, i) => {
-          const rowY = MAP_Y + (i + 1) * MAP_ROW_H;
-          const isHighlight =
-            step.found && entry.key === step.complement;
-
-          return (
-            <g key={`${entry.key}-${entry.value}`}>
-              <rect
-                x={MAP_X}
-                y={rowY}
-                width={MAP_TOTAL_W}
-                height={MAP_ROW_H}
-                rx={i === step.mapEntries.length - 1 ? 6 : 0}
-                fill={isHighlight ? COLORS.foundBg : '#FFFFFF'}
-                stroke={isHighlight ? COLORS.success : '#E5E5EA'}
-                strokeWidth={isHighlight ? 2 : 1}
-              />
-              {/* Key */}
-              <text
-                x={MAP_X + MAP_KEY_W / 2}
-                y={rowY + MAP_ROW_H / 2 + 1}
-                textAnchor="middle"
-                dominantBaseline="central"
-                fontSize={14}
-                fontWeight={entry.isNew || isHighlight ? 700 : 500}
-                fill={
-                  isHighlight
-                    ? COLORS.success
-                    : entry.isNew
-                    ? COLORS.primary
-                    : COLORS.text
-                }
-              >
-                {entry.key}
-              </text>
-              {/* Arrow */}
-              <text
-                x={MAP_X + MAP_KEY_W + MAP_ARROW_W / 2}
-                y={rowY + MAP_ROW_H / 2 + 1}
-                textAnchor="middle"
-                dominantBaseline="central"
-                fontSize={13}
-                fill={COLORS.secondaryText}
-              >
-                →
-              </text>
-              {/* Value */}
-              <text
-                x={MAP_X + MAP_KEY_W + MAP_ARROW_W + MAP_VAL_W / 2}
-                y={rowY + MAP_ROW_H / 2 + 1}
-                textAnchor="middle"
-                dominantBaseline="central"
-                fontSize={14}
-                fontWeight={entry.isNew || isHighlight ? 700 : 500}
-                fill={
-                  isHighlight
-                    ? COLORS.success
-                    : entry.isNew
-                    ? COLORS.primary
-                    : COLORS.text
-                }
-              >
-                {entry.value}
-              </text>
-              {/* "new" badge */}
-              {entry.isNew && (
-                <text
-                  x={MAP_X + MAP_TOTAL_W + 10}
-                  y={rowY + MAP_ROW_H / 2 + 1}
-                  dominantBaseline="central"
-                  fontSize={11}
-                  fontWeight={600}
-                  fill={COLORS.primary}
+      {/* Array */}
+      <Box sx={{ overflowX: 'auto', pb: 1 }}>
+        <Box sx={{ display: 'inline-flex', flexDirection: 'column', gap: 0.5, minWidth: '100%' }}>
+          <Box sx={{ display: 'flex', gap: `${GAP}px`, justifyContent: 'center' }}>
+            {ARRAY.map((_, i) => (
+              <Box key={i} sx={{ width: CELL, textAlign: 'center', fontSize: '0.7rem', color: 'text.disabled', fontFamily: 'monospace' }}>
+                {i}
+              </Box>
+            ))}
+          </Box>
+          <Box sx={{ display: 'flex', gap: `${GAP}px`, justifyContent: 'center' }}>
+            {ARRAY.map((v, i) => {
+              const result = isResult(i);
+              const current = isCurrent(i);
+              const bg = result ? PALETTE.foundBg : current ? PALETTE.currentBg : PALETTE.cellBg;
+              const border = result ? PALETTE.foundBorder : current ? PALETTE.currentBorder : PALETTE.cellBorder;
+              return (
+                <Box
+                  key={i}
+                  sx={{
+                    width: CELL,
+                    height: CELL,
+                    borderRadius: 1.5,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontWeight: 600,
+                    fontSize: '1rem',
+                    bgcolor: bg,
+                    border: 1.5,
+                    borderColor: border,
+                    color: 'text.primary',
+                    transition: 'background-color 0.25s, border-color 0.25s',
+                  }}
                 >
-                  ← новая
-                </text>
-              )}
-            </g>
-          );
-        })}
+                  {v}
+                </Box>
+              );
+            })}
+          </Box>
+        </Box>
+      </Box>
 
-        {/* Empty map indicator */}
-        {step.mapEntries.length === 0 && (
-          <text
-            x={MAP_X + MAP_TOTAL_W / 2}
-            y={MAP_Y + MAP_ROW_H + MAP_ROW_H / 2}
-            textAnchor="middle"
-            dominantBaseline="central"
-            fontSize={12}
-            fill={COLORS.secondaryText}
-            fontStyle="italic"
+      {/* Complement */}
+      {step && !step.found && (
+        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
+          <Box
+            sx={{
+              px: 1.5,
+              py: 0.5,
+              borderRadius: 1,
+              fontSize: '0.8rem',
+              fontWeight: 600,
+              color: PALETTE.currentColor,
+              border: 1,
+              borderColor: PALETTE.currentColor,
+            }}
           >
-            (пусто)
-          </text>
-        )}
+            complement = target − {step.num} = {step.complement}
+          </Box>
+        </Box>
+      )}
 
-        {/* Result badge */}
-        {step.found && step.resultIndices && (
-          <g>
-            <rect
-              x={MAP_X + MAP_TOTAL_W + 30}
-              y={MAP_Y + MAP_ROW_H}
-              width={120}
-              height={34}
-              rx={10}
-              fill={COLORS.success}
-            />
-            <text
-              x={MAP_X + MAP_TOTAL_W + 90}
-              y={MAP_Y + MAP_ROW_H + 18}
-              textAnchor="middle"
-              dominantBaseline="central"
-              fontSize={13}
-              fontWeight={700}
-              fill="#FFFFFF"
-            >
-              Ответ: [{step.resultIndices.join(', ')}]
-            </text>
-          </g>
-        )}
-      </svg>
+      {/* Map table */}
+      <Box sx={{ mt: 2 }}>
+        <Typography variant="overline" color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>
+          Map (значение → индекс)
+        </Typography>
+        <Box
+          sx={{
+            border: 1,
+            borderColor: PALETTE.rowBorder,
+            borderRadius: 1.5,
+            overflow: 'hidden',
+          }}
+        >
+          {/* Header */}
+          <Box
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: '1fr 32px 1fr 100px',
+              alignItems: 'center',
+              px: 1.5,
+              py: 0.75,
+              bgcolor: PALETTE.rowBg,
+              fontSize: '0.75rem',
+              fontWeight: 700,
+              color: 'text.secondary',
+              borderBottom: 1,
+              borderColor: PALETTE.rowBorder,
+            }}
+          >
+            <Box>ключ</Box>
+            <Box />
+            <Box>значение</Box>
+            <Box />
+          </Box>
+          {/* Rows */}
+          {step === null || step.mapEntries.length === 0 ? (
+            <Box sx={{ px: 1.5, py: 1.5, color: 'text.disabled', fontStyle: 'italic', fontSize: '0.85rem', textAlign: 'center' }}>
+              (пусто)
+            </Box>
+          ) : (
+            step.mapEntries.map((entry, i) => {
+              const highlight = step.found && entry.key === step.complement;
+              const isNew = !!entry.isNew;
+              const bg = highlight ? PALETTE.foundBg : isNew ? PALETTE.newBg : 'transparent';
+              const color = highlight ? PALETTE.foundColor : isNew ? PALETTE.newColor : 'text.primary';
+              return (
+                <Box
+                  key={`${entry.key}-${entry.value}`}
+                  sx={{
+                    display: 'grid',
+                    gridTemplateColumns: '1fr 32px 1fr 100px',
+                    alignItems: 'center',
+                    px: 1.5,
+                    py: 0.75,
+                    fontSize: '0.9rem',
+                    fontWeight: highlight || isNew ? 700 : 500,
+                    bgcolor: bg,
+                    color,
+                    borderBottom: i < step.mapEntries.length - 1 ? 1 : 0,
+                    borderColor: PALETTE.rowBorder,
+                  }}
+                >
+                  <Box>{entry.key}</Box>
+                  <Box sx={{ color: 'text.disabled' }}>→</Box>
+                  <Box>{entry.value}</Box>
+                  <Box sx={{ fontSize: '0.7rem', color: isNew ? PALETTE.newColor : 'transparent', fontWeight: 600 }}>
+                    {isNew ? 'новая' : ''}
+                  </Box>
+                </Box>
+              );
+            })
+          )}
+        </Box>
+      </Box>
 
-      {/* Description */}
+      {/* Status */}
       <Box
         sx={{
           mt: 2,
           px: 2,
-          py: 1.2,
-          bgcolor: '#FFFFFF',
-          borderRadius: 2,
-          border: '1px solid #E5E5EA',
-          minHeight: 42,
+          py: 1.25,
+          borderRadius: 1.5,
+          textAlign: 'center',
+          bgcolor: step?.found
+            ? (t) => (t.palette.mode === 'dark' ? 'rgba(52,199,89,0.15)' : 'rgba(52,199,89,0.12)')
+            : (t) => (t.palette.mode === 'dark' ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)'),
+          color: step?.found ? 'success.main' : 'text.secondary',
+          fontWeight: step?.found ? 600 : 400,
         }}
       >
-        <Typography variant="body2" sx={{ color: COLORS.text, fontWeight: 500, fontSize: 13 }}>
-          Шаг {currentStep + 1}/{steps.length}: {step.description}
+        <Typography variant="body2" sx={{ color: 'inherit', fontWeight: 'inherit' }}>
+          {step
+            ? `Шаг ${stepIdx} / ${steps.length}: ${step.description}`
+            : 'Нажмите «Следующий шаг», чтобы начать.'}
         </Typography>
       </Box>
 
-      {/* Buttons */}
-      <Box sx={{ display: 'flex', gap: 1.5, mt: 2 }}>
+      <Box sx={{ display: 'flex', gap: 1, mt: 2, justifyContent: 'center' }}>
         <Button
+          size="small"
           variant="contained"
-          disabled={currentStep >= steps.length - 1}
-          onClick={() => setCurrentStep((s) => Math.min(s + 1, steps.length - 1))}
-          sx={{
-            bgcolor: COLORS.primary,
-            textTransform: 'none',
-            borderRadius: 2,
-            fontWeight: 600,
-            '&:hover': { bgcolor: '#0066D6' },
-          }}
+          disabled={stepIdx >= steps.length}
+          onClick={() => setStepIdx((s) => Math.min(s + 1, steps.length))}
+          endIcon={<ArrowForwardIcon />}
         >
           Следующий шаг
         </Button>
         <Button
+          size="small"
           variant="outlined"
-          disabled={currentStep === 0}
-          onClick={() => setCurrentStep(0)}
-          sx={{
-            borderColor: COLORS.primary,
-            color: COLORS.primary,
-            textTransform: 'none',
-            borderRadius: 2,
-            fontWeight: 600,
-          }}
+          onClick={() => setStepIdx(0)}
+          startIcon={<RestartAltIcon />}
+          disabled={stepIdx === 0}
         >
           Сбросить
         </Button>
       </Box>
-    </Paper>
+    </Box>
   );
-};
-
-export default HashMapViz;
+}

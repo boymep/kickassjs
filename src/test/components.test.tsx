@@ -65,7 +65,7 @@ describe('LessonPage', () => {
         </ProgressProvider>
       </MemoryRouter>,
     );
-    expect(screen.getByText('Тема не найдена')).toBeInTheDocument();
+    expect(screen.getByText('Урок ещё не готов')).toBeInTheDocument();
   });
 });
 

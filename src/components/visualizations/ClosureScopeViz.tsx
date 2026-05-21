@@ -1,5 +1,7 @@
 import { useState } from 'react';
-import { Button, Paper, Typography, Box, Alert, Chip } from '@mui/material';
+import { Box, Button, Typography, useTheme } from '@mui/material';
+import RestartAltIcon from '@mui/icons-material/RestartAlt';
+import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import CodeBlock from '../theory/CodeBlock';
 
 interface Step {
@@ -15,7 +17,7 @@ const steps: Step[] = [
   {
     title: 'Функция определена',
     activeLine: 'function makeCounter() { ... }',
-    note: 'makeCounter попадает в глобальную область видимости. Никаких scope-ов ещё нет — функция только объявлена.',
+    note: 'makeCounter попадает в глобальную область. Локальных областей пока нет — функция только объявлена.',
     global: {},
     scope1: null,
     scope2: null,
@@ -23,7 +25,7 @@ const steps: Step[] = [
   {
     title: 'counter1 = makeCounter()',
     activeLine: 'const counter1 = makeCounter();',
-    note: 'Вызов makeCounter() создаёт новый scope. В нём живёт переменная count = 0. Функции increment и getCount замыкаются на этот scope.',
+    note: 'Вызов makeCounter создал отдельную область с переменной count = 0. Возвращённые функции increment и getCount замкнуты на эту область.',
     global: { counter1: true },
     scope1: { count: 0, showClosures: true },
     scope2: null,
@@ -31,7 +33,7 @@ const steps: Step[] = [
   {
     title: 'counter1.increment() × 2',
     activeLine: 'counter1.increment(); counter1.increment();',
-    note: 'increment() из замыкания обращается к count в scope counter1 и увеличивает его. Сам scope не уничтожается — closure держит на него ссылку.',
+    note: 'increment из замыкания обращается к count и увеличивает его. Область не уничтожается — на неё держится ссылка из возвращённых функций.',
     global: { counter1: true },
     scope1: { count: 2, showClosures: true },
     scope2: null,
@@ -39,7 +41,7 @@ const steps: Step[] = [
   {
     title: 'counter2 = makeCounter()',
     activeLine: 'const counter2 = makeCounter();',
-    note: 'Новый вызов makeCounter() создаёт ОТДЕЛЬНЫЙ scope с собственным count = 0. Это не связано со scope counter1 — у каждого вызова свои переменные.',
+    note: 'Новый вызов makeCounter создал отдельную область с собственным count = 0. С первой областью никак не связан.',
     global: { counter1: true, counter2: true },
     scope1: { count: 2, showClosures: false },
     scope2: { count: 0, showClosures: true },
@@ -47,7 +49,7 @@ const steps: Step[] = [
   {
     title: 'counter2.increment()',
     activeLine: 'counter2.increment();',
-    note: 'counter2.increment() меняет count только в scope counter2. Scope counter1 не затронут — counter1.getCount() по-прежнему вернёт 2.',
+    note: 'increment counter2 меняет count только в своей области. counter1 не затронут — у каждого экземпляра свой count.',
     global: { counter1: true, counter2: true },
     scope1: { count: 2, showClosures: false },
     scope2: { count: 1, showClosures: true },
@@ -69,73 +71,54 @@ counter1.increment();
 
 const counter2 = makeCounter();
 counter2.increment();
-// counter2.getCount() → 1  (не 3!)`;
-
-function ScopeLabel({ label, active, color }: { label: string; active: boolean; color?: string }) {
-  return (
-    <Typography
-      variant="caption"
-      sx={{
-        display: 'block',
-        fontWeight: 700,
-        fontSize: '0.72rem',
-        color: active ? (color ?? 'text.secondary') : 'text.disabled',
-        mb: 0.75,
-        letterSpacing: 0.3,
-      }}
-    >
-      {label}
-    </Typography>
-  );
-}
+// counter2.getCount() → 1`;
 
 function CounterScope({
   label,
   data,
   active,
+  isDark,
 }: {
   label: string;
   data: { count: number; showClosures: boolean };
   active: boolean;
+  isDark: boolean;
 }) {
   return (
     <Box
       sx={{
-        border: '1.5px solid',
+        border: 1.5,
         borderColor: active ? 'primary.main' : 'divider',
-        borderRadius: '8px',
+        borderRadius: 1.5,
         p: 1.5,
-        bgcolor: active ? 'action.selected' : 'action.hover',
-        transition: 'all 0.2s',
+        bgcolor: active
+          ? (t) => (t.palette.mode === 'dark' ? 'rgba(10,132,255,0.10)' : 'rgba(10,132,255,0.06)')
+          : 'transparent',
         flex: 1,
         minWidth: 0,
       }}
     >
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.75 }}>
-        <ScopeLabel label={`${label} Scope`} active={active} color="primary.main" />
-        {active && (
-          <Chip label="активен" size="small" color="primary" variant="filled" sx={{ ml: 'auto', fontSize: '0.65rem', height: 20 }} />
-        )}
-      </Box>
-
+      <Typography variant="overline" sx={{ display: 'block', mb: 0.75, color: active ? 'primary.main' : 'text.disabled', fontSize: '0.7rem' }}>
+        {label}
+      </Typography>
       <Box sx={{ fontFamily: 'monospace', fontSize: '0.82rem', mb: data.showClosures ? 1 : 0 }}>
         <Box component="span" sx={{ color: active ? 'primary.main' : 'text.disabled' }}>count</Box>
         {' = '}
         <Box component="span" sx={{ color: 'warning.main', fontWeight: 700 }}>{data.count}</Box>
-        <Box component="span" sx={{ color: 'text.disabled' }}>  {'// ← живёт здесь'}</Box>
       </Box>
-
       {data.showClosures && (
         <Box
           sx={{
-            border: '1.5px solid',
+            border: 1,
             borderColor: 'success.main',
-            borderRadius: '6px',
+            borderRadius: 1,
             p: 1,
-            bgcolor: 'action.hover',
+            bgcolor: isDark ? 'rgba(52,199,89,0.08)' : 'rgba(52,199,89,0.05)',
           }}
         >
-          <ScopeLabel label="Замкнутые функции" active color="success.main" />
+          <Typography variant="overline" sx={{ display: 'block', mb: 0.5, color: 'success.main', fontSize: '0.65rem' }}>
+            замкнутые функции
+          </Typography>
           <Box sx={{ fontFamily: 'monospace', fontSize: '0.78rem' }}>
             <Box>
               <Box component="span" sx={{ color: 'success.main' }}>increment()</Box>
@@ -153,102 +136,139 @@ function CounterScope({
 }
 
 export default function ClosureScopeViz() {
+  const theme = useTheme();
+  const isDark = theme.palette.mode === 'dark';
   const [idx, setIdx] = useState(0);
-  const step = steps[idx];
-
-  const hasScope2 = step.scope2 !== null && step.scope2 !== undefined;
+  const step = idx > 0 ? steps[idx - 1]! : null;
+  const hasScope2 = step?.scope2 !== null && step?.scope2 !== undefined;
 
   return (
-    <Paper sx={{ p: 3 }}>
-      <Typography variant="h6" gutterBottom>
-        Замыкание — визуализация scope chain
+    <Box
+      sx={{
+        p: { xs: 2, sm: 2.5 },
+        borderRadius: 2,
+        border: 1,
+        borderColor: 'divider',
+        backgroundColor: (t) =>
+          t.palette.mode === 'dark' ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.015)',
+      }}
+    >
+      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+        Каждый вызов makeCounter создаёт свою область с независимым count.
       </Typography>
 
       <CodeBlock code={CODE} />
 
-      {/* Current line */}
-      <Box
-        sx={{
-          px: 2, py: 1, mb: 2,
-          borderLeft: '3px solid',
-          borderColor: 'primary.main',
-          bgcolor: 'action.hover',
-          fontFamily: 'monospace',
-          fontSize: '0.82rem',
-        }}
-      >
-        {'→ '}{step.activeLine}
-      </Box>
-
-      {/* Scope diagram */}
-      <Box sx={{ mb: 2 }}>
-        {/* Global Scope */}
+      {step && (
         <Box
           sx={{
-            border: '1.5px solid',
-            borderColor: 'divider',
-            borderRadius: '10px',
-            p: 2,
-            bgcolor: 'background.paper',
+            px: 2,
+            py: 1,
+            mt: 2,
+            mb: 2,
+            borderLeft: 3,
+            borderColor: 'primary.main',
+            bgcolor: (t) => (t.palette.mode === 'dark' ? 'rgba(10,132,255,0.10)' : 'rgba(10,132,255,0.06)'),
+            fontFamily: 'monospace',
+            fontSize: '0.82rem',
           }}
         >
-          <ScopeLabel label="Global Scope" active />
+          → {step.activeLine}
+        </Box>
+      )}
 
-          <Box sx={{ fontFamily: 'monospace', fontSize: '0.82rem', mb: (step.scope1 || hasScope2) ? 1.5 : 0 }}>
-            <Box sx={{ color: 'text.secondary' }}>
-              makeCounter: <Box component="span" sx={{ color: 'primary.main' }}>function</Box>
-            </Box>
-            {step.global.counter1 && (
-              <Box sx={{ color: 'warning.main', fontWeight: 600 }}>
-                counter1: {'{ increment, getCount }'}
-                <Box component="span" sx={{ color: 'text.disabled' }}>  {'// count = '}{step.scope1?.count}</Box>
+      {step && (
+        <Box sx={{ mb: 2 }}>
+          <Box
+            sx={{
+              border: 1.5,
+              borderColor: 'divider',
+              borderRadius: 2,
+              p: 2,
+            }}
+          >
+            <Typography variant="overline" sx={{ display: 'block', mb: 1, color: 'text.secondary' }}>
+              Глобальная область
+            </Typography>
+            <Box sx={{ fontFamily: 'monospace', fontSize: '0.82rem', mb: (step.scope1 || hasScope2) ? 1.5 : 0 }}>
+              <Box sx={{ color: 'text.secondary' }}>
+                makeCounter: <Box component="span" sx={{ color: 'primary.main' }}>function</Box>
               </Box>
-            )}
-            {step.global.counter2 && (
-              <Box sx={{ color: 'warning.dark', fontWeight: 600 }}>
-                counter2: {'{ increment, getCount }'}
-                <Box component="span" sx={{ color: 'text.disabled' }}>  {'// count = '}{step.scope2?.count}</Box>
+              {step.global.counter1 && (
+                <Box sx={{ color: 'warning.main', fontWeight: 600 }}>
+                  counter1: {'{ increment, getCount }'}
+                  <Box component="span" sx={{ color: 'text.disabled', fontWeight: 400 }}>  {'// count = '}{step.scope1?.count}</Box>
+                </Box>
+              )}
+              {step.global.counter2 && (
+                <Box sx={{ color: 'warning.main', fontWeight: 600 }}>
+                  counter2: {'{ increment, getCount }'}
+                  <Box component="span" sx={{ color: 'text.disabled', fontWeight: 400 }}>  {'// count = '}{step.scope2?.count}</Box>
+                </Box>
+              )}
+            </Box>
+            {(step.scope1 || hasScope2) && (
+              <Box sx={{ display: 'flex', gap: 1.5, flexDirection: { xs: 'column', sm: 'row' } }}>
+                {step.scope1 && (
+                  <CounterScope
+                    label="область counter1"
+                    data={step.scope1}
+                    active={!!step.scope1.showClosures}
+                    isDark={isDark}
+                  />
+                )}
+                {hasScope2 && step.scope2 && (
+                  <CounterScope
+                    label="область counter2"
+                    data={step.scope2}
+                    active={step.scope2.showClosures}
+                    isDark={isDark}
+                  />
+                )}
               </Box>
             )}
           </Box>
-
-          {/* Scopes side by side */}
-          {(step.scope1 || hasScope2) && (
-            <Box sx={{ display: 'flex', gap: 1.5 }}>
-              {step.scope1 && (
-                <CounterScope
-                  label="makeCounter() [counter1]"
-                  data={step.scope1}
-                  active={step.global.counter1 === true && !hasScope2 || (hasScope2 && !!(step.scope1?.showClosures))}
-                />
-              )}
-              {hasScope2 && step.scope2 && (
-                <CounterScope
-                  label="makeCounter() [counter2]"
-                  data={step.scope2}
-                  active={step.scope2.showClosures}
-                />
-              )}
-            </Box>
-          )}
         </Box>
+      )}
+
+      <Box
+        sx={{
+          mt: 2,
+          px: 2,
+          py: 1.25,
+          borderRadius: 1.5,
+          textAlign: 'center',
+          bgcolor: (t) => (t.palette.mode === 'dark' ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)'),
+          color: 'text.secondary',
+        }}
+      >
+        <Typography variant="body2" sx={{ color: 'inherit' }}>
+          {step
+            ? `Шаг ${idx} / ${steps.length}: ${step.note}`
+            : 'Нажмите «Следующий шаг», чтобы посмотреть, как создаются и живут области видимости.'}
+        </Typography>
       </Box>
 
-      <Alert severity="info" sx={{ mb: 2 }}>
-        <Typography variant="body2">{step.note}</Typography>
-      </Alert>
-
-      <Box sx={{ display: 'flex', gap: 1.5 }}>
-        <Button variant="outlined" disabled={idx === 0} onClick={() => setIdx((s) => s - 1)}>
-          ← Назад
+      <Box sx={{ display: 'flex', gap: 1, mt: 2, justifyContent: 'center' }}>
+        <Button
+          size="small"
+          variant="contained"
+          disabled={idx >= steps.length}
+          onClick={() => setIdx((s) => Math.min(s + 1, steps.length))}
+          endIcon={<ArrowForwardIcon />}
+        >
+          Следующий шаг
         </Button>
-        <Button variant="contained" disabled={idx >= steps.length - 1} onClick={() => setIdx((s) => s + 1)}>
-          Следующий шаг →
-        </Button>
-        <Button variant="outlined" onClick={() => setIdx(0)} sx={{ ml: 'auto' }}>
+        <Button
+          size="small"
+          variant="outlined"
+          onClick={() => setIdx(0)}
+          startIcon={<RestartAltIcon />}
+          disabled={idx === 0}
+        >
           Сбросить
         </Button>
       </Box>
-    </Paper>
+    </Box>
   );
 }

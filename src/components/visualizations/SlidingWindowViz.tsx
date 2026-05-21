@@ -1,301 +1,200 @@
-import React, { useState } from 'react';
-import { Button, Paper, Typography, Box } from '@mui/material';
-import { useVizColors } from './_colors';
+import { useState } from 'react';
+import { Box, Button, Typography, useTheme } from '@mui/material';
+import RestartAltIcon from '@mui/icons-material/RestartAlt';
+import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 
 const ARRAY = [2, 1, 5, 1, 3, 2];
 const K = 3;
 
-const COLORS = {
-  primary: '#007AFF',
-  success: '#34C759',
-  warning: '#FF9500',
-  bg: '#F2F2F7',
-  cellBg: '#FFFFFF',
-  cellBorder: '#C7C7CC',
-  text: '#1C1C1E',
-  secondaryText: '#8E8E93',
-  windowFill: 'rgba(0, 122, 255, 0.12)',
-  windowStroke: '#007AFF',
-};
-
 interface Step {
-  windowStart: number;
-  windowEnd: number;
+  start: number;
+  end: number;
   sum: number;
   maxSum: number;
   isNewMax: boolean;
-  added: number | null;
-  removed: number | null;
   addedIdx: number | null;
   removedIdx: number | null;
   description: string;
 }
 
 const steps: Step[] = [
-  {
-    windowStart: 0,
-    windowEnd: 2,
-    sum: 8,
-    maxSum: 8,
-    isNewMax: true,
-    added: null,
-    removed: null,
-    addedIdx: null,
-    removedIdx: null,
-    description: 'Начальное окно [2, 1, 5], сумма = 8, maxSum = 8',
-  },
-  {
-    windowStart: 1,
-    windowEnd: 3,
-    sum: 7,
-    maxSum: 8,
-    isNewMax: false,
-    added: 1,
-    removed: 2,
-    addedIdx: 3,
-    removedIdx: 0,
-    description: 'Сдвиг: +arr[3]=1, −arr[0]=2 → сумма = 7, maxSum = 8',
-  },
-  {
-    windowStart: 2,
-    windowEnd: 4,
-    sum: 9,
-    maxSum: 9,
-    isNewMax: true,
-    added: 3,
-    removed: 1,
-    addedIdx: 4,
-    removedIdx: 1,
-    description: 'Сдвиг: +arr[4]=3, −arr[1]=1 → сумма = 9, новый максимум!',
-  },
-  {
-    windowStart: 3,
-    windowEnd: 5,
-    sum: 6,
-    maxSum: 9,
-    isNewMax: false,
-    added: 2,
-    removed: 5,
-    addedIdx: 5,
-    removedIdx: 2,
-    description: 'Сдвиг: +arr[5]=2, −arr[2]=5 → сумма = 6, maxSum = 9',
-  },
+  { start: 0, end: 2, sum: 8, maxSum: 8, isNewMax: true,  addedIdx: null, removedIdx: null, description: 'Первое окно [2, 1, 5], сумма = 8' },
+  { start: 1, end: 3, sum: 7, maxSum: 8, isNewMax: false, addedIdx: 3, removedIdx: 0,    description: 'Сдвиг: +arr[3]=1, −arr[0]=2 → сумма = 7' },
+  { start: 2, end: 4, sum: 9, maxSum: 9, isNewMax: true,  addedIdx: 4, removedIdx: 1,    description: 'Сдвиг: +arr[4]=3, −arr[1]=1 → сумма = 9, новый максимум' },
+  { start: 3, end: 5, sum: 6, maxSum: 9, isNewMax: false, addedIdx: 5, removedIdx: 2,    description: 'Сдвиг: +arr[5]=2, −arr[2]=5 → сумма = 6' },
 ];
 
-const CELL_W = 56;
-const CELL_H = 44;
-const CELL_GAP = 8;
-const SVG_PADDING_X = 32;
-const SVG_PADDING_TOP = 70;
-const SVG_WIDTH = SVG_PADDING_X * 2 + ARRAY.length * (CELL_W + CELL_GAP) - CELL_GAP;
-const SVG_HEIGHT = SVG_PADDING_TOP + CELL_H + 50;
+const CELL = 48;
+const GAP = 6;
 
-const SlidingWindowViz: React.FC = () => {
-  const [currentStep, setCurrentStep] = useState(0);
-  const step = steps[currentStep];
+export default function SlidingWindowViz() {
+  const theme = useTheme();
+  const isDark = theme.palette.mode === 'dark';
+  const [stepIdx, setStepIdx] = useState(0);
+  const step = stepIdx > 0 ? steps[stepIdx - 1]! : null;
 
-  const cellX = (i: number) => SVG_PADDING_X + i * (CELL_W + CELL_GAP);
-  const cellY = SVG_PADDING_TOP;
+  const PALETTE = {
+    cellBg: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.025)',
+    cellBorder: isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.12)',
+    windowBg: isDark ? 'rgba(10,132,255,0.15)' : 'rgba(10,132,255,0.10)',
+    windowBorder: '#0a84ff',
+    maxBg: isDark ? 'rgba(52,199,89,0.20)' : 'rgba(52,199,89,0.16)',
+    maxBorder: '#34c759',
+    addedBorder: '#34c759',
+    removedBorder: '#ff3b30',
+    addedColor: '#34c759',
+    removedColor: '#ff3b30',
+  };
 
-  const windowX = cellX(step.windowStart) - 4;
-  const windowWidth = K * (CELL_W + CELL_GAP) - CELL_GAP + 8;
+  const inWindow = (i: number) => step !== null && i >= step.start && i <= step.end;
 
   return (
-    <Paper
-      elevation={0}
+    <Box
       sx={{
-        p: 3,
-        borderRadius: 3,
-        bgcolor: COLORS.bg,
-        border: '1px solid #E5E5EA',
-        maxWidth: 520,
+        p: { xs: 2, sm: 2.5 },
+        borderRadius: 2,
+        border: 1,
+        borderColor: 'divider',
+        backgroundColor: (t) =>
+          t.palette.mode === 'dark' ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.015)',
       }}
     >
-      <Typography variant="h6" sx={{ fontWeight: 700, color: COLORS.text, mb: 0.5 }}>
-        Скользящее окно
-      </Typography>
-      <Typography variant="body2" sx={{ color: COLORS.secondaryText, mb: 2 }}>
-        Максимальная сумма подмассива длины k={K}
-      </Typography>
-
-      <svg
-        width={SVG_WIDTH}
-        height={SVG_HEIGHT}
-        viewBox={`0 0 ${SVG_WIDTH} ${SVG_HEIGHT}`}
-        style={{ display: 'block', margin: '0 auto' }}
-      >
-        {/* Window overlay */}
-        <rect
-          x={windowX}
-          y={cellY - 6}
-          width={windowWidth}
-          height={CELL_H + 12}
-          rx={10}
-          fill={COLORS.windowFill}
-          stroke={COLORS.windowStroke}
-          strokeWidth={2}
-          strokeDasharray={step.isNewMax ? 'none' : '6 3'}
-        />
-
-        {/* Sum label above window */}
-        <text
-          x={windowX + windowWidth / 2}
-          y={cellY - 18}
-          textAnchor="middle"
-          fontSize={14}
-          fontWeight={700}
-          fill={step.isNewMax ? COLORS.success : COLORS.primary}
-        >
-          sum = {step.sum}
-        </text>
-
-        {/* Max sum label */}
-        <text
-          x={SVG_WIDTH - SVG_PADDING_X}
-          y={24}
-          textAnchor="end"
-          fontSize={13}
-          fontWeight={600}
-          fill={step.isNewMax ? COLORS.success : COLORS.secondaryText}
-        >
-          maxSum = {step.maxSum}
-          {step.isNewMax ? ' ✓' : ''}
-        </text>
-
-        {/* Operation labels */}
-        {step.addedIdx !== null && (
-          <text
-            x={cellX(step.addedIdx) + CELL_W / 2}
-            y={cellY - 18}
-            textAnchor="middle"
-            fontSize={11}
-            fontWeight={600}
-            fill={COLORS.success}
-          >
-            +{step.added}
-          </text>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', mb: 2, gap: 2, flexWrap: 'wrap' }}>
+        <Typography variant="body2" color="text.secondary">
+          Массив [{ARRAY.join(', ')}], размер окна <b>k = {K}</b>
+        </Typography>
+        {step && (
+          <Typography variant="body2" sx={{ color: step.isNewMax ? 'success.main' : 'text.secondary', fontWeight: 600 }}>
+            maxSum = {step.maxSum}
+          </Typography>
         )}
-        {step.removedIdx !== null && (
-          <text
-            x={cellX(step.removedIdx) + CELL_W / 2}
-            y={cellY - 18}
-            textAnchor="middle"
-            fontSize={11}
-            fontWeight={600}
-            fill="#FF3B30"
-          >
-            −{step.removed}
-          </text>
-        )}
+      </Box>
 
-        {/* Array cells */}
-        {ARRAY.map((val, i) => {
-          const x = cellX(i);
-          const inWindow = i >= step.windowStart && i <= step.windowEnd;
-          const isAdded = i === step.addedIdx;
-          const isRemoved = i === step.removedIdx;
-
-          let stroke = COLORS.cellBorder;
-          let strokeWidth = 1;
-          if (isAdded) {
-            stroke = COLORS.success;
-            strokeWidth = 2;
-          } else if (isRemoved) {
-            stroke = '#FF3B30';
-            strokeWidth = 2;
-          } else if (inWindow) {
-            stroke = COLORS.primary;
-            strokeWidth = 1.5;
-          }
-
-          return (
-            <g key={i}>
-              <rect
-                x={x}
-                y={cellY}
-                width={CELL_W}
-                height={CELL_H}
-                rx={8}
-                fill={inWindow ? '#FFFFFF' : '#F9F9FB'}
-                stroke={stroke}
-                strokeWidth={strokeWidth}
-              />
-              <text
-                x={x + CELL_W / 2}
-                y={cellY + CELL_H / 2 + 1}
-                textAnchor="middle"
-                dominantBaseline="central"
-                fontSize={16}
-                fontWeight={inWindow ? 700 : 500}
-                fill={inWindow ? COLORS.text : COLORS.secondaryText}
+      <Box sx={{ overflowX: 'auto', pb: 1 }}>
+        <Box sx={{ display: 'inline-flex', flexDirection: 'column', gap: 0.5, minWidth: '100%' }}>
+          {/* +/- markers */}
+          <Box sx={{ display: 'flex', gap: `${GAP}px`, justifyContent: 'center', minHeight: 20 }}>
+            {ARRAY.map((v, i) => (
+              <Box key={i} sx={{ width: CELL, textAlign: 'center', fontSize: '0.7rem', fontWeight: 700 }}>
+                {step?.addedIdx === i && <Box component="span" sx={{ color: PALETTE.addedColor }}>+{v}</Box>}
+                {step?.removedIdx === i && <Box component="span" sx={{ color: PALETTE.removedColor }}>−{v}</Box>}
+              </Box>
+            ))}
+          </Box>
+          {/* Index row */}
+          <Box sx={{ display: 'flex', gap: `${GAP}px`, justifyContent: 'center' }}>
+            {ARRAY.map((_, i) => (
+              <Box key={i} sx={{ width: CELL, textAlign: 'center', fontSize: '0.7rem', color: 'text.disabled', fontFamily: 'monospace' }}>
+                {i}
+              </Box>
+            ))}
+          </Box>
+          {/* Cells */}
+          <Box sx={{ display: 'flex', gap: `${GAP}px`, justifyContent: 'center' }}>
+            {ARRAY.map((v, i) => {
+              const inside = inWindow(i);
+              const isAdded = step !== null && i === step.addedIdx;
+              const isRemoved = step !== null && i === step.removedIdx;
+              const bg = isAdded
+                ? PALETTE.maxBg
+                : isRemoved
+                  ? 'transparent'
+                  : inside
+                    ? (step!.isNewMax ? PALETTE.maxBg : PALETTE.windowBg)
+                    : PALETTE.cellBg;
+              const border = isAdded
+                ? PALETTE.addedBorder
+                : isRemoved
+                  ? PALETTE.removedBorder
+                  : inside
+                    ? (step!.isNewMax ? PALETTE.maxBorder : PALETTE.windowBorder)
+                    : PALETTE.cellBorder;
+              return (
+                <Box
+                  key={i}
+                  sx={{
+                    width: CELL,
+                    height: CELL,
+                    borderRadius: 1.5,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontWeight: 600,
+                    fontSize: '1rem',
+                    bgcolor: bg,
+                    border: 1.5,
+                    borderColor: border,
+                    color: 'text.primary',
+                    opacity: isRemoved ? 0.6 : 1,
+                    transition: 'background-color 0.25s, border-color 0.25s, opacity 0.25s',
+                  }}
+                >
+                  {v}
+                </Box>
+              );
+            })}
+          </Box>
+          {/* sum label */}
+          {step && (
+            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 1 }}>
+              <Box
+                sx={{
+                  px: 1.5,
+                  py: 0.5,
+                  borderRadius: 1,
+                  bgcolor: step.isNewMax ? PALETTE.maxBg : PALETTE.windowBg,
+                  color: step.isNewMax ? 'success.main' : 'primary.main',
+                  fontWeight: 700,
+                  fontSize: '0.85rem',
+                }}
               >
-                {val}
-              </text>
-              {/* Index below */}
-              <text
-                x={x + CELL_W / 2}
-                y={cellY + CELL_H + 18}
-                textAnchor="middle"
-                fontSize={11}
-                fill={COLORS.secondaryText}
-              >
-                [{i}]
-              </text>
-            </g>
-          );
-        })}
-      </svg>
+                сумма = {step.sum}
+                {step.isNewMax ? ' ← новый максимум' : ''}
+              </Box>
+            </Box>
+          )}
+        </Box>
+      </Box>
 
-      {/* Description */}
       <Box
         sx={{
           mt: 2,
           px: 2,
-          py: 1.2,
-          bgcolor: '#FFFFFF',
-          borderRadius: 2,
-          border: '1px solid #E5E5EA',
-          minHeight: 42,
+          py: 1.25,
+          borderRadius: 1.5,
+          textAlign: 'center',
+          bgcolor: (t) =>
+            t.palette.mode === 'dark' ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)',
+          color: 'text.secondary',
         }}
       >
-        <Typography variant="body2" sx={{ color: COLORS.text, fontWeight: 500, fontSize: 13 }}>
-          Шаг {currentStep + 1}/{steps.length}: {step.description}
+        <Typography variant="body2" sx={{ color: 'inherit' }}>
+          {step
+            ? `Шаг ${stepIdx} / ${steps.length}: ${step.description}`
+            : 'Нажмите «Следующий шаг», чтобы начать.'}
         </Typography>
       </Box>
 
-      {/* Buttons */}
-      <Box sx={{ display: 'flex', gap: 1.5, mt: 2 }}>
+      <Box sx={{ display: 'flex', gap: 1, mt: 2, justifyContent: 'center' }}>
         <Button
+          size="small"
           variant="contained"
-          disabled={currentStep >= steps.length - 1}
-          onClick={() => setCurrentStep((s) => Math.min(s + 1, steps.length - 1))}
-          sx={{
-            bgcolor: COLORS.primary,
-            textTransform: 'none',
-            borderRadius: 2,
-            fontWeight: 600,
-            '&:hover': { bgcolor: '#0066D6' },
-          }}
+          disabled={stepIdx >= steps.length}
+          onClick={() => setStepIdx((s) => Math.min(s + 1, steps.length))}
+          endIcon={<ArrowForwardIcon />}
         >
           Следующий шаг
         </Button>
         <Button
+          size="small"
           variant="outlined"
-          disabled={currentStep === 0}
-          onClick={() => setCurrentStep(0)}
-          sx={{
-            borderColor: COLORS.primary,
-            color: COLORS.primary,
-            textTransform: 'none',
-            borderRadius: 2,
-            fontWeight: 600,
-          }}
+          onClick={() => setStepIdx(0)}
+          startIcon={<RestartAltIcon />}
+          disabled={stepIdx === 0}
         >
           Сбросить
         </Button>
       </Box>
-    </Paper>
+    </Box>
   );
-};
-
-export default SlidingWindowViz;
+}

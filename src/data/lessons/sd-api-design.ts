@@ -1,6 +1,5 @@
 import type { Lesson } from '../../types/lesson';
 import type { QuizQuestion } from '../../types/quiz';
-import type { Flashcard } from '../../types/flashcard';
 
 // =============================================================================
 // Quiz pool. Часть вопросов идёт в checkpoint глав, остальные — в финальный
@@ -269,218 +268,6 @@ const Q = Object.fromEntries(quizQuestions.map((q) => [q.id, q]));
 
 const CHECKPOINT_IDS = new Set(['sda-q1', 'sda-q4', 'sda-q9', 'sda-q13']);
 
-// =============================================================================
-// Flashcards
-// =============================================================================
-
-const flashcards: Flashcard[] = [
-  {
-    id: 'sda-f1',
-    question: 'Что такое REST и какие у него ключевые ограничения?',
-    answer:
-      'REST (Representational State Transfer) — архитектурный стиль Роя Филдинга. API оперирует ресурсами по URI, использует стандартные HTTP-методы (GET/POST/PUT/PATCH/DELETE) и статусы. Ключевые принципы: stateless, кешируемость, единообразный интерфейс, layered system, HATEOAS.',
-    keyPoints: [
-      'Ресурсы как существительные: /users, /orders/42/items',
-      'Методы как глаголы: GET читает, POST создаёт, PUT/PATCH меняют, DELETE удаляет',
-      'Статусы: 2xx успех, 3xx редирект, 4xx ошибка клиента, 5xx ошибка сервера',
-      'Stateless: каждый запрос самодостаточен (auth в каждом заголовке)',
-      'HATEOAS на практике встречается редко — большинство «REST» API на самом деле RPC over HTTP',
-    ],
-  },
-  {
-    id: 'sda-f2',
-    question: 'Что такое идемпотентность и какие методы идемпотентны?',
-    answer:
-      'Идемпотентный метод — такой, повторное выполнение которого приводит к тому же состоянию ресурса. По RFC 9110 идемпотентны GET, HEAD, OPTIONS, PUT, DELETE. POST и PATCH — нет. Safe-методы (GET, HEAD, OPTIONS) дополнительно не меняют состояние вообще.',
-    keyPoints: [
-      'Идемпотентность ≠ возврат одинакового ответа (DELETE: первый — 200, второй — 404)',
-      'POST идемпотентен только с Idempotency-Key',
-      'PATCH технически не идемпотентен (зависит от семантики операции)',
-      'Идемпотентность критична для ретраев в распределённых системах',
-      'Safe ⊂ Idempotent: GET/HEAD/OPTIONS и safe, и idempotent',
-    ],
-  },
-  {
-    id: 'sda-f3',
-    question: 'Что такое GraphQL и чем он отличается от REST?',
-    answer:
-      'GraphQL — язык запросов и runtime для API, разработанный Facebook. Клиент сам описывает, какие поля нужны, и получает ровно их в одном запросе. Один эндпоинт (POST /graphql), типизированная схема (SDL), резолверы на сервере.',
-    keyPoints: [
-      'Решает over-fetching и under-fetching REST',
-      'Один эндпоинт вместо десятков',
-      'Сильно типизированная схема — встроенная документация',
-      'Минусы: сложное кеширование (нет HTTP cache), N+1 без DataLoader, риск дорогих запросов',
-      'Подзапросы и фрагменты позволяют переиспользовать поля',
-    ],
-    code: `# schema.graphql
-type User {
-  id: ID!
-  name: String!
-  posts: [Post!]!
-}
-type Query {
-  user(id: ID!): User
-}`,
-    codeLanguage: 'graphql',
-  },
-  {
-    id: 'sda-f4',
-    question: 'Что такое N+1 query problem и как с ней бороться в GraphQL?',
-    answer:
-      'N+1 — антипаттерн: один запрос за списком из N родителей плюс N отдельных запросов за их детьми. В GraphQL возникает в резолверах вложенных полей. Решение — DataLoader: батчит ключи внутри одного тика event loop в один запрос и кеширует результат на время запроса.',
-    keyPoints: [
-      'GET /users → 1 запрос за пользователями',
-      'Для каждого user.posts → N запросов в БД',
-      'DataLoader: new DataLoader(keys => batchFn(keys))',
-      'batchFn получает массив ключей, возвращает массив результатов',
-      'Per-request кеш: запрос одного и того же id дважды → один SQL',
-    ],
-    code: `const userLoader = new DataLoader(async (ids) => {
-  const users = await db.users.where('id', 'in', ids);
-  return ids.map((id) => users.find((u) => u.id === id));
-});`,
-    codeLanguage: 'javascript',
-  },
-  {
-    id: 'sda-f5',
-    question: 'Что такое gRPC и когда его выбирать?',
-    answer:
-      'gRPC — RPC-фреймворк от Google поверх HTTP/2 + Protocol Buffers. Контракт описывается в .proto-файле, из него генерируются клиенты и серверы на десятках языков. Поддерживает unary и стриминговые вызовы (server/client/bidirectional).',
-    keyPoints: [
-      'Бинарная сериализация Protobuf — в 3–10× компактнее JSON',
-      'HTTP/2 multiplexing — много вызовов в одном TCP-соединении',
-      'Кодогенерация: одинаковые типы у клиента и сервера',
-      'Стриминг: подходит для real-time (logs, metrics, chat)',
-      'Слабо работает в браузере — нужен gRPC-Web или прокси',
-    ],
-  },
-  {
-    id: 'sda-f6',
-    question: 'Что такое tRPC и в чём его уникальность?',
-    answer:
-      'tRPC — RPC-библиотека для TypeScript-стека: клиент импортирует тип серверного роутера и получает полностью типизированные вызовы без OpenAPI, GraphQL SDL или кодогенерации. Работает в монорепо и в Next.js «из коробки».',
-    keyPoints: [
-      'End-to-end типизация: рефакторинг сервера автоматически ломает клиента',
-      'Без runtime-схем (хотя обычно используется Zod для валидации input)',
-      'Транспорт — обычно HTTP с JSON, есть batching и subscriptions через SSE/WebSocket',
-      'Подходит только для TypeScript-стека на обоих концах',
-      'Интеграция с TanStack Query (React Query) для кеширования',
-    ],
-  },
-  {
-    id: 'sda-f7',
-    question: 'Чем отличаются способы версионирования API?',
-    answer:
-      'Три основных подхода: URL-based (/v1/users), header-based (Accept: application/vnd.example.v2+json), query-based (?version=2). У каждого свои trade-off по простоте, кешируемости и чистоте URI.',
-    keyPoints: [
-      'URL: проще всего отлаживать в браузере, но плодит маршруты — Stripe, Twitter использовали',
-      'Header: URI стабилен, ресурс «один», но сложнее тестировать; используют GitHub, Heroku',
-      'Query: легко переключать в браузере, но плохо кешируется на CDN',
-      'Главное правило: добавлять новые поля без версии, удалять/переименовывать — с версией',
-      'Sunset-заголовок (RFC 8594) объявляет дату вывода версии',
-    ],
-  },
-  {
-    id: 'sda-f8',
-    question: 'Чем offset-пагинация отличается от cursor-пагинации?',
-    answer:
-      'Offset/limit (?page=10&limit=20) проста, но деградирует на больших offset (БД отбрасывает миллион строк) и «прыгает» при вставках. Cursor-пагинация (?cursor=abc) использует непрозрачный токен, кодирующий позицию (id или timestamp последнего элемента); работает за O(log n) и стабильна к вставкам.',
-    keyPoints: [
-      'Offset: работает плохо на > 100K элементов, прыжки страниц при вставках',
-      'Cursor: используется в Twitter, Instagram, Slack, GraphQL Relay',
-      'Cursor должен быть непрозрачным (base64) — клиент не должен его парсить',
-      'Удобно для бесконечной прокрутки; неудобно для «перейти на страницу 15»',
-      'Keyset: вариация cursor — WHERE (created_at, id) < ($cursor_ts, $cursor_id)',
-    ],
-  },
-  {
-    id: 'sda-f9',
-    question: 'Какие HTTP-статусы использовать для ошибок?',
-    answer:
-      '4xx — ошибки клиента: 400 (плохой синтаксис), 401 (нет аутентификации), 403 (нет прав), 404 (не найдено), 409 (конфликт), 422 (валидация не прошла), 429 (rate limit). 5xx — ошибки сервера: 500 (баг), 502/503/504 (gateway/upstream).',
-    keyPoints: [
-      '401 vs 403: 401 = «кто ты?», 403 = «я знаю кто ты, но нельзя»',
-      '404 vs 410: 404 — нет/неизвестно, 410 — было и удалено навсегда',
-      '422 для бизнес-валидации, 400 для синтаксиса (но многие смешивают)',
-      '429 + Retry-After: rate limiting',
-      '503 + Retry-After: временная недоступность',
-    ],
-  },
-  {
-    id: 'sda-f10',
-    question: 'Что такое Problem Details (RFC 7807)?',
-    answer:
-      'Стандарт application/problem+json для машинно-читаемых ошибок HTTP API. Поля: type (стабильный URI ошибки), title (краткое описание), status (HTTP-код), detail (текст), instance (URI конкретной ошибки). Клиенты безопасно switch-ятся по type.',
-    keyPoints: [
-      'Content-Type: application/problem+json',
-      'type — единственное стабильное поле для логики клиента',
-      'detail — для логов и UI, не парсить!',
-      'Можно расширять: errors[], traceId, retryAfter',
-      'Альтернативы: GraphQL errors[], JSON:API errors',
-    ],
-    code: `{
-  "type": "https://api.example.com/errors/insufficient-funds",
-  "title": "Insufficient funds",
-  "status": 422,
-  "detail": "Account balance is 50, requested 100",
-  "instance": "/transfers/abc-123",
-  "balance": 50
-}`,
-    codeLanguage: 'json',
-  },
-  {
-    id: 'sda-f11',
-    question: 'Что такое Idempotency-Key и зачем он нужен?',
-    answer:
-      'Заголовок Idempotency-Key (Stripe, PayPal, AWS) — клиентский UUID, который сервер запоминает вместе с ответом. Повторные запросы с тем же ключом возвращают сохранённый ответ, не выполняя операцию снова. Спасает от двойных платежей при сетевых ретраях.',
-    keyPoints: [
-      'TTL обычно 24 часа',
-      'Storage: Redis или таблица idempotency_keys',
-      'Если тело отличается от первого — обычно 422',
-      'Клиент должен генерировать ключ ДО первой попытки (UUID v4)',
-      'Применять только к не-идемпотентным методам (POST, иногда PATCH)',
-    ],
-  },
-  {
-    id: 'sda-f12',
-    question: 'Что такое OpenAPI и зачем он нужен?',
-    answer:
-      'OpenAPI (бывший Swagger) — стандарт описания REST API в YAML/JSON: эндпоинты, параметры, схемы ответов, ошибки, схемы аутентификации. Инструменты генерируют документацию (Swagger UI, Redoc), клиенты на десятках языков, мок-серверы и контрактные тесты.',
-    keyPoints: [
-      'OpenAPI 3.1 совместим с JSON Schema Draft 2020-12',
-      'Single source of truth: код или YAML — выбирайте одно',
-      'Аналоги: Protobuf для gRPC, SDL для GraphQL, AsyncAPI для events',
-      'Генерация клиентов: openapi-generator, orval, hey-api',
-      'Contract testing: Pact, Schemathesis',
-    ],
-  },
-  {
-    id: 'sda-f13',
-    question: 'REST vs GraphQL vs gRPC vs tRPC — когда что выбирать?',
-    answer:
-      'REST — публичные API с разными клиентами, простые CRUD, кеширование на CDN. GraphQL — фронтенд агрегирует данные из десятков источников, мобильные клиенты с тонким каналом. gRPC — межсервисное общение, строгий контракт, высокая нагрузка. tRPC — full-stack TypeScript-монорепо, быстрая итерация продукта.',
-    keyPoints: [
-      'REST: HTTP-семантика, кеши, простота, любой клиент',
-      'GraphQL: гибкие запросы, схема, хорош для BFF',
-      'gRPC: бинарь, стриминг, кодогенерация, плохо в браузере',
-      'tRPC: только TS, нулевой контракт-overhead',
-      'Реальные системы комбинируют: REST/GraphQL наружу, gRPC внутри',
-    ],
-  },
-  {
-    id: 'sda-f14',
-    question: 'Какие изменения в API считаются breaking?',
-    answer:
-      'Ломающие: удаление поля/эндпоинта, переименование, изменение типа, ужесточение валидации (новое required-поле), изменение формата ошибок. Не ломающие: добавление опциональных полей, новых эндпоинтов, новых статус-кодов в документацию.',
-    keyPoints: [
-      'Postel’s law: «be conservative in what you send, liberal in what you accept»',
-      'Always-additive подход — основа долгоживущих API',
-      'Удаление поля → новая major-версия + Sunset-заголовок',
-      'Срок депрекации: обычно 6–12 месяцев для публичного API',
-      'Контрактные тесты ловят breaking change на CI до релиза',
-    ],
-  },
-];
 
 // =============================================================================
 // Lesson
@@ -490,90 +277,15 @@ export const sdApiDesignLesson: Lesson = {
   topicId: 'sd-api-design',
 
   intro: {
-    whyItMatters: `Дизайн API определяет, насколько долго проект сможет жить и развиваться без переписываний. Плохо спроектированный API — это «сломанный контракт»: каждое изменение ломает клиентский код, каждый ретрай создаёт дубликаты, каждый запрос с миллионом записей без пагинации кладёт базу. Хорошо спроектированный API наоборот: десятилетиями принимает новых клиентов, переживает миграции БД и смену команд.
+    whyItMatters: `Дизайн API определяет, насколько долго проект сможет жить без переписываний. Плохо спроектированный API ломает клиентов при каждом изменении и создаёт дубликаты при ретраях. Хорошо спроектированный API годами принимает новых клиентов и переживает миграции БД.
 
-Первое решение — **выбор стиля**. REST — для публичных HTTP-ресурсов с кешированием на CDN. GraphQL — когда фронтенд собирает данные из десятков источников и не хочет получать лишнее. gRPC — для внутреннего межсервисного общения, где важны скорость и строгие типы. tRPC — для full-stack TypeScript-проектов, где клиент и сервер в одном репозитории.
-
-Второе решение — **механики, которые делают API надёжным**: идемпотентность (чтобы ретраи не создавали дубликаты), курсорная пагинация (чтобы offset/limit не ломался на миллионе записей), версионирование (чтобы изменения не ломали старых клиентов), понятные ошибки (чтобы клиент мог обработать их программно, а не показывать "Что-то пошло не так").
-
-По итогам урока вы сможете обосновать выбор стиля API, объяснить разницу между идемпотентным и не-идемпотентным запросом, спроектировать пагинацию и версионирование — и не услышать от интервьюера "а почему именно так?".`,
+Первое решение — выбор стиля: REST для публичных HTTP-ресурсов с кешированием, GraphQL когда фронт собирает данные из десятков источников, gRPC для внутреннего межсервисного общения, tRPC для full-stack TypeScript-проектов. Второе — механики надёжности: идемпотентность, курсорная пагинация, версионирование, машиночитаемые ошибки.`,
     estimatedMinutes: 45,
     interviewAngle:
-      'Интервьюер на System Design проверяет не определения, а умение делать обоснованный выбор: REST или GraphQL для нового сервиса; как версионировать публичный API; как сделать платежи идемпотентными; как пагинировать ленту с миллиардом записей; как описать ошибки так, чтобы клиент мог обрабатывать их программно. Сильный кандидат опирается на trade-off’ы и реальные кейсы (Stripe, GitHub, Slack), а не на лозунги.',
+      'Интервьюера интересует обоснованный выбор стиля API, корректное версионирование, идемпотентность платежей, курсорная пагинация и формат ошибок, понятный программно.',
     prerequisites: [{ slug: 'js-network', title: 'Сеть: CORS, cookie, HTTP' }],
   },
 
-  resources: {
-    videos: [
-      {
-        source: 'youtube',
-        id: '4OuaONkZw1I',
-        title: 'Why Idempotency is very critical in Backend Applications',
-        channel: 'Hussein Nasser',
-        language: 'en',
-        durationSec: 16 * 60,
-        description:
-          'Хуссейн Нассер на пальцах объясняет, почему ретраи без идемпотентности приводят к двойным платежам и как Idempotency-Key решает проблему. Обязателен перед собеседованием по платёжным системам.',
-      },
-      {
-        source: 'youtube',
-        id: 'yWzKJPw_VzM',
-        title: 'What Is GraphQL? REST vs. GraphQL',
-        channel: 'ByteByteGo',
-        language: 'en',
-        durationSec: 5 * 60,
-        description:
-          'Сжатый и наглядный сравнительный разбор от ByteByteGo: где REST выигрывает за счёт HTTP-кеша, где GraphQL — за счёт точечной выборки полей и одного запроса.',
-      },
-      {
-        source: 'youtube',
-        id: '2-407yO8nEU',
-        title: 'Discussing tRPC & GraphQL with Theo Browne & Max Stoiber',
-        channel: 'Real World React',
-        language: 'en',
-        durationSec: 60 * 60,
-        description:
-          'Тео Браун (создатель T3 Stack) и Макс Штойбер (один из идеологов GraphQL) обсуждают, когда tRPC уместнее GraphQL и наоборот. Лучший живой контекст для понимания современного API-стека.',
-      },
-    ],
-    links: [
-      {
-        url: 'https://cloud.google.com/apis/design',
-        title: 'API Design Guide — Google Cloud',
-        source: 'article',
-        language: 'en',
-        note: 'Каноническое руководство Google по REST-дизайну: ресурсы, методы, ошибки, версии, пагинация. Источник многих решений в Stripe и GitHub API.',
-      },
-      {
-        url: 'https://graphql.org/learn/',
-        title: 'Learn GraphQL — graphql.org',
-        source: 'article',
-        language: 'en',
-        note: 'Официальное введение в GraphQL: схемы, запросы, мутации, подписки, резолверы. Лучший старт перед DataLoader и федерацией.',
-      },
-      {
-        url: 'https://grpc.io/docs/what-is-grpc/introduction/',
-        title: 'What is gRPC? — grpc.io',
-        source: 'article',
-        language: 'en',
-        note: 'Официальная документация gRPC: HTTP/2, Protobuf, четыре вида вызовов, кодогенерация. Достаточно прочесть Introduction и Core Concepts.',
-      },
-      {
-        url: 'https://trpc.io/docs/concepts',
-        title: 'tRPC — Concepts',
-        source: 'article',
-        language: 'en',
-        note: 'Концепции tRPC: роутер, процедуры, контекст, мидлвары. Понимание этой страницы достаточно, чтобы ответить на вопросы про tRPC на собеседовании.',
-      },
-      {
-        url: 'https://spec.openapis.org/oas/latest.html',
-        title: 'OpenAPI Specification 3.1',
-        source: 'spec',
-        language: 'en',
-        note: 'Официальная спецификация OpenAPI 3.1 — язык описания REST API. Обязательное знание для любого API-дизайнера.',
-      },
-    ],
-  },
 
   chapters: [
     {
@@ -634,27 +346,7 @@ export const sdApiDesignLesson: Lesson = {
           type: 'callout',
           calloutType: 'tip',
           content:
-            'На собеседовании senior-уровня вопрос «REST или GraphQL?» — ловушка. Сильный ответ начинается с «зависит от: кто клиент, насколько изменчив запрос, нужен ли HTTP-кеш, сколько у нас сервисов, каков язык бэкенда». Никогда не выбирайте «лучший» стиль вне контекста.',
-        },
-      ],
-      flashcardIds: ['sda-f1', 'sda-f3', 'sda-f5', 'sda-f6', 'sda-f13'],
-      docsLink: { url: 'https://developer.mozilla.org/ru/docs/Web/HTTP/Methods', title: 'HTTP-методы — MDN (ru)' },
-      video: {
-        source: 'youtube',
-        id: 'yWzKJPw_VzM',
-        title: 'What Is GraphQL? REST vs. GraphQL',
-        channel: 'ByteByteGo',
-        language: 'en',
-        durationSec: 5 * 60,
-        description: 'Сжатый сравнительный разбор: где REST выигрывает за счёт HTTP-кеша, где GraphQL — за счёт точечной выборки.',
-      },
-      links: [
-        {
-          url: 'https://cloud.google.com/apis/design',
-          title: 'API Design Guide — Google Cloud',
-          source: 'article',
-          language: 'en',
-          note: 'Каноническое руководство Google по REST-дизайну: ресурсы, методы, ошибки, версии, пагинация.',
+            'На собеседовании вопрос «REST или GraphQL?» — ловушка. Корректный ответ начинается с «зависит от: кто клиент, насколько изменчив запрос, нужен ли HTTP-кеш, сколько у нас сервисов, каков язык бэкенда». «Лучшего» стиля вне контекста не существует.',
         },
       ],
     },
@@ -749,7 +441,6 @@ Content-Type: application/json
 - **500/502/503/504** — ошибки сервера и upstream-зависимостей.`,
         },
       ],
-      flashcardIds: ['sda-f1', 'sda-f2', 'sda-f9', 'sda-f11'],
       checkpoint: [Q['sda-q1']!, {
         type: 'match-pairs',
         id: 'sdapi-mp1',
@@ -762,25 +453,6 @@ Content-Type: application/json
         ],
         explanation: 'Идемпотентный = повторный запрос не меняет результат. PUT /users/1 с одними данными всегда даёт один результат. POST /users каждый раз создаёт нового пользователя. Это важно для retry-логики при сетевых ошибках.',
       }],
-      docsLink: { url: 'https://developer.mozilla.org/ru/docs/Web/HTTP/Methods', title: 'HTTP-методы — MDN (ru)' },
-      video: {
-        source: 'youtube',
-        id: '4OuaONkZw1I',
-        title: 'Why Idempotency is very critical in Backend Applications',
-        channel: 'Hussein Nasser',
-        language: 'en',
-        durationSec: 16 * 60,
-        description: 'Hussein Nasser объясняет, почему ретраи без идемпотентности приводят к двойным платежам и как Idempotency-Key решает проблему.',
-      },
-      links: [
-        {
-          url: 'https://spec.openapis.org/oas/latest.html',
-          title: 'OpenAPI Specification 3.1',
-          source: 'spec',
-          language: 'en',
-          note: 'Официальная спецификация OpenAPI 3.1 — язык описания REST API для любого API-дизайнера.',
-        },
-      ],
     },
 
     {
@@ -904,7 +576,6 @@ const resolvers = {
 - Авторизация на уровне поля сложнее, чем в REST.`,
         },
       ],
-      flashcardIds: ['sda-f3', 'sda-f4'],
       checkpoint: [Q['sda-q4']!, {
         type: 'ordering',
         id: 'sdapi-ord1',
@@ -917,16 +588,6 @@ const resolvers = {
         ],
         explanation: 'URL версионирование — самое явное и простое для понимания. Header-based — \'чистый\' REST но сложнее тестировать. Query param — удобен но загрязняет URL. Главное: версионировать сразу, менять версию при breaking changes.',
       }],
-      docsLink: { url: 'https://habr.com/ru/articles/326986/', title: 'Введение в GraphQL — Habr' },
-      links: [
-        {
-          url: 'https://graphql.org/learn/',
-          title: 'Learn GraphQL — graphql.org',
-          source: 'article',
-          language: 'en',
-          note: 'Официальное введение: схемы, запросы, мутации, подписки, резолверы. Лучший старт перед DataLoader и федерацией.',
-        },
-      ],
     },
 
     {
@@ -1041,33 +702,6 @@ const user = await trpc.getUser.query({ id: '42' });
 - **tRPC** — Next.js / SvelteKit / Remix-приложение в монорепо, full-stack TypeScript, быстрая итерация.`,
         },
       ],
-      flashcardIds: ['sda-f5', 'sda-f6', 'sda-f13'],
-      docsLink: { url: 'https://habr.com/ru/hub/grpc/', title: 'gRPC — Habr' },
-      video: {
-        source: 'youtube',
-        id: '2-407yO8nEU',
-        title: 'Discussing tRPC & GraphQL with Theo Browne & Max Stoiber',
-        channel: 'Real World React',
-        language: 'en',
-        durationSec: 60 * 60,
-        description: 'Тео Браун и Макс Штойбер: когда tRPC уместнее GraphQL и наоборот. Живой контекст для понимания современного API-стека.',
-      },
-      links: [
-        {
-          url: 'https://grpc.io/docs/what-is-grpc/introduction/',
-          title: 'What is gRPC? — grpc.io',
-          source: 'article',
-          language: 'en',
-          note: 'Официальная документация gRPC: HTTP/2, Protobuf, четыре вида вызовов, кодогенерация.',
-        },
-        {
-          url: 'https://trpc.io/docs/concepts',
-          title: 'tRPC — Concepts',
-          source: 'article',
-          language: 'en',
-          note: 'Концепции tRPC: роутер, процедуры, контекст, мидлвары. Достаточно для ответа на вопросы про tRPC на собеседовании.',
-        },
-      ],
       playground: {
         starterCode: `// Дано: TypeScript-моно-репо с Next.js. Бэкенд и фронт на TS.
 // Команда из 3 человек. Третьих сторон у API нет.
@@ -1167,9 +801,7 @@ Link: <https://api.example.com/v2/users>; rel="successor-version"`,
             'Стандартный срок депрекации публичного API — 6–12 месяцев. Меньше — и third-party интеграции не успеют мигрировать. Для внутренних API срок может быть короче, но не меньше одного спринта (2–3 недели).',
         },
       ],
-      flashcardIds: ['sda-f7', 'sda-f14'],
       checkpoint: [Q['sda-q9']!],
-      docsLink: { url: 'https://developer.mozilla.org/ru/docs/Web/HTTP/Headers', title: 'HTTP-заголовки — MDN (ru)' },
     },
 
     {
@@ -1272,9 +904,7 @@ LIMIT 20;`,
 - **Гибрид**: первые 10 страниц через offset, дальше — cursor (Slack так делает).`,
         },
       ],
-      flashcardIds: ['sda-f8'],
       checkpoint: [Q['sda-q13']!],
-      docsLink: { url: 'https://developer.mozilla.org/ru/docs/Web/HTTP/Methods', title: 'HTTP-методы — MDN (ru)' },
     },
 
     {
@@ -1343,7 +973,7 @@ Content-Type: application/json
           type: 'callout',
           calloutType: 'warning',
           content:
-            'Никогда не делайте логику клиента, парся `detail` или `title`. Эти поля **могут меняться** без новой версии API. Только `type` стабилен.',
+            'Логика клиента не должна строиться на парсинге `detail` или `title`. Эти поля **могут меняться** без новой версии API. Стабильным остаётся только `type`.',
         },
         {
           type: 'text',
@@ -1407,14 +1037,11 @@ components:
             'Контрактные тесты (Pact, Schemathesis) — лучшая защита от breaking change. CI прогоняет тесты на новой версии API против схемы старой версии и падает, если что-то изменилось несовместимо.',
         },
       ],
-      flashcardIds: ['sda-f9', 'sda-f10', 'sda-f12'],
-      docsLink: { url: 'https://developer.mozilla.org/ru/docs/Web/HTTP/Status', title: 'HTTP-статусы — MDN (ru)' },
     },
   ],
 
   finalQuiz: quizQuestions.filter((q) => !CHECKPOINT_IDS.has(q.id)),
 
-  flashcards,
 
   cheatsheet: `### Шпаргалка по дизайну API
 
@@ -1437,265 +1064,6 @@ components:
 
 **Ошибки:** RFC 7807 application/problem+json. Только \`type\` стабилен. Контракт — OpenAPI / Protobuf / GraphQL SDL.`,
 
-  interviewQA: [
-    {
-      id: 'sda-iq1',
-      question: 'Что такое идемпотентность и какие HTTP-методы идемпотентны? Как сделать POST идемпотентным?',
-      shortAnswer:
-        'Идемпотентный метод — повторный вызов оставляет ресурс в том же состоянии. По RFC 9110: GET, HEAD, OPTIONS, PUT, DELETE. POST по умолчанию — нет; делается идемпотентным через заголовок Idempotency-Key.',
-      fullAnswer: `**Идемпотентность** — свойство операции, при котором её повторное выполнение не меняет состояние ресурса по сравнению с однократным. Это **не** про равенство ответов: DELETE /users/42 первый раз вернёт 200, второй — 404, но состояние БД одно и то же (пользователя нет).
-
-**По RFC 9110 идемпотентны**: GET, HEAD, OPTIONS, PUT, DELETE. **Не идемпотентны**: POST, PATCH. Safe-методы (GET, HEAD, OPTIONS) дополнительно не меняют состояние вообще.
-
-Почему это важно: в распределённой системе ретраи неизбежны. Клиент отправил POST /charges, не получил ответ из-за таймаута — он не знает, прошёл платёж или нет. Если POST не идемпотентен, ретрай создаст второй платёж.
-
-**Как сделать POST идемпотентным** — паттерн Stripe/PayPal:
-1. Клиент генерирует UUID **до** первой попытки и кладёт его в заголовок \`Idempotency-Key\`.
-2. Сервер на каждом запросе делает \`SELECT ... WHERE key = ?\` в Redis или таблице idempotency_keys.
-3. Если ключ найден — возвращает сохранённый ответ, не выполняя операцию.
-4. Если нет — выполняет, сохраняет (key, request_hash, response) с TTL 24 часа.
-5. Если тело отличается от первого вызова с тем же ключом — 422 Unprocessable Entity.
-
-Это спасает от двойных платежей при сетевых ретраях и от race condition на стороне клиента.`,
-      followUps: [
-        'Чем отличается safe от idempotent? Какие методы и safe, и idempotent?',
-        'Как организовать хранилище для Idempotency-Key — Redis или Postgres?',
-        'Что делать, если клиент отправил два разных запроса с одним ключом?',
-      ],
-      relatedChapterId: 'rest-resources',
-    },
-    {
-      id: 'sda-iq2',
-      question: 'Чем REST отличается от GraphQL и gRPC? Когда какой стиль выбирать?',
-      shortAnswer:
-        'REST — ресурсы по URI и HTTP-методы, кешируется CDN, любой клиент. GraphQL — один эндпоинт, клиент описывает поля, решает over/under-fetching. gRPC — HTTP/2 + Protobuf, бинарь, стриминг, для микросервисов.',
-      fullAnswer: `**REST** — архитектурный стиль поверх HTTP. Оперирует ресурсами (URI как существительное) и стандартными методами (GET/POST/PUT/PATCH/DELETE). Плюсы: HTTP-кеш на CDN работает «из коробки», любой клиент (curl, браузер, мобайл) понимает; широкая инструментальная поддержка. Минусы: over-fetching (приходит больше данных, чем нужно фронту) и under-fetching (надо делать несколько запросов). Идеален для публичного API.
-
-**GraphQL** — язык запросов и runtime от Facebook. Один эндпоинт (POST /graphql), типизированная схема (SDL), клиент сам описывает нужные поля. Плюсы: решает over/under-fetching, схема как документация, легко эволюционировать через @deprecated. Минусы: HTTP-кеш не работает (всё POST на один URL), N+1 без DataLoader, сложно ограничить «дорогие» запросы. Идеален для BFF и мобильных клиентов с тонким каналом.
-
-**gRPC** — RPC поверх HTTP/2 + Protocol Buffers. Кодогенерация клиентов и серверов на десятках языков. Плюсы: бинарь в 3–10× компактнее JSON, стриминг (4 вида: unary, server, client, bidirectional), строгий контракт через .proto. Минусы: в браузере «из коробки» не работает (нужен gRPC-Web через прокси), сложнее отлаживать. Идеален для межсервисного общения в Kubernetes.
-
-**tRPC** — RPC для TypeScript-стека: клиент импортирует тип серверного роутера, типы синхронизируются автоматически без OpenAPI/SDL/Protobuf. Идеален для full-stack TS-моно-репо.
-
-**Когда что выбирать:**
-- Публичный API с разными клиентами → **REST**.
-- Фронт собирает данные из десятков сервисов → **GraphQL**.
-- Высоконагруженные микросервисы с разными языками → **gRPC**.
-- Next.js/Remix-приложение в монорепо на TS → **tRPC**.
-- Реальные системы комбинируют: REST/GraphQL наружу, gRPC внутри.`,
-      followUps: [
-        'Что такое N+1 problem в GraphQL и как с ней бороться?',
-        'Почему gRPC плохо работает в браузере без прокси?',
-        'Когда tRPC проигрывает GraphQL в одном и том же стеке?',
-      ],
-      relatedChapterId: 'styles-overview',
-    },
-    {
-      id: 'sda-iq3',
-      question: 'Как версионировать публичный REST API?',
-      shortAnswer:
-        'Три подхода: URL (/v1/users — Stripe), header (Accept: vnd.x.v2+json — GitHub), query (?v=2). Always-additive: добавляйте поля, не удаляйте. Для вывода версии — заголовки Sunset (RFC 8594) и Deprecation.',
-      fullAnswer: `Версионирование — контракт о том, **что вы можете менять, не ломая существующих клиентов**.
-
-**Три способа:**
-1. **URL-based** (\`/v1/users\`, \`/v2/users\`): просто отлаживать, легко кешировать на CDN, но плодит маршруты. Используют Stripe, Twitter, Twilio. Самый частый.
-2. **Header-based** через media type (\`Accept: application/vnd.example.v2+json\`): URI стабилен, ресурс «один и тот же», но сложнее тестировать в браузере. Используют GitHub, Heroku.
-3. **Query-based** (\`?version=2\`): легко переключать в URL, но плохо кешируется CDN, легко «потерять» в логах. Применяется реже.
-
-**Always-additive подход — основа долгоживущего API:**
-
-*Не ломающие изменения* (можно в той же версии): добавление опционального поля в ответ, добавление опционального поля во вход, новый эндпоинт, новый код ошибки.
-
-*Ломающие* (требуют новой major-версии): удаление поля, переименование, изменение типа, превращение опционального во обязательный, изменение формата ошибок.
-
-**Депрекация:** когда вы решаете убрать старую версию, объявите дату через заголовки RFC 8594 \`Sunset\` (когда перестанет работать) и RFC 9745 \`Deprecation\` (когда объявлено устаревшим). Стандартный срок депрекации публичного API — 6–12 месяцев.
-
-**Контрактные тесты** на CI (Pact, Schemathesis) ловят breaking change до релиза: прогоняют тесты старой версии против новой схемы.
-
-На собеседовании сильный ответ — не «я бы выбрал URL», а «зависит от: сколько у нас сторонних клиентов, как часто меняется API, насколько важно кеширование на CDN». Stripe-style URL почти всегда корректный дефолт.`,
-      followUps: [
-        'Что считается breaking change, а что нет?',
-        'Как реализовать заголовок Sunset на CDN-уровне?',
-        'Чем GraphQL-эволюция «через @deprecated» отличается от REST-версионирования?',
-      ],
-      relatedChapterId: 'versioning',
-    },
-    {
-      id: 'sda-iq4',
-      question: 'Как пагинировать ленту с миллиардом записей? Чем cursor лучше offset?',
-      shortAnswer:
-        'Offset/limit деградирует: БД физически отбрасывает offset строк (O(offset)). Cursor — непрозрачный токен, кодирующий позицию (id, ts); WHERE (ts, id) < cursor работает за O(log n) и стабилен к вставкам.',
-      fullAnswer: `**Offset/limit** прост (\`?page=10&limit=20\`), но имеет два фундаментальных дефекта:
-
-1. **Производительность**: \`SELECT ... LIMIT 20 OFFSET 1000000\` физически читает и отбрасывает миллион строк. Postgres и MySQL не умеют «перематывать» индекс на N-ю позицию. На больших таблицах это секунды CPU.
-2. **Стабильность**: между запросом первой и второй страницы кто-то вставил запись в начало → пользователь видит дубликаты, или удалил → пропускает запись.
-
-**Cursor pagination** (keyset) хранит непрозрачный токен с позицией последнего элемента (id, timestamp, или их пара):
-
-\`\`\`sql
-SELECT * FROM posts
-WHERE (created_at, id) < ($cursor_ts, $cursor_id)
-ORDER BY created_at DESC, id DESC
-LIMIT 20;
-\`\`\`
-
-Это использует составной индекс \`(created_at DESC, id DESC)\` напрямую → O(log n) независимо от глубины. Стабильно к вставкам/удалениям: новые записи появляются в начале, не сдвигая позиции уже выданных.
-
-**Tie-breaker по id обязателен**: если два поста имеют одинаковый created_at, без id вы получите бесконечный цикл «next» (cursor никогда не сдвинется). Поэтому cursor — это пара.
-
-**Cursor должен быть непрозрачным** (base64({"id":1020,"ts":1700})). Клиент не должен парсить его, а сервер может менять формат.
-
-**Когда что выбирать:**
-- **Offset** — админка, отчёты, поиск с «перейти на страницу 12». Лимит на глубину (max 10 000).
-- **Cursor** — публичные ленты, бесконечная прокрутка, экспорт. Используют Twitter, Instagram, Slack, GraphQL Relay.
-- **Гибрид** — Slack: первые 10 страниц offset, дальше cursor.
-
-Минус cursor: нельзя «перейти на страницу 15», только next/prev. Для большинства лент это не нужно.`,
-      followUps: [
-        'Почему составной индекс по (created_at, id) важнее, чем просто по created_at?',
-        'Как реализовать cursor для двунаправленной пагинации (prev/next)?',
-        'Что делать, если данные меняются между страницами в cursor-пагинации?',
-      ],
-      relatedChapterId: 'pagination',
-    },
-    {
-      id: 'sda-iq5',
-      question: 'Как организовать формат ошибок REST API?',
-      shortAnswer:
-        'Используйте HTTP-коды + RFC 7807 application/problem+json. Поля type (стабильный URI ошибки), title, status, detail, instance. Только type стабилен для логики клиента; detail — для людей.',
-      fullAnswer: `Хороший формат ошибок должен быть одновременно **машинно-читаемым** (клиент может switch-нуться) и **человеко-читаемым** (разработчик видит, что делать).
-
-**Два подхода:**
-
-1. **HTTP-коды + envelope** (RFC 7807 Problem Details): статус выражается HTTP-кодом, тело — JSON с полями \`type\`, \`title\`, \`status\`, \`detail\`, \`instance\`. Content-Type: application/problem+json.
-
-2. **Always-200 + envelope**: HTTP всегда 200, ошибка в теле \`{ ok: false, error: {...} }\`. Так делает GraphQL.
-
-**HTTP-коды лучше для REST**: они работают с CDN, прокси, retry-стратегиями axios (4xx — не ретраить, 5xx — ретраить с экспоненциальным backoff). Always-200 имеет смысл только для GraphQL и WebSocket, где транспорт всегда возвращает «успех».
-
-**RFC 7807 — стандарт:**
-\`\`\`json
-{
-  "type": "https://api.example.com/errors/insufficient-funds",
-  "title": "Insufficient funds",
-  "status": 422,
-  "detail": "Account balance is 50, requested 100",
-  "instance": "/transfers/abc-123",
-  "balance": 50
-}
-\`\`\`
-
-- \`type\` — **стабильный URI**, единственное поле, по которому клиент должен ветвиться.
-- \`title\` — краткое описание, стабильно для одного type, но может меняться без новой версии.
-- \`detail\` — длинный текст, **никогда** не парсить.
-- \`instance\` — URI конкретной ошибки для трейсинга.
-- Можно расширять: \`errors[]\` для валидации, \`traceId\`, \`retryAfter\`, \`balance\`.
-
-**Какие статусы для каких ошибок:**
-- 400 — синтаксис (битый JSON).
-- 401 — нет аутентификации («кто ты?»).
-- 403 — есть, но нет прав («знаю, но нельзя»).
-- 404 — ресурса нет.
-- 409 — конфликт (одновременная запись, дубль).
-- 422 — синтаксис ок, бизнес-валидация не прошла (RFC 4918).
-- 429 — rate limit (+ \`Retry-After\`).
-- 500/502/503/504 — ошибки сервера и upstream.
-
-Главное правило: клиент **никогда** не парсит \`detail\` или \`title\` — только \`type\` стабилен.`,
-      followUps: [
-        'Чем 401 отличается от 403?',
-        'Когда уместно 409, а когда 422?',
-        'Как описать массив ошибок валидации в Problem Details?',
-      ],
-      relatedChapterId: 'errors-contracts',
-    },
-    {
-      id: 'sda-iq6',
-      question: 'Что такое N+1 problem в GraphQL и как её решает DataLoader?',
-      shortAnswer:
-        'N+1 — антипаттерн: 1 запрос за родителями + N запросов за их детьми. DataLoader батчит ключи внутри одного тика event loop в один запрос и кеширует результат на время одного HTTP-запроса.',
-      fullAnswer: `Запрос \`{ users { posts { title } } }\` без оптимизации делает 1 SQL за списком пользователей и **N отдельных SQL** за постами каждого. На списке из 100 — 101 запрос. Это N+1 query problem, главная причина деградации GraphQL в проде.
-
-В REST она тоже встречается, но в GraphQL — острее, потому что клиент сам решает глубину вложенности.
-
-**DataLoader** (библиотека от Facebook) решает её через два механизма:
-
-1. **Батчинг.** Каждый резолвер кладёт ключ в очередь loader'а. В конце текущего тика event loop (через \`process.nextTick\` или \`Promise.resolve().then\`) все ключи объединяются в один массив и передаются в \`batchFn\`. Та делает один SQL и возвращает массив результатов в порядке ключей.
-
-2. **Per-request cache.** Запрос одного и того же id внутри одного HTTP-запроса делает один SQL. Между запросами — кеш чист (loader создаётся в context на каждый запрос).
-
-\`\`\`typescript
-const userLoader = new DataLoader<string, User>(async (ids) => {
-  const users = await db.users.where('id', 'in', ids);
-  return ids.map((id) => users.find((u) => u.id === id));
-});
-
-// В резолвере:
-const resolvers = {
-  Post: {
-    author: (post, _, ctx) => ctx.loaders.user.load(post.authorId),
-  },
-};
-\`\`\`
-
-**Критично**: \`batchFn\` должна вернуть результаты **в том же порядке ключей**, что и пришли. Если в БД нет записи — на её месте \`null\` или \`Error\`.
-
-**Создавать loader на каждый HTTP-запрос** (в context). Если loader глобальный — кеш переживёт между запросами разных пользователей и вы получите утечку приватных данных.
-
-**Что ещё помогает в GraphQL:**
-- Query complexity analysis: каждое поле имеет «вес», запросы с весом > N отклоняются.
-- Persisted queries: клиент шлёт хэш заранее зарегистрированного запроса, не сам запрос.
-- Max depth и max alias limit.
-- Federation вместо одного гигантского монолита.`,
-      followUps: [
-        'Почему DataLoader использует именно конец тика event loop, а не setTimeout?',
-        'Что произойдёт, если batchFn вернёт меньше элементов, чем ключей?',
-        'Как сочетать DataLoader с Redis-кешем между запросами?',
-      ],
-      relatedChapterId: 'graphql',
-    },
-    {
-      id: 'sda-iq7',
-      question: 'Когда выбирать tRPC, а не REST или GraphQL?',
-      shortAnswer:
-        'tRPC уместен в TypeScript-моно-репо, где и сервер, и клиент пишет одна команда. End-to-end типизация без OpenAPI/SDL/Protobuf. Не подходит, если у API есть третьи стороны, мобильные клиенты не на TS, или гетерогенный бэкенд.',
-      fullAnswer: `**tRPC** — RPC для TypeScript-стека. Клиент импортирует **тип** серверного роутера (\`type AppRouter = typeof appRouter\`) и получает полностью типизированные вызовы — без runtime-схемы, без кодогенерации, без OpenAPI/SDL/Protobuf.
-
-\`\`\`typescript
-// server: type AppRouter = typeof appRouter;
-// client: const user = await trpc.getUser.query({ id: '42' });
-//                ^? const user: User    — типы выводятся автоматически
-\`\`\`
-
-**Преимущества:**
-- Рефакторинг сервера автоматически ломает компиляцию клиента — ошибки видны на этапе сборки, не в проде.
-- Нулевой контракт-overhead: нет YAML, .proto или SDL.
-- Интеграция с TanStack Query (React Query) для кеширования.
-- Скорость итерации: добавил процедуру на сервере — клиент видит её через секунду.
-
-**Когда tRPC — правильный выбор:**
-- Next.js / Remix / SvelteKit-приложение в монорепо.
-- Команда из 2–10 человек, full-stack TypeScript.
-- Нет третьих сторон (только свой фронт).
-- Быстрая итерация продукта важнее стандартизации.
-
-**Когда tRPC — неправильный выбор:**
-- У API есть **сторонние клиенты** (third-party, мобайл на Swift/Kotlin, CLI). Им нужна стандартная схема (OpenAPI/Protobuf), не TypeScript-импорт.
-- **Гетерогенный бэкенд**: сервисы на Go, Python, Java — типы из TS-роутера им не помогут.
-- **Долгоживущий публичный API**: tRPC заточен под итерацию, у него нет major-версионирования.
-- **Большая организация** с separate frontend и backend командами: контракт нужен явный.
-
-**На собеседовании** сильный ответ — не «tRPC лучше всего», а «tRPC оптимален в узком сценарии (TS-моно-репо, одна команда), и я бы выбрал REST/GraphQL для всего остального». Понимание границ применимости — то, что ищет senior-интервьюер.
-
-**Альтернативы tRPC в TS-стеке**: Hono с RPC-builder, Effect Schema + ts-rest, ORPC. Принцип тот же — типы между клиентом и сервером без отдельного контракта.`,
-      followUps: [
-        'Как tRPC валидирует input, если на клиенте Zod не запускается?',
-        'Чем httpBatchLink отличается от httpLink?',
-        'Можно ли использовать tRPC с не-TypeScript клиентом?',
-      ],
-      relatedChapterId: 'grpc-trpc',
-    },
-  ],
 
   nextTopics: [
     { slug: 'sd-auth', reason: 'Как защищать API: OAuth 2.0, JWT, сессии, CSRF, rate limiting и rotation токенов.' },

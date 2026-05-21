@@ -1,4 +1,4 @@
-import { Paper, Typography } from '@mui/material';
+import { Box, Paper, Typography } from '@mui/material';
 import type { Chapter as ChapterType } from '../../types/lesson';
 import TheoryBlocks from './TheoryBlocks';
 import InlinePlayground from './InlinePlayground';
@@ -14,16 +14,20 @@ export default function Chapter({ chapter, showCheckpoint = true }: ChapterProps
     <Paper
       data-chapter-id={chapter.id}
       id={`ch-${chapter.id}`}
-      sx={{ p: { xs: 2.5, md: 3 }, scrollMarginTop: 96 }}
+      sx={{ p: { xs: 2.5, md: 4 }, scrollMarginTop: 96 }}
     >
-      <Typography variant="h5" sx={{ mb: 2, lineHeight: 1.3 }}>
+      <Typography variant="h4" sx={{ mb: 3, lineHeight: 1.2 }}>
         {chapter.title}
       </Typography>
 
-      <TheoryBlocks blocks={chapter.blocks} />
+      <Box sx={{ '& > *:first-of-type': { mt: 0 } }}>
+        <TheoryBlocks blocks={chapter.blocks} />
+      </Box>
 
       {chapter.playground && (
-        <InlinePlayground playground={chapter.playground} />
+        <Box sx={{ mt: 3 }}>
+          <InlinePlayground playground={chapter.playground} />
+        </Box>
       )}
 
       {showCheckpoint && chapter.checkpoint && chapter.checkpoint.length > 0 && (

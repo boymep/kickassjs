@@ -1,20 +1,7 @@
-import React, { useState } from 'react';
-import { Button, Paper, Typography, Box } from '@mui/material';
-import { useVizColors } from './_colors';
-
-const baseColors = {
-  primary: '#007AFF',
-  success: '#34C759',
-  orange: '#FF9500',
-  red: '#FF3B30',
-  activeBg: '#E8F0FE',
-  inactiveBg: '#E5E5EA',
-  cellBorder: '#C7C7CC',
-  text: '#1C1C1E',
-  lightText: '#8E8E93',
-};
-
-const elementColors = [baseColors.primary, baseColors.success, baseColors.orange, baseColors.red];
+import { useState } from 'react';
+import { Box, Button, Typography, useTheme } from '@mui/material';
+import RestartAltIcon from '@mui/icons-material/RestartAlt';
+import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 
 interface Step {
   queue: string[];
@@ -25,375 +12,217 @@ interface Step {
 }
 
 const steps: Step[] = [
-  {
-    queue: ['A'],
-    action: 'enqueue',
-    element: 'A',
-    description: "Добавляем 'A' в конец очереди (enqueue)",
-    dequeued: [],
-  },
-  {
-    queue: ['A', 'B'],
-    action: 'enqueue',
-    element: 'B',
-    description: "Добавляем 'B' в конец очереди (enqueue)",
-    dequeued: [],
-  },
-  {
-    queue: ['A', 'B', 'C'],
-    action: 'enqueue',
-    element: 'C',
-    description: "Добавляем 'C' в конец очереди (enqueue)",
-    dequeued: [],
-  },
-  {
-    queue: ['A', 'B', 'C', 'D'],
-    action: 'enqueue',
-    element: 'D',
-    description: "Добавляем 'D' в конец очереди (enqueue)",
-    dequeued: [],
-  },
-  {
-    queue: ['B', 'C', 'D'],
-    action: 'dequeue',
-    element: 'A',
-    description: "Извлекаем 'A' из начала очереди (dequeue) — первый пришёл, первый вышел!",
-    dequeued: ['A'],
-  },
-  {
-    queue: ['C', 'D'],
-    action: 'dequeue',
-    element: 'B',
-    description: "Извлекаем 'B' из начала очереди (dequeue)",
-    dequeued: ['A', 'B'],
-  },
-  {
-    queue: ['D'],
-    action: 'dequeue',
-    element: 'C',
-    description: "Извлекаем 'C' из начала очереди (dequeue)",
-    dequeued: ['A', 'B', 'C'],
-  },
-  {
-    queue: [],
-    action: 'dequeue',
-    element: 'D',
-    description: "Извлекаем 'D' из начала очереди (dequeue)",
-    dequeued: ['A', 'B', 'C', 'D'],
-  },
-  {
-    queue: [],
-    action: 'done',
-    element: '',
-    description: 'Очередь пуста. Порядок извлечения: A → B → C → D — это и есть FIFO!',
-    dequeued: ['A', 'B', 'C', 'D'],
-  },
+  { queue: ['A'],             action: 'enqueue', element: 'A', description: "enqueue('A') — добавляем в конец", dequeued: [] },
+  { queue: ['A', 'B'],        action: 'enqueue', element: 'B', description: "enqueue('B') — добавляем в конец", dequeued: [] },
+  { queue: ['A', 'B', 'C'],   action: 'enqueue', element: 'C', description: "enqueue('C') — добавляем в конец", dequeued: [] },
+  { queue: ['A', 'B', 'C', 'D'], action: 'enqueue', element: 'D', description: "enqueue('D') — добавляем в конец", dequeued: [] },
+  { queue: ['B', 'C', 'D'],   action: 'dequeue', element: 'A', description: "dequeue() — снимаем 'A' с головы. FIFO: первый пришёл — первый ушёл", dequeued: ['A'] },
+  { queue: ['C', 'D'],        action: 'dequeue', element: 'B', description: "dequeue() — снимаем 'B' с головы", dequeued: ['A', 'B'] },
+  { queue: ['D'],             action: 'dequeue', element: 'C', description: "dequeue() — снимаем 'C' с головы", dequeued: ['A', 'B', 'C'] },
+  { queue: [],                action: 'dequeue', element: 'D', description: "dequeue() — снимаем 'D' с головы", dequeued: ['A', 'B', 'C', 'D'] },
+  { queue: [],                action: 'done',    element: '',  description: 'Очередь пуста. Порядок извлечения: A → B → C → D', dequeued: ['A', 'B', 'C', 'D'] },
 ];
 
-const CELL_W = 56;
-const CELL_H = 44;
-const CELL_GAP = 8;
-const QUEUE_Y = 80;
-const QUEUE_START_X = 80;
-
-const colorForElement = (el: string): string => {
-  const idx = 'ABCD'.indexOf(el);
-  return idx >= 0 ? elementColors[idx] : baseColors.primary;
-};
+const CELL = 44;
+const GAP = 6;
 
 export default function QueueViz() {
-  const colors = useVizColors(baseColors);
-  const [currentStep, setCurrentStep] = useState(0);
+  const theme = useTheme();
+  const isDark = theme.palette.mode === 'dark';
+  const [stepIdx, setStepIdx] = useState(0);
+  const step = stepIdx > 0 ? steps[stepIdx - 1]! : null;
 
-  const step = currentStep > 0 ? steps[currentStep - 1] : null;
+  const PALETTE = {
+    cellBg: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.025)',
+    cellBorder: isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.12)',
+    enqueueBg: isDark ? 'rgba(10,132,255,0.18)' : 'rgba(10,132,255,0.12)',
+    enqueueBorder: '#0a84ff',
+    dequeueBg: isDark ? 'rgba(255,149,0,0.22)' : 'rgba(255,149,0,0.16)',
+    dequeueBorder: '#ff9500',
+    doneBg: isDark ? 'rgba(52,199,89,0.20)' : 'rgba(52,199,89,0.16)',
+  };
 
-  const svgWidth = 460;
-  const svgHeight = 200;
+  const tail = step ? step.queue[step.queue.length - 1] : null;
+  const head = step ? step.queue[0] : null;
 
   return (
-    <Paper elevation={1} sx={{ p: 3, borderRadius: 3 }}>
-      <Typography variant="h6" sx={{ mb: 0.5, color: colors.text }}>
-        Очередь: FIFO (First In, First Out)
-      </Typography>
-      <Typography variant="body2" sx={{ mb: 2, color: colors.lightText }}>
-        Добавляем элементы [A, B, C, D], затем извлекаем их
+    <Box
+      sx={{
+        p: { xs: 2, sm: 2.5 },
+        borderRadius: 2,
+        border: 1,
+        borderColor: 'divider',
+        backgroundColor: (t) =>
+          t.palette.mode === 'dark' ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.015)',
+      }}
+    >
+      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+        Очередь FIFO. Голова слева, хвост справа.
       </Typography>
 
-      <Box sx={{ overflowX: 'auto' }}>
-        <svg
-          width={svgWidth}
-          height={svgHeight}
-          style={{ display: 'block', margin: '0 auto' }}
-        >
-          {/* Labels */}
-          <text
-            x={QUEUE_START_X}
-            y={QUEUE_Y - 16}
-            fontSize={13}
-            fontWeight={600}
-            fill={colors.lightText}
+      <Box sx={{ overflowX: 'auto', pb: 1 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, justifyContent: 'center', minWidth: 'min-content' }}>
+          {/* Head label */}
+          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: 60 }}>
+            <Typography variant="caption" sx={{ color: 'primary.main', fontWeight: 700 }}>
+              ← голова
+            </Typography>
+            <Typography variant="caption" color="text.disabled">
+              dequeue
+            </Typography>
+          </Box>
+
+          {/* Queue cells */}
+          <Box
+            sx={{
+              display: 'flex',
+              gap: `${GAP}px`,
+              alignItems: 'center',
+              minHeight: CELL + 4,
+              px: 1,
+              py: 0.5,
+              borderRadius: 1.5,
+              border: 1,
+              borderColor: 'divider',
+              minWidth: 4 * (CELL + GAP) + 16,
+              justifyContent: 'flex-start',
+            }}
           >
-            Очередь:
-          </text>
-
-          {/* Front label */}
-          {step && step.queue.length > 0 && (
-            <text
-              x={QUEUE_START_X + CELL_W / 2}
-              y={QUEUE_Y + CELL_H + 22}
-              textAnchor="middle"
-              fontSize={11}
-              fontWeight={600}
-              fill={colors.primary}
-            >
-              ↑ начало
-            </text>
-          )}
-
-          {/* Back label */}
-          {step && step.queue.length > 0 && (
-            <text
-              x={QUEUE_START_X + (step.queue.length - 1) * (CELL_W + CELL_GAP) + CELL_W / 2}
-              y={QUEUE_Y + CELL_H + 22}
-              textAnchor="middle"
-              fontSize={11}
-              fontWeight={600}
-              fill={colors.orange}
-            >
-              ↑ конец
-            </text>
-          )}
-
-          {/* Queue elements */}
-          {step &&
-            step.queue.map((el, i) => {
-              const x = QUEUE_START_X + i * (CELL_W + CELL_GAP);
-              const color = colorForElement(el);
-              const isFirst = i === 0;
-              const isLast = i === step.queue.length - 1;
-              return (
-                <g key={`q-${i}`}>
-                  <rect
-                    x={x}
-                    y={QUEUE_Y}
-                    width={CELL_W}
-                    height={CELL_H}
-                    rx={8}
-                    fill={color + '20'}
-                    stroke={color}
-                    strokeWidth={isFirst || isLast ? 2.5 : 1.5}
-                  />
-                  <text
-                    x={x + CELL_W / 2}
-                    y={QUEUE_Y + CELL_H / 2 + 6}
-                    textAnchor="middle"
-                    fontSize={18}
-                    fontWeight={600}
-                    fill={color}
+            {step === null || step.queue.length === 0 ? (
+              <Box sx={{ color: 'text.disabled', fontStyle: 'italic', fontSize: '0.85rem', mx: 'auto' }}>
+                (пусто)
+              </Box>
+            ) : (
+              step.queue.map((ch, i) => {
+                const isHead = i === 0 && step.action === 'dequeue';
+                const isTail = i === step.queue.length - 1 && step.action === 'enqueue';
+                const bg = isHead ? PALETTE.dequeueBg : isTail ? PALETTE.enqueueBg : PALETTE.cellBg;
+                const border = isHead ? PALETTE.dequeueBorder : isTail ? PALETTE.enqueueBorder : PALETTE.cellBorder;
+                return (
+                  <Box
+                    key={i}
+                    sx={{
+                      width: CELL,
+                      height: CELL,
+                      borderRadius: 1.5,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontFamily: 'monospace',
+                      fontSize: '1.1rem',
+                      fontWeight: 700,
+                      bgcolor: bg,
+                      border: 1.5,
+                      borderColor: border,
+                      color: 'text.primary',
+                      transition: 'background-color 0.25s, border-color 0.25s',
+                    }}
                   >
-                    {el}
-                  </text>
-                </g>
-              );
-            })}
-
-          {/* Dequeue arrow */}
-          {step && step.action === 'dequeue' && (
-            <g>
-              <line
-                x1={QUEUE_START_X - 10}
-                y1={QUEUE_Y + CELL_H / 2}
-                x2={QUEUE_START_X - 36}
-                y2={QUEUE_Y + CELL_H / 2}
-                stroke={colors.red}
-                strokeWidth={2}
-                markerEnd="url(#arrowLeft)"
-              />
-              <defs>
-                <marker
-                  id="arrowLeft"
-                  viewBox="0 0 10 10"
-                  refX="10"
-                  refY="5"
-                  markerWidth={8}
-                  markerHeight={8}
-                  orient="auto-start-reverse"
-                >
-                  <path d="M 0 0 L 10 5 L 0 10 z" fill={colors.red} />
-                </marker>
-              </defs>
-            </g>
-          )}
-
-          {/* Enqueue arrow */}
-          {step && step.action === 'enqueue' && (
-            <g>
-              {(() => {
-                const lastX = QUEUE_START_X + (step.queue.length - 1) * (CELL_W + CELL_GAP);
-                return (
-                  <line
-                    x1={lastX + CELL_W + 36}
-                    y1={QUEUE_Y + CELL_H / 2}
-                    x2={lastX + CELL_W + 10}
-                    y2={QUEUE_Y + CELL_H / 2}
-                    stroke={colors.success}
-                    strokeWidth={2}
-                    markerEnd="url(#arrowRight)"
-                  />
+                    {ch}
+                  </Box>
                 );
-              })()}
-              <defs>
-                <marker
-                  id="arrowRight"
-                  viewBox="0 0 10 10"
-                  refX="0"
-                  refY="5"
-                  markerWidth={8}
-                  markerHeight={8}
-                  orient="auto-start-reverse"
-                >
-                  <path d="M 10 0 L 0 5 L 10 10 z" fill={colors.success} />
-                </marker>
-              </defs>
-            </g>
-          )}
+              })
+            )}
+          </Box>
 
-          {/* Empty queue message */}
-          {step && step.queue.length === 0 && (
-            <text
-              x={QUEUE_START_X + 60}
-              y={QUEUE_Y + CELL_H / 2 + 5}
-              textAnchor="middle"
-              fontSize={14}
-              fontWeight={500}
-              fill={colors.lightText}
-            >
-              (пусто)
-            </text>
-          )}
-
-          {/* Dequeued elements */}
-          {step && step.dequeued.length > 0 && (
-            <>
-              <text
-                x={QUEUE_START_X}
-                y={QUEUE_Y + CELL_H + 54}
-                fontSize={13}
-                fontWeight={600}
-                fill={colors.lightText}
-              >
-                Извлечено:
-              </text>
-              {step.dequeued.map((el, i) => {
-                const x = QUEUE_START_X + 90 + i * (36 + 6);
-                const color = colorForElement(el);
-                return (
-                  <g key={`dq-${i}`}>
-                    <rect
-                      x={x}
-                      y={QUEUE_Y + CELL_H + 38}
-                      width={36}
-                      height={28}
-                      rx={6}
-                      fill={color + '15'}
-                      stroke={color}
-                      strokeWidth={1.5}
-                    />
-                    <text
-                      x={x + 18}
-                      y={QUEUE_Y + CELL_H + 57}
-                      textAnchor="middle"
-                      fontSize={14}
-                      fontWeight={600}
-                      fill={color}
-                    >
-                      {el}
-                    </text>
-                  </g>
-                );
-              })}
-            </>
-          )}
-
-          {/* Done message */}
-          {step && step.action === 'done' && (
-            <text
-              x={svgWidth / 2}
-              y={QUEUE_Y + CELL_H / 2 + 5}
-              textAnchor="middle"
-              fontSize={16}
-              fontWeight={700}
-              fill={colors.success}
-            >
-              FIFO — порядок сохранён!
-            </text>
-          )}
-        </svg>
+          {/* Tail label */}
+          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: 60 }}>
+            <Typography variant="caption" sx={{ color: 'warning.main', fontWeight: 700 }}>
+              хвост →
+            </Typography>
+            <Typography variant="caption" color="text.disabled">
+              enqueue
+            </Typography>
+          </Box>
+        </Box>
       </Box>
 
-      {step && (
-        <Typography
-          variant="body2"
+      {/* Dequeued */}
+      <Box sx={{ mt: 2 }}>
+        <Typography variant="overline" color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>
+          Порядок извлечения
+        </Typography>
+        <Box
           sx={{
-            mt: 2,
-            p: 1.5,
-            borderRadius: 2,
-            bgcolor:
-              step.action === 'done'
-                ? '#34C75918'
-                : step.action === 'dequeue'
-                  ? '#FF3B3010'
-                  : '#34C75910',
-            color: step.action === 'done' ? colors.success : colors.text,
-            fontWeight: step.action === 'done' ? 600 : 400,
-            textAlign: 'center',
+            display: 'flex',
+            gap: 0.5,
+            minHeight: 32,
+            alignItems: 'center',
+            px: 1,
+            py: 0.5,
+            borderRadius: 1.5,
+            bgcolor: (t) =>
+              t.palette.mode === 'dark' ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.025)',
           }}
         >
-          Шаг {currentStep}: {step.description}
-        </Typography>
-      )}
+          {step === null || step.dequeued.length === 0 ? (
+            <Typography variant="body2" sx={{ color: 'text.disabled', fontStyle: 'italic' }}>
+              (пока ничего не извлечено)
+            </Typography>
+          ) : (
+            step.dequeued.map((ch, i) => (
+              <Box key={i} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                {i > 0 && <Box sx={{ color: 'text.disabled' }}>→</Box>}
+                <Box
+                  sx={{
+                    px: 1,
+                    py: 0.25,
+                    borderRadius: 0.75,
+                    bgcolor: PALETTE.dequeueBg,
+                    fontFamily: 'monospace',
+                    fontWeight: 700,
+                    fontSize: '0.9rem',
+                  }}
+                >
+                  {ch}
+                </Box>
+              </Box>
+            ))
+          )}
+        </Box>
+      </Box>
 
-      {!step && (
-        <Typography
-          variant="body2"
-          sx={{
-            mt: 2,
-            textAlign: 'center',
-            color: 'text.disabled',
-            fontStyle: 'italic',
-          }}
-        >
-          Нажмите &laquo;Следующий шаг&raquo; для начала
+      <Box
+        sx={{
+          mt: 2,
+          px: 2,
+          py: 1.25,
+          borderRadius: 1.5,
+          textAlign: 'center',
+          bgcolor: step?.action === 'done'
+            ? PALETTE.doneBg
+            : (t) => (t.palette.mode === 'dark' ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)'),
+          color: step?.action === 'done' ? 'success.main' : 'text.secondary',
+          fontWeight: step?.action === 'done' ? 600 : 400,
+        }}
+      >
+        <Typography variant="body2" sx={{ color: 'inherit', fontWeight: 'inherit' }}>
+          {step
+            ? `Шаг ${stepIdx} / ${steps.length}: ${step.description}`
+            : 'Нажмите «Следующий шаг», чтобы начать.'}
         </Typography>
-      )}
+      </Box>
 
-      <Box sx={{ display: 'flex', gap: 1.5, mt: 2 }}>
+      <Box sx={{ display: 'flex', gap: 1, mt: 2, justifyContent: 'center' }}>
         <Button
+          size="small"
           variant="contained"
-          disabled={currentStep >= steps.length}
-          onClick={() => setCurrentStep((s) => s + 1)}
-          sx={{
-            bgcolor: colors.primary,
-            textTransform: 'none',
-            borderRadius: 2,
-            '&:hover': { bgcolor: '#005EC4' },
-          }}
+          disabled={stepIdx >= steps.length}
+          onClick={() => setStepIdx((s) => Math.min(s + 1, steps.length))}
+          endIcon={<ArrowForwardIcon />}
         >
           Следующий шаг
         </Button>
         <Button
+          size="small"
           variant="outlined"
-          onClick={() => setCurrentStep(0)}
-          sx={{
-            textTransform: 'none',
-            borderRadius: 2,
-            borderColor: colors.primary,
-            color: colors.primary,
-          }}
+          onClick={() => setStepIdx(0)}
+          startIcon={<RestartAltIcon />}
+          disabled={stepIdx === 0}
         >
           Сбросить
         </Button>
       </Box>
-    </Paper>
+    </Box>
   );
 }

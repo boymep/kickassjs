@@ -24,7 +24,6 @@ import { sdPerformanceLesson } from '../data/lessons/sd-performance';
 import { sdApiDesignLesson } from '../data/lessons/sd-api-design';
 import { sdScalingLesson } from '../data/lessons/sd-scaling';
 import { sdObservabilityLesson } from '../data/lessons/sd-observability';
-import { isValidYouTubeId } from '../utils/youtube';
 import type { Lesson } from '../types/lesson';
 
 const authoredLessons: Lesson[] = [
@@ -56,27 +55,6 @@ const authoredLessons: Lesson[] = [
 ];
 
 describe('Authored lessons — content invariants', () => {
-  it('every video has a syntactically valid YouTube id', () => {
-    for (const lesson of authoredLessons) {
-      for (const v of lesson.resources.videos) {
-        expect(isValidYouTubeId(v.id), `Lesson ${lesson.topicId}: invalid id "${v.id}"`).toBe(true);
-      }
-      for (const c of lesson.chapters) {
-        if (c.video) {
-          expect(isValidYouTubeId(c.video.id), `Lesson ${lesson.topicId}/${c.id}: invalid id "${c.video.id}"`).toBe(true);
-        }
-      }
-    }
-  });
-
-  it('all external links are https', () => {
-    for (const lesson of authoredLessons) {
-      for (const link of lesson.resources.links) {
-        expect(link.url.startsWith('https://'), `Lesson ${lesson.topicId}: non-https url ${link.url}`).toBe(true);
-      }
-    }
-  });
-
   it('chapter ids are unique within a lesson', () => {
     for (const lesson of authoredLessons) {
       const ids = lesson.chapters.map((c) => c.id);

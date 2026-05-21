@@ -1,97 +1,35 @@
 import type { Lesson } from '../../types/lesson';
 import { treesQuiz } from '../quizzes/trees';
 
-// Index existing quiz questions for reuse as checkpoints.
 const Q = Object.fromEntries(treesQuiz.questions.map((q) => [q.id, q]));
 
-// Questions used as in-chapter checkpoints (must NOT appear in finalQuiz).
+// Чекпоинт-вопросы из квиза. Не должны попадать в finalQuiz.
 const CHECKPOINT_IDS = new Set(['tree-q2', 'tree-q3', 'tree-q6', 'tree-q8', 'tree-q11']);
 
 export const treesLesson: Lesson = {
   topicId: 'trees',
 
   intro: {
-    whyItMatters: `Дерево — самая распространённая структура данных в работе фронтенд-инженера, даже если вы об этом не задумываетесь. DOM, который браузер рендерит на странице, — это дерево. Виртуальный DOM React, который сравнивается между рендерами в процессе reconciliation, — тоже дерево. AST, который парсер вашего сборщика строит из исходников TypeScript, — дерево. Структура категорий в интернет-магазине, иерархия комментариев на форуме, файловая система операционной системы, JSON произвольной вложенности из ответа API — везде деревья.
+    whyItMatters: `Дерево — иерархическая структура из узлов, у которой есть ровно один корень и нет циклов. С деревьями работает почти любой код: DOM в браузере, Virtual DOM в React, AST в компиляторе, JSON с вложенностью, файловая система — всё это деревья.
 
-На алгоритмических собеседованиях деревья проверяют умение работать с **рекурсией** и понимание разницы между двумя стратегиями обхода: DFS (в глубину, через стек или рекурсию) и BFS (в ширину, через очередь). DFS бывает трёх видов — pre-order, in-order и post-order — и каждый из них применяется в своих задачах: pre-order для копирования и сериализации, in-order для вывода BST в отсортированном порядке, post-order для удаления и для подсчёта снизу вверх (например, высота дерева). BFS используется, когда нужен **ближайший** ответ или поуровневая обработка: «найти путь минимальной длины», «вывести узлы по уровням», «найти первого общего предка по глубине».
-
-Помимо обхода, на интервью спрашивают про **бинарные деревья поиска (BST)**, балансировку (AVL, Red-Black), Trie для автодополнения, наименьшего общего предка (LCA), сериализацию и восстановление дерева. Сложность обхода — O(n) по времени, O(h) по памяти на стек рекурсии, где h — высота дерева. На сбалансированном дереве h = O(log n); на вырожденном (цепочке) — h = O(n), и наивная рекурсия легко получает Maximum call stack size exceeded.`,
-    estimatedMinutes: 36,
+На собеседованиях деревья проверяют умение работать с рекурсией и понимание двух стратегий обхода: DFS (в глубину, через стек или рекурсию) и BFS (в ширину, через очередь). Сложность обхода — O(n) по времени и O(h) по памяти на стек рекурсии, где h — высота дерева. На сбалансированном дереве h = O(log n), на вырожденном — O(n).`,
+    estimatedMinutes: 32,
     interviewAngle:
-      'Деревья встречаются на каждом алгоритмическом собеседовании. Сильный кандидат не зазубривает шаблон обхода, а аргументирует выбор стратегии (DFS vs BFS), типа DFS (pre/in/post) и формы реализации (рекурсия vs итерация со стеком), исходя из формулировки задачи и ограничений по глубине.',
+      'Интервьюера интересует обоснованный выбор стратегии (DFS или BFS), типа DFS (pre-order, in-order, post-order) и формы реализации (рекурсия или итерация со стеком) — исходя из условия задачи и ограничений по глубине.',
     prerequisites: [{ slug: 'stacks-queues', title: 'Стеки и очереди' }],
   },
 
-  resources: {
-    videos: [
-      {
-        source: 'youtube',
-        id: 'fAAZixBzIAI',
-        title: 'Binary Tree Algorithms for Technical Interviews — Full Course',
-        channel: 'freeCodeCamp.org (Alvin Zablan)',
-        language: 'en',
-        durationSec: 76 * 60,
-        description: 'Образцовый разбор задач на деревья по шаблонам DFS и BFS — must-watch перед собеседованием.',
-      },
-      {
-        source: 'youtube',
-        id: '9RHO6jU--GU',
-        title: 'Binary tree traversal — breadth-first and depth-first strategies',
-        channel: 'mycodeschool',
-        language: 'en',
-        durationSec: 11 * 60,
-        description: 'Каноническая визуализация трёх вариантов DFS (pre/in/post-order) и BFS на доске.',
-      },
-    ],
-    links: [
-      {
-        url: 'https://developer.mozilla.org/en-US/docs/Web/API/Document_Object_Model/Introduction',
-        title: 'Introduction to the DOM — MDN',
-        source: 'mdn',
-        language: 'en',
-        note: 'DOM как живой пример древовидной структуры в браузере: узлы, родители, дети, обход.',
-      },
-      {
-        url: 'https://cp-algorithms.com/graph/breadth-first-search.html',
-        title: 'Breadth-first search — cp-algorithms',
-        source: 'article',
-        language: 'en',
-        note: 'Точная формулировка BFS, инварианты очереди и обоснование O(n + m).',
-      },
-      {
-        url: 'https://cp-algorithms.com/graph/depth-first-search.html',
-        title: 'Depth-first search — cp-algorithms',
-        source: 'article',
-        language: 'en',
-        note: 'Глубокий разбор DFS, цвета вершин, классификация рёбер, применение для топосорта.',
-      },
-      {
-        url: 'https://neetcode.io/courses/dsa-for-beginners/24',
-        title: 'Trees — NeetCode DSA course',
-        source: 'article',
-        language: 'en',
-        note: 'Бесплатный курс с пошаговым разбором BST, обходов и шаблонов под LeetCode-задачи.',
-      },
-      {
-        url: 'https://en.wikipedia.org/wiki/Tree_traversal',
-        title: 'Tree traversal — Wikipedia',
-        source: 'article',
-        language: 'en',
-        note: 'Справочник: pre/in/post-order, level-order, итеративные шаблоны со стеком.',
-      },
-    ],
-  },
-
   chapters: [
+    // ─────────────────────────────────────────────────────────────
     {
       id: 'what-is-tree',
       title: 'Что такое дерево',
-      estimatedMinutes: 5,
+      estimatedMinutes: 4,
       blocks: [
         {
           type: 'text',
           content:
-            '**Дерево** — иерархическая структура из узлов. У каждого узла — значение и ссылки на дочерние узлы. **Корень** — единственный узел без родителя, **листья** — узлы без детей. Между любыми двумя узлами существует ровно один путь — этим дерево отличается от графа.\n\nТы работаешь с деревьями постоянно: DOM браузера, Virtual DOM React, AST компилятора, JSON с вложенностью — всё это деревья.',
+            '**Дерево** — иерархическая структура из узлов. У каждого узла есть значение и ссылки на дочерние узлы. **Корень** — единственный узел без родителя, **листья** — узлы без детей. Между любыми двумя узлами существует ровно один путь — этим дерево отличается от графа.',
         },
         {
           type: 'visualization',
@@ -101,194 +39,136 @@ export const treesLesson: Lesson = {
         { type: 'heading', content: 'Виды деревьев' },
         {
           type: 'list',
-          content: `- **Бинарное дерево** — у каждого узла не более двух детей (\`left\` и \`right\`).
-- **Бинарное дерево поиска (BST)** — для каждого узла все значения в левом поддереве меньше, в правом — больше.
-- **Сбалансированное дерево** (AVL, Red-Black) — высота поддеревьев отличается не более чем на 1, что гарантирует O(log n) на операции.
-- **N-ary tree** — у узла произвольное число детей в массиве \`children\`. Самая частая форма на фронтенд-собеседованиях.
-- **Trie (бор)** — дерево префиксов: каждый путь от корня — это строка. Используется для автодополнения и поиска.
-- **Heap** — частично упорядоченное бинарное дерево, реализация приоритетной очереди.`,
+          content: `**Бинарное дерево** — у каждого узла не более двух детей (\`left\` и \`right\`).
+**Бинарное дерево поиска (BST)** — все значения в левом поддереве меньше узла, в правом — больше.
+**Сбалансированное дерево** (AVL, Red-Black) — высоты поддеревьев отличаются не более чем на 1, операции выполняются за O(log n).
+**N-ary tree** — у узла произвольное число детей в массиве \`children\`. Частая форма на фронтенд-собеседованиях.
+**Trie (бор)** — дерево префиксов: каждый путь от корня — это строка. Используется для автодополнения.
+**Heap** — частично упорядоченное бинарное дерево, реализация приоритетной очереди.`,
         },
         {
           type: 'code',
           language: 'javascript',
-          content: `// Типичная форма дерева на фронтенд-собеседовании
+          content: `// Типовая форма n-ary дерева
 const tree = {
-  type: 'nested',
+  type: 'folder',
   children: [
-    { type: 'added', value: 42 },
+    { type: 'file', name: 'index.ts' },
     {
-      type: 'nested',
-      children: [{ type: 'added', value: 43 }],
+      type: 'folder',
+      children: [
+        { type: 'file', name: 'utils.ts' },
+        { type: 'file', name: 'config.ts' },
+      ],
     },
-    { type: 'added', value: 44 },
   ],
-};
-
-// Классическое бинарное дерево из алгоритмических задач
-const bst = {
-  value: 5,
-  left:  { value: 3, left: { value: 1 }, right: { value: 4 } },
-  right: { value: 8, left: { value: 7 }, right: { value: 9 } },
 };`,
         },
-        {
-          type: 'callout',
-          calloutType: 'info',
-          content:
-            'Чем дерево отличается от графа: в дереве **n** узлов соединены **n − 1** ребром, нет циклов и есть выделенный корень. В графе циклы возможны, и при обходе нужно отмечать посещённые узлы (\`Set\` или булев массив), иначе DFS зациклится.',
-        },
-        {
-          type: 'text',
-          content:
-            'Ключевое свойство для работы с деревьями — рекурсия. Почти любая задача на дерево решается по схеме «реши для левого поддерева + реши для правого + объедини результаты». Интервьюер проверяет именно это: умеешь ли ты разбивать задачу рекурсивно и правильно описывать базовый случай (что делать, когда пришли к null или листу). Если научишься думать про деревья через рекурсию — большинство задач пишутся за 10-15 строк.',
-        },
       ],
-      flashcardIds: ['tr-f1', 'tr-f2'],
       checkpoint: [Q['tree-q2']!, {
-        type: 'ordering',
-        id: 'tr-ord1',
-        description: 'Расставь узлы в порядке In-order обхода (Left → Root → Right) для BST с корнем 4, левый=2 (дети 1,3), правый=6 (дети 5,7)',
-        items: ['1', '2', '3', '4', '5', '6', '7'],
-        explanation: 'In-order обход BST всегда даёт отсортированную последовательность. Алгоритм: рекурсивно обойди левое поддерево → посети корень → рекурсивно обойди правое. Это фундаментальное свойство BST.',
+        type: 'match-pairs',
+        id: 'tree-mp1',
+        description: 'Сопоставьте вид дерева с его свойством',
+        pairs: [
+          { left: 'BST', right: 'Левое поддерево < узла, правое > узла' },
+          { left: 'AVL / Red-Black', right: 'Сбалансировано, операции за O(log n)' },
+          { left: 'Trie', right: 'Хранит строки по префиксам' },
+          { left: 'Heap', right: 'Частично упорядоченное, реализует приоритетную очередь' },
+        ],
+        explanation:
+          'BST даёт быстрый поиск только когда сбалансировано — иначе деградирует до O(n). Trie экономит память на общих префиксах. Heap не сортирует элементы полностью, а гарантирует минимум или максимум на вершине за O(1).',
       }],
-      docsLink: { url: 'https://ru.algorithmica.org/cs/trees/', title: 'Корневые деревья — ru.algorithmica.org' },
-      video: {
-        source: 'youtube',
-        id: '9RHO6jU--GU',
-        title: 'Binary tree traversal — BFS and DFS',
-        channel: 'mycodeschool',
-        language: 'en',
-        durationSec: 11 * 60,
-        description: 'Визуализация трёх вариантов DFS (pre/in/post-order) и BFS на доске — лучшее введение.',
-      },
-      links: [
-        {
-          url: 'https://en.wikipedia.org/wiki/Tree_traversal',
-          title: 'Tree traversal — Wikipedia',
-          source: 'article',
-          language: 'en',
-          note: 'Справочник: pre/in/post-order, level-order, итеративные шаблоны со стеком.',
-        },
-      ],
     },
 
+    // ─────────────────────────────────────────────────────────────
     {
       id: 'dfs',
-      title: 'DFS — обход в глубину',
+      title: 'Обход в глубину (DFS)',
       estimatedMinutes: 7,
       blocks: [
         {
           type: 'text',
           content:
-            '**DFS** (Depth-First Search) — идёшь по одной ветке до конца, затем возвращаешься. Реализуется через рекурсию или явный стек. Три варианта отличаются моментом обработки текущего узла: **pre-order** (до потомков), **in-order** (между), **post-order** (после).',
-        },
-        {
-          type: 'callout',
-          calloutType: 'tip',
-          content:
-            'Сигналы на интервью: **высота дерева** → post-order (сначала результат детей, потом считаешь для родителя). **Сериализация** → pre-order (корень первым). **BST в отсортированном виде** → in-order.',
+            '**DFS** (Depth-First Search) идёт вглубь как можно дальше, прежде чем повернуть назад. Естественно реализуется рекурсией — каждый рекурсивный вызов использует системный стек. Можно также написать итеративно через явный стек.',
         },
         {
           type: 'visualization',
           content: '',
           vizId: 'dfs',
         },
-        { type: 'heading', content: 'Три порядка DFS для бинарного дерева' },
+        { type: 'heading', content: 'Три порядка DFS' },
         {
           type: 'list',
-          content: `- **Pre-order** (прямой): корень → левое → правое. Применение: сериализация дерева, копирование, печать структуры.
-- **In-order** (центральный): левое → корень → правое. Применение: вывод BST в отсортированном порядке.
-- **Post-order** (обратный): левое → правое → корень. Применение: удаление дерева, подсчёт «снизу вверх» (высота, размер, агрегаты).`,
+          content: `**Pre-order** (корень → левое → правое): сначала узел, потом поддеревья. Применяется для копирования дерева, сериализации, печати с отступами.
+**In-order** (левое → корень → правое): для BST даёт элементы в отсортированном порядке.
+**Post-order** (левое → правое → корень): сначала поддеревья, потом узел. Применяется для удаления и для подсчётов снизу вверх (высота, размер, проверка балансировки).`,
         },
         {
           type: 'code',
           language: 'javascript',
-          content: `// Три варианта DFS для бинарного дерева
-function preorder(node, visit) {
+          content: `function preOrder(node) {
   if (!node) return;
-  visit(node);              // 1. корень
-  preorder(node.left, visit);
-  preorder(node.right, visit);
+  visit(node);              // 1. обработать узел
+  preOrder(node.left);      // 2. левое поддерево
+  preOrder(node.right);     // 3. правое поддерево
 }
 
-function inorder(node, visit) {
+function inOrder(node) {
   if (!node) return;
-  inorder(node.left, visit);
-  visit(node);              // 2. корень между поддеревьями
-  inorder(node.right, visit);
+  inOrder(node.left);
+  visit(node);
+  inOrder(node.right);
 }
 
-function postorder(node, visit) {
+function postOrder(node) {
   if (!node) return;
-  postorder(node.left, visit);
-  postorder(node.right, visit);
-  visit(node);              // 3. корень в конце
+  postOrder(node.left);
+  postOrder(node.right);
+  visit(node);
 }`,
         },
-        { type: 'heading', content: 'DFS для дерева с произвольным числом детей' },
+        { type: 'heading', content: 'Итеративный DFS на явном стеке' },
+        {
+          type: 'text',
+          content:
+            'Рекурсивный DFS использует системный стек вызовов, у которого в JavaScript-движках лимит ~10⁴ кадров. На глубоком дереве будет \`RangeError: Maximum call stack size exceeded\`. Решение — итеративная версия на явном стеке.',
+        },
         {
           type: 'code',
           language: 'javascript',
-          content: `// На фронтенде чаще встречается форма с children: []
-function dfs(node, visit) {
-  visit(node);
-  if (node.children) {
-    for (const child of node.children) {
-      dfs(child, visit);
-    }
+          content: `function dfsIterative(root) {
+  if (!root) return;
+  const stack = [root];
+  while (stack.length) {
+    const node = stack.pop();
+    visit(node);
+    // правое кладём раньше — оно достанется позже,
+    // левое окажется наверху и будет обработано первым
+    if (node.right) stack.push(node.right);
+    if (node.left)  stack.push(node.left);
   }
 }`,
         },
         {
           type: 'callout',
-          calloutType: 'tip',
+          calloutType: 'info',
           content:
-            'Сложность DFS — O(n) по времени и O(h) по памяти, где h — высота дерева. На сбалансированном дереве h = O(log n), на вырожденной цепочке h = O(n), и рекурсия может уронить стек.',
-        },
-        {
-          type: 'text',
-          content:
-            'Самая частая ловушка на интервью с DFS: перепутать pre-order и post-order. Pre-order — сначала обработай текущий узел, потом спускайся. Post-order — сначала спускайся, потом обрабатывай. Если нужна высота дерева или LCA — нужен post-order (сначала узнаешь результат детей, потом считаешь для родителя). Если нужно скопировать или сериализовать — pre-order (сначала запоминаешь корень, потом детей).',
+            'Сложность DFS — O(n) по времени, O(h) по памяти, где h — высота дерева. На сбалансированном дереве h = O(log n), на вырожденном (цепочке) h = O(n).',
         },
       ],
-      flashcardIds: ['tr-f3', 'tr-f4', 'tr-f5'],
-      checkpoint: [Q['tree-q6']!, Q['tree-q8']!],
-      docsLink: { url: 'https://ru.algorithmica.org/cs/graph-traversals/dfs/', title: 'Поиск в глубину (DFS) — ru.algorithmica.org' },
-      video: {
-        source: 'youtube',
-        id: 'fAAZixBzIAI',
-        title: 'Binary Tree Algorithms — Full Course',
-        channel: 'freeCodeCamp.org (Alvin Zablan)',
-        language: 'en',
-        durationSec: 76 * 60,
-        description: 'Образцовый разбор задач на деревья по шаблонам DFS и BFS — must-watch перед собеседованием.',
-      },
-      links: [
-        {
-          url: 'https://cp-algorithms.com/graph/depth-first-search.html',
-          title: 'Depth-first search — cp-algorithms',
-          source: 'article',
-          language: 'en',
-          note: 'Глубокий разбор DFS, цвета вершин, классификация рёбер, применение для топосорта.',
-        },
-      ],
+      checkpoint: [Q['tree-q3']!, Q['tree-q6']!],
     },
 
+    // ─────────────────────────────────────────────────────────────
     {
       id: 'bfs',
-      title: 'BFS — обход в ширину',
+      title: 'Обход в ширину (BFS)',
       estimatedMinutes: 6,
       blocks: [
         {
           type: 'text',
           content:
-            '**BFS** (Breadth-First Search) — обход в ширину: сначала все узлы ближайшего уровня, потом следующего. Реализуется через **очередь** (FIFO) — именно FIFO обеспечивает обход по уровням и гарантирует нахождение **кратчайшего пути**.',
-        },
-        {
-          type: 'callout',
-          calloutType: 'tip',
-          content:
-            'Интервьюер часто спрашивает: «что если заменить очередь стеком?» — стек даёт DFS (вглубь), очередь даёт BFS (вширь). Это разница между `pop()` (LIFO) и `shift()` (FIFO).',
+            '**BFS** (Breadth-First Search) обходит дерево уровень за уровнем. Реализуется через очередь: достаём узел, обрабатываем, добавляем детей в конец очереди. Применяется, когда нужен ближайший ответ или поуровневая обработка.',
         },
         {
           type: 'visualization',
@@ -298,894 +178,286 @@ function dfs(node, visit) {
         {
           type: 'code',
           language: 'javascript',
-          content: `function bfs(root, visit) {
+          content: `function bfs(root) {
   if (!root) return;
   const queue = [root];
-
-  while (queue.length > 0) {
-    const node = queue.shift();    // FIFO: берём из начала
+  let head = 0;
+  while (head < queue.length) {
+    const node = queue[head++];
     visit(node);
-
-    if (node.children) {
-      for (const child of node.children) {
-        queue.push(child);          // в конец очереди
-      }
-    }
+    if (node.left)  queue.push(node.left);
+    if (node.right) queue.push(node.right);
   }
 }`,
         },
-        { type: 'heading', content: 'Поуровневый BFS (level-order)' },
+        {
+          type: 'callout',
+          calloutType: 'warning',
+          content:
+            'Использование \`queue.shift()\` вместо указателя головы даёт O(n²) на больших деревьях, потому что каждый \`shift\` сдвигает все оставшиеся элементы. Для боевого кода берётся указатель головы или двусвязный список.',
+        },
+        { type: 'heading', content: 'Level-order: обработка по уровням' },
         {
           type: 'text',
           content:
-            'Если нужно знать, **на каком уровне** находится узел, фиксируйте размер очереди в начале каждой итерации. Все узлы текущего уровня обработаются одной партией.',
+            'Если нужно знать, на каком уровне находится узел (или вернуть узлы сгруппированными по уровням), удобно обрабатывать очередь «слоями»: на каждой итерации внешнего цикла обрабатывается ровно одна порция, равная текущему размеру очереди.',
         },
         {
           type: 'code',
           language: 'javascript',
           content: `function levelOrder(root) {
+  if (!root) return [];
   const result = [];
-  if (!root) return result;
   const queue = [root];
-
-  while (queue.length > 0) {
-    const levelSize = queue.length;     // ✓ зафиксировали границу уровня
+  while (queue.length) {
     const level = [];
-
-    for (let i = 0; i < levelSize; i++) {
+    const size = queue.length;          // фиксируем размер уровня
+    for (let i = 0; i < size; i++) {
       const node = queue.shift();
-      level.push(node.value);
-      if (node.children) queue.push(...node.children);
+      level.push(node.val);
+      if (node.left)  queue.push(node.left);
+      if (node.right) queue.push(node.right);
     }
-
     result.push(level);
   }
-
   return result;
-}`,
-        },
-        {
-          type: 'callout',
-          calloutType: 'info',
-          content:
-            'Когда выбирать BFS, а когда DFS. **BFS** — если нужен ближайший ответ (минимальная глубина, кратчайший путь, поуровневый вывод). **DFS** — если нужен любой путь, агрегаты от листьев к корню, или важна простота кода через рекурсию.',
-        },
-        {
-          type: 'callout',
-          calloutType: 'warning',
-          content:
-            '\`Array.prototype.shift\` — O(n): движок сдвигает все элементы. На больших деревьях используйте указатель-голову (\`head++\`) или связный список. На собеседовании \`shift()\` допустим, но упомяните цену вслух.',
-        },
-      ],
-      flashcardIds: ['tr-f6', 'tr-f7'],
-      checkpoint: [Q['tree-q3']!],
-      docsLink: { url: 'https://ru.algorithmica.org/cs/graph-traversals/', title: 'Обходы графов — ru.algorithmica.org' },
-      links: [
-        {
-          url: 'https://cp-algorithms.com/graph/breadth-first-search.html',
-          title: 'Breadth-first search — cp-algorithms',
-          source: 'article',
-          language: 'en',
-          note: 'Точная формулировка BFS, инварианты очереди и обоснование O(n + m).',
-        },
-      ],
-    },
-
-    {
-      id: 'iterative-dfs',
-      title: 'Итеративный DFS — без рекурсии',
-      estimatedMinutes: 6,
-      blocks: [
-        {
-          type: 'text',
-          content:
-            'Рекурсивный DFS красив и лаконичен, но у него есть физическое ограничение: стек вызовов JS-движка вмещает примерно 10–15 тысяч кадров. На глубоком дереве (например, цепочке из 50 000 узлов) получишь Maximum call stack size exceeded. Решение — итеративный DFS: то же самое, но со своим явным стеком в памяти, у которого нет такого лимита.',
-        },
-        {
-          type: 'text',
-          content:
-            'На вырожденном дереве (цепочке) глубина может быть десятки тысяч. Движок V8 по умолчанию допускает порядка 10–15 тысяч кадров стека — рекурсивный DFS падает с **Maximum call stack size exceeded**. Лекарство — заменить рекурсию на явный стек.',
-        },
-        {
-          type: 'code',
-          language: 'javascript',
-          content: `// Итеративный pre-order DFS через явный стек
-function dfsIterative(root, visit) {
-  if (!root) return;
-  const stack = [root];
-
-  while (stack.length > 0) {
-    const node = stack.pop();           // LIFO: с вершины
-    visit(node);
-
-    if (node.children) {
-      // Кладём детей в обратном порядке, чтобы первый ребёнок
-      // оказался на вершине стека и был обработан первым.
-      for (let i = node.children.length - 1; i >= 0; i--) {
-        stack.push(node.children[i]);
-      }
-    }
-  }
 }`,
         },
         {
           type: 'callout',
           calloutType: 'tip',
           content:
-            'Различие между BFS и итеративным DFS — это структура данных контейнера: **очередь** (\`shift\`) даёт BFS, **стек** (\`pop\`) даёт DFS. Алгоритмическая логика — та же.',
-        },
-        {
-          type: 'text',
-          content:
-            'Фокус интервьюера: попросить написать итеративный DFS без подсказки. Многие знают рекурсивный, но путаются в итеративном — особенно с порядком push детей. Главное: чтобы получить обход слева направо (pre-order), кладёшь детей в стек в обратном порядке — справа налево. Тогда левый ребёнок окажется на вершине и будет вынут первым.',
-        },
-        { type: 'heading', content: 'Итеративный in-order для бинарного дерева' },
-        {
-          type: 'code',
-          language: 'javascript',
-          content: `function inorderIterative(root) {
-  const result = [];
-  const stack = [];
-  let node = root;
-
-  while (node || stack.length > 0) {
-    // 1. Идём максимально влево, складывая узлы в стек
-    while (node) {
-      stack.push(node);
-      node = node.left;
-    }
-    // 2. Снимаем — это самый левый необработанный узел
-    node = stack.pop();
-    result.push(node.value);
-    // 3. Переходим в правое поддерево
-    node = node.right;
-  }
-
-  return result;
-}`,
-        },
-        {
-          type: 'text',
-          content:
-            'Этот шаблон встречается в задачах на BST: «найти k-й по величине элемент», «валидировать BST», «итератор по BST». Память — O(h), но без падения стека вызовов.',
+            'BFS гарантирует обход в порядке возрастания глубины. Поэтому для задачи «найдите минимальную глубину» он останавливается сразу при первом листе — это O(n) в худшем случае, но часто работает быстрее DFS, если ответ близко к корню.',
         },
       ],
-      playground: {
-        starterCode: `// Реализуйте итеративный DFS, который не превышает стек на дереве-цепочке.
-// Дерево глубины 50_000 — рекурсия упадёт, итерация должна выжить.
-
-function dfsIterative(root) {
-  // ваш код: верните массив значений в порядке pre-order
-  return [];
-}
-
-// Строим цепочку из 5 узлов для проверки корректности
-let chain = null;
-for (let i = 4; i >= 0; i--) chain = { value: i, children: chain ? [chain] : [] };
-
-console.log(JSON.stringify(dfsIterative(chain)));`,
-        expectedOutput: '[0,1,2,3,4]',
-        description:
-          'Используйте явный стек: \`const stack = [root]\`, в цикле \`pop\` и push детей в обратном порядке. На цепочке pre-order даёт значения от корня к листу: [0, 1, 2, 3, 4].',
-      },
-      flashcardIds: ['tr-f8'],
-      links: [
-        {
-          url: 'https://neetcode.io/courses/dsa-for-beginners/24',
-          title: 'Trees — NeetCode DSA course',
-          source: 'article',
-          language: 'en',
-          note: 'Пошаговый разбор BST, обходов и шаблонов под LeetCode-задачи.',
-        },
-      ],
-    },
-
-    {
-      id: 'bst-balance',
-      title: 'BST, балансировка и Trie',
-      estimatedMinutes: 6,
-      blocks: [
-        {
-          type: 'text',
-          content:
-            '**BST** (Binary Search Tree) — бинарное дерево поиска. Правило: значения слева **меньше** узла, справа **больше**. Это даёт поиск, вставку и удаление за **O(log n)** — но только если дерево сбалансировано.',
-        },
-        {
-          type: 'callout',
-          calloutType: 'warning',
-          content:
-            'Главная ловушка BST: при вставке в отсортированном порядке дерево вырождается в связный список → поиск снова O(n). Интервьюер спросит об этом как о слабом месте. Решение — сбалансированные деревья (AVL, Red-Black).',
-        },
-        { type: 'heading', content: 'Бинарное дерево поиска (BST)' },
-        {
-          type: 'code',
-          language: 'javascript',
-          content: `function bstSearch(node, target) {
-  while (node) {
-    if (target === node.value) return node;
-    node = target < node.value ? node.left : node.right;
-  }
-  return null;                  // не найдено
-}`,
-        },
-        {
-          type: 'callout',
-          calloutType: 'warning',
-          content:
-            'Если вставлять в BST уже отсортированные данные, дерево вырождается в цепочку и поиск деградирует до O(n). Это почему в реальных БД и стандартных библиотеках используют **самобалансирующиеся** BST: AVL, Red-Black, B-tree.',
-        },
-        {
-          type: 'text',
-          content:
-            'Главная ловушка BST на интервью — это вопрос «а какова сложность поиска?». Многие отвечают «O(log n)» и получают уточнение: «всегда?». Правильный ответ: O(log n) только если дерево сбалансировано. В вырожденном случае (вставляли данные в отсортированном порядке) дерево превращается в связный список и поиск становится O(n). AVL и Red-Black деревья решают эту проблему через ротации — это та самая «балансировка».',
-        },
-        { type: 'heading', content: 'Балансировка (AVL, Red-Black)' },
-        {
-          type: 'list',
-          content: `- **AVL** — для каждого узла |высота(left) − высота(right)| ≤ 1. Жёсткий баланс, быстрый поиск, но больше ротаций при вставке.
-- **Red-Black** — более слабый инвариант через раскраску узлов. Используется в Java \`TreeMap\`, C++ \`std::map\`, V8 для словарных режимов объектов.
-- **B-tree** — узел может иметь 2..k детей. Лежит в основе индексов SQL: меньше уровней = меньше дисковых чтений.`,
-        },
-        { type: 'heading', content: 'Trie — дерево префиксов' },
-        {
-          type: 'code',
-          language: 'javascript',
-          content: `// Trie для автодополнения: каждый путь от корня — это строка
-class Trie {
-  constructor() { this.root = { children: {}, isEnd: false }; }
-
-  insert(word) {
-    let node = this.root;
-    for (const ch of word) {
-      node.children[ch] ??= { children: {}, isEnd: false };
-      node = node.children[ch];
-    }
-    node.isEnd = true;
-  }
-
-  startsWith(prefix) {
-    let node = this.root;
-    for (const ch of prefix) {
-      if (!node.children[ch]) return false;
-      node = node.children[ch];
-    }
-    return true;
-  }
-}`,
-        },
-        {
-          type: 'callout',
-          calloutType: 'info',
-          content:
-            'Поиск в Trie — O(L), где L — длина запроса, **не зависит от размера словаря**. Это делает Trie идеальным для автодополнения, проверки орфографии и поиска по префиксу.',
-        },
-      ],
-      flashcardIds: ['tr-f9', 'tr-f10', 'tr-f11'],
-      links: [
-        {
-          url: 'https://developer.mozilla.org/en-US/docs/Web/API/Document_Object_Model/Introduction',
-          title: 'Introduction to the DOM — MDN',
-          source: 'mdn',
-          language: 'en',
-          note: 'DOM как живой пример древовидной структуры: узлы, родители, дети, обход.',
-        },
-      ],
-    },
-
-    {
-      id: 'lca-and-patterns',
-      title: 'LCA и паттерны рекурсии',
-      estimatedMinutes: 5,
-      blocks: [
-        {
-          type: 'text',
-          content:
-            'LCA — задача найти самый глубокий узел, который является предком сразу для двух заданных узлов. Аналогия: два человека ищут общего предка в семейном дереве — ищем самого «младшего» предка, который есть у обоих. В алгоритмах LCA решается рекурсией post-order: сначала спустись вниз, потом на обратном пути собери ответ.',
-        },
-        {
-          type: 'text',
-          content:
-            '**Наименьший общий предок** (Lowest Common Ancestor, LCA) двух узлов \`p\` и \`q\` — самый глубокий узел, поддерево которого содержит и \`p\`, и \`q\`. Классическое решение через post-order: каждый узел возвращает «нашёл ли я в своём поддереве \`p\` или \`q\`».',
-        },
-        {
-          type: 'code',
-          language: 'javascript',
-          content: `function lca(root, p, q) {
-  if (!root || root === p || root === q) return root;
-
-  const left  = lca(root.left,  p, q);
-  const right = lca(root.right, p, q);
-
-  // Нашли по одному в каждом поддереве — текущий узел и есть LCA
-  if (left && right) return root;
-  // Иначе ответ в той ветке, где что-то нашлось
-  return left || right;
-}`,
-        },
-        {
-          type: 'callout',
-          calloutType: 'tip',
-          content:
-            'Шаблон **«рекурсия post-order с возвратом агрегата»** покрывает огромный класс задач: высота дерева, диаметр, симметричность, сериализация, валидация BST. Идея одна: ребёнок возвращает то, что родителю нужно для своего ответа.',
-        },
-        {
-          type: 'text',
-          content:
-            'На интервью паттерн «построй дерево из плоского массива» появляется в формулировках вроде «дерево комментариев из БД», «иерархия категорий», «структура папок». Наивное решение — для каждого элемента ищешь родителя перебором — это O(n²). Хитрость: создаёшь Map от id к узлу, потом за один проход подвешиваешь каждый узел к родителю по parentId. Итого O(n). Запомни этот паттерн — он встречается регулярно.',
-        },
-        { type: 'heading', content: 'Шаблон: build tree из плоского списка' },
-        {
-          type: 'code',
-          language: 'javascript',
-          content: `// Из массива {id, parentId} собираем дерево за O(n) через Map
-function buildTree(items) {
-  const map = new Map();
-  for (const item of items) map.set(item.id, { ...item, children: [] });
-
-  let root = null;
-  for (const item of items) {
-    const node = map.get(item.id);
-    if (item.parentId === null) root = node;
-    else map.get(item.parentId).children.push(node);
-  }
-  return root;
-}`,
-        },
-        {
-          type: 'text',
-          content:
-            'Этот паттерн появляется на собеседованиях в формулировках «дерево комментариев из БД», «иерархия категорий», «структура папок». Хеш-таблица превращает наивный O(n²)-поиск родителя в O(1).',
-        },
-      ],
-      flashcardIds: ['tr-f12'],
-      checkpoint: [Q['tree-q11']!, {
+      checkpoint: [Q['tree-q8']!, {
         type: 'match-pairs',
-        id: 'tr-mp1',
-        description: 'Сопоставь тип обхода с его типичным применением',
+        id: 'tree-mp2',
+        description: 'Когда применять DFS, а когда BFS',
         pairs: [
-          { left: 'In-order (L→Root→R)', right: 'Получить отсортированные элементы BST' },
-          { left: 'Pre-order (Root→L→R)', right: 'Сериализация дерева, копирование структуры' },
-          { left: 'Post-order (L→R→Root)', right: 'Удаление дерева, вычисление высоты' },
-          { left: 'BFS (по уровням)', right: 'Кратчайший путь, уровень узла' },
+          { left: 'DFS pre-order', right: 'Сериализация, копирование дерева' },
+          { left: 'DFS in-order', right: 'Вывод BST в отсортированном порядке' },
+          { left: 'DFS post-order', right: 'Подсчёт снизу вверх (высота, размер)' },
+          { left: 'BFS', right: 'Минимальная глубина, level-order, кратчайший путь' },
         ],
-        explanation: 'Выбор обхода зависит от задачи: in-order для BST-сортировки, pre-order когда корень нужен первым (сериализация), post-order когда узел обрабатывается после детей (высота), BFS для уровней и кратчайшего пути.',
+        explanation:
+          'Выбор стратегии диктуется задачей. Если ответ зависит от поддеревьев — нужен post-order. Если важен порядок глубины — BFS. Если нужно отсортировать BST — in-order.',
       }],
     },
 
+    // ─────────────────────────────────────────────────────────────
     {
-      id: 'pitfalls',
-      title: 'Типичные ошибки',
-      estimatedMinutes: 4,
+      id: 'typical-tasks',
+      title: 'Типовые задачи на дереве',
+      estimatedMinutes: 6,
       blocks: [
+        { type: 'heading', content: 'Глубина дерева' },
         {
           type: 'text',
           content:
-            'Ошибки с деревьями делают не новички, а люди которые торопятся. Забытая проверка на null, отсутствие `children` у листа, рекурсия без базового случая — всё это роняет программу на первом же тест-кейсе. Читай эту главу как чеклист перед «готово».',
+            'Высота (глубина) дерева — длина самого длинного пути от корня до листа. Решается post-order: сначала считаем высоту левого и правого поддеревьев, потом возвращаем максимум плюс единица.',
+        },
+        {
+          type: 'code',
+          language: 'javascript',
+          content: `function maxDepth(root) {
+  if (!root) return 0;
+  return 1 + Math.max(maxDepth(root.left), maxDepth(root.right));
+}`,
+        },
+        { type: 'heading', content: 'Проверка симметрии' },
+        {
+          type: 'code',
+          language: 'javascript',
+          content: `function isSymmetric(root) {
+  function mirror(a, b) {
+    if (!a && !b) return true;
+    if (!a || !b) return false;
+    return a.val === b.val
+      && mirror(a.left, b.right)
+      && mirror(a.right, b.left);
+  }
+  return !root || mirror(root.left, root.right);
+}`,
+        },
+        { type: 'heading', content: 'Поиск в BST' },
+        {
+          type: 'text',
+          content:
+            'В бинарном дереве поиска работает классический бинарный поиск: если искомое значение меньше узла — идём в левое поддерево, иначе — в правое. Сложность — O(h): O(log n) на сбалансированном дереве, O(n) на вырожденном.',
+        },
+        {
+          type: 'code',
+          language: 'javascript',
+          content: `function searchBST(node, target) {
+  while (node) {
+    if (node.val === target) return node;
+    node = target < node.val ? node.left : node.right;
+  }
+  return null;
+}`,
+        },
+        { type: 'heading', content: 'Наименьший общий предок (LCA)' },
+        {
+          type: 'text',
+          content:
+            'LCA — самый глубокий узел, который содержит p и q в своих поддеревьях. Для произвольного бинарного дерева решается рекурсивно за O(n): идём вниз, возвращаем найденный узел; если узел находит и левого, и правого — он и есть LCA.',
+        },
+        {
+          type: 'code',
+          language: 'javascript',
+          content: `function lowestCommonAncestor(root, p, q) {
+  if (!root || root === p || root === q) return root;
+  const left  = lowestCommonAncestor(root.left,  p, q);
+  const right = lowestCommonAncestor(root.right, p, q);
+  if (left && right) return root;
+  return left ?? right;
+}`,
+        },
+      ],
+      checkpoint: [Q['tree-q11']!],
+    },
+
+    // ─────────────────────────────────────────────────────────────
+    {
+      id: 'pitfalls',
+      title: 'Подводные камни',
+      estimatedMinutes: 5,
+      blocks: [
+        { type: 'heading', content: 'Переполнение стека вызовов' },
+        {
+          type: 'text',
+          content:
+            'JavaScript-движки ограничивают глубину рекурсии (~10⁴ кадров). На дереве, которое выродилось в цепочку (например, отсортированный массив, построенный как BST без балансировки), рекурсивный обход упадёт с \`RangeError: Maximum call stack size exceeded\`.',
         },
         {
           type: 'callout',
           calloutType: 'tip',
           content:
-            'Хитрый вопрос на интервью: «твой DFS работает правильно — а что если дерево это граф с циклом?». В дереве циклов нет по определению, в графе — нужен `Set` посещённых. Если не уверен в структуре — добавь `visited` на всякий случай.',
+            'Защита — итеративный обход через явный стек. Память выделяется в куче, лимита нет. Также помогает «хвостовая рекурсия», но V8 её не оптимизирует — рассчитывать на это нельзя.',
         },
-        { type: 'heading', content: 'Забыли проверить наличие children' },
+        { type: 'heading', content: 'Array.shift в BFS' },
+        {
+          type: 'text',
+          content:
+            'Стандартный \`queue.shift()\` стоит O(n) — на больших деревьях BFS превращается в O(n²). Решение — указатель головы или двусвязный список.',
+        },
+        { type: 'heading', content: 'Проверка BST через локальные сравнения' },
         {
           type: 'code',
           language: 'javascript',
-          content: `// АНТИПАТТЕРН: TypeError на листе, у которого нет children
-function dfs(node, visit) {
-  visit(node);
-  for (const child of node.children) {  // ✗ undefined у листа
-    dfs(child, visit);
-  }
+          content: `// АНТИПАТТЕРН: проверка только с непосредственными детьми
+function isBST(node) {
+  if (!node) return true;
+  if (node.left  && node.left.val  >= node.val) return false;
+  if (node.right && node.right.val <= node.val) return false;
+  return isBST(node.left) && isBST(node.right);
 }
-
-// Правильно: явная проверка
-function dfsSafe(node, visit) {
-  visit(node);
-  if (node.children) {
-    for (const child of node.children) dfs(child, visit);
-  }
-}`,
-        },
-        { type: 'heading', content: 'Рекурсия без терминатора' },
-        {
-          type: 'callout',
-          calloutType: 'warning',
-          content:
-            'У бинарного дерева ребёнок может быть \`null\`. Любая рекурсивная функция должна начинаться с \`if (!node) return ...\`. Без этого первый же лист обрушит вызов \`node.left\` с TypeError.',
+// Для дерева 10 → (5, 15 → (6, 20)) пройдёт проверку,
+// хотя 6 < 10 и должен быть в левом поддереве.`,
         },
         {
           type: 'text',
           content:
-            'Хитрый вопрос на собеседовании: «твой DFS работает правильно — а что если дерево на самом деле граф с циклом?» Это проверка: понимаешь ли ты разницу между деревом (циклов нет по определению) и графом (циклы возможны). В дереве Set посещённых не нужен. В графе — обязателен, иначе DFS уйдёт в бесконечную рекурсию. Если данные пришли из API и ты не уверен в структуре — добавь Set на всякий случай.',
+            'Правильная проверка — рекурсивная с диапазоном допустимых значений: каждый узел должен лежать в (lo, hi), и эти границы сужаются при спуске.',
         },
-        { type: 'heading', content: 'Maximum call stack на глубоком дереве' },
-        {
-          type: 'text',
-          content:
-            'Цепочка из 50 000 узлов гарантированно уронит рекурсию: V8 разрешает примерно 10–15 тысяч кадров. Решение — итеративный DFS со стеком, как показано в главе 4.',
-        },
-        { type: 'heading', content: 'Циклы при обходе графа как дерева' },
         {
           type: 'code',
           language: 'javascript',
-          content: `// АНТИПАТТЕРН: бесконечная рекурсия, если структура — граф с циклом
-function dfsGraph(node, visit) {
-  visit(node);
-  for (const next of node.neighbors) dfsGraph(next, visit); // ✗ зациклится
-}
-
-// Правильно: маркируем посещённые
-function dfsGraphSafe(node, visit, seen = new Set()) {
-  if (seen.has(node)) return;
-  seen.add(node);
-  visit(node);
-  for (const next of node.neighbors) dfsGraphSafe(next, visit, seen);
+          content: `function isValidBST(root, lo = -Infinity, hi = Infinity) {
+  if (!root) return true;
+  if (root.val <= lo || root.val >= hi) return false;
+  return isValidBST(root.left,  lo, root.val)
+      && isValidBST(root.right, root.val, hi);
 }`,
         },
+        { type: 'heading', content: 'Циклы в «дереве», полученном извне' },
         {
-          type: 'callout',
-          calloutType: 'info',
+          type: 'text',
           content:
-            'В **дереве** циклов нет по определению, маркировка не нужна. Но если структура пришла из API и содержит обратные ссылки на родителя или дублирующиеся узлы — это уже граф, и без \`Set\` обхода не обойтись.',
+            'Если структура пришла из внешнего источника (распарсенный JSON, граф с пометкой «дерево»), стоит проверять отсутствие циклов перед рекурсивным обходом. Иначе обход уйдёт в бесконечный цикл и положит процесс. Простая защита — \`Set\` посещённых узлов.',
         },
       ],
-      playground: {
-        starterCode: `// Перед вами буггованный код. Найдите ошибку и исправьте.
-// На дереве { value: 1 } (без children) код падает с TypeError.
-
-function sumTree(node) {
-  let sum = node.value;
-  for (const child of node.children) {
-    sum += sumTree(child);
-  }
-  return sum;
-}
-
-console.log(sumTree({ value: 1 }));`,
-        expectedOutput: '1',
-        description:
-          'Лист — это узел без поля \`children\`. \`for...of\` по \`undefined\` бросает TypeError. Добавьте \`if (node.children)\` перед циклом.',
-      },
-      flashcardIds: ['tr-f13'],
     },
   ],
 
-  // Все вопросы из старого квиза, кроме тех, что ушли в checkpoint.
   finalQuiz: treesQuiz.questions.filter((q) => !CHECKPOINT_IDS.has(q.id)),
 
-  flashcards: [
-    {
-      id: 'tr-f1',
-      question: 'Что такое дерево и как оно отличается от графа?',
-      answer:
-        'Дерево — иерархическая структура из n узлов и n − 1 рёбер с одним корнем и без циклов. Между любыми двумя узлами существует ровно один путь. Граф допускает циклы и отсутствие выделенного корня.',
-      keyPoints: [
-        'Узел (node), корень (root), листья (leaves)',
-        'n узлов → n − 1 рёбер, нет циклов',
-        'Для обхода графа нужен Set посещённых, для дерева — нет',
-      ],
-    },
-    {
-      id: 'tr-f2',
-      question: 'Какие виды деревьев чаще всего спрашивают на собеседовании?',
-      answer:
-        'Бинарное дерево (≤2 детей), BST (поиск за O(h)), сбалансированные AVL/Red-Black, N-ary с массивом children, Trie для префиксов и Heap как реализация приоритетной очереди.',
-      keyPoints: [
-        'Бинарное и BST — для алгоритмических задач',
-        'N-ary — для DOM, JSON, категорий',
-        'Trie — для автодополнения, поиска по префиксу',
-        'Heap — реализует priority queue',
-      ],
-    },
-    {
-      id: 'tr-f3',
-      question: 'В чём разница между pre-order, in-order и post-order?',
-      answer:
-        'Это три порядка обхода бинарного дерева через DFS. Pre-order: корень → лево → право (сериализация, копирование). In-order: лево → корень → право (сортированный вывод BST). Post-order: лево → право → корень (агрегаты снизу вверх, удаление).',
-      keyPoints: [
-        'Pre-order — посетить корень первым',
-        'In-order — посетить корень между поддеревьями',
-        'Post-order — посетить корень последним',
-        'In-order по BST даёт отсортированный массив',
-      ],
-      code: `function preorder(n, v) { if (!n) return; v(n); preorder(n.left, v); preorder(n.right, v); }
-function inorder (n, v) { if (!n) return; inorder(n.left, v);  v(n); inorder(n.right, v); }
-function postorder(n, v) { if (!n) return; postorder(n.left, v); postorder(n.right, v); v(n); }`,
-      codeLanguage: 'javascript',
-    },
-    {
-      id: 'tr-f4',
-      question: 'Когда выбирать DFS, а когда BFS?',
-      answer:
-        'DFS — когда нужен любой путь, агрегаты от листьев к корню, или когда естественно использовать рекурсию. BFS — когда нужен ближайший ответ, минимальная глубина, поуровневый вывод или кратчайший путь по числу рёбер.',
-      keyPoints: [
-        'BFS гарантирует ближайший узел по уровням',
-        'DFS проще писать рекурсивно',
-        'BFS использует очередь O(w), DFS — стек O(h)',
-        '«Минимальное число шагов» = почти всегда BFS',
-      ],
-    },
-    {
-      id: 'tr-f5',
-      question: 'Какова сложность DFS-обхода и сколько он жрёт памяти?',
-      answer:
-        'Время — O(n): каждый узел посещается ровно один раз. Дополнительная память — O(h), где h — высота дерева, на стек рекурсии или явный стек. На сбалансированном дереве h = O(log n), на цепочке h = O(n).',
-      keyPoints: [
-        'Время O(n) для всех вариантов DFS и BFS',
-        'Память DFS = O(h), BFS = O(w) (ширина уровня)',
-        'На цепочке h = n — рекурсия может уронить стек',
-      ],
-    },
-    {
-      id: 'tr-f6',
-      question: 'Какая структура данных нужна для BFS и почему?',
-      answer:
-        'Очередь (FIFO). BFS обходит узлы по уровням: сначала корень, потом все его дети, потом внуки. Чтобы дети текущего уровня обрабатывались после всех узлов предыдущего, нужно класть в конец и забирать из начала — это и есть FIFO.',
-      keyPoints: [
-        'Очередь = FIFO: push в конец, shift из начала',
-        'shift в массиве — O(n); для прода используйте deque',
-        'Стек дал бы DFS, очередь — BFS',
-      ],
-      code: `function bfs(root, visit) {
-  const queue = [root];
-  while (queue.length) {
+  cheatsheet: `### Шпаргалка по деревьям
+
+**Когда применять**
+- DFS: задачи, где ответ зависит от поддеревьев (высота, копирование, post-order вычисления)
+- BFS: минимальная глубина, level-order обход, ближайший узел с условием
+- In-order на BST: отсортированный обход
+
+**Сложность**
+- Обход: O(n) по времени
+- Память: O(h) на рекурсию или O(w) на BFS-очередь (w — ширина уровня)
+- На сбалансированном дереве: h = O(log n)
+- На вырожденном: h = O(n) → риск переполнения стека
+
+**DFS рекурсивно**
+\`\`\`js
+function dfs(node) {
+  if (!node) return;
+  // pre-order:  visit здесь
+  dfs(node.left);
+  // in-order:   visit здесь
+  dfs(node.right);
+  // post-order: visit здесь
+}
+\`\`\`
+
+**DFS итеративно через стек**
+\`\`\`js
+const stack = [root];
+while (stack.length) {
+  const node = stack.pop();
+  visit(node);
+  if (node.right) stack.push(node.right);
+  if (node.left)  stack.push(node.left);
+}
+\`\`\`
+
+**BFS через очередь**
+\`\`\`js
+const queue = [root];
+let head = 0;                    // указатель головы вместо shift
+while (head < queue.length) {
+  const node = queue[head++];
+  visit(node);
+  if (node.left)  queue.push(node.left);
+  if (node.right) queue.push(node.right);
+}
+\`\`\`
+
+**Level-order по слоям**
+\`\`\`js
+while (queue.length) {
+  const size = queue.length;     // фиксируем размер уровня
+  for (let i = 0; i < size; i++) {
     const node = queue.shift();
-    visit(node);
-    if (node.children) queue.push(...node.children);
-  }
-}`,
-      codeLanguage: 'javascript',
-    },
-    {
-      id: 'tr-f7',
-      question: 'Как сделать поуровневый BFS (level-order)?',
-      answer:
-        'Перед обработкой уровня зафиксируйте \`levelSize = queue.length\`. Затем извлеките ровно столько узлов из очереди — это все узлы текущего уровня. Дети, добавленные в очередь во время этой партии, относятся к следующему уровню.',
-      keyPoints: [
-        '`levelSize = queue.length` фиксирует границу уровня',
-        'Внутренний for от 0 до levelSize обрабатывает один уровень',
-        'Используется для «правый край дерева», «средние значения уровней»',
-      ],
-    },
-    {
-      id: 'tr-f8',
-      question: 'Как сделать DFS итеративно, без рекурсии?',
-      answer:
-        'Заведите явный стек, положите в него корень и в цикле вынимайте через pop, складывая детей. Чтобы получить pre-order на n-арном дереве, кладите детей в обратном порядке — тогда первый ребёнок окажется на вершине стека.',
-      keyPoints: [
-        'Замените стек вызовов на массив-стек',
-        'pop = LIFO = DFS',
-        'Спасает от Maximum call stack на глубоких деревьях',
-        'Детей кладите в обратном порядке для pre-order',
-      ],
-      code: `function dfs(root, visit) {
-  const stack = [root];
-  while (stack.length) {
-    const node = stack.pop();
-    visit(node);
-    if (node.children) {
-      for (let i = node.children.length - 1; i >= 0; i--) {
-        stack.push(node.children[i]);
-      }
-    }
-  }
-}`,
-      codeLanguage: 'javascript',
-    },
-    {
-      id: 'tr-f9',
-      question: 'Что такое BST и какие у него инварианты?',
-      answer:
-        'Binary Search Tree — бинарное дерево, в котором для каждого узла все значения в левом поддереве строго меньше, в правом — строго больше. Это даёт поиск, вставку и удаление за O(h).',
-      keyPoints: [
-        'left < node < right — для всех потомков, а не только прямых',
-        'In-order обход BST → отсортированный массив',
-        'Поиск, вставка, удаление: O(h)',
-        'Без балансировки h может вырасти до n',
-      ],
-    },
-    {
-      id: 'tr-f10',
-      question: 'Что такое сбалансированное дерево и зачем нужны AVL/Red-Black?',
-      answer:
-        'Сбалансированным называют дерево, в котором высота ограничена O(log n). AVL и Red-Black — самобалансирующиеся BST: после вставки/удаления они выполняют ротации, поддерживая инвариант баланса. Без этого вставка отсортированных данных вырождает дерево в цепочку.',
-      keyPoints: [
-        'AVL: |h(left) − h(right)| ≤ 1, жёсткий баланс',
-        'Red-Black: чёрная высота, более слабый баланс, меньше ротаций',
-        'Применяются в std::map, TreeMap, ядре Linux',
-      ],
-    },
-    {
-      id: 'tr-f11',
-      question: 'Что такое Trie и для чего он нужен?',
-      answer:
-        'Trie (бор, дерево префиксов) — дерево, в котором каждый путь от корня соответствует строке. Узел хранит флаг конца слова и map детей по символам. Поиск, вставка и проверка префикса занимают O(L), где L — длина запроса.',
-      keyPoints: [
-        'O(L) — не зависит от размера словаря',
-        'Применение: автодополнение, проверка орфографии, IP-роутинг',
-        'Память пропорциональна суммарной длине строк × алфавит',
-      ],
-    },
-    {
-      id: 'tr-f12',
-      question: 'Как найти наименьшего общего предка (LCA) двух узлов?',
-      answer:
-        'Рекурсивно: для каждого узла спуститесь в левое и правое поддерево. Если оба возврата непустые — текущий узел и есть LCA. Иначе ответ — в той ветке, которая нашла хотя бы один из искомых узлов.',
-      keyPoints: [
-        'Post-order рекурсия с возвратом агрегата',
-        'База: null или совпадение с p или q',
-        'Если left && right → текущий узел = LCA',
-        'Сложность O(n), память O(h) на стек',
-      ],
-      code: `function lca(root, p, q) {
-  if (!root || root === p || root === q) return root;
-  const left  = lca(root.left,  p, q);
-  const right = lca(root.right, p, q);
-  if (left && right) return root;
-  return left || right;
-}`,
-      codeLanguage: 'javascript',
-    },
-    {
-      id: 'tr-f13',
-      question: 'Какие типичные ошибки случаются при обходе деревьев?',
-      answer:
-        'Не проверить наличие children и упасть на листе с TypeError. Забыть базовый случай в рекурсии. Превысить стек на глубоком дереве. Перепутать DFS и BFS, когда задача требует именно ближайший узел. Запустить DFS на графе без Set посещённых.',
-      keyPoints: [
-        '`if (node.children)` перед циклом — must',
-        'Базовый случай `if (!node) return` для бинарного дерева',
-        'Глубина >10_000 → итеративный обход',
-        'Цикл в данных → Set seen',
-      ],
-    },
-  ],
-
-  cheatsheet: `### Шпаргалка по обходу деревьев
-
-- **Узел**: \`{ value, children: [...] }\` или \`{ value, left, right }\`.
-- **DFS** (стек/рекурсия): pre/in/post-order. Время O(n), память O(h).
-- **BFS** (очередь): уровни. Время O(n), память O(w) — ширина уровня.
-- **Pre-order**: корень → лево → право. Сериализация, копирование.
-- **In-order**: лево → корень → право. Сортированный вывод BST.
-- **Post-order**: лево → право → корень. Агрегаты, удаление, LCA.
-- **BFS-шаблон**: \`while (queue.length) { node = queue.shift(); visit; push детей }\`.
-- **Итеративный DFS**: явный стек спасает от Maximum call stack.
-- **BST**: left < node < right, поиск O(h). Без баланса h → n.
-- **Trie**: O(L) на запрос, не зависит от размера словаря.
-- **LCA**: post-order с возвратом «нашёл ли p/q».
-- **Граф ≠ дерево**: добавьте \`Set seen\`, иначе DFS зациклится.`,
-
-  interviewQA: [
-    {
-      id: 'tr-iq1',
-      question: 'DFS vs BFS: когда что выбрать?',
-      shortAnswer:
-        'BFS — когда нужен ближайший узел или поуровневая обработка (минимальная глубина, кратчайший путь по рёбрам). DFS — когда нужен любой путь, агрегаты от листьев к корню или когда удобнее писать рекурсивно.',
-      fullAnswer: `Оба алгоритма посещают каждый узел ровно один раз и работают за O(n). Различаются они в **порядке** обхода и в **памяти**.
-
-**Сигналы выбрать BFS.**
-- В формулировке есть «минимальное число шагов», «ближайший», «по уровням», «кратчайший».
-- Нужен поуровневый агрегат: средние значения уровней, правый край дерева, zigzag-обход.
-- Дерево очень глубокое и сравнительно узкое — память O(w) меньше, чем O(h).
-
-**Сигналы выбрать DFS.**
-- Нужно посчитать что-то «снизу вверх»: высоту, размер, диаметр, валидность BST.
-- Нужен любой путь от корня до листа (а не самый короткий).
-- Структура задачи естественно рекурсивна — например, матчинг шаблонов в AST.
-- Дерево широкое, но не глубокое — память O(h) меньше, чем O(w) у BFS.
-
-**По памяти.** DFS хранит O(h) кадров стека (явного или через рекурсию), где h — высота. BFS хранит O(w) узлов в очереди, где w — максимальная ширина уровня. На сбалансированном дереве w ≈ n / 2 на последнем уровне — BFS может оказаться **дороже** по памяти, чем DFS.
-
-**Корректность LeetCode-формулировок.** «Find shortest path in unweighted graph» — BFS. «Find any path that sums to K» — DFS. «Level-order serialize a tree» — BFS. «Validate BST» — DFS in-order.`,
-      followUps: [
-        'Что произойдёт с памятью BFS на полном бинарном дереве высотой 20?',
-        'Можно ли решить задачу «минимальная глубина дерева» через DFS, и стоит ли?',
-      ],
-      relatedChapterId: 'bfs',
-    },
-    {
-      id: 'tr-iq2',
-      question: 'Чем отличаются pre-order, in-order и post-order? Где они применяются?',
-      shortAnswer:
-        'Это три способа упорядочить визит корня относительно поддеревьев в DFS. Pre-order — корень первый (сериализация, копирование). In-order — корень между поддеревьями, на BST даёт сортированный массив. Post-order — корень последним, для агрегатов снизу вверх и для удаления.',
-      fullAnswer: `Все три обхода — это варианты DFS бинарного дерева, отличающиеся **моментом посещения** корня:
-
-\`\`\`js
-function preorder (n, v) { if (!n) return; v(n);                preorder(n.left,v); preorder(n.right,v); }
-function inorder  (n, v) { if (!n) return; inorder(n.left,v);   v(n);               inorder(n.right,v);  }
-function postorder(n, v) { if (!n) return; postorder(n.left,v); postorder(n.right,v); v(n); }
-\`\`\`
-
-**Pre-order.** Корень посещается до спуска. Применения:
-- Сериализация дерева (LeetCode 297) — корень первым, чтобы при десериализации сразу знать структуру.
-- Глубокое копирование дерева — создаём текущий узел, потом рекурсивно его дети.
-- Отображение иерархии (например, рендер дерева категорий).
-
-**In-order.** Корень между поддеревьями. Применения:
-- Вывод BST в **отсортированном** порядке — это его определяющее свойство.
-- «Найти k-й по величине элемент BST» — итеративный in-order до k-го извлечения.
-- Валидация BST — соседние значения в in-order должны идти строго возрастающе.
-
-**Post-order.** Корень в самом конце. Применения:
-- Удаление дерева (сначала освободить детей, потом узел).
-- Подсчёт высоты, диаметра, размера — родитель использует уже посчитанные значения детей.
-- LCA через возврат «нашёл ли я p/q в своём поддереве».
-- Вычисление выражений по AST: операнды раньше оператора.
-
-**Для n-арного дерева** существуют только pre-order и post-order — in-order требует ровно двух поддеревьев.`,
-      followUps: [
-        'Как восстановить бинарное дерево по парам pre-order + in-order?',
-        'Почему по одному pre-order восстановить дерево нельзя?',
-      ],
-      relatedChapterId: 'dfs',
-    },
-    {
-      id: 'tr-iq3',
-      question: 'Как обойти бинарное дерево итеративно, без рекурсии? Зачем это нужно?',
-      shortAnswer:
-        'Заведите явный стек, положите туда корень и в цикле вынимайте через pop, добавляя детей. Это спасает от Maximum call stack на дереве-цепочке глубиной десятки тысяч узлов, где V8 ограничивает стек вызовов 10–15 тысячами кадров.',
-      fullAnswer: `Рекурсивная реализация DFS использует **стек вызовов** движка. На сбалансированном дереве из 10⁶ узлов глубина около 20 — это безопасно. Но если дерево вырождено в цепочку (вставляли отсортированные данные в BST без балансировки, или входные данные пришли из API в виде линейного списка), глубина может быть равна числу узлов, и движок выбросит **Maximum call stack size exceeded** уже на 10–15 тысячах.
-
-Решение — заменить стек вызовов на явный массив-стек:
-
-\`\`\`js
-function dfsIterative(root, visit) {
-  if (!root) return;
-  const stack = [root];
-
-  while (stack.length > 0) {
-    const node = stack.pop();
-    visit(node);
-    if (node.right) stack.push(node.right);
-    if (node.left)  stack.push(node.left);   // ← левый сверху → пойдёт первым
+    // обработка node на текущем уровне
   }
 }
 \`\`\`
 
-**Порядок push.** Стек — LIFO, поэтому, чтобы получить pre-order (левый ребёнок раньше правого), сначала кладём правого, потом левого. Левый окажется на вершине и будет вынут первым.
-
-**In-order итеративно.** Сложнее: нужно «дойти до самого левого» через push в стек, потом снимать и переходить в правое поддерево. Этот шаблон используется как итератор по BST.
-
-**Сложность.** Время O(n), память O(h) — но теперь куча, а не стек вызовов. Куча в V8 — порядка гигабайтов, легко выдерживает миллионы узлов.
-
-**Когда оставить рекурсию.** Если высота гарантированно мала (АВЛ, B-tree глубиной 4–5 для миллионов записей) — рекурсивный код проще читается и пишется. Итеративный шаблон применяют, когда есть риск глубокого дерева или когда нужен полный контроль над состоянием обхода (например, lazy-итератор).`,
-      followUps: [
-        'Сколько примерно кадров стека вызовов разрешает V8 по умолчанию?',
-        'Почему `tail call optimization` в Node.js не спасает рекурсивный DFS?',
-      ],
-      relatedChapterId: 'iterative-dfs',
-    },
-    {
-      id: 'tr-iq4',
-      question: 'Что такое сбалансированное дерево? Почему AVL и Red-Black поддерживают баланс?',
-      shortAnswer:
-        'Сбалансированное дерево гарантирует высоту O(log n) — поэтому поиск, вставка и удаление работают за O(log n). AVL и Red-Black после каждой модификации делают ротации, восстанавливая инвариант баланса; без этого вставка отсортированных данных вырождает BST в цепочку с O(n).',
-      fullAnswer: `**Проблема несбалансированного BST.** Если вставить элементы в порядке 1, 2, 3, ..., n, дерево превратится в линейную цепочку из правых детей. Поиск элемента n в такой цепочке — O(n), и преимущество BST исчезает.
-
-**Сбалансированное дерево** — то, у которого высота h = O(log n) при любом порядке вставок и удалений. Это достигается **ротациями** — локальной перестройкой узлов, сохраняющей инвариант BST.
-
-**AVL (Адельсон-Вельский, Ландис, 1962).** Для каждого узла |h(left) − h(right)| ≤ 1. После вставки или удаления алгоритм поднимается от изменённого узла к корню и при нарушении баланса делает левую, правую или двойную ротацию. Высота строго ограничена ≈ 1.44 · log₂(n + 2). Поиск чуть быстрее Red-Black, но ротаций больше.
-
-**Red-Black tree.** Каждый узел красный или чёрный, выполняются 5 правил: корень чёрный, листья (NIL) чёрные, у красного узла оба ребёнка чёрные, на любом пути от узла до листа равное число чёрных узлов, новый узел красный. Эти правила гарантируют высоту ≤ 2 · log₂(n + 1). Менее жёсткий баланс → меньше ротаций при модификации, но поиск чуть медленнее AVL.
-
-**Где используется.**
-- C++ \`std::map\` и \`std::set\` — Red-Black.
-- Java \`TreeMap\` — Red-Black.
-- Linux kernel: планировщик процессов CFS, \`epoll\` — Red-Black.
-- B-tree (обобщение с k-арными узлами) — индексы PostgreSQL, MySQL, файловые системы.
-
-**В JavaScript.** Стандартный \`Map\` в V8 — это хеш-таблица, не дерево. Сбалансированных деревьев в стандартной библиотеке JS нет; реализуют вручную или берут npm-пакеты, когда нужен упорядоченный словарь.`,
-      followUps: [
-        'Чем B-tree отличается от Red-Black и почему он лучше подходит для дисковых индексов?',
-        'Сколько ротаций в худшем случае требуется при вставке в AVL?',
-      ],
-      relatedChapterId: 'bst-balance',
-    },
-    {
-      id: 'tr-iq5',
-      question: 'Чем дерево отличается от графа? Как это влияет на алгоритм обхода?',
-      shortAnswer:
-        'Дерево — связный ациклический граф с n узлами и n − 1 рёбрами и одним корнем. В графе допустимы циклы, и при обходе нужно отмечать посещённые узлы (Set), иначе DFS/BFS уйдёт в бесконечную рекурсию.',
-      fullAnswer: `**Формальные отличия.**
-
-| Свойство | Дерево | Граф |
-|---|---|---|
-| Циклы | Нет | Возможны |
-| Корень | Один выделенный | Не определён |
-| Число рёбер | Ровно n − 1 | От 0 до n(n − 1) / 2 |
-| Путь между двумя узлами | Уникален | Может быть несколько |
-| Направление | Обычно от родителя к ребёнку | Может быть направлен или нет |
-
-**Влияние на обход.** В дереве DFS без проверки «уже посещён» работает корректно — невозможно вернуться в посещённый узел, не пройдя по уже использованному ребру дважды. В графе нужен \`Set\` посещённых:
-
-\`\`\`js
-function dfsTree(node, visit) {
-  visit(node);
-  for (const child of node.children) dfsTree(child, visit);   // безопасно
-}
-
-function dfsGraph(node, visit, seen = new Set()) {
-  if (seen.has(node)) return;                                  // ✓ обязательно
-  seen.add(node);
-  visit(node);
-  for (const next of node.neighbors) dfsGraph(next, visit, seen);
-}
-\`\`\`
-
-**Подвохи на интервью.**
-- API возвращает «дерево комментариев», но в данных есть \`parentId\`, ссылающийся на потомка → это уже граф с циклом.
-- DOM «дерево» содержит \`parentNode\` — обратная ссылка делает структуру графом, и наивный обход обоих \`children\` и \`parentNode\` зациклится.
-- Объект с круговыми ссылками (\`a.b = a\`) при сериализации в JSON падает с TypeError. Это сигнал, что структура — граф.
-
-**Если не уверены, дерево перед вами или граф** — добавьте \`Set seen\` на всякий случай. Лишняя проверка стоит копейки и страхует от бесконечной рекурсии.`,
-      followUps: [
-        'Как формально доказать, что в дереве из n узлов ровно n − 1 рёбер?',
-        'Когда DAG (ориентированный ациклический граф) можно обойти как дерево?',
-      ],
-      relatedChapterId: 'pitfalls',
-    },
-    {
-      id: 'tr-iq6',
-      question: 'Как найти наименьшего общего предка двух узлов в бинарном дереве за O(n)?',
-      shortAnswer:
-        'Рекурсивно: если корень — null, p или q, верните корень. Иначе спуститесь в оба поддерева. Если оба возврата непустые — текущий узел и есть LCA. Иначе ответ в той ветке, где что-то нашлось.',
-      fullAnswer: `\`\`\`js
-function lca(root, p, q) {
-  if (!root || root === p || root === q) return root;
-
-  const left  = lca(root.left,  p, q);
-  const right = lca(root.right, p, q);
-
-  if (left && right) return root;   // p и q в разных поддеревьях
-  return left || right;             // оба нашлись с одной стороны
-}
-\`\`\`
-
-**Идея.** Каждый рекурсивный вызов возвращает один из:
-- \`null\` — в этом поддереве нет ни p, ни q;
-- сам p или q — найден один из них;
-- LCA — узел, под которым находятся оба.
-
-**Корректность по случаям.**
-1. Если левый возврат непустой и правый непустой — значит, p и q находятся в разных поддеревьях текущего узла. Текущий узел — их ближайший общий предок.
-2. Если непустой только левый — оба узла (или ближайший к ним предок) находятся слева. Возвращаем найденный ответ выше.
-3. Аналогично для правого.
-
-**Сложность.**
-- Время: O(n). Каждый узел посещается ровно один раз.
-- Память: O(h) на стек рекурсии.
-
-**Особый случай BST.** Если дерево — BST, существует более простой алгоритм за O(h) без полного обхода: спускайтесь от корня, и пока оба значения p и q лежат строго слева — иди влево, оба строго справа — иди вправо; иначе текущий узел и есть LCA.
-
-**Где встречается на практике.**
-- Git: \`git merge-base\` для двух коммитов — это LCA в DAG истории.
-- Файловые системы: общий родительский каталог двух файлов.
-- DOM: ближайший общий предок двух элементов для определения области события.`,
-      followUps: [
-        'Как найти LCA в дереве с произвольным числом детей?',
-        'Можно ли решить LCA быстрее, чем O(n), при предобработке за O(n)?',
-      ],
-      relatedChapterId: 'lca-and-patterns',
-    },
-  ],
+**Подводные камни**
+- Переполнение стека вызовов на глубоких деревьях → итеративная версия
+- \`queue.shift()\` стоит O(n) → указатель головы
+- Локальная проверка BST неверна — нужна с диапазоном (lo, hi)
+- Циклы во внешних данных → \`Set\` посещённых узлов`,
 
   nextTopics: [
     {
       slug: 'hash-map',
       reason:
-        'Хеш-таблица — постоянный спутник деревьев: Map для отслеживания посещённых при обходе графа, Map для построения дерева из плоского массива {id, parentId} за O(n).',
+        'Хеш-таблицы часто используются вместе с обходом дерева: маркировка посещённых узлов, кэширование поддеревьев, индексация значений.',
     },
     {
-      slug: 'stacks-queues',
+      slug: 'sliding-window',
       reason:
-        'Стеки и очереди — «двигатели» итеративных DFS и BFS. После деревьев логично закрепить, как они устроены под капотом и где ещё применяются.',
+        'После деревьев и хеш-таблиц логично перейти к окнам — третий частый паттерн на собеседованиях.',
     },
-  ],
-
-  related: [
-    { kind: 'pattern', id: 'recursion', label: 'Шаблон: рекурсия с агрегатом снизу вверх' },
-    { kind: 'pitfall', id: 'stack-overflow', label: 'Maximum call stack: когда рекурсия падает на глубоком дереве' },
   ],
 };

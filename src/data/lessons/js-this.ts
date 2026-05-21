@@ -1,102 +1,36 @@
 import type { Lesson } from '../../types/lesson';
 import { jsThisQuiz } from '../quizzes/js-this';
-import { jsThisFlashcards } from '../flashcards/js-this';
 
-// Index existing quiz questions for reuse as checkpoints.
 const Q = Object.fromEntries(jsThisQuiz.questions.map((q) => [q.id, q]));
 
-// Questions used as in-chapter checkpoints (must NOT appear in finalQuiz).
 const CHECKPOINT_IDS = new Set(['jst-q1', 'jst-q2', 'jst-q5', 'jst-q6', 'jst-q9']);
 
 export const jsThisLesson: Lesson = {
   topicId: 'js-this',
 
   intro: {
-    whyItMatters: `Ключевое слово \`this\` — главный источник так называемой «магии» JavaScript. Его значение определяется не местом, где функция объявлена, а тем, **как** она вызвана. Из-за этого один и тот же метод может вести себя по-разному в зависимости от способа вызова: как метод объекта, как обработчик события, как callback в \`setTimeout\` или как аргумент \`Array.prototype.forEach\`.
+    whyItMatters: `\`this\` в JavaScript определяется в момент вызова функции, а не в момент её написания. Этим JavaScript отличается от большинства языков, где \`this\` жёстко привязан к объекту. Из этой особенности вытекают типичные баги: метод теряет контекст при передаче как коллбэк, стрелочная функция не подходит как метод объекта, \`this\` внутри \`forEach\` указывает не туда.
 
-\`this\` встречается практически во всех частях экосистемы: в методах объектов и классов, в обработчиках DOM-событий, в callback-API таймеров и сети, в библиотеках вроде React — где привязка контекста долгое время решалась через \`bind\` в конструкторе, а затем через class fields со стрелочными функциями. Связь с замыканиями возникает там, где стрелочная функция захватывает \`this\` из внешней области видимости лексически — этот трюк закрывает большинство случаев потери контекста.
-
-Неправильное понимание \`this\` приводит к самым распространённым багам JavaScript: метод, переданный как callback, вдруг возвращает \`undefined\`; обработчик \`addEventListener\` пишет в неправильный объект; стрелочная функция, использованная как метод, не видит свойств объекта.
-
-В этом уроке вы научитесь применять четыре правила определения \`this\` в нужном порядке приоритета, отличать поведение стрелочной функции от обычной, осознанно выбирать между \`bind\`, \`call\` и \`apply\`, а также диагностировать классические ловушки потери контекста.`,
+На собеседовании \`this\` спрашивают регулярно: четыре правила определения, разницу между стрелочной и обычной функцией, методы \`call\` / \`apply\` / \`bind\`, поведение в классах и при наследовании.`,
     estimatedMinutes: 30,
     interviewAngle:
-      'Интервьюер проверяет понимание четырёх правил определения this и их приоритета, разницу call/apply/bind, поведение стрелочной функции в качестве метода и callback, а также способность диагностировать потерю контекста в коде.',
+      'Интервьюера интересуют четыре правила определения \`this\`, их приоритет, разница между стрелочной и обычной функцией в контексте \`this\`, и типичные сценарии потери контекста при передаче метода как коллбэка.',
     prerequisites: [{ slug: 'js-closures', title: 'Замыкания' }],
   },
 
-  resources: {
-    videos: [
-      {
-        source: 'youtube',
-        id: '9T4z98JcHR0',
-        title: 'this keyword in JavaScript — Namaste JavaScript Season 2, Ep. 6',
-        channel: 'Akshay Saini',
-        language: 'en',
-        durationSec: 24 * 60,
-        description: 'Подробный разбор всех режимов this с примерами в браузере, Node.js, классах и стрелочных функциях.',
-      },
-      {
-        source: 'youtube',
-        id: 'fVXp7ZWjlO4',
-        title: 'What is THIS keyword in JavaScript? — Tutorial for beginners',
-        channel: 'ColorCode',
-        language: 'en',
-        durationSec: 11 * 60,
-        description: 'Краткое визуальное объяснение четырёх правил this и типичных потерь контекста.',
-      },
-    ],
-    links: [
-      {
-        url: 'https://developer.mozilla.org/ru/docs/Web/JavaScript/Reference/Operators/this',
-        title: 'this — MDN',
-        source: 'mdn',
-        language: 'ru',
-        note: 'Каноническая справка с описанием всех режимов: глобальный, функция, метод, конструктор, стрелочная функция.',
-      },
-      {
-        url: 'https://learn.javascript.ru/object-methods',
-        title: 'Методы объекта, «this» — учебник learn.javascript.ru',
-        source: 'learn-js',
-        language: 'ru',
-        note: 'Глава Ильи Кантора о методах и связывании контекста при вызове.',
-      },
-      {
-        url: 'https://learn.javascript.ru/bind',
-        title: 'Привязка контекста — bind — учебник learn.javascript.ru',
-        source: 'learn-js',
-        language: 'ru',
-        note: 'Подробно о потере this и трёх способах её избежать: обёртка, bind, частичное применение.',
-      },
-      {
-        url: 'https://developer.mozilla.org/ru/docs/Web/JavaScript/Reference/Global_Objects/Function/bind',
-        title: 'Function.prototype.bind — MDN',
-        source: 'mdn',
-        language: 'ru',
-        note: 'Спецификация поведения bind, включая жёсткую привязку и частичное применение.',
-      },
-      {
-        url: 'https://2ality.com/2017/12/alternate-this.html',
-        title: 'ECMAScript proposal: alternate this — 2ality',
-        source: 'article',
-        language: 'en',
-        note: 'Аксель Раушмайер о тонкостях this в стрелочных функциях, классах и модулях.',
-      },
-    ],
-  },
-
   chapters: [
+    // ─────────────────────────────────────────────────────────────
     {
       id: 'four-rules',
       title: 'Четыре правила определения this',
-      estimatedMinutes: 7,
+      estimatedMinutes: 6,
       blocks: [
         {
           type: 'text',
           content:
-            'В JavaScript `this` определяется **в момент вызова** функции, а не в момент её написания. Это главное отличие от большинства языков, где `this` жёстко привязан к объекту. Существует всего **четыре правила**, применяемых по приоритету:\n\n**new** > **explicit** (call/apply/bind) > **implicit** (obj.method()) > **default**',
+            'В JavaScript \`this\` определяется в момент вызова функции, а не в месте её объявления. Четыре правила применяются по приоритету: **new** > **call / apply / bind** > **obj.method()** > **обычный вызов**.',
         },
-        { type: 'heading', content: '1. Default binding — вызов без контекста' },
+        { type: 'heading', content: '1. Привязка по умолчанию — вызов без контекста' },
         {
           type: 'code',
           language: 'javascript',
@@ -104,11 +38,11 @@ export const jsThisLesson: Lesson = {
   console.log(this);
 }
 
-show(); // в browser non-strict: window
+show(); // в браузере non-strict: window
         // в strict mode: undefined
-        // в модуле ES (.mjs): undefined`,
+        // в ES-модуле: undefined`,
         },
-        { type: 'heading', content: '2. Implicit binding — вызов как метода' },
+        { type: 'heading', content: '2. Неявная привязка — вызов как метода' },
         {
           type: 'code',
           language: 'javascript',
@@ -125,7 +59,7 @@ user.greet();
 const fn = user.greet;
 fn(); // undefined — default binding`,
         },
-        { type: 'heading', content: '3. Explicit binding — call, apply, bind' },
+        { type: 'heading', content: '3. Явная привязка — call, apply, bind' },
         {
           type: 'code',
           language: 'javascript',
@@ -135,13 +69,13 @@ fn(); // undefined — default binding`,
 
 const user = { name: 'Алиса' };
 
-greet.call(user, 'Привет');         // 'Привет, Алиса!'
+greet.call(user, 'Привет');          // 'Привет, Алиса!'
 greet.apply(user, ['Здравствуйте']); // 'Здравствуйте, Алиса!'
 
-const greetUser = greet.bind(user); // новая функция
-greetUser('Хей');                   // 'Хей, Алиса!'`,
+const greetUser = greet.bind(user);  // новая функция
+greetUser('Хей');                    // 'Хей, Алиса!'`,
         },
-        { type: 'heading', content: '4. new binding — вызов через new' },
+        { type: 'heading', content: '4. Привязка через new' },
         {
           type: 'code',
           language: 'javascript',
@@ -153,62 +87,38 @@ greetUser('Хей');                   // 'Хей, Алиса!'`,
 const alice = new Person('Алиса');
 console.log(alice.name); // 'Алиса'`,
         },
-
-        {
-          type: 'text',
-          content:
-            '`this` — это как местоимение «я» в разговоре. Кто говорит «я» — от этого зависит смысл. Функция это речь, а `this` — это «я» того, кто её вызвал. Интервьюер обязательно покажет тебе код где метод объекта передаётся как колбэк — и спросит что будет с `this`. Спойлер: он потеряется, потому что функция вызвана уже не как метод объекта, а как обычная функция.',
-        },
         {
           type: 'callout',
           calloutType: 'info',
           content:
-            'Приоритет связываний: **new** > **explicit** > **implicit** > **default**. Если функция вызвана через `new`, никакие предыдущие `bind` не отменят это правило: `this` будет указывать на новый объект.',
+            'Приоритет связываний: \`new\` > explicit > implicit > default. Если функция вызвана через \`new\`, никакой предыдущий \`bind\` это не отменит — \`this\` будет указывать на новый объект.',
         },
       ],
-      flashcardIds: ['jsth-f1'],
       checkpoint: [Q['jst-q1']!, {
         type: 'ordering',
         id: 'jst-ord1',
-        description: 'Расставь правила определения this от наивысшего приоритета к низшему',
+        description: 'Расставьте правила определения \`this\` от наивысшего приоритета к низшему',
         items: [
-          'new — создаёт новый объект, this = новый объект',
-          'bind/call/apply — явная привязка, this = переданный объект',
+          'new — создаётся новый объект, this = новый объект',
+          'bind / call / apply — явная привязка, this = переданный объект',
           'Метод объекта — неявная привязка, this = объект перед точкой',
           'Обычный вызов функции — this = undefined (strict) или global',
         ],
-        explanation: 'Приоритет: new > явная привязка (bind/call/apply) > неявная (метод объекта) > дефолтная. Стрелочные функции вне этой иерархии — они берут this из лексического окружения в момент определения.',
+        explanation:
+          'Приоритет: new > явная привязка > неявная > дефолтная. Стрелочные функции вне этой иерархии — они берут \`this\` из лексического окружения в момент определения.',
       }],
-      video: {
-        source: 'youtube',
-        id: '9T4z98JcHR0',
-        title: 'this keyword in JavaScript — Namaste JavaScript Season 2, Ep. 6',
-        channel: 'Akshay Saini',
-        language: 'en',
-        durationSec: 24 * 60,
-        description: 'Подробный разбор всех режимов this с примерами в браузере, Node.js, классах и стрелочных функциях.',
-      },
-      links: [
-        {
-          url: 'https://developer.mozilla.org/ru/docs/Web/JavaScript/Reference/Operators/this',
-          title: 'this — MDN (ru)',
-          source: 'mdn',
-          language: 'ru',
-          note: 'Каноническая справка: глобальный контекст, функция, метод, конструктор, стрелочная функция, классы.',
-        },
-      ],
-      docsLink: { url: 'https://learn.javascript.ru/object-methods', title: 'Методы объекта и this — learn.javascript.ru' },
     },
 
+    // ─────────────────────────────────────────────────────────────
     {
       id: 'arrow-functions',
       title: 'Стрелочные функции и лексический this',
-      estimatedMinutes: 6,
+      estimatedMinutes: 5,
       blocks: [
         {
           type: 'text',
           content:
-            'Стрелочные функции **не имеют собственного `this`** — они захватывают его из места, где **написаны** (лексически), а не откуда вызваны. Это поведение нельзя переопределить через `call`, `apply` или `bind`. Именно это делает их отличными для колбэков внутри методов — и плохим выбором для самих методов объекта.',
+            'Стрелочные функции **не имеют собственного \`this\`** — они захватывают его из места, где написаны (лексически), а не откуда вызваны. Это нельзя переопределить через \`call\`, \`apply\` или \`bind\`. Из-за этого стрелки удобны для коллбэков внутри методов и не подходят как сами методы объекта.',
         },
         {
           type: 'code',
@@ -219,7 +129,7 @@ console.log(alice.name); // 'Алиса'`,
   }
 
   start() {
-    // Стрелочная функция наследует this из start().
+    // Стрелка наследует this из start()
     setInterval(() => {
       this.seconds++; // this = экземпляр Timer
     }, 1000);
@@ -232,12 +142,7 @@ new Timer().start();`,
           type: 'callout',
           calloutType: 'warning',
           content:
-            'Стрелочную функцию не следует использовать как метод объекта или как метод на прототипе. Она не получит `this` объекта при вызове `obj.method()` — `this` останется тем, что был во внешнем коде.',
-        },
-        {
-          type: 'text',
-          content:
-            'Главная ловушка: стрелочная функция как метод объекта — это классический баг. Вроде пишешь метод, а на деле `this` указывает в никуда. Интервьюер часто спрашивает именно это: «Что выведет `obj.arrowMethod()`?» — и ждёт что ты объяснишь разницу между лексическим `this` стрелки и динамическим `this` обычной функции. Правило простое: стрелки внутрь методов, обычные функции — как методы.',
+            'Стрелочная функция как метод объекта — классическая ошибка. При вызове \`obj.method()\` \`this\` не станет \`obj\` — он останется тем, что был во внешней области.',
         },
         {
           type: 'code',
@@ -245,12 +150,12 @@ new Timer().start();`,
           content: `const obj = {
   name: 'obj',
 
-  // Не делайте так: this — глобальный, а не obj.
+  // Так делать не нужно: this не равен obj
   arrowMethod: () => {
     console.log(this.name);
   },
 
-  // Корректный метод объекта.
+  // Корректный метод объекта
   regularMethod() {
     console.log(this.name); // 'obj'
   },
@@ -261,55 +166,37 @@ obj.regularMethod(); // 'obj'`,
         },
         {
           type: 'list',
-          content: `- У стрелочной функции нет собственных \`this\`, \`arguments\`, \`super\`, \`new.target\`.
-- Стрелочную функцию нельзя вызвать через \`new\`.
-- Идиома: использовать стрелочную функцию как **callback** внутри метода, чтобы сохранить \`this\` метода.
-- Не использовать стрелочную функцию как метод объекта или прототипа.`,
+          content: `У стрелочной функции нет собственных \`this\`, \`arguments\`, \`super\`, \`new.target\`.
+Стрелочную функцию нельзя вызвать через \`new\`.
+Идиома: использовать стрелку как коллбэк внутри метода, чтобы сохранить \`this\` метода.
+Не использовать стрелку как метод объекта или прототипа.`,
         },
       ],
-      flashcardIds: ['jsth-f3'],
       checkpoint: [Q['jst-q2']!, Q['jst-q9']!, {
         type: 'match-pairs',
         id: 'jst-mp1',
-        description: 'Сопоставь контекст вызова со значением this',
+        description: 'Сопоставьте контекст вызова со значением \`this\`',
         pairs: [
           { left: 'const fn = obj.method; fn()', right: 'undefined (strict) или window' },
           { left: 'obj.method()', right: 'obj' },
           { left: 'new Constructor()', right: 'Новый экземпляр' },
           { left: 'fn.call(ctx)', right: 'ctx' },
         ],
-        explanation: 'Значение `this` определяется в момент ВЫЗОВА, не определения. Деструктурированный метод теряет контекст — это классический баг. `new` всегда создаёт новый объект.',
+        explanation:
+          '\`this\` определяется в момент вызова, а не объявления. Метод, извлечённый в переменную, теряет контекст. \`new\` всегда создаёт новый объект.',
       }],
-      video: {
-        source: 'youtube',
-        id: 'fVXp7ZWjlO4',
-        title: 'What is THIS keyword in JavaScript? — Tutorial for beginners',
-        channel: 'ColorCode',
-        language: 'en',
-        durationSec: 11 * 60,
-        description: 'Краткое визуальное объяснение четырёх правил this и типичных потерь контекста — особый акцент на стрелочных функциях.',
-      },
-      links: [
-        {
-          url: 'https://2ality.com/2017/12/alternate-this.html',
-          title: 'ECMAScript proposal: alternate this — 2ality',
-          source: 'article',
-          language: 'en',
-          note: 'Аксель Раушмайер о тонкостях this в стрелочных функциях, классах и модулях.',
-        },
-      ],
-      docsLink: { url: 'https://learn.javascript.ru/arrow-functions', title: 'Стрелочные функции — learn.javascript.ru' },
     },
 
+    // ─────────────────────────────────────────────────────────────
     {
       id: 'bind-call-apply',
       title: 'bind, call, apply — явное связывание',
-      estimatedMinutes: 6,
+      estimatedMinutes: 5,
       blocks: [
         {
           type: 'text',
           content:
-            'Три метода `Function.prototype` для явного задания `this`:\n\n- **`call(ctx, arg1, arg2)`** — вызывает функцию немедленно, аргументы через запятую\n- **`apply(ctx, [arg1, arg2])`** — то же самое, но аргументы массивом\n- **`bind(ctx)`** — возвращает **новую функцию** с зафиксированным `this`, можно вызвать позже',
+            'Три метода \`Function.prototype\` для явного задания \`this\`:\n- **\`call(ctx, a, b)\`** — вызывает функцию немедленно, аргументы через запятую.\n- **\`apply(ctx, [a, b])\`** — то же, но аргументы массивом.\n- **\`bind(ctx, ...args)\`** — возвращает новую функцию с зафиксированным \`this\` и предзаполненными аргументами.',
         },
         {
           type: 'code',
@@ -320,17 +207,13 @@ obj.regularMethod(); // 'obj'`,
 
 const user = { name: 'Алиса' };
 
-// call — аргументы перечислением
-describe.call(user, 'Привет', '!');
+describe.call(user, 'Привет', '!');         // 'Привет, Алиса!'
+describe.apply(user, ['Здравствуйте', '.']); // 'Здравствуйте, Алиса.'
 
-// apply — аргументы массивом
-describe.apply(user, ['Здравствуйте', '.']);
-
-// bind — новая функция с зафиксированным this и предзаполненными аргументами
 const sayHi = describe.bind(user, 'Хей');
 sayHi('?'); // 'Хей, Алиса?'`,
         },
-        { type: 'heading', content: 'Hard binding — повторный bind не отменяется' },
+        { type: 'heading', content: 'Жёсткая привязка — повторный bind не отменяется' },
         {
           type: 'code',
           language: 'javascript',
@@ -347,15 +230,7 @@ const tryRebind = boundToAlice.bind(bob); // не работает
 console.log(boundToAlice()); // 'Алиса'
 console.log(tryRebind());    // 'Алиса' — повторный bind проигнорирован
 
-// Снять hard binding можно только через new:
-function Foo() { return this.name; }
-const Bound = Foo.bind({ name: 'Алиса' });
-new Bound(); // this = новый объект, не привязанный — правило new имеет высший приоритет`,
-        },
-        {
-          type: 'text',
-          content:
-            'Разница между `call` и `apply` только в том как передаются аргументы: `call` — через запятую, `apply` — массивом. `bind` — это «отложенный call»: ты говоришь «запомни этот контекст, но вызови позже». В реальном коде `bind` чаще всего встречается в конструкторах классовых компонентов React старого стиля — `this.handleClick = this.handleClick.bind(this)`. На собеседовании спросят разницу между тремя — знай наизусть.',
+// Снять hard binding можно только через new — у него высший приоритет.`,
         },
         { type: 'heading', content: 'Заимствование методов и частичное применение' },
         {
@@ -370,32 +245,14 @@ function toArray() {
 function multiply(a, b) {
   return a * b;
 }
-const double = multiply.bind(null, 2); // a = 2 зафиксирован
+const double = multiply.bind(null, 2);
 double(5);  // 10
 double(10); // 20`,
         },
       ],
-      flashcardIds: ['jsth-f6'],
-      links: [
-        {
-          url: 'https://developer.mozilla.org/ru/docs/Web/JavaScript/Reference/Global_Objects/Function/bind',
-          title: 'Function.prototype.bind — MDN (ru)',
-          source: 'mdn',
-          language: 'ru',
-          note: 'Спецификация bind: hard binding, частичное применение, поведение при new.',
-        },
-        {
-          url: 'https://developer.mozilla.org/ru/docs/Web/JavaScript/Reference/Global_Objects/Function/call',
-          title: 'Function.prototype.call — MDN (ru)',
-          source: 'mdn',
-          language: 'ru',
-          note: 'Справка call с примерами заимствования методов у Array.prototype.',
-        },
-      ],
-      docsLink: { url: 'https://learn.javascript.ru/bind', title: 'bind, call, apply — learn.javascript.ru' },
       playground: {
         starterCode: `// Метод user.greet теряет контекст при передаче как callback.
-// Исправьте код одной строкой так, чтобы вывод был "Привет, Алиса!".
+// Исправьте одной строкой так, чтобы вывод был "Привет, Алиса!".
 
 const user = {
   name: 'Алиса',
@@ -404,30 +261,26 @@ const user = {
   },
 };
 
-const fn = user.greet; // <-- здесь нужно зафиксировать this
+const fn = user.greet; // здесь нужно зафиксировать this
 console.log(fn('Привет'));`,
         expectedOutput: 'Привет, Алиса!',
         description:
-          'Используйте `bind`, чтобы создать функцию с привязанным контекстом. Это базовый приём, спасающий от потери this в callback-API.',
+          'Используйте \`bind\`, чтобы создать функцию с привязанным контекстом. Базовый приём, спасающий от потери \`this\` в callback-API.',
       },
     },
 
+    // ─────────────────────────────────────────────────────────────
     {
       id: 'pitfalls',
-      title: 'Типичные ошибки с this',
-      estimatedMinutes: 7,
+      title: 'Подводные камни: потеря this',
+      estimatedMinutes: 6,
       blocks: [
         {
           type: 'text',
           content:
-            'Потеря `this` — невидимый баг. Код выглядит правильным, тесты проходят, а в продакшне вдруг `undefined`. Это происходит потому что метод объекта — это просто функция, и как только ты отрываешь её от объекта, `this` исчезает. Три сценария где это случается чаще всего: деструктуризация, callback в `setTimeout` и обычная функция внутри `forEach`.',
+            'Потеря \`this\` — самая частая ошибка с этой темой. Метод объекта — это обычная функция, и как только она оторвана от объекта, \`this\` исчезает. Три типичных сценария: вытащили метод в переменную, передали как коллбэк, написали обычную функцию внутри \`forEach\`.',
         },
-        {
-          type: 'text',
-          content:
-            'Потеря `this` — это самая частая и коварная ошибка в JavaScript. Код выглядит правильным, но `this` вдруг становится `undefined` или глобальным объектом. Три классических сценария: вытащил метод в переменную, передал как колбэк, написал обычную функцию внутри `forEach`. Разберём каждый.',
-        },
-        { type: 'heading', content: 'Деструктуризация и присваивание метода в переменную' },
+        { type: 'heading', content: 'Метод в переменной — контекст потерян' },
         {
           type: 'code',
           language: 'javascript',
@@ -444,15 +297,9 @@ inc();                   // TypeError: cannot read 'count' of undefined
 const incBound = counter.inc.bind(counter);
 incBound(); // работает
 
-// Или вызывать через объект:
 counter.inc(); // implicit binding сохраняется`,
         },
-        {
-          type: 'text',
-          content:
-            'Аналогия: представь визитку с именем врача. Ты можешь взять визитку и передать другу — но «я» на ней больше не значит этого врача, а значит кого угодно кто её держит. Метод — это визитка. `this` — это «я». Когда ты передаёшь метод как колбэк без привязки, «я» теряется. Интервьюер обязательно покажет тебе такой код и спросит что выведет — спойлер: не то что ожидаешь.',
-        },
-        { type: 'heading', content: 'Передача метода как callback' },
+        { type: 'heading', content: 'Метод как callback в setTimeout' },
         {
           type: 'code',
           language: 'javascript',
@@ -460,7 +307,6 @@ counter.inc(); // implicit binding сохраняется`,
   constructor() {
     this.prefix = '[LOG]';
   }
-
   log(msg) {
     console.log(\`\${this.prefix} \${msg}\`);
   }
@@ -468,21 +314,16 @@ counter.inc(); // implicit binding сохраняется`,
 
 const logger = new Logger();
 
-// Не сработает — потеря контекста.
+// Не сработает — потеря контекста
 setTimeout(logger.log, 100, 'привет');
 
-// Сработает.
+// Сработает
 setTimeout(() => logger.log('привет'), 100);
 
-// Сработает.
+// Сработает
 setTimeout(logger.log.bind(logger), 100, 'привет');`,
         },
-        {
-          type: 'text',
-          content:
-            'Интервьюер может показать код `setTimeout(logger.log, 100, "привет")` и спросить что выведет. Правильный ответ — не то что ожидается: `this.prefix` будет `undefined`. Потому что `logger.log` передаётся как голая функция — без объекта перед точкой. Когда потом её вызовут внутри `setTimeout`, она вызывается как обычная функция без контекста. Это и есть потеря `this`.',
-        },
-        { type: 'heading', content: 'this внутри callback методов массива' },
+        { type: 'heading', content: 'this внутри callback массива' },
         {
           type: 'code',
           language: 'javascript',
@@ -493,13 +334,13 @@ setTimeout(logger.log.bind(logger), 100, 'привет');`,
   }
 
   calculate() {
-    // Не работает: this внутри обычной функции — undefined / window.
+    // Не работает: this внутри обычной функции — undefined
     // this.values.forEach(function (v) { this.total += v; });
 
-    // Работает: стрелочная функция захватывает this лексически.
+    // Работает: стрелка захватывает this лексически
     this.values.forEach((v) => { this.total += v; });
 
-    // Работает: forEach принимает thisArg вторым параметром.
+    // Работает: forEach принимает thisArg вторым параметром
     this.values.forEach(function (v) { this.total += v; }, this);
 
     return this.total;
@@ -510,23 +351,12 @@ setTimeout(logger.log.bind(logger), 100, 'привет');`,
           type: 'callout',
           calloutType: 'tip',
           content:
-            'Многие методы массива (`forEach`, `map`, `filter`, `some`, `every`) принимают второй параметр — `thisArg`. Он позволяет передать контекст в callback без `bind` и без стрелочной функции.',
+            'Методы массива \`forEach\`, \`map\`, \`filter\`, \`some\`, \`every\` принимают вторым параметром \`thisArg\` — это позволяет передать контекст в коллбэк без \`bind\` и без стрелочной функции.',
         },
       ],
-      flashcardIds: ['jsth-f2'],
-      links: [
-        {
-          url: 'https://learn.javascript.ru/bind',
-          title: 'Привязка контекста — learn.javascript.ru',
-          source: 'learn-js',
-          language: 'ru',
-          note: 'Подробно о потере this и трёх способах её избежать: обёртка, bind, частичное применение.',
-        },
-      ],
-      docsLink: { url: 'https://developer.mozilla.org/ru/docs/Web/JavaScript/Reference/Operators/this', title: 'this — MDN (ru)' },
       playground: {
         starterCode: `// Класс ниже теряет this в обработчике forEach.
-// Исправьте метод processAll, чтобы вывод был "[CTX] a", "[CTX] b", "[CTX] c".
+// Исправьте processAll, чтобы вывод был "[CTX] a", "[CTX] b", "[CTX] c".
 
 class Printer {
   constructor() {
@@ -542,25 +372,21 @@ class Printer {
 new Printer().processAll(['a', 'b', 'c']);`,
         expectedOutput: '[CTX] a\n[CTX] b\n[CTX] c',
         description:
-          'Замените обычную функцию на стрелочную или передайте `this` вторым аргументом forEach. Оба решения корректны.',
+          'Замените обычную функцию на стрелочную или передайте \`this\` вторым аргументом \`forEach\`. Оба решения корректны.',
       },
       checkpoint: [Q['jst-q5']!],
     },
 
+    // ─────────────────────────────────────────────────────────────
     {
       id: 'class-fields',
-      title: 'Class fields и современные паттерны',
-      estimatedMinutes: 5,
+      title: 'Поля класса и привязка методов',
+      estimatedMinutes: 4,
       blocks: [
         {
           type: 'text',
           content:
-            'Class fields — это ES2022-способ решить проблему потери `this` раз и навсегда, не прибегая к `bind` в конструкторе. Если объявить метод как стрелочную функцию-поле, `this` будет всегда привязан к экземпляру — даже когда метод передан как колбэк.',
-        },
-        {
-          type: 'text',
-          content:
-            'С появлением class fields (ES2022) появился декларативный способ привязать `this` к методу без вызова `bind` в конструкторе. Поле, инициализированное стрелочной функцией, создаётся на каждом экземпляре и автоматически захватывает `this` экземпляра.',
+            'Поля класса (class fields, ES2022) — декларативный способ привязать \`this\` к методу без вызова \`bind\` в конструкторе. Если объявить метод как стрелочную функцию-поле, \`this\` всегда будет привязан к экземпляру — даже когда метод передан как коллбэк.',
         },
         {
           type: 'code',
@@ -568,7 +394,7 @@ new Printer().processAll(['a', 'b', 'c']);`,
           content: `class Button {
   label = 'OK';
 
-  // Стрелочный метод как class field — this всегда привязан.
+  // Стрелочный метод как class field — this всегда привязан
   handleClick = () => {
     console.log(this.label);
   };
@@ -590,52 +416,32 @@ class ButtonOld {
 }`,
         },
         {
-          type: 'text',
-          content:
-            'На собеседовании могут спросить: «Чем `handleClick = () => {}` как поле класса отличается от обычного метода `handleClick() {}`?» Ключевое: поле-стрелка не попадает на прототип — она создаётся на каждом экземпляре. Это значит нельзя переопределить через `super` в подклассе, и при тысячах экземпляров память растёт. Зато `this` всегда безопасен при передаче как колбэк.',
-        },
-        {
           type: 'callout',
           calloutType: 'info',
           content:
-            'Стрелочные методы-поля — синтаксический сахар. Под капотом каждый экземпляр получает собственную копию функции, а не общий метод на прототипе. На больших коллекциях экземпляров это увеличивает расход памяти.',
+            'У стрелочного поля есть цена. Обычный метод живёт на прототипе — одна функция на класс. Поле создаётся в каждом экземпляре. На больших коллекциях это увеличивает расход памяти и не позволяет переопределить метод через \`super\` в подклассе.',
         },
         {
           type: 'list',
-          content: `- Обычный метод на прототипе: одна функция на класс, \`this\` зависит от способа вызова.
-- Стрелочный метод-поле: функция на каждом экземпляре, \`this\` зафиксирован лексически.
-- Преимущество поля: не нужен \`bind\` в конструкторе и не теряется контекст при передаче как callback.
-- Минус поля: нельзя переопределить через \`super\` в подклассе и расход памяти выше.`,
+          content: `Обычный метод на прототипе: одна функция на класс, \`this\` зависит от способа вызова.
+Стрелочный метод-поле: функция на каждом экземпляре, \`this\` зафиксирован лексически.
+Преимущество поля: не нужен \`bind\` в конструкторе, контекст безопасен при передаче как коллбэк.
+Минус поля: нельзя переопределить через \`super\`, расход памяти выше.`,
         },
       ],
-      flashcardIds: ['jsth-f5'],
       checkpoint: [Q['jst-q6']!],
-      links: [
-        {
-          url: 'https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes/Public_class_fields',
-          title: 'Public class fields — MDN',
-          source: 'mdn',
-          language: 'en',
-          note: 'Спецификация class fields: отличие от методов прототипа, поведение при наследовании.',
-        },
-      ],
-      docsLink: { url: 'https://learn.javascript.ru/class', title: 'Классы — learn.javascript.ru' },
     },
 
+    // ─────────────────────────────────────────────────────────────
     {
       id: 'new-and-classes',
-      title: 'this в new, классах и наследовании',
-      estimatedMinutes: 5,
+      title: 'this в new и классах',
+      estimatedMinutes: 4,
       blocks: [
         {
           type: 'text',
           content:
-            'Оператор `new` это особый способ вызова функции, при котором `this` всегда привязан к свежесозданному объекту. В классах это работает именно так: `constructor` получает `this` = новый экземпляр. Понимание `new` под капотом помогает отвечать на сложные вопросы про `instanceof` и прототипы.',
-        },
-        {
-          type: 'text',
-          content:
-            'Оператор `new` запускает специальную последовательность: создаётся новый объект, его внутренний прототип устанавливается равным `Constructor.prototype`, конструктор вызывается с `this` = новый объект, и объект возвращается автоматически (если конструктор не вернул другой объект явно).',
+            'Оператор \`new\` запускает специальную последовательность: создаётся новый объект, его внутренний прототип устанавливается равным \`Constructor.prototype\`, конструктор вызывается с \`this\` = новый объект, и объект возвращается автоматически — если конструктор не вернул другой объект явно.',
         },
         {
           type: 'code',
@@ -677,254 +483,62 @@ class Dog extends Animal {
 new Dog('Рекс').describe(); // 'Я Рекс, и я собака'`,
         },
         {
-          type: 'text',
-          content:
-            'При вызове через `super` в подклассе важно помнить: `super.describe()` вызывается с текущим `this` = экземпляр подкласса. Это не очевидно, но важно: метод родителя видит поля ребёнка. Интервьюер может показать цепочку наследования и спросить что выведет метод с `super` — проверяй что `this` при этом это всегда экземпляр самого нижнего класса в цепочке.',
-        },
-        {
           type: 'callout',
           calloutType: 'info',
           content:
-            'В strict mode (а классы всегда выполняются в strict mode) default binding даёт `this = undefined`, а не глобальный объект. Это устраняет класс ошибок «случайной» записи в `window`.',
+            'В strict mode (а классы всегда выполняются в strict mode) default binding даёт \`this = undefined\`, а не глобальный объект. Это убирает случайные записи в \`window\` через \`this\`.',
         },
       ],
-      flashcardIds: ['jsth-f4'],
-      links: [
-        {
-          url: 'https://developer.mozilla.org/ru/docs/Web/JavaScript/Reference/Operators/new',
-          title: 'Оператор new — MDN (ru)',
-          source: 'mdn',
-          language: 'ru',
-          note: 'Как new создаёт объект, устанавливает прототип и возвращает результат.',
-        },
-        {
-          url: 'https://developer.mozilla.org/ru/docs/Web/JavaScript/Reference/Global_Objects/Object/create',
-          title: 'Object.create — MDN (ru)',
-          source: 'mdn',
-          language: 'ru',
-          note: 'Ручная реализация new через Object.create — понять, что делает оператор под капотом.',
-        },
-      ],
-      docsLink: { url: 'https://learn.javascript.ru/constructor-new', title: 'Конструкторы и new — learn.javascript.ru' },
     },
   ],
 
-  // Все вопросы из старого квиза, кроме тех, что ушли в checkpoint.
   finalQuiz: jsThisQuiz.questions.filter((q) => !CHECKPOINT_IDS.has(q.id)),
-
-  flashcards: jsThisFlashcards.cards,
 
   cheatsheet: `### Шпаргалка по this
 
-- **4 правила** в порядке приоритета: \`new\` > \`call/apply/bind\` > \`obj.method()\` > вызов «голой» функции.
-- Default binding: \`this = globalThis\` в non-strict, \`undefined\` в strict, в классах и в модулях ES.
-- Стрелочная функция: своего \`this\` нет — наследует лексически. \`call/apply/bind\` на ней не работают.
-- \`call(ctx, ...args)\` и \`apply(ctx, [args])\` — вызывают сразу. \`bind(ctx, ...args)\` — возвращает новую функцию.
-- Hard binding после \`bind\` снимается только через \`new\`.
-- Типичные потери контекста: деструктуризация, присваивание метода в переменную, callback в \`setTimeout\` / \`addEventListener\`, обычная функция внутри \`forEach\`.
-- Решения: \`bind\` в конструкторе, стрелочная функция-обёртка, class field со стрелкой, \`thisArg\` у методов массива.`,
+**Четыре правила в порядке приоритета**
+- \`new\` — \`this\` = новый объект
+- \`call\` / \`apply\` / \`bind\` — \`this\` = переданный объект
+- \`obj.method()\` — \`this\` = объект перед точкой
+- Обычный вызов — \`this\` = \`undefined\` (strict) или глобальный объект
 
-  interviewQA: [
-    {
-      id: 'jsth-iq1',
-      question: 'Объясните четыре правила определения this и их приоритет.',
-      shortAnswer:
-        'Значение this определяется способом вызова функции. По убыванию приоритета: new, явное связывание (call/apply/bind), неявное связывание (obj.method()), default. Default в strict mode — undefined, иначе — глобальный объект.',
-      fullAnswer: `В JavaScript значение \`this\` определяется не местом, где функция объявлена, а тем, **как** она вызвана. Применяются четыре правила:
+**Привязка по умолчанию**
+- \`globalThis\` в non-strict
+- \`undefined\` в strict mode, в классах, в модулях ES
 
-1. **new binding.** Если функция вызвана через \`new\`, JavaScript создаёт новый объект, устанавливает его прототип равным \`Constructor.prototype\` и привязывает \`this\` к этому объекту.
-2. **Explicit binding.** Если функция вызвана через \`call\`, \`apply\` или предварительно «забиндена» через \`bind\`, контекст задаётся явно.
-3. **Implicit binding.** Если функция вызвана как метод объекта (\`obj.method()\`), \`this\` равен объекту слева от точки.
-4. **Default binding.** Если применимо ничего из вышеперечисленного, в strict mode \`this = undefined\`, иначе \`this\` указывает на глобальный объект (\`window\` в браузере, \`global\` в Node.js).
+**Стрелочная функция**
+- Своего \`this\` нет, наследует лексически
+- \`call\` / \`apply\` / \`bind\` не действуют
+- Нельзя вызвать через \`new\`
+- Подходит как коллбэк внутри метода, не подходит как метод объекта
 
-Правила применяются в порядке убывания приоритета. Например, если \`bind\` зафиксировал контекст, а функция затем вызвана через \`new\`, победит \`new\` — это поведение зафиксировано в спецификации и используется в полифилле \`bind\`.`,
-      followUps: [
-        'Что вернёт `this` в обычной функции, объявленной в модуле ES?',
-        'Что произойдёт, если конструктор вернёт примитив? А если объект?',
-      ],
-      relatedChapterId: 'four-rules',
-    },
-    {
-      id: 'jsth-iq2',
-      question: 'Чем стрелочная функция отличается от обычной в контексте this?',
-      shortAnswer:
-        'У стрелочной функции нет собственного this — она захватывает его лексически из окружающей области видимости. Поэтому call, apply и bind на неё не влияют. Стрелочную функцию нельзя использовать как конструктор и как метод объекта.',
-      fullAnswer: `Обычная функция получает \`this\` по правилам default/implicit/explicit/new в момент вызова. Стрелочная функция не имеет собственного \`this\` — она захватывает значение из лексической области видимости, где была написана.
+**call vs apply vs bind**
+- \`call(ctx, a, b)\` — вызов с аргументами через запятую
+- \`apply(ctx, [a, b])\` — вызов с аргументами массивом
+- \`bind(ctx, ...args)\` — новая функция с зафиксированным \`this\`
+- Жёсткая привязка после \`bind\` снимается только через \`new\`
 
-Из этого следуют важные практические следствия:
+**Типичные потери контекста**
+- Деструктуризация / присваивание метода в переменную
+- Передача метода как коллбэка в \`setTimeout\`, \`addEventListener\`
+- Обычная функция внутри \`forEach\` / \`map\`
 
-- Передача стрелочной функции в \`call\`, \`apply\` или \`bind\` не меняет её \`this\`. Контекст просто игнорируется.
-- Стрелочную функцию нельзя вызвать через \`new\` — её нельзя использовать как конструктор.
-- У стрелочной функции нет собственных \`arguments\`, \`super\` и \`new.target\`.
-
-Идиоматическое применение — callback внутри метода. Например, в обработчике \`setInterval\` стрелочная функция «вспомнит» \`this\` метода, в котором она написана:
-
-\`\`\`js
-class Timer {
-  start() {
-    setInterval(() => this.tick(), 1000);
-  }
-}
-\`\`\`
-
-Антипаттерн — стрелочная функция как метод объекта. При вызове \`obj.arrowMethod()\` контекст не станет \`obj\` — он будет тем, что был во внешней области.`,
-      followUps: [
-        'Почему стрелочную функцию нельзя использовать в качестве метода прототипа?',
-        'Что произойдёт, если применить bind к стрелочной функции?',
-      ],
-      relatedChapterId: 'arrow-functions',
-    },
-    {
-      id: 'jsth-iq3',
-      question: 'В чём разница между call, apply и bind?',
-      shortAnswer:
-        'call и apply вызывают функцию немедленно, отличаются способом передачи аргументов: call — перечислением, apply — массивом. bind возвращает новую функцию с зафиксированным this и опционально предзаполненными аргументами; функция при этом не вызывается.',
-      fullAnswer: `Все три метода прототипа \`Function.prototype\` позволяют явно задать \`this\` при вызове функции, но различаются по способу вызова и форме аргументов.
-
-- \`fn.call(ctx, a, b, c)\` вызывает функцию немедленно. Аргументы передаются перечислением.
-- \`fn.apply(ctx, [a, b, c])\` вызывает функцию немедленно. Аргументы передаются массивом или массивоподобным объектом. Удобно, когда аргументы уже собраны в массив.
-- \`fn.bind(ctx, a)\` не вызывает функцию. Возвращает **новую** функцию, у которой \`this\` зафиксирован равным \`ctx\`, а первый аргумент уже подставлен.
-
-Особенность \`bind\` — привязка **жёсткая**: повторный \`bind\` на уже привязанную функцию не меняет \`this\`. Снять её можно только через \`new\`, потому что правило \`new\` имеет высший приоритет.
-
-Практические применения \`bind\`: фиксация \`this\` в конструкторе класса, частичное применение аргументов, передача метода как callback без потери контекста. Применения \`call\`/\`apply\`: заимствование методов (\`Array.prototype.slice.call(arguments)\`), вызов функций со «спред»-аргументами в средах без \`...\`.`,
-      followUps: [
-        'Можно ли реализовать bind через call?',
-        'Что произойдёт при `fn.call(null)` в strict mode?',
-      ],
-      relatedChapterId: 'bind-call-apply',
-    },
-    {
-      id: 'jsth-iq4',
-      question: 'Что такое hard binding и можно ли его «снять»?',
-      shortAnswer:
-        'Hard binding — это фиксация this через bind. Повторный bind на уже привязанную функцию игнорируется. Снять привязку можно только вызовом через new: правило new имеет наивысший приоритет.',
-      fullAnswer: `\`Function.prototype.bind\` создаёт функцию с **жёстко зафиксированным** \`this\`. Это поведение называется hard binding. Спецификация требует, чтобы повторный \`bind\` на уже привязанной функции не перезаписывал контекст:
-
-\`\`\`js
-function f() { return this.name; }
-const a = f.bind({ name: 'A' });
-const b = a.bind({ name: 'B' });
-b(); // 'A'
-\`\`\`
-
-Аналогично, \`call\` и \`apply\` на привязанной функции не меняют контекст — этот аспект был источником множества ошибок в ранних реализациях \`bind\` через замыкание.
-
-Единственный способ «обойти» hard binding — вызвать привязанную функцию через \`new\`. По спецификации, правило \`new\` имеет высший приоритет: создаётся новый объект, который и становится \`this\`, а зафиксированный через \`bind\` контекст игнорируется. Это поведение полезно при наследовании от привязанных конструкторов.
-
-Стрелочные функции технически не подвержены ни \`bind\`, ни \`call\`, ни \`apply\` — у них нет собственного \`this\`. Поэтому к ним hard binding неприменим в принципе.`,
-      followUps: [
-        'Зачем поведение «new побеждает bind» зафиксировано в спецификации?',
-        'Как реализовать собственный bind, чтобы он корректно работал с new?',
-      ],
-      relatedChapterId: 'bind-call-apply',
-    },
-    {
-      id: 'jsth-iq5',
-      question: 'Как this ведёт себя в strict mode и почему так сделано?',
-      shortAnswer:
-        'В strict mode default binding даёт this = undefined вместо глобального объекта. Это устраняет класс ошибок, когда метод вызывается без контекста и случайно записывает данные в window.',
-      fullAnswer: `В non-strict коде функция, вызванная без контекста, получает \`this\`, равный глобальному объекту: \`window\` в браузере или \`global\` в Node.js. Это поведение опасно: если внутри метода случайно потерян контекст и метод пишет в \`this.someField\`, поле создаётся в глобальном объекте и виден весь рантайм.
-
-В strict mode (\`'use strict'\`) default binding даёт \`this = undefined\`. Любое обращение \`this.someField\` сразу выбросит \`TypeError\`, и ошибка проявится в момент возникновения, а не в неожиданном месте позже.
-
-Strict mode включается:
-- Явно директивой \`'use strict'\` в начале файла или функции.
-- **Неявно** в любом ES-модуле (\`type="module"\` или \`.mjs\`).
-- **Неявно** в теле любого \`class\`.
-
-Поэтому в современном проекте практически весь код выполняется в strict mode. Это меняет поведение и других механизмов: запрещает дублирование параметров, автоматическое создание глобальных переменных при присваивании необъявленным идентификаторам, делает \`delete\` на простых переменных синтаксической ошибкой.
-
-В контексте \`this\` важно помнить: если код выполняется в strict mode, защититься от потери контекста нужно явно — через \`bind\`, стрелочную функцию или class field.`,
-      followUps: [
-        'Что вернёт `(function(){ return this; })()` в браузере, в Node.js, в модуле?',
-        'Чем отличается `this` в обычной функции от `this` в IIFE в strict mode?',
-      ],
-      relatedChapterId: 'four-rules',
-    },
-    {
-      id: 'jsth-iq6',
-      question: 'Как избежать потери this в обработчике события или в callback таймера?',
-      shortAnswer:
-        'Привязать метод через bind в конструкторе, использовать стрелочную функцию-обёртку в месте передачи, или объявить метод как стрелочный class field. В методах массива можно передать thisArg вторым аргументом.',
-      fullAnswer: `Потеря контекста происходит, когда метод передаётся как callback и вызывается без объекта-владельца — \`addEventListener\`, \`setTimeout\`, \`Promise.then\` и т.п. Существуют четыре общепринятых подхода.
-
-1. **bind в конструкторе.** Классическая практика React-компонентов до 2019 года:
-   \`\`\`js
-   class Btn {
-     constructor() { this.handleClick = this.handleClick.bind(this); }
-     handleClick() { /* ... */ }
-   }
-   \`\`\`
-   Минус — шаблонный код.
-
-2. **Стрелочная обёртка в месте передачи.**
-   \`\`\`js
-   element.addEventListener('click', () => btn.handleClick());
-   \`\`\`
-   Минус — придётся хранить функцию-обёртку отдельно, чтобы потом передать её в \`removeEventListener\`.
-
-3. **Class field как стрелочная функция (ES2022).**
-   \`\`\`js
-   class Btn {
-     handleClick = () => { /* this всегда экземпляр */ };
-   }
-   \`\`\`
-   Самый удобный современный вариант. Минус — каждый экземпляр получает свою копию функции.
-
-4. **thisArg у методов массива.** \`forEach\`, \`map\`, \`filter\`, \`some\`, \`every\` принимают второй параметр-контекст. Это нишевый, но рабочий способ внутри обработки массивов.
-
-Выбор зависит от контекста: для класса с долгоживущими экземплярами и небольшим количеством обработчиков подходит class field; для одноразовых обработчиков — стрелочная обёртка; для удаления подписки нужна именованная функция, которую сохраняют в поле и передают и в \`addEventListener\`, и в \`removeEventListener\`.`,
-      followUps: [
-        'Почему передача `setTimeout(obj.method, 100)` теряет контекст?',
-        'Как корректно отписать обработчик, привязанный через стрелочную обёртку?',
-      ],
-      relatedChapterId: 'pitfalls',
-    },
-    {
-      id: 'jsth-iq7',
-      question: 'Опишите, что делает оператор new под капотом.',
-      shortAnswer:
-        'new создаёт новый объект, устанавливает его прототип равным Constructor.prototype, вызывает конструктор с this = новый объект и возвращает его. Если конструктор явно вернул объект — возвращается он, примитивные значения игнорируются.',
-      fullAnswer: `Оператор \`new\` выполняет четыре шага:
-
-1. Создаёт новый пустой объект.
-2. Устанавливает его внутренний прототип (\`[[Prototype]]\`) равным \`Constructor.prototype\`.
-3. Вызывает функцию-конструктор с \`this\` = новый объект и переданными аргументами.
-4. Возвращает результат: если конструктор явно вернул объект (или функцию) — возвращается он, иначе возвращается созданный объект.
-
-Эту логику легко воспроизвести вручную:
-
-\`\`\`js
-function myNew(Constructor, ...args) {
-  const obj = Object.create(Constructor.prototype);
-  const result = Constructor.apply(obj, args);
-  return (result !== null && typeof result === 'object') ? result : obj;
-}
-\`\`\`
-
-Понимание шагов помогает в собеседовании при ответах на смежные вопросы: почему \`instanceof\` работает (проверяется наличие \`Constructor.prototype\` в цепочке прототипов созданного объекта), почему \`new\` имеет приоритет над \`bind\` (на шаге 3 \`this\` всегда равен новому объекту, а не привязанному), почему конструктор может вернуть другой объект (используется в реализации singleton и фабрик).`,
-      followUps: [
-        'Как реализовать new без Object.create?',
-        'Что произойдёт, если вызвать стрелочную функцию через new?',
-      ],
-      relatedChapterId: 'new-and-classes',
-    },
-  ],
+**Решения**
+- \`bind\` в конструкторе или при передаче
+- Стрелочная функция-обёртка
+- Class field со стрелочной функцией
+- \`thisArg\` вторым параметром у методов массива`,
 
   nextTopics: [
     {
       slug: 'js-prototypes',
-      reason: 'Поведение `new` напрямую опирается на цепочку прототипов и Constructor.prototype.',
+      reason:
+        'Прототипы и классы — естественное продолжение темы про \`this\`. После четырёх правил полезно увидеть, как \`new\` строит цепочку прототипов.',
     },
     {
       slug: 'js-async',
-      reason: 'Promise и async-функции — частый источник потери контекста в обработчиках then/catch.',
+      reason:
+        'Async / await часто комбинируются с методами классов — потеря \`this\` встречается и в асинхронном коде.',
     },
-  ],
-
-  related: [
-    { kind: 'bug-hunt', id: 'bh-this-1', label: 'Bug hunt: метод теряет this в setTimeout' },
-    { kind: 'pitfall', id: 'arrow-as-method', label: 'JS-ловушки: стрелочная функция как метод объекта' },
   ],
 };

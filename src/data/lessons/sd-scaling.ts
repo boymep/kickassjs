@@ -1,6 +1,5 @@
 import type { Lesson } from '../../types/lesson';
 import type { QuizQuestion } from '../../types/quiz';
-import type { Flashcard } from '../../types/flashcard';
 
 // =============================================================================
 // Quiz pool. Часть вопросов идёт в checkpoint глав, остальные — в финальный
@@ -213,218 +212,6 @@ const Q = Object.fromEntries(quizQuestions.map((q) => [q.id, q]));
 
 const CHECKPOINT_IDS = new Set(['sds-q1', 'sds-q5', 'sds-q9', 'sds-q11']);
 
-// =============================================================================
-// Flashcards
-// =============================================================================
-
-const flashcards: Flashcard[] = [
-  {
-    id: 'sds-f1',
-    question: 'Что такое микрофронтенды?',
-    answer:
-      'Архитектурный стиль, при котором фронтенд разделён на независимо разрабатываемые, тестируемые и деплоимые части. Каждый фрагмент UI принадлежит одной команде и собирается в общий продукт через shell-приложение.',
-    keyPoints: [
-      'Главный признак — автономный цикл разработки и доставки',
-      'Решает организационную проблему, а не техническую',
-      'Соответствует закону Конвея: каждая команда владеет своим разделом',
-      'Подход дороже монолита по инфраструктуре и performance',
-      'Имеет смысл при 4+ командах и независимых релиз-циклах',
-    ],
-  },
-  {
-    id: 'sds-f2',
-    question: 'Что такое Module Federation?',
-    answer:
-      'Рантайм-механизм Webpack 5 / Rspack, который позволяет одному приложению (host) загружать модули из другого приложения (remote) по URL во время выполнения. Поддерживает разделение общих зависимостей.',
-    keyPoints: [
-      'remoteEntry.js — точка входа remote-приложения',
-      'shared с singleton: true даёт одну копию React/ReactDOM',
-      'Версии разрешаются в рантайме по requiredVersion и strictVersion',
-      'Host подключает remote через ленивую загрузку (React.lazy)',
-      'Альтернатива iframe и Single SPA для композиции приложений',
-    ],
-    code: `new ModuleFederationPlugin({
-  name: 'shell',
-  remotes: {
-    cart: 'cart@https://cdn.example.com/cart/remoteEntry.js',
-  },
-  shared: {
-    react: { singleton: true },
-    'react-dom': { singleton: true },
-  },
-});`,
-    codeLanguage: 'javascript',
-  },
-  {
-    id: 'sds-f3',
-    question: 'Что такое монорепо и зачем оно нужно?',
-    answer:
-      'Один Git-репозиторий, в котором лежит несколько связанных пакетов или приложений с общим pipeline. Упрощает атомарные изменения через границы пакетов, уменьшает дублирование кода и стандартизирует инструментарий.',
-    keyPoints: [
-      'Один lockfile → одна версия каждой зависимости',
-      'Атомарные коммиты: меняете API в lib и вызовы в app в одном PR',
-      'Инкрементальная сборка по графу зависимостей',
-      'Не путать с монолитом: монорепо может содержать N независимых приложений',
-      'Инструменты: Nx, Turborepo, pnpm workspaces, Bazel',
-    ],
-  },
-  {
-    id: 'sds-f4',
-    question: 'Чем отличаются Nx, Turborepo и pnpm workspaces?',
-    answer:
-      'pnpm workspaces — менеджер зависимостей с symlink-ами. Turborepo — оркестратор задач с remote-кешем и минимальной конфигурацией. Nx — полноценная платформа: оркестратор, кодогенерация, плагины под React/Next/Node, граф зависимостей и аналитика.',
-    keyPoints: [
-      'pnpm workspaces: только установка зависимостей',
-      'Turborepo: pipelines, кеш, remote cache из коробки (Vercel)',
-      'Nx: всё из Turborepo + плагины, generators, project graph',
-      'Часто комбинируются: pnpm + Turborepo или pnpm + Nx',
-      'Nx сильнее в больших монорепо с десятками пакетов и кодогенерацией',
-    ],
-  },
-  {
-    id: 'sds-f5',
-    question: 'Что такое edge functions?',
-    answer:
-      'Функции, выполняемые на CDN-узлах ближе к пользователю — обычно в V8 isolate, а не в Node.js контейнере. TTFB сокращается до десятков миллисекунд, но окружение ограничено: только веб-стандартные API, лимиты CPU и размера кода.',
-    keyPoints: [
-      'Платформы: Cloudflare Workers, Vercel Edge, Deno Deploy, AWS Lambda@Edge',
-      'V8 isolate стартует за единицы миллисекунд → нет «холодного старта»',
-      'Доступны fetch, Request, Response, Crypto, Streams',
-      'Нет fs, net, нативных Node-модулей и большинства npm-пакетов',
-      'Доступ к БД — через HTTP-протокол (Neon, PlanetScale, Upstash)',
-    ],
-  },
-  {
-    id: 'sds-f6',
-    question: 'Что такое CDN-распределение для фронта?',
-    answer:
-      'Раздача статических файлов (HTML, JS, CSS, картинок) и закешированных ответов через сеть PoP-ов, расположенных по всему миру. Пользователь получает контент из ближайшей точки присутствия — TTFB и LCP снижаются на сотни миллисекунд.',
-    keyPoints: [
-      'Cache-Control и immutable hash в имени файла → длинный edge-кеш',
-      'CDN-провайдеры: Cloudflare, Fastly, Akamai, CloudFront, Vercel',
-      'Динамика тоже кешируется: ISR-результаты, edge SSR-ответы',
-      'Геораспределение нужно для глобальных продуктов; локальный продукт может обойтись одной зоной',
-      'Инвалидация — через purge API или версионирование URL',
-    ],
-  },
-  {
-    id: 'sds-f7',
-    question: 'Что такое design system и почему он критичен для масштабирования?',
-    answer:
-      'Версионированная UI-библиотека (компоненты, токены, гайдлайны), которой пользуются все команды. Служит визуальным и техническим контрактом, удерживает консистентность UI и позволяет централизованно менять брендинг и доступность.',
-    keyPoints: [
-      'Публикуется как npm-пакет с semver',
-      'Содержит компоненты, дизайн-токены (цвета, отступы, типографика), темы',
-      'Storybook + visual regression тесты — обязательная инфраструктура',
-      'Без design system команды стихийно создают «свои» кнопки → визуальный дрейф',
-      'Breaking changes выкатываются через major + deprecation-период + codemod',
-    ],
-  },
-  {
-    id: 'sds-f8',
-    question: 'Закон Конвея (Conway\'s law)',
-    answer:
-      'Системы повторяют структуру коммуникаций организации, которая их строит. На фронте это означает: рано или поздно код повторит границы команд. Микрофронтенды и монорепо — это инженерные ответы на закон Конвея.',
-    keyPoints: [
-      'Сформулирован Мелвином Конвеем в 1968',
-      'Объясняет, почему монолит «трещит» при росте команд',
-      'Inverse Conway maneuver: сначала проектируем команды, потом архитектуру',
-      'Микрофронтенды легализуют границы команд в коде',
-      'Игнорирование закона приводит к спутанному коду и blocking-релизам',
-    ],
-  },
-  {
-    id: 'sds-f9',
-    question: 'Цена микрофронтендов',
-    answer:
-      'Микрофронтенды решают организационную проблему ценой технических расходов: дублирование зависимостей, дополнительные сетевые запросы, сложная отладка, риск рассогласования стилей и потери Core Web Vitals.',
-    keyPoints: [
-      'Дублирование React/lodash/иконок без shared singletons',
-      'Дополнительные roundtrip-ы за remoteEntry.js',
-      'Сложнее E2E-тестирование (нужна композиция)',
-      'Кросс-микрофронтенд события и shared state — отдельная инфраструктура',
-      'Без design system визуальная консистентность теряется',
-    ],
-  },
-  {
-    id: 'sds-f10',
-    question: 'Когда стоит выбирать микрофронтенды?',
-    answer:
-      'Когда вы упёрлись в организационный потолок: 4+ команды, желание независимых релизов, разные технологические стэки, разные циклы планирования. До этого момента монорепо или просто пакеты обычно дешевле.',
-    keyPoints: [
-      'Триггер: «релизы блокируют друг друга» в большом приложении',
-      'Триггер: команды хотят разный стек (React + Vue + Svelte)',
-      'Триггер: разные SLA для разных частей продукта',
-      'Антитриггер: одна команда, один продукт → не нужны',
-      'Антитриггер: «модно и современно» — это не аргумент',
-    ],
-  },
-  {
-    id: 'sds-f11',
-    question: 'Что такое shell-приложение?',
-    answer:
-      'Тонкое приложение-оболочка, которое монтирует микрофронтенды в общий лейаут. Отвечает за роутинг верхнего уровня, авторизацию, общий header/footer, runtime-загрузку remote-приложений и shared-зависимости.',
-    keyPoints: [
-      'Точка входа для пользователя и для остальных микрофронтендов',
-      'Содержит общий design system или его инициализацию',
-      'Роутер shell-а делегирует подмаршруты микрофронтендам',
-      'Авторизация и сессия живут в shell, токен пробрасывается вниз',
-      'Shell сам по себе должен быть тонким — иначе превращается в монолит',
-    ],
-  },
-  {
-    id: 'sds-f12',
-    question: 'iframe, Single SPA и Module Federation: чем они отличаются?',
-    answer:
-      'iframe изолирует UI на уровне документа: безопасно, но плохой UX и сложная коммуникация. Single SPA оркестрирует «жизненный цикл» SPA-приложений в одном окне через manifest. Module Federation шарит модули в рантайме без жизненных циклов и без iframe.',
-    keyPoints: [
-      'iframe: полная изоляция, отдельный document, postMessage для связи',
-      'Single SPA: один document, mount/unmount по роуту, любой framework',
-      'Module Federation: динамические импорты модулей, shared singletons',
-      'iframe выбирают, когда нужна жёсткая изоляция (например, third-party)',
-      'MF — самый современный outlet для команд на одном технологическом стеке',
-    ],
-  },
-  {
-    id: 'sds-f13',
-    question: 'Версионирование UI-библиотеки',
-    answer:
-      'Design system публикуется как npm-пакет по semver: patch — багфиксы, minor — новые компоненты и пропсы, major — breaking changes. Breaking changes выкатываются через deprecation-период и codemod, чтобы не блокировать команды.',
-    keyPoints: [
-      'semver: MAJOR.MINOR.PATCH',
-      'changesets / lerna version / nx release — инструменты публикации',
-      'Storybook + visual regression защищают от случайных breaking changes',
-      'Codemod автоматизирует миграцию потребляющего кода',
-      'Долгий deprecation-период важнее «чистого» API',
-    ],
-  },
-  {
-    id: 'sds-f14',
-    question: 'Edge vs origin: когда выбирать что',
-    answer:
-      'Edge выгоден для лёгких персонализированных ответов и геолокализированной логики: TTFB мизерный, окружение жёстко ограничено. Origin (Node-сервер) подходит для тяжёлой логики, прямого TCP к БД, больших зависимостей и долгих операций.',
-    keyPoints: [
-      'Edge: геолокация, A/B-тесты, заголовки безопасности, лёгкий SSR',
-      'Origin: чекаут, тяжёлая обработка, миграции данных, длинные операции',
-      'Next.js: export const runtime = "edge" | "nodejs" на роут',
-      'Edge ближе к пользователю, origin — к данным',
-      'Антипаттерн: edge-функция, ходящая в БД в другом регионе на каждый запрос',
-    ],
-  },
-  {
-    id: 'sds-f15',
-    question: 'Common runtime в микрофронтендах',
-    answer:
-      'Общий рантайм — это набор ресурсов, которые все микрофронтенды должны разделять: версия React, дизайн-токены, авторизация, шина событий, словари локализации. Без общего рантайма приложения дублируют код и теряют консистентность.',
-    keyPoints: [
-      'shared singletons в Module Federation: react, react-dom, intl',
-      'Один auth-провайдер на shell, токен — через context или cookie',
-      'Общий event bus или message channel для кросс-микрофронтенд событий',
-      'Общая i18n-инфраструктура: словари грузятся один раз',
-      'Контракты типов фиксируются в общем npm-пакете types/contracts',
-    ],
-  },
-];
 
 // =============================================================================
 // Lesson
@@ -434,88 +221,15 @@ export const sdScalingLesson: Lesson = {
   topicId: 'sd-scaling',
 
   intro: {
-    whyItMatters: `Масштабирование фронтенда — это не «добавить серверов», а ответ на одновременный рост двух факторов: размера команды и размера продукта. Когда в репозитории работают 30+ инженеров из 6+ продуктовых команд, монолитная сборка превращается в очередь: пайплайн идёт 12 минут, конфликты в \`package.json\` тормозят релизы, общий стейт-менеджер ломается на каждой второй фиче. На этой стадии возникают четыре больших инструмента: монорепо (Nx, Turborepo, pnpm workspaces) для инкрементальной сборки и атомарных изменений; микрофронтенды (Module Federation, Single SPA, iframe) для независимого деплоя автономных команд; design system как версионированный контракт, удерживающий визуальную консистентность; edge functions и CDN-распределение, чтобы не платить латентностью за глобальную аудиторию.
+    whyItMatters: `Масштабирование фронтенда — ответ на одновременный рост размера команды и размера продукта. Когда в репозитории работают десятки инженеров из нескольких команд, монолитная сборка превращается в очередь и блокирует релизы.
 
-Параллельно работает закон Конвея: структура кода рано или поздно повторит структуру коммуникаций в организации. Если у вас шесть команд, фронт всё равно разделится на шесть кусков — вопрос только в том, признаёте вы эту границу инженерно или сопротивляетесь ей. Микрофронтенды легализуют такую границу: каждая команда владеет своим разделом, выпускает релизы независимо и не блокирует соседей. Платой служат дублирование зависимостей, дополнительные сетевые roundtrip-ы и более сложная отладка — поэтому микрофронтенды оправданы только тогда, когда организационная проблема действительно есть. Раньше это решение почти всегда преждевременно.
-
-Edge functions меняют картину инфраструктуры: V8 isolate стартует за миллисекунды, и одна и та же функция выполняется в Сингапуре, Франкфурте и Сан-Паулу. CDN-распределение даёт TTFB 30–80 мс независимо от региона. Common runtime, shared singletons, версионирование UI-библиотек по semver — всё это конкретные ответы на вопрос «как сохранить контроль, когда фронт перестал помещаться в одну голову». В этом уроке вы научитесь подбирать стратегию под размер команды и продукта и аргументированно отвечать на senior-вопросы про trade-off-ы.`,
-    estimatedMinutes: 45,
+Четыре основных инструмента: монорепо (Nx, Turborepo, pnpm workspaces) для инкрементальной сборки и атомарных изменений; микрофронтенды (Module Federation, Single SPA) для независимого деплоя команд; design system как версионированный контракт; edge functions и CDN-распределение для глобальной аудитории. Параллельно действует закон Конвея: структура кода повторит структуру коммуникаций в организации.`,
+    estimatedMinutes: 35,
     interviewAngle:
-      'Senior-интервьюер хочет проверить не определения, а инженерное чувство меры: когда монорепо достаточно и микрофронтенды преждевременны, как вы выберете между Nx и Turborepo, как обеспечить shared singletons в Module Federation, чем edge отличается от origin, как версионируется design system. Сильный ответ опирается на закон Конвея и стоимость каждого решения.',
+      'Интервьюера интересует чувство меры: когда монорепо достаточно и микрофронтенды преждевременны, как обеспечить shared singletons, чем edge отличается от origin, как версионируется design system.',
     prerequisites: [],
   },
 
-  resources: {
-    videos: [
-      {
-        source: 'youtube',
-        id: 'D3XYAx30CNc',
-        title: 'Introducing Module Federation in Webpack 5',
-        channel: 'Jack Herrington',
-        language: 'en',
-        durationSec: 18 * 60,
-        description:
-          'Канонический разбор от Jack Herrington: как устроен ModuleFederationPlugin, что такое remoteEntry.js, как работают shared singletons и как host подгружает модули из remote во время выполнения. Если смотреть один доклад про MF — то этот.',
-      },
-      {
-        source: 'youtube',
-        id: 'lKKsjpH09dU',
-        title: 'Micro-Frontends Course — Beginner to Expert',
-        channel: 'freeCodeCamp.org',
-        language: 'en',
-        durationSec: 4 * 3600,
-        description:
-          'Полный курс по микрофронтендам: разбор iframe, Single SPA и Module Federation на одних и тех же примерах. Объясняет архитектурные trade-off-ы, shell-приложение, маршрутизацию и shared state.',
-      },
-      {
-        source: 'youtube',
-        id: '48NWaLkDcME',
-        title: 'Here is what Cloudflare Workers do',
-        channel: 'Wes Bos',
-        language: 'en',
-        durationSec: 8 * 60,
-        description:
-          'Короткое и наглядное объяснение от Wes Bos: что такое edge function на Cloudflare Workers, как V8 isolate отличается от контейнера Lambda, какие задачи решаются на edge и где у платформы лимиты.',
-      },
-    ],
-    links: [
-      {
-        url: 'https://micro-frontends.org/',
-        title: 'Micro Frontends — micro-frontends.org',
-        source: 'article',
-        language: 'en',
-        note: 'Канонический манифест Michael Geers с определением, паттернами композиции и примерами интеграции независимых SPA в одно приложение.',
-      },
-      {
-        url: 'https://module-federation.io/',
-        title: 'Module Federation — официальная документация',
-        source: 'article',
-        language: 'en',
-        note: 'Современная документация по Module Federation 2.0 для Webpack/Rspack: shared, singleton, runtime API, динамические remote.',
-      },
-      {
-        url: 'https://nx.dev/',
-        title: 'Nx — Smart Monorepos · Fast CI',
-        source: 'article',
-        language: 'en',
-        note: 'Документация Nx: project graph, кодогенерация, affected-команды, плагины под React/Next/Node и удалённое кеширование Nx Cloud.',
-      },
-      {
-        url: 'https://turborepo.com/docs',
-        title: 'Turborepo Docs',
-        source: 'article',
-        language: 'en',
-        note: 'Документация Turborepo: turbo.json, pipeline, remote cache (Vercel), интеграция с pnpm workspaces, миграционные гайды.',
-      },
-      {
-        url: 'https://vercel.com/docs/functions/runtimes/edge',
-        title: 'Edge Runtime — Vercel Docs',
-        source: 'article',
-        language: 'en',
-        note: 'Описание ограничений edge runtime в Next.js на Vercel: какие API доступны, лимиты CPU и размера, как выбрать между edge и nodejs.',
-      },
-    ],
-  },
 
   chapters: [
     {
@@ -570,7 +284,6 @@ Edge functions меняют картину инфраструктуры: V8 isol
             'На каждом шаге проверяйте: эта боль уже есть, или мы готовимся к гипотетическому будущему? Стоимость отката с микрофронтендов обратно в монолит выше, чем стоимость лишнего шага вперёд по этой лестнице.',
         },
       ],
-      flashcardIds: ['sds-f1', 'sds-f10'],
       checkpoint: [Q['sds-q1']!, {
         type: 'multi-select',
         id: 'sdsc-ms1',
@@ -585,16 +298,6 @@ Edge functions меняют картину инфраструктуры: V8 isol
         correctIndices: [0, 1, 2, 4],
         explanation: 'Монорепо: общий node_modules экономит место, атомарные коммиты упрощают рефакторинг, инкрементальная сборка (Nx/Turborepo) пересобирает только изменённое, shared конфиги. Минус: команды обычно НЕ независимы в деплое — нужна координация.',
       }],
-      docsLink: { url: 'https://habr.com/ru/hub/highload/', title: 'Highload и масштабирование — Habr' },
-      links: [
-        {
-          url: 'https://micro-frontends.org/',
-          title: 'Micro Frontends — micro-frontends.org',
-          source: 'article',
-          language: 'en',
-          note: 'Канонический манифест Michael Geers: определение, паттерны композиции и примеры интеграции независимых SPA.',
-        },
-      ],
     },
 
     {
@@ -688,24 +391,6 @@ packages:
             'Простое правило выбора: pnpm workspaces — для маленьких монорепо (3–5 пакетов). Turborepo — для типового web-стэка с Vercel. Nx — для больших монорепо с разными типами проектов (10+ пакетов) и нуждой в кодогенерации.',
         },
       ],
-      flashcardIds: ['sds-f3', 'sds-f4'],
-      docsLink: { url: 'https://habr.com/ru/hub/monorepo/', title: 'Монорепо — Habr' },
-      links: [
-        {
-          url: 'https://nx.dev/',
-          title: 'Nx — Smart Monorepos · Fast CI',
-          source: 'article',
-          language: 'en',
-          note: 'Документация Nx: project graph, кодогенерация, affected-команды, плагины под React/Next/Node и удалённое кеширование.',
-        },
-        {
-          url: 'https://turborepo.com/docs',
-          title: 'Turborepo Docs',
-          source: 'article',
-          language: 'en',
-          note: 'Turborepo: turbo.json, pipeline, remote cache (Vercel), интеграция с pnpm workspaces.',
-        },
-      ],
     },
 
     {
@@ -786,7 +471,6 @@ export function App() {
             'Single SPA и Module Federation не взаимоисключают друг друга: на больших проектах их часто комбинируют. Single SPA отвечает за маршрутизацию верхнего уровня, MF — за внутренние модули каждого приложения.',
         },
       ],
-      flashcardIds: ['sds-f1', 'sds-f2', 'sds-f11', 'sds-f12'],
       checkpoint: [Q['sds-q5']!, {
         type: 'match-pairs',
         id: 'sdsc-mp1',
@@ -799,25 +483,6 @@ export function App() {
         ],
         explanation: 'Module Federation — самый популярный подход для runtime composition: приложения загружают компоненты друг друга без rebuild. Монорепо решает проблему shared кода и единого тулинга. iframe — простая изоляция но плохой UX.',
       }],
-      docsLink: { url: 'https://habr.com/ru/hub/microfrontends/', title: 'Микрофронтенды — Habr' },
-      video: {
-        source: 'youtube',
-        id: 'D3XYAx30CNc',
-        title: 'Introducing Module Federation in Webpack 5',
-        channel: 'Jack Herrington',
-        language: 'en',
-        durationSec: 18 * 60,
-        description: 'ModuleFederationPlugin, remoteEntry.js, shared singletons и как host подгружает модули из remote во время выполнения.',
-      },
-      links: [
-        {
-          url: 'https://module-federation.io/',
-          title: 'Module Federation — официальная документация',
-          source: 'article',
-          language: 'en',
-          note: 'Module Federation 2.0 для Webpack/Rspack: shared, singleton, runtime API, динамические remote.',
-        },
-      ],
     },
 
     {
@@ -886,8 +551,6 @@ export interface ButtonProps {
             'Хороший design system отвечает на вопрос «где взять кнопку?» одним импортом и закрывает 80% UI-нужд. Если команды всё равно делают «свои» кнопки — значит, в design system не хватает компонентов или процесс контрибуции слишком тяжёлый.',
         },
       ],
-      flashcardIds: ['sds-f7', 'sds-f13', 'sds-f15'],
-      docsLink: { url: 'https://habr.com/ru/hub/microfrontends/', title: 'Дизайн-система — Habr' },
       playground: {
         starterCode: `// Какой тип релиза по semver выбрать в каждом случае?
 // Заполните "patch" | "minor" | "major".
@@ -975,27 +638,7 @@ export async function GET(req: Request) {
             'Практический паттерн: edge-runtime для лёгкой персонализации (геолокация, A/B, заголовки безопасности, лёгкий SSR), node-runtime — для чекаута, тяжёлой бизнес-логики и работы с БД через TCP. Next.js позволяет указывать runtime на уровне сегмента: `export const runtime = "edge" | "nodejs"`.',
         },
       ],
-      flashcardIds: ['sds-f5', 'sds-f6', 'sds-f14'],
       checkpoint: [Q['sds-q9']!],
-      docsLink: { url: 'https://developer.mozilla.org/ru/docs/Web/HTTP/Caching', title: 'Кеширование HTTP — MDN (ru)' },
-      video: {
-        source: 'youtube',
-        id: '48NWaLkDcME',
-        title: 'Here is what Cloudflare Workers do',
-        channel: 'Wes Bos',
-        language: 'en',
-        durationSec: 8 * 60,
-        description: 'Wes Bos: что такое edge function на Cloudflare Workers, как V8 isolate отличается от Lambda, задачи edge.',
-      },
-      links: [
-        {
-          url: 'https://vercel.com/docs/functions/runtimes/edge',
-          title: 'Edge Runtime — Vercel Docs',
-          source: 'article',
-          language: 'en',
-          note: 'Ограничения edge runtime в Next.js: доступные API, лимиты CPU и размера, как выбрать между edge и nodejs.',
-        },
-      ],
     },
 
     {
@@ -1041,9 +684,7 @@ export async function GET(req: Request) {
             'Главный антипаттерн — превращение platform-команды в «бутылочное горлышко»: все продуктовые команды просят их добавить фичу в shell, и они физически не успевают. Лечится контрибутивной моделью (любая команда может прислать PR) и хорошей документацией.',
         },
       ],
-      flashcardIds: ['sds-f8'],
       checkpoint: [Q['sds-q11']!],
-      docsLink: { url: 'https://habr.com/ru/hub/microfrontends/', title: 'Закон Конвея — Habr' },
     },
 
     {
@@ -1095,14 +736,11 @@ export async function GET(req: Request) {
             'Сильный senior-ответ на вопрос «делать ли микрофронтенды?» обычно начинается со слов «зависит от размера команды и от того, есть ли реальная боль независимого деплоя». Это не отговорка, а инженерное мышление: не оптимизировать то, что ещё не стало проблемой.',
         },
       ],
-      flashcardIds: ['sds-f9', 'sds-f10'],
-      docsLink: { url: 'https://habr.com/ru/hub/microfrontends/', title: 'Микрофронтенды — Habr' },
     },
   ],
 
   finalQuiz: quizQuestions.filter((q) => !CHECKPOINT_IDS.has(q.id)),
 
-  flashcards,
 
   cheatsheet: `### Чек-лист «нужны ли микрофронтенды?»
 
@@ -1129,275 +767,6 @@ export async function GET(req: Request) {
 - Breaking → deprecation-период + codemod.
 - Storybook + visual regression обязательны.`,
 
-  interviewQA: [
-    {
-      id: 'sds-iq1',
-      question: 'Когда стоит выбирать микрофронтенды, а когда лучше остаться на монолите?',
-      shortAnswer:
-        'Микрофронтенды решают организационную проблему: 4+ автономных команды, желание независимых релизов, разные стэки. Если этой проблемы нет, монолит дешевле по инфраструктуре, performance и отладке.',
-      fullAnswer: `Это диагностический вопрос: senior-интервьюер хочет проверить, понимаете ли вы, какую проблему решают микрофронтенды и за что вы платите взамен.
-
-**Триггеры в пользу микрофронтендов:**
-- Команд больше четырёх, и они хотят релизиться независимо.
-- Релизы блокируют друг друга: «нельзя выкатить, пока чужая фича не пройдёт ревью».
-- Разные технологические стэки или разный темп планирования.
-- Закон Конвея уже работает: код стихийно делится по границам команд.
-
-**Триггеры против:**
-- Одна команда из 6–10 человек.
-- Общий roadmap и общий релизный цикл.
-- Стек один и в обозримом будущем менять не планируется.
-- Нет бюджета на platform-команду, поддерживающую shell и MF-инфраструктуру.
-
-**Цена микрофронтендов:** дублирование зависимостей без shared singletons, дополнительные roundtrip-ы за \`remoteEntry.js\`, ухудшение Core Web Vitals, сложная отладка через несколько приложений, тяжёлое E2E-тестирование, необходимость явных контрактов через общий пакет.
-
-**Промежуточная ступень.** Прежде чем уходить в MF, попробуйте монорепо с инкрементальной сборкой (Nx, Turborepo). Часто именно он, а не MF, решает реальную боль команды. Микрофронтенды — последний шаг лестницы, а не первый.
-
-Сильный ответ на собеседовании заканчивается фразой: «масштабируем, когда боль становится реальной, а не превентивно». Это сигнал инженерной зрелости.`,
-      followUps: [
-        'Какие конкретные метрики или симптомы говорят, что монолит больше не справляется?',
-        'Как откатиться с микрофронтендов обратно в монолит, если они не зашли?',
-        'Чем платформенная команда отличается от продуктовых в большом фронте?',
-      ],
-      relatedChapterId: 'when-to-scale',
-    },
-    {
-      id: 'sds-iq2',
-      question: 'Чем отличаются Nx и Turborepo? Как выбирать между ними?',
-      shortAnswer:
-        'Turborepo — лёгкий оркестратор задач с remote cache, минимум конфигурации, идеален с Vercel. Nx — полноценная платформа: оркестратор + кодогенераторы + плагины + project graph. Nx сильнее в больших монорепо с разными типами проектов.',
-      fullAnswer: `**Turborepo** разрабатывается в Vercel и сфокусирован на двух вещах: pipeline-оркестрация и удалённое кеширование результата задач. Конфигурация умещается в \`turbo.json\` с описанием тасков и их зависимостей. Remote cache работает «из коробки» с Vercel и доступен через Turborepo Remote Cache API для других провайдеров.
-
-**Nx** разрабатывается Nrwl и предлагает целую платформу: оркестратор + project graph + кодогенераторы + плагины под React, Next, Node, Angular, Storybook. Nx Cloud добавляет распределённое выполнение задач (DTE) и интеллектуальные affected-команды. На больших монорепо (10+ пакетов) Nx окупается за счёт автоматизации.
-
-**Когда выбирать что:**
-- **Turborepo**: типовой web-стек (Next.js + общая библиотека + ui-kit), команда уже на Vercel, конфигурация хочется минимальной.
-- **Nx**: монорепо с разными типами проектов (Next + Node-сервисы + React Native + общие библиотеки), нужна кодогенерация (\`nx g @nx/react:component\`), хочется встроенных affected-команд для CI.
-- **pnpm workspaces без оркестратора**: для 3–5 связанных пакетов без сложного pipeline.
-
-**Общее у них:** оба работают поверх npm/yarn/pnpm workspaces, оба строят граф зависимостей, оба поддерживают удалённый кеш. Разница — в богатстве экосистемы и пороге входа.
-
-Бывает, что монорепо мигрирует с Turborepo на Nx по мере роста; обратная миграция встречается реже. Если вы только начинаете и не уверены — Turborepo проще попробовать и затем при необходимости перейти на Nx.`,
-      followUps: [
-        'Что такое affected-команды и как они ускоряют CI?',
-        'Как устроен remote cache в Turborepo и Nx?',
-        'Когда стоит вообще отказаться от оркестратора и оставить pnpm workspaces?',
-      ],
-      relatedChapterId: 'monorepo',
-    },
-    {
-      id: 'sds-iq3',
-      question: 'Что такое Module Federation и как он работает?',
-      shortAnswer:
-        'Module Federation — рантайм-механизм Webpack 5/Rspack, при котором host-приложение импортирует модули из другого приложения по URL во время выполнения. Поддерживает разделение общих зависимостей через shared с singleton.',
-      fullAnswer: `Module Federation предложен Zack Jackson в Webpack 5 как ответ на вопрос: «как двум независимо собранным и задеплоенным приложениям делиться кодом без бандлеро-склейки на этапе сборки?».
-
-**Как это устроено.** Каждое приложение, которое хочет «отдавать» свои модули, конфигурируется как remote и публикует точку входа \`remoteEntry.js\`. В нём — манифест с описанием экспортов и shared-зависимостей. Host-приложение указывает remote в своей конфигурации:
-
-\`\`\`js
-new ModuleFederationPlugin({
-  name: 'shell',
-  remotes: {
-    cart: 'cart@https://cdn.example.com/cart/remoteEntry.js',
-  },
-  shared: {
-    react: { singleton: true, requiredVersion: '^18.0.0' },
-    'react-dom': { singleton: true },
-  },
-});
-\`\`\`
-
-В рантайме host динамически загружает \`remoteEntry.js\`, рантайм MF разрешает зависимости (в том числе shared) и импортирует нужный модуль:
-
-\`\`\`tsx
-const Cart = React.lazy(() => import('cart/Cart'));
-\`\`\`
-
-**shared singletons.** Без \`singleton: true\` host загружает свой React, а каждый remote — свой. В браузере оказываются две копии React, и любые hooks падают с «Invalid hook call». Поэтому React, ReactDOM, роутер и прочая инфраструктура почти всегда настраиваются как singleton.
-
-**В чём сила MF:**
-- Команды деплоят свои remote независимо: меняется только URL \`remoteEntry.js\`.
-- Host подхватывает новые версии без пересборки.
-- Можно делать A/B-тесты разных версий remote через переключение URL.
-- Не нужны iframe и Single SPA для базовых сценариев.
-
-**Где осторожно:** разные версии React в host и remote, breaking changes в общих типах, отладка ошибок через несколько приложений. Module Federation 2.0 (новая версия для Webpack/Rspack) добавляет более сильные runtime-API, типобезопасные манифесты и инструменты диагностики.`,
-      followUps: [
-        'Что произойдёт, если убрать singleton: true для react в shared?',
-        'Чем Module Federation 2.0 отличается от классической версии?',
-        'Как версионировать API между host и remote, чтобы не было breaking?',
-      ],
-      relatedChapterId: 'microfrontends',
-    },
-    {
-      id: 'sds-iq4',
-      question: 'Как обеспечить shared dependencies в микрофронтендах?',
-      shortAnswer:
-        'Через `shared` в ModuleFederationPlugin с singleton: true для React/ReactDOM/роутера, через общие npm-пакеты для design system и контрактов и через единый рантайм auth/i18n в shell-приложении.',
-      fullAnswer: `Shared dependencies — это набор зависимостей, которые должны существовать в браузере в **одном экземпляре**, а не дублироваться в каждом remote. Это и про код, и про инфраструктурный рантайм.
-
-**1. Shared в Module Federation.** Самое прямое решение для рантайм-зависимостей вроде React:
-
-\`\`\`js
-shared: {
-  react: { singleton: true, requiredVersion: '^18.0.0', strictVersion: false },
-  'react-dom': { singleton: true, requiredVersion: '^18.0.0' },
-  'react-router-dom': { singleton: true },
-}
-\`\`\`
-
-\`singleton: true\` гарантирует одну версию в рантайме. \`requiredVersion\` задаёт желаемую версию, \`strictVersion: true\` падает с ошибкой при несовпадении вместо warning. Без этого — две копии React и Invalid hook call.
-
-**2. Design system как общий npm-пакет.** UI-kit публикуется отдельным пакетом (\`@company/ui-kit\`), все микрофронтенды и shell зависят от него. Версионирование — semver, breaking changes — через major + deprecation. В MF UI-kit обычно не singleton, но требует \`requiredVersion\`, чтобы все были на одной major.
-
-**3. Контракты типов.** Общий пакет \`@company/contracts\` с TypeScript-типами для props, событий и API. Меняется атомарно вместе с микрофронтендами, использующими его.
-
-**4. Общий рантайм в shell.** Auth, i18n, тема, шина событий, observability-клиент — поднимаются в shell и пробрасываются вниз через React Context, browser globals или message channel. Каждый микрофронтенд использует одну и ту же реализацию, не дублируя её.
-
-**5. Дизайн-токены.** Цвета, отступы, типографика — отдельный пакет \`@company/tokens\`, импортируемый и UI-kit-ом, и каждым микрофронтендом.
-
-**Антипаттерн:** «у каждого микрофронтенда свой контекст auth». Это сразу разваливает SSO, единое logout и общий state user-а. Auth — всегда один на shell.`,
-      followUps: [
-        'Что произойдёт при несовпадении версий react в host и remote?',
-        'Как версионировать @company/contracts при breaking change в API?',
-        'Как организовать общую шину событий между микрофронтендами?',
-      ],
-      relatedChapterId: 'microfrontends',
-    },
-    {
-      id: 'sds-iq5',
-      question: 'Чем edge runtime отличается от обычного origin (Node) runtime?',
-      shortAnswer:
-        'Edge выполняется в V8 isolate на CDN-узлах ближе к пользователю — TTFB ≈ 30–80 мс. Origin — Node.js контейнер в одном-двух регионах с полным API. Edge ограничен веб-стандартными API и лимитами CPU; origin без таких ограничений, но платит сетевой латентностью.',
-      fullAnswer: `**Origin runtime.** Классический Node.js сервер на AWS, GCP или Vercel в одном-двух регионах. Доступны все Node API (\`fs\`, \`net\`, \`child_process\`), любые npm-пакеты, прямой TCP к БД. Холодный старт у serverless — сотни миллисекунд (Lambda-контейнер). Сетевая латентность для глобальной аудитории — 100–300 мс ещё до начала работы сервера.
-
-**Edge runtime.** Функция выполняется в V8 isolate (Cloudflare Workers, Vercel Edge, Deno Deploy) на сотнях CDN-узлов. Старт за единицы миллисекунд — нет «холодного старта» в смысле Lambda. TTFB сокращается до десятков миллисекунд для пользователя в любой точке мира.
-
-**Цена edge:**
-- Только веб-стандартные API: \`fetch\`, \`Request\`, \`Response\`, \`Crypto\`, \`Streams\`.
-- Нет \`fs\`, \`net\`, нативных модулей и большинства npm-пакетов с C++ биндингами.
-- CPU-time лимит: десятки миллисекунд на бесплатном плане Cloudflare, до десятков секунд на платном.
-- Размер бандла worker-а — обычно 1–10 МБ.
-- Доступ к БД через HTTP-протокол (Neon, PlanetScale, Upstash) — обычные TCP-клиенты не работают.
-
-**Когда выбирать что:**
-- **Edge**: лёгкая персонализация (геолокация, A/B-тесты, валюта по IP), заголовки безопасности, лёгкий SSR, edge middleware.
-- **Origin**: чекаут, тяжёлая бизнес-логика, прямой TCP к БД, миграции данных, длинные операции, работа с npm-пакетами вроде Sharp, Puppeteer.
-
-**Гибрид.** В Next.js и Remix runtime указывается на уровне сегмента: \`export const runtime = 'edge' | 'nodejs'\`. Лёгкие страницы и middleware идут на edge, тяжёлые — на origin.
-
-**Антипаттерн.** Edge-функция, которая ходит в БД в другом регионе на каждый запрос: сетевая задержка съедает выигрыш близости edge к пользователю. Решения — распределённая БД (Neon, PlanetScale с регионами), edge-friendly KV-кеш, или origin для тяжёлых страниц.`,
-      followUps: [
-        'Чем V8 isolate отличается от Lambda-контейнера?',
-        'Как edge-функция работает с БД в другом регионе и в чём подвох?',
-        'Какие npm-пакеты нельзя использовать на edge и почему?',
-      ],
-      relatedChapterId: 'edge-cdn',
-    },
-    {
-      id: 'sds-iq6',
-      question: 'Как версионировать design system, чтобы не блокировать команды-потребителей?',
-      shortAnswer:
-        'Строго по semver: patch — багфиксы, minor — новые компоненты и пропсы, major — breaking changes. Любой breaking change сопровождается deprecation-периодом, миграционным гайдом и codemod. Storybook и visual regression защищают от случайных breaking.',
-      fullAnswer: `Design system, опубликованный как npm-пакет, превращается в **контракт** между командами. Любое неосторожное изменение мгновенно ломает десятки потребителей. Поэтому процесс выпуска версий должен быть жёстким и предсказуемым.
-
-**Semantic versioning (semver).**
-- **Patch (1.0.x)** — багфиксы, рефакторинг без изменения публичного API. Можно мерджить и публиковать без согласования.
-- **Minor (1.x.0)** — новые компоненты, новые пропсы (с дефолтами), новые варианты. Старые вызовы продолжают работать.
-- **Major (x.0.0)** — breaking changes: удаление пропа, изменение сигнатуры, переименование компонента, смена дизайна.
-
-**Процесс выпуска major:**
-1. Добавляем новый API параллельно со старым, помечая старый \`@deprecated\`.
-2. Выпускаем minor-версию с deprecation-warning. Команды видят его в IDE и в консоли.
-3. Даём deprecation-период (обычно квартал) для миграции.
-4. Выпускаем major с удалением старого API.
-5. Поставляем codemod (jscodeshift), автоматизирующий миграцию.
-
-**Защита от случайных breaking:**
-- **Storybook** с покрытием всех вариантов компонентов.
-- **Visual regression** (Chromatic, Loki) — автоматический скриншот-тест на каждом PR.
-- **API-extractor / api-report** — фиксирует публичный API в виде \`.api.md\` файла, любое изменение видно в diff.
-- **Тесты доступности** (jest-axe) — чтобы не сломать a11y случайно.
-
-**Инструменты публикации:**
-- **changesets** — лёгкий, гибкий, отлично для монорепо.
-- **lerna version** — классический подход.
-- **nx release** — встроен в Nx.
-
-**Антипаттерны:**
-- «Маленький breaking change в minor» — сразу ломает 12 команд, никто не знает, что обновляться нужно.
-- «Удалили старое API без deprecation» — команды узнают об этом, когда у них падает сборка.
-- «Major выкатывается за выходные без миграционного гайда» — рекламный пример «как не надо».
-
-Сильный ответ упоминает codemod как часть процесса: автоматизация миграции снижает порог апгрейда для потребителей.`,
-      followUps: [
-        'Что такое codemod и как его написать на jscodeshift?',
-        'Чем changesets лучше lerna version в монорепо?',
-        'Как организовать визуальную регрессию на CI, чтобы не замедлять PR-ы?',
-      ],
-      relatedChapterId: 'design-system',
-    },
-    {
-      id: 'sds-iq7',
-      question: 'Что такое shell-приложение в архитектуре микрофронтендов?',
-      shortAnswer:
-        'Shell — тонкое приложение-оболочка, которое монтирует микрофронтенды в общий лейаут. Отвечает за роутинг верхнего уровня, авторизацию, общий header/footer, runtime-загрузку remote-приложений и shared-зависимости.',
-      fullAnswer: `Shell — это «контейнер», который видит пользователь, и точка композиции для остальных микрофронтендов. Без shell микрофронтенды — это просто набор независимых SPA, не связанных в продукт.
-
-**Что входит в shell:**
-- **Маршрутизация верхнего уровня.** Shell-роутер делегирует подмаршруты конкретным микрофронтендам: \`/cart/*\` → \`cart\`-remote, \`/catalog/*\` → \`catalog\`-remote.
-- **Авторизация и сессия.** Auth-провайдер живёт в shell, токен передаётся вниз через context, cookie или message channel. SSO и единый logout работают только если auth централизован.
-- **Общий header / footer / навигация.** Эти элементы не должны дублироваться в каждом remote.
-- **Runtime-загрузка remote-приложений.** \`React.lazy(() => import('cart/Cart'))\` плюс Suspense fallback на skeleton.
-- **Shared infrastructure:** дизайн-токены, тема (light/dark), i18n, observability-клиент, шина событий.
-- **Глобальные модалки и тосты.** Общая система уведомлений и порталов.
-- **Глобальный обработчик ошибок.** ErrorBoundary, ловящий падения в любом remote.
-
-**Что не должно быть в shell:**
-- Бизнес-логика конкретных продуктовых доменов (это в микрофронтендах).
-- Тяжёлые зависимости вроде editor-а или графиков.
-- Прямой fetch данных, специфичных для одного раздела.
-
-**Антипаттерн.** «Shell разросся до монолита»: команды постепенно докидывают туда логику, кому-то лень делать новый remote, и через полгода shell весит больше всех микрофронтендов вместе взятых. Лечится дисциплиной и чёткой границей: «в shell — только инфраструктура, никакой бизнес-логики».
-
-**Кто владеет shell.** Обычно — platform-команда. Она же поддерживает контрибутивную модель: любая продуктовая команда может прислать PR в shell, чтобы добавить туда что-то нужное. Без этой модели platform-команда становится «бутылочным горлышком».
-
-В архитектуре с Single SPA shell — это «root config», описывающий, какие приложения mount-ить на каких маршрутах. В Module Federation shell — обычное host-приложение, импортирующее remote через \`React.lazy\`.`,
-      followUps: [
-        'Как организовать shared auth между shell и микрофронтендами?',
-        'Что делать, если shell начинает разрастаться до монолита?',
-        'Как тестировать shell отдельно от микрофронтендов?',
-      ],
-      relatedChapterId: 'microfrontends',
-    },
-    {
-      id: 'sds-iq8',
-      question: 'Объясните закон Конвея и его влияние на архитектуру фронтенда.',
-      shortAnswer:
-        'Закон Конвея: системы повторяют структуру коммуникаций организации. На фронте это означает, что границы кода рано или поздно совпадут с границами команд. Микрофронтенды и монорепо — инженерные ответы на закон Конвея.',
-      fullAnswer: `Мелвин Конвей в 1968 году сформулировал: «организации, проектирующие системы, вынуждены воспроизводить структуру коммуникаций своей организации». На практике это значит: код всегда тяготеет к структуре команд, которые его пишут.
-
-**Как закон Конвея проявляется на фронте:**
-- В монолите команд по 4–6 границы появляются стихийно: «модуль catalog», «модуль cart», «модуль admin». Их пишут разные люди, и стиль, и подходы расходятся.
-- При росте до 6–10 команд монолит «трещит»: общий стейт-менеджер становится спорной территорией, общая сборка тормозит всех, ревью идут через всю команду.
-- В этой точке полезно легализовать границы кода как границы артефактов — пакеты в монорепо или микрофронтенды.
-
-**Inverse Conway maneuver.** Идея, обратная закону: сначала проектируем команды под желаемую архитектуру, затем строят систему. Если хотите микрофронтенды — заранее формируйте автономные продуктовые команды end-to-end (фронт + бэк + дизайн), а не «команду фронта» и «команду бэка». Если структура команд останется «по технологии», получится «монолит, обмазанный микрофронтендами».
-
-**Что это значит для интервью:**
-- Ответ на «делать ли микрофронтенды» зависит от структуры команд, а не только от технологии.
-- Фраза «у нас 5 продуктовых команд, релизы блокируют друг друга» — сильнее аргумента, чем «микрофронтенды модные».
-- Senior-инженер видит, как структура команд формирует код, и предлагает архитектуру, которая выдерживает рост организации, а не только текущий день.
-
-**Где закон не работает.** Если команда одна и продукт один, закон Конвея просто отсутствует как сила: вы не «нарушаете» его, его просто нет. Поэтому маленькие проекты с большими архитектурными амбициями часто буксуют — они оптимизируют под несуществующее давление.`,
-      followUps: [
-        'Что такое inverse Conway maneuver и как он применяется?',
-        'Как закон Конвея объясняет популярность микросервисов на бэке?',
-        'Когда можно игнорировать закон Конвея и почему?',
-      ],
-      relatedChapterId: 'teams-conway',
-    },
-  ],
 
   nextTopics: [
     {

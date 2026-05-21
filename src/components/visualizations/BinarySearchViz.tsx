@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
-import { Button, Paper, Typography, Box } from '@mui/material';
-import { useVizColors } from './_colors';
+import { useState } from 'react';
+import { Box, Button, Typography, useTheme } from '@mui/material';
+import RestartAltIcon from '@mui/icons-material/RestartAlt';
+import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 
 interface Step {
   left: number;
@@ -14,218 +15,244 @@ const arr = [1, 3, 5, 7, 9, 11, 13];
 const target = 9;
 
 const steps: Step[] = [
-  {
-    left: 0,
-    right: 6,
-    mid: 3,
-    found: false,
-    description: 'arr[3] = 7 < 9 — ищем в правой половине',
-  },
-  {
-    left: 4,
-    right: 6,
-    mid: 5,
-    found: false,
-    description: 'arr[5] = 11 > 9 — ищем в левой половине',
-  },
-  {
-    left: 4,
-    right: 4,
-    mid: 4,
-    found: true,
-    description: 'arr[4] = 9 === 9 — Элемент найден!',
-  },
+  { left: 0, right: 6, mid: 3, found: false, description: 'arr[3] = 7 < 9 — ищем в правой половине' },
+  { left: 4, right: 6, mid: 5, found: false, description: 'arr[5] = 11 > 9 — ищем в левой половине' },
+  { left: 4, right: 4, mid: 4, found: true,  description: 'arr[4] = 9 — элемент найден!' },
 ];
 
-const CELL_W = 50;
-const CELL_H = 40;
+const CELL = 44;
 const GAP = 6;
-const START_X = 30;
-const START_Y = 30;
-const POINTER_Y = START_Y + CELL_H + 30;
-
-const baseColors = {
-  primary: '#007AFF',
-  success: '#34C759',
-  orange: '#FF9500',
-  red: '#FF3B30',
-  activeBg: '#E8F0FE',
-  inactiveBg: '#E5E5EA',
-  cellBorder: '#C7C7CC',
-  text: '#1C1C1E',
-  lightText: '#8E8E93',
-};
 
 export default function BinarySearchViz() {
-  const colors = useVizColors(baseColors);
-  const [currentStep, setCurrentStep] = useState(0);
+  const theme = useTheme();
+  const isDark = theme.palette.mode === 'dark';
+  const [stepIdx, setStepIdx] = useState(0);
+  const step = stepIdx > 0 ? steps[stepIdx - 1] : null;
 
-  const step = currentStep > 0 ? steps[currentStep - 1] : null;
-
-  const cellX = (i: number) => START_X + i * (CELL_W + GAP);
-  const cellCenterX = (i: number) => cellX(i) + CELL_W / 2;
-
-  const svgWidth = START_X * 2 + arr.length * (CELL_W + GAP) - GAP;
-  const svgHeight = POINTER_Y + 40;
-
-  const getCellFill = (i: number) => {
-    if (!step) return '#FFFFFF';
-    if (step.found && i === step.mid) return colors.success;
-    if (i === step.mid) return colors.orange + '30';
-    if (i >= step.left && i <= step.right) return colors.activeBg;
-    return colors.inactiveBg;
+  const PALETTE = {
+    cellBg: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.025)',
+    cellBorder: isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.12)',
+    activeBg: isDark ? 'rgba(10,132,255,0.15)' : 'rgba(10,132,255,0.10)',
+    activeBorder: isDark ? 'rgba(10,132,255,0.45)' : 'rgba(10,132,255,0.4)',
+    midBg: isDark ? 'rgba(255,149,0,0.20)' : 'rgba(255,149,0,0.18)',
+    midBorder: '#ff9500',
+    foundBg: isDark ? 'rgba(52,199,89,0.25)' : 'rgba(52,199,89,0.20)',
+    foundBorder: '#34c759',
+    leftColor: '#0a84ff',
+    midColor: '#ff9500',
+    rightColor: '#ff3b30',
   };
 
-  const getCellStroke = (i: number) => {
-    if (!step) return colors.cellBorder;
-    if (step.found && i === step.mid) return colors.success;
-    if (i === step.mid) return colors.orange;
-    return colors.cellBorder;
+  const cellState = (i: number): 'idle' | 'active' | 'mid' | 'found' => {
+    if (!step) return 'idle';
+    if (step.found && i === step.mid) return 'found';
+    if (i === step.mid) return 'mid';
+    if (i >= step.left && i <= step.right) return 'active';
+    return 'idle';
   };
 
-  const renderPointer = (index: number, label: string, color: string) => {
-    const cx = cellCenterX(index);
-    const ty = POINTER_Y;
-    return (
-      <g key={label}>
-        <polygon
-          points={`${cx},${ty - 10} ${cx - 7},${ty + 2} ${cx + 7},${ty + 2}`}
-          fill={color}
-        />
-        <text
-          x={cx}
-          y={ty + 18}
-          textAnchor="middle"
-          fontSize={12}
-          fontWeight={600}
-          fill={color}
-        >
-          {label}
-        </text>
-      </g>
-    );
+  const cellStyle = (s: ReturnType<typeof cellState>) => {
+    switch (s) {
+      case 'found':
+        return { bg: PALETTE.foundBg, border: PALETTE.foundBorder, textColor: 'text.primary' };
+      case 'mid':
+        return { bg: PALETTE.midBg, border: PALETTE.midBorder, textColor: 'text.primary' };
+      case 'active':
+        return { bg: PALETTE.activeBg, border: PALETTE.activeBorder, textColor: 'text.primary' };
+      default:
+        return { bg: PALETTE.cellBg, border: PALETTE.cellBorder, textColor: 'text.disabled' };
+    }
   };
 
   return (
-    <Paper elevation={1} sx={{ p: 3, borderRadius: 3 }}>
-      <Typography variant="h6" sx={{ mb: 0.5, color: colors.text }}>
-        Бинарный поиск
-      </Typography>
-      <Typography variant="body2" sx={{ mb: 2, color: colors.lightText }}>
-        Массив: [{arr.join(', ')}], цель: {target}
+    <Box
+      sx={{
+        p: { xs: 2, sm: 2.5 },
+        borderRadius: 2,
+        border: 1,
+        borderColor: 'divider',
+        backgroundColor: (t) =>
+          t.palette.mode === 'dark' ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.015)',
+      }}
+    >
+      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+        Массив: [{arr.join(', ')}] · цель: <b>{target}</b>
       </Typography>
 
-      <Box sx={{ overflowX: 'auto' }}>
-        <svg
-          width={svgWidth}
-          height={svgHeight}
-          style={{ display: 'block', margin: '0 auto' }}
+      {/* Cells row */}
+      <Box sx={{ overflowX: 'auto', pb: 1 }}>
+        <Box
+          sx={{
+            display: 'inline-flex',
+            flexDirection: 'column',
+            gap: 0.5,
+            minWidth: '100%',
+            justifyContent: 'center',
+          }}
         >
-          {arr.map((val, i) => {
-            const x = cellX(i);
-            return (
-              <g key={i}>
-                <rect
-                  x={x}
-                  y={START_Y}
-                  width={CELL_W}
-                  height={CELL_H}
-                  rx={6}
-                  fill={getCellFill(i)}
-                  stroke={getCellStroke(i)}
-                  strokeWidth={1.5}
-                />
-                <text
-                  x={x + CELL_W / 2}
-                  y={START_Y + CELL_H / 2 + 5}
-                  textAnchor="middle"
-                  fontSize={16}
-                  fontWeight={500}
-                  fill={colors.text}
-                >
-                  {val}
-                </text>
-                <text
-                  x={x + CELL_W / 2}
-                  y={START_Y - 8}
-                  textAnchor="middle"
-                  fontSize={11}
-                  fill={colors.lightText}
-                >
-                  {i}
-                </text>
-              </g>
-            );
-          })}
+          {/* Index row */}
+          <Box sx={{ display: 'flex', gap: `${GAP}px`, justifyContent: 'center' }}>
+            {arr.map((_, i) => (
+              <Box
+                key={i}
+                sx={{
+                  width: CELL,
+                  textAlign: 'center',
+                  fontSize: '0.7rem',
+                  color: 'text.disabled',
+                  fontFamily: 'monospace',
+                }}
+              >
+                {i}
+              </Box>
+            ))}
+          </Box>
 
-          {step && (
-            <>
-              {renderPointer(step.left, 'left', colors.primary)}
-              {renderPointer(step.mid, 'mid', colors.orange)}
-              {renderPointer(step.right, 'right', colors.red)}
-            </>
-          )}
-        </svg>
+          {/* Cells */}
+          <Box sx={{ display: 'flex', gap: `${GAP}px`, justifyContent: 'center' }}>
+            {arr.map((v, i) => {
+              const cs = cellStyle(cellState(i));
+              return (
+                <Box
+                  key={i}
+                  sx={{
+                    width: CELL,
+                    height: CELL,
+                    borderRadius: 1.5,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontWeight: 600,
+                    fontSize: '0.95rem',
+                    bgcolor: cs.bg,
+                    border: 1.5,
+                    borderColor: cs.border,
+                    color: cs.textColor,
+                    transition: 'background-color 0.25s, border-color 0.25s',
+                  }}
+                >
+                  {v}
+                </Box>
+              );
+            })}
+          </Box>
+
+          {/* Pointers */}
+          <Box
+            sx={{
+              display: 'flex',
+              gap: `${GAP}px`,
+              justifyContent: 'center',
+              minHeight: 36,
+              mt: 0.5,
+            }}
+          >
+            {arr.map((_, i) => {
+              if (!step) return <Box key={i} sx={{ width: CELL }} />;
+              const tags: { label: string; color: string }[] = [];
+              if (i === step.left) tags.push({ label: 'L', color: PALETTE.leftColor });
+              if (i === step.mid) tags.push({ label: 'M', color: PALETTE.midColor });
+              if (i === step.right) tags.push({ label: 'R', color: PALETTE.rightColor });
+              return (
+                <Box
+                  key={i}
+                  sx={{
+                    width: CELL,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: 0.25,
+                  }}
+                >
+                  {tags.length > 0 && (
+                    <>
+                      <Box
+                        sx={{
+                          width: 0,
+                          height: 0,
+                          borderLeft: '5px solid transparent',
+                          borderRight: '5px solid transparent',
+                          borderBottom: `6px solid ${tags[0]!.color}`,
+                          opacity: 0,
+                          display: 'none',
+                        }}
+                      />
+                      <Box sx={{ display: 'flex', gap: 0.5 }}>
+                        {tags.map((t) => (
+                          <Box
+                            key={t.label}
+                            sx={{
+                              px: 0.6,
+                              borderRadius: 0.5,
+                              fontSize: '0.65rem',
+                              fontWeight: 700,
+                              color: 'white',
+                              bgcolor: t.color,
+                              minWidth: 14,
+                              textAlign: 'center',
+                              lineHeight: 1.4,
+                            }}
+                          >
+                            {t.label}
+                          </Box>
+                        ))}
+                      </Box>
+                    </>
+                  )}
+                </Box>
+              );
+            })}
+          </Box>
+        </Box>
       </Box>
 
-      {step && (
-        <Typography
-          variant="body2"
-          sx={{
-            mt: 2,
-            p: 1.5,
-            borderRadius: 2,
-            bgcolor: step.found ? '#34C75918' : '#F2F2F7',
-            color: step.found ? colors.success : colors.text,
-            fontWeight: step.found ? 600 : 400,
-            textAlign: 'center',
-          }}
-        >
-          Шаг {currentStep}: {step.description}
+      {/* Status */}
+      <Box
+        sx={{
+          mt: 2,
+          px: 2,
+          py: 1.25,
+          borderRadius: 1.5,
+          minHeight: 44,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          textAlign: 'center',
+          bgcolor: step?.found
+            ? (t) => (t.palette.mode === 'dark' ? 'rgba(52,199,89,0.15)' : 'rgba(52,199,89,0.12)')
+            : (t) => (t.palette.mode === 'dark' ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)'),
+          color: step?.found ? 'success.main' : 'text.secondary',
+          fontWeight: step?.found ? 600 : 400,
+        }}
+      >
+        <Typography variant="body2" sx={{ color: 'inherit', fontWeight: 'inherit' }}>
+          {step
+            ? `Шаг ${stepIdx}: ${step.description}`
+            : 'Нажмите «Следующий шаг», чтобы начать'}
         </Typography>
-      )}
+      </Box>
 
-      {!step && (
-        <Typography
-          variant="body2"
-          sx={{
-            mt: 2,
-            textAlign: 'center',
-            color: 'text.disabled',
-            fontStyle: 'italic',
-          }}
-        >
-          Нажмите &laquo;Следующий шаг&raquo; для начала
-        </Typography>
-      )}
-
-      <Box sx={{ display: 'flex', gap: 1.5, mt: 2 }}>
+      {/* Controls */}
+      <Box sx={{ display: 'flex', gap: 1, mt: 2, justifyContent: 'center' }}>
         <Button
+          size="small"
           variant="contained"
-          disabled={currentStep >= steps.length}
-          onClick={() => setCurrentStep((s) => s + 1)}
-          sx={{
-            bgcolor: colors.primary,
-            textTransform: 'none',
-            borderRadius: 2,
-            '&:hover': { bgcolor: '#005EC4' },
-          }}
+          disabled={stepIdx >= steps.length}
+          onClick={() => setStepIdx((s) => s + 1)}
+          endIcon={<ArrowForwardIcon />}
         >
           Следующий шаг
         </Button>
         <Button
+          size="small"
           variant="outlined"
-          onClick={() => setCurrentStep(0)}
-          sx={{
-            textTransform: 'none',
-            borderRadius: 2,
-            borderColor: colors.primary,
-            color: colors.primary,
-          }}
+          onClick={() => setStepIdx(0)}
+          startIcon={<RestartAltIcon />}
+          disabled={stepIdx === 0}
         >
           Сбросить
         </Button>
       </Box>
-    </Paper>
+    </Box>
   );
 }

@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
-import { Button, Paper, Typography, Box } from '@mui/material';
-import { useVizColors } from './_colors';
+import { useState } from 'react';
+import { Box, Button, Typography, useTheme } from '@mui/material';
+import RestartAltIcon from '@mui/icons-material/RestartAlt';
+import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 
 interface Step {
   left: number;
@@ -19,13 +20,10 @@ const maxHours = 8;
 function calcHours(speed: number): { total: number; detail: string } {
   const parts = orders.map((o) => Math.ceil(o / speed));
   const total = parts.reduce((a, b) => a + b, 0);
-  const detail = orders
-    .map((o, i) => `⌈${o}/${speed}⌉=${parts[i]}`)
-    .join(' + ');
+  const detail = orders.map((o, i) => `⌈${o}/${speed}⌉=${parts[i]}`).join(' + ');
   return { total, detail };
 }
 
-// Pre-compute all steps
 function buildSteps(): Step[] {
   const result: Step[] = [];
   let left = 1;
@@ -36,10 +34,7 @@ function buildSteps(): Step[] {
     const mid = Math.floor((left + right) / 2);
     const { total, detail } = calcHours(mid);
     const fits = total <= maxHours;
-    if (fits) {
-      best = mid;
-    }
-
+    if (fits) best = mid;
     result.push({
       left,
       right,
@@ -48,255 +43,258 @@ function buildSteps(): Step[] {
       fits,
       result: fits ? mid : best,
       description: fits
-        ? `speed=${mid}: ${total} ≤ ${maxHours} — подходит! result=${mid}, сужаем right=${mid - 1}`
+        ? `speed=${mid}: ${total} ≤ ${maxHours} — подходит, сужаем right=${mid - 1}`
         : `speed=${mid}: ${total} > ${maxHours} — не подходит, сужаем left=${mid + 1}`,
       calcDetail: `${detail} = ${total}`,
     });
-
-    if (fits) {
-      right = mid - 1;
-    } else {
-      left = mid + 1;
-    }
+    if (fits) right = mid - 1;
+    else left = mid + 1;
   }
-
   return result;
 }
 
 const steps = buildSteps();
-
-const CELL_W = 44;
-const CELL_H = 36;
-const GAP = 4;
-const START_X = 20;
-const START_Y = 30;
-const POINTER_Y = START_Y + CELL_H + 28;
-
-const baseColors = {
-  primary: '#007AFF',
-  success: '#34C759',
-  orange: '#FF9500',
-  red: '#FF3B30',
-  activeBg: '#E8F0FE',
-  inactiveBg: '#E5E5EA',
-  cellBorder: '#C7C7CC',
-  text: '#1C1C1E',
-  lightText: '#8E8E93',
-};
-
 const searchSpace = Array.from({ length: 11 }, (_, i) => i + 1);
 
+const CELL = 40;
+const GAP = 5;
+
 export default function BinarySearchAnswerViz() {
-  const colors = useVizColors(baseColors);
-  const [currentStep, setCurrentStep] = useState(0);
+  const theme = useTheme();
+  const isDark = theme.palette.mode === 'dark';
+  const [stepIdx, setStepIdx] = useState(0);
+  const step = stepIdx > 0 ? steps[stepIdx - 1] : null;
+  const isFinished = stepIdx >= steps.length;
+  const finalResult = isFinished ? steps[steps.length - 1]!.result : null;
 
-  const step = currentStep > 0 ? steps[currentStep - 1] : null;
-
-  const cellX = (i: number) => START_X + i * (CELL_W + GAP);
-  const cellCenterX = (i: number) => cellX(i) + CELL_W / 2;
-
-  const svgWidth = START_X * 2 + searchSpace.length * (CELL_W + GAP) - GAP;
-  const svgHeight = POINTER_Y + 40;
-
-  const getCellFill = (value: number) => {
-    if (!step) return '#FFFFFF';
-    if (step.fits && value === step.mid) return colors.success + '40';
-    if (!step.fits && value === step.mid) return colors.red + '25';
-    if (value >= step.left && value <= step.right) return colors.activeBg;
-    return colors.inactiveBg;
+  const PALETTE = {
+    cellBg: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.025)',
+    cellBorder: isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.12)',
+    activeBg: isDark ? 'rgba(10,132,255,0.15)' : 'rgba(10,132,255,0.10)',
+    activeBorder: isDark ? 'rgba(10,132,255,0.45)' : 'rgba(10,132,255,0.4)',
+    okBg: isDark ? 'rgba(52,199,89,0.22)' : 'rgba(52,199,89,0.18)',
+    okBorder: '#34c759',
+    badBg: isDark ? 'rgba(255,59,48,0.20)' : 'rgba(255,59,48,0.15)',
+    badBorder: '#ff3b30',
+    leftColor: '#0a84ff',
+    midColor: '#ff9500',
+    rightColor: '#ff3b30',
   };
 
-  const getCellStroke = (value: number) => {
-    if (!step) return colors.cellBorder;
-    if (value === step.mid) return step.fits ? colors.success : colors.red;
-    if (value >= step.left && value <= step.right) return colors.primary;
-    return colors.cellBorder;
+  type CellState = 'idle' | 'active' | 'midOk' | 'midBad';
+  const cellState = (val: number): CellState => {
+    if (!step) return 'idle';
+    if (val === step.mid) return step.fits ? 'midOk' : 'midBad';
+    if (val >= step.left && val <= step.right) return 'active';
+    return 'idle';
   };
 
-  const renderPointer = (value: number, label: string, color: string) => {
-    const idx = value - 1;
-    const cx = cellCenterX(idx);
-    const ty = POINTER_Y;
-    return (
-      <g key={label}>
-        <polygon
-          points={`${cx},${ty - 10} ${cx - 7},${ty + 2} ${cx + 7},${ty + 2}`}
-          fill={color}
-        />
-        <text
-          x={cx}
-          y={ty + 18}
-          textAnchor="middle"
-          fontSize={12}
-          fontWeight={600}
-          fill={color}
-        >
-          {label}
-        </text>
-      </g>
-    );
+  const cellStyle = (s: CellState) => {
+    switch (s) {
+      case 'midOk':
+        return { bg: PALETTE.okBg, border: PALETTE.okBorder };
+      case 'midBad':
+        return { bg: PALETTE.badBg, border: PALETTE.badBorder };
+      case 'active':
+        return { bg: PALETTE.activeBg, border: PALETTE.activeBorder };
+      default:
+        return { bg: PALETTE.cellBg, border: PALETTE.cellBorder };
+    }
   };
-
-  const isFinished = currentStep >= steps.length;
-  const finalResult = isFinished ? steps[steps.length - 1].result : null;
 
   return (
-    <Paper elevation={1} sx={{ p: 3, borderRadius: 3 }}>
-      <Typography variant="h6" sx={{ mb: 0.5, color: colors.text }}>
-        Бинарный поиск по ответу
+    <Box
+      sx={{
+        p: { xs: 2, sm: 2.5 },
+        borderRadius: 2,
+        border: 1,
+        borderColor: 'divider',
+        backgroundColor: (t) =>
+          t.palette.mode === 'dark' ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.015)',
+      }}
+    >
+      <Typography variant="body2" color="text.secondary" sx={{ mb: 0.25 }}>
+        Задача: orders = [{orders.join(', ')}], hours = <b>{maxHours}</b>
       </Typography>
-      <Typography variant="body2" sx={{ mb: 0.5, color: colors.lightText }}>
-        Задача: orders = [{orders.join(', ')}], hours = {maxHours}
-      </Typography>
-      <Typography variant="body2" sx={{ mb: 2, color: colors.lightText }}>
-        Найти минимальную скорость доставки. Пространство поиска: speed от 1 до{' '}
-        {Math.max(...orders)}
+      <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 2 }}>
+        Ищем минимальную скорость доставки. Пространство ответов: speed от 1 до {Math.max(...orders)}.
       </Typography>
 
-      <Box sx={{ overflowX: 'auto' }}>
-        <svg
-          width={svgWidth}
-          height={svgHeight}
-          style={{ display: 'block', margin: '0 auto' }}
-        >
-          {searchSpace.map((val, i) => {
-            const x = cellX(i);
-            return (
-              <g key={i}>
-                <rect
-                  x={x}
-                  y={START_Y}
-                  width={CELL_W}
-                  height={CELL_H}
-                  rx={6}
-                  fill={getCellFill(val)}
-                  stroke={getCellStroke(val)}
-                  strokeWidth={1.5}
-                />
-                <text
-                  x={x + CELL_W / 2}
-                  y={START_Y + CELL_H / 2 + 5}
-                  textAnchor="middle"
-                  fontSize={15}
-                  fontWeight={500}
-                  fill={colors.text}
+      <Box sx={{ overflowX: 'auto', pb: 1 }}>
+        <Box sx={{ display: 'inline-flex', flexDirection: 'column', gap: 0.5, minWidth: '100%' }}>
+          {/* "speed" label row */}
+          <Box sx={{ display: 'flex', gap: `${GAP}px`, justifyContent: 'center' }}>
+            {searchSpace.map((_, i) => (
+              <Box
+                key={i}
+                sx={{
+                  width: CELL,
+                  textAlign: 'center',
+                  fontSize: '0.65rem',
+                  color: 'text.disabled',
+                }}
+              >
+                {i === 0 ? 'speed' : ''}
+              </Box>
+            ))}
+          </Box>
+          {/* Cells */}
+          <Box sx={{ display: 'flex', gap: `${GAP}px`, justifyContent: 'center' }}>
+            {searchSpace.map((v) => {
+              const cs = cellStyle(cellState(v));
+              return (
+                <Box
+                  key={v}
+                  sx={{
+                    width: CELL,
+                    height: CELL,
+                    borderRadius: 1.5,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontWeight: 600,
+                    fontSize: '0.9rem',
+                    bgcolor: cs.bg,
+                    border: 1.5,
+                    borderColor: cs.border,
+                    color: 'text.primary',
+                    transition: 'background-color 0.25s, border-color 0.25s',
+                  }}
                 >
-                  {val}
-                </text>
-                <text
-                  x={x + CELL_W / 2}
-                  y={START_Y - 8}
-                  textAnchor="middle"
-                  fontSize={10}
-                  fill={colors.lightText}
-                >
-                  speed
-                </text>
-              </g>
-            );
-          })}
-
-          {step && (
-            <>
-              {renderPointer(step.left, 'left', colors.primary)}
-              {renderPointer(step.mid, 'mid', colors.orange)}
-              {renderPointer(step.right, 'right', colors.red)}
-            </>
-          )}
-        </svg>
+                  {v}
+                </Box>
+              );
+            })}
+          </Box>
+          {/* Pointers */}
+          <Box sx={{ display: 'flex', gap: `${GAP}px`, justifyContent: 'center', minHeight: 24, mt: 0.5 }}>
+            {searchSpace.map((v) => {
+              if (!step) return <Box key={v} sx={{ width: CELL }} />;
+              const tags: { label: string; color: string }[] = [];
+              if (v === step.left) tags.push({ label: 'L', color: PALETTE.leftColor });
+              if (v === step.mid) tags.push({ label: 'M', color: PALETTE.midColor });
+              if (v === step.right) tags.push({ label: 'R', color: PALETTE.rightColor });
+              return (
+                <Box key={v} sx={{ width: CELL, display: 'flex', justifyContent: 'center', gap: 0.5 }}>
+                  {tags.map((t) => (
+                    <Box
+                      key={t.label}
+                      sx={{
+                        px: 0.6,
+                        borderRadius: 0.5,
+                        fontSize: '0.65rem',
+                        fontWeight: 700,
+                        color: 'white',
+                        bgcolor: t.color,
+                        minWidth: 14,
+                        textAlign: 'center',
+                        lineHeight: 1.4,
+                      }}
+                    >
+                      {t.label}
+                    </Box>
+                  ))}
+                </Box>
+              );
+            })}
+          </Box>
+        </Box>
       </Box>
 
+      {/* Calc + status */}
       {step && (
-        <Box sx={{ mt: 2 }}>
-          <Typography
-            variant="body2"
+        <Box sx={{ mt: 2, display: 'flex', flexDirection: 'column', gap: 1 }}>
+          <Box
             sx={{
-              p: 1.5,
-              borderRadius: 2,
-              bgcolor: '#F2F2F7',
-              color: colors.lightText,
+              px: 1.5,
+              py: 1,
+              borderRadius: 1.5,
               fontFamily: '"SF Mono", "Fira Code", Consolas, monospace',
-              fontSize: '0.82rem',
-              mb: 1,
+              fontSize: '0.8rem',
+              bgcolor: (t) =>
+                t.palette.mode === 'dark' ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)',
+              color: 'text.secondary',
             }}
           >
-            Часы = {step.calcDetail}
-          </Typography>
-          <Typography
-            variant="body2"
+            часов = {step.calcDetail}
+          </Box>
+          <Box
             sx={{
-              p: 1.5,
-              borderRadius: 2,
-              bgcolor: step.fits ? '#34C75918' : '#FF3B3018',
-              color: step.fits ? colors.success : colors.red,
-              fontWeight: 500,
+              px: 2,
+              py: 1.25,
+              borderRadius: 1.5,
               textAlign: 'center',
+              bgcolor: step.fits
+                ? (t) => (t.palette.mode === 'dark' ? 'rgba(52,199,89,0.15)' : 'rgba(52,199,89,0.12)')
+                : (t) => (t.palette.mode === 'dark' ? 'rgba(255,59,48,0.15)' : 'rgba(255,59,48,0.10)'),
+              color: step.fits ? 'success.main' : 'error.main',
+              fontWeight: 500,
             }}
           >
-            Шаг {currentStep}: {step.description}
-          </Typography>
+            <Typography variant="body2" sx={{ color: 'inherit', fontWeight: 'inherit' }}>
+              Шаг {stepIdx}: {step.description}
+            </Typography>
+          </Box>
         </Box>
       )}
 
       {!step && !isFinished && (
-        <Typography
-          variant="body2"
+        <Box
           sx={{
             mt: 2,
+            px: 2,
+            py: 1.25,
+            borderRadius: 1.5,
             textAlign: 'center',
-            color: 'text.disabled',
-            fontStyle: 'italic',
+            bgcolor: (t) =>
+              t.palette.mode === 'dark' ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)',
+            color: 'text.secondary',
           }}
         >
-          Нажмите &laquo;Следующий шаг&raquo; для начала
-        </Typography>
+          <Typography variant="body2">Нажмите «Следующий шаг», чтобы начать</Typography>
+        </Box>
       )}
 
       {isFinished && (
-        <Typography
-          variant="body2"
+        <Box
           sx={{
             mt: 2,
-            p: 1.5,
-            borderRadius: 2,
-            bgcolor: '#34C75918',
-            color: colors.success,
-            fontWeight: 600,
+            px: 2,
+            py: 1.5,
+            borderRadius: 1.5,
             textAlign: 'center',
+            bgcolor: (t) =>
+              t.palette.mode === 'dark' ? 'rgba(52,199,89,0.15)' : 'rgba(52,199,89,0.12)',
+            color: 'success.main',
+            fontWeight: 600,
           }}
         >
-          Ответ: минимальная скорость = {finalResult}. Мы искали не по массиву, а
-          по пространству ответов!
-        </Typography>
+          <Typography variant="body2" sx={{ color: 'inherit', fontWeight: 'inherit' }}>
+            Минимальная скорость = {finalResult}. Искали не в массиве, а в пространстве ответов.
+          </Typography>
+        </Box>
       )}
 
-      <Box sx={{ display: 'flex', gap: 1.5, mt: 2 }}>
+      <Box sx={{ display: 'flex', gap: 1, mt: 2, justifyContent: 'center' }}>
         <Button
+          size="small"
           variant="contained"
           disabled={isFinished}
-          onClick={() => setCurrentStep((s) => s + 1)}
-          sx={{
-            bgcolor: colors.primary,
-            textTransform: 'none',
-            borderRadius: 2,
-            '&:hover': { bgcolor: '#005EC4' },
-          }}
+          onClick={() => setStepIdx((s) => s + 1)}
+          endIcon={<ArrowForwardIcon />}
         >
           Следующий шаг
         </Button>
         <Button
+          size="small"
           variant="outlined"
-          onClick={() => setCurrentStep(0)}
-          sx={{
-            textTransform: 'none',
-            borderRadius: 2,
-            borderColor: colors.primary,
-            color: colors.primary,
-          }}
+          onClick={() => setStepIdx(0)}
+          startIcon={<RestartAltIcon />}
+          disabled={stepIdx === 0}
         >
           Сбросить
         </Button>
       </Box>
-    </Paper>
+    </Box>
   );
 }

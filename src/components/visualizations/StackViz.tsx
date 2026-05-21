@@ -1,29 +1,9 @@
-import React, { useState } from 'react';
-import { Button, Paper, Typography, Box } from '@mui/material';
-import { useVizColors } from './_colors';
+import { useState } from 'react';
+import { Box, Button, Typography, useTheme } from '@mui/material';
+import RestartAltIcon from '@mui/icons-material/RestartAlt';
+import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 
 const input = '({[]})';
-
-const baseColors = {
-  primary: '#007AFF',
-  success: '#34C759',
-  orange: '#FF9500',
-  red: '#FF3B30',
-  activeBg: '#E8F0FE',
-  inactiveBg: '#E5E5EA',
-  cellBorder: '#C7C7CC',
-  text: '#1C1C1E',
-  lightText: '#8E8E93',
-};
-
-const bracketColor: Record<string, string> = {
-  '(': baseColors.primary,
-  ')': baseColors.primary,
-  '{': baseColors.success,
-  '}': baseColors.success,
-  '[': baseColors.orange,
-  ']': baseColors.orange,
-};
 
 interface Step {
   charIndex: number;
@@ -33,284 +13,183 @@ interface Step {
 }
 
 const steps: Step[] = [
-  {
-    charIndex: 0,
-    stack: ['('],
-    action: 'push',
-    description: "Читаем '(' — кладём в стек",
-  },
-  {
-    charIndex: 1,
-    stack: ['(', '{'],
-    action: 'push',
-    description: "Читаем '{' — кладём в стек",
-  },
-  {
-    charIndex: 2,
-    stack: ['(', '{', '['],
-    action: 'push',
-    description: "Читаем '[' — кладём в стек",
-  },
-  {
-    charIndex: 3,
-    stack: ['(', '{'],
-    action: 'pop',
-    description: "Читаем ']' — совпадает с '[' на вершине → извлекаем!",
-  },
-  {
-    charIndex: 4,
-    stack: ['('],
-    action: 'pop',
-    description: "Читаем '}' — совпадает с '{' на вершине → извлекаем!",
-  },
-  {
-    charIndex: 5,
-    stack: [],
-    action: 'pop',
-    description: "Читаем ')' — совпадает с '(' на вершине → извлекаем!",
-  },
-  {
-    charIndex: -1,
-    stack: [],
-    action: 'done',
-    description: 'Стек пуст → Валидно!',
-  },
+  { charIndex: 0, stack: ['('],                action: 'push', description: "Читаем '(' — кладём в стек" },
+  { charIndex: 1, stack: ['(', '{'],           action: 'push', description: "Читаем '{' — кладём в стек" },
+  { charIndex: 2, stack: ['(', '{', '['],      action: 'push', description: "Читаем '[' — кладём в стек" },
+  { charIndex: 3, stack: ['(', '{'],           action: 'pop',  description: "Читаем ']' — совпадает с '[' на вершине, извлекаем" },
+  { charIndex: 4, stack: ['('],                action: 'pop',  description: "Читаем '}' — совпадает с '{' на вершине, извлекаем" },
+  { charIndex: 5, stack: [],                   action: 'pop',  description: "Читаем ')' — совпадает с '(' на вершине, извлекаем" },
+  { charIndex: -1, stack: [],                  action: 'done', description: 'Стек пуст. Строка валидна.' },
 ];
 
-const CHAR_CELL = 44;
-const CHAR_GAP = 6;
-const CHAR_H = 40;
-const CHAR_START_X = 30;
-const CHAR_Y = 20;
+const CELL = 44;
+const GAP = 6;
 
-const STACK_CELL_W = 56;
-const STACK_CELL_H = 36;
-const STACK_BASE_Y = 260;
-const STACK_X = 160;
-const STACK_GAP = 6;
+const bracketColor: Record<string, string> = {
+  '(': '#0a84ff',
+  ')': '#0a84ff',
+  '{': '#34c759',
+  '}': '#34c759',
+  '[': '#ff9500',
+  ']': '#ff9500',
+};
 
 export default function StackViz() {
-  const colors = useVizColors(baseColors);
-  const [currentStep, setCurrentStep] = useState(0);
+  const theme = useTheme();
+  const isDark = theme.palette.mode === 'dark';
+  const [stepIdx, setStepIdx] = useState(0);
+  const step = stepIdx > 0 ? steps[stepIdx - 1]! : null;
 
-  const step = currentStep > 0 ? steps[currentStep - 1] : null;
-
-  const svgWidth = Math.max(
-    CHAR_START_X * 2 + input.length * (CHAR_CELL + CHAR_GAP),
-    400,
-  );
-  const svgHeight = 290;
+  const PALETTE = {
+    cellBg: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.025)',
+    cellBorder: isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.12)',
+    activeBg: isDark ? 'rgba(255,149,0,0.18)' : 'rgba(255,149,0,0.14)',
+    activeBorder: '#ff9500',
+    doneBg: isDark ? 'rgba(52,199,89,0.20)' : 'rgba(52,199,89,0.16)',
+    doneColor: '#34c759',
+  };
 
   return (
-    <Paper elevation={1} sx={{ p: 3, borderRadius: 3 }}>
-      <Typography variant="h6" sx={{ mb: 0.5, color: colors.text }}>
-        Валидация скобок (стек)
-      </Typography>
-      <Typography variant="body2" sx={{ mb: 2, color: colors.lightText }}>
-        Строка: &quot;{input}&quot;
+    <Box
+      sx={{
+        p: { xs: 2, sm: 2.5 },
+        borderRadius: 2,
+        border: 1,
+        borderColor: 'divider',
+        backgroundColor: (t) =>
+          t.palette.mode === 'dark' ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.015)',
+      }}
+    >
+      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+        Проверка сбалансированности скобок: <code>{input}</code>
       </Typography>
 
-      <Box sx={{ overflowX: 'auto' }}>
-        <svg
-          width={svgWidth}
-          height={svgHeight}
-          style={{ display: 'block', margin: '0 auto' }}
-        >
-          {/* Input string cells */}
-          {input.split('').map((ch, i) => {
-            const x = CHAR_START_X + i * (CHAR_CELL + CHAR_GAP);
-            const isCurrent = step && step.charIndex === i;
-            const isProcessed = step && step.charIndex > i;
+      {/* String chars */}
+      <Box sx={{ overflowX: 'auto', pb: 1 }}>
+        <Box sx={{ display: 'flex', gap: `${GAP}px`, justifyContent: 'center' }}>
+          {[...input].map((ch, i) => {
+            const isCurrent = step !== null && step.charIndex === i;
+            const isPast = step !== null && step.charIndex !== -1 && i < step.charIndex;
+            const color = bracketColor[ch] ?? 'text.primary';
             return (
-              <g key={i}>
-                <rect
-                  x={x}
-                  y={CHAR_Y}
-                  width={CHAR_CELL}
-                  height={CHAR_H}
-                  rx={8}
-                  fill={isCurrent ? colors.activeBg : isProcessed ? '#F2F2F7' : '#FFFFFF'}
-                  stroke={isCurrent ? colors.primary : colors.cellBorder}
-                  strokeWidth={isCurrent ? 2.5 : 1.5}
-                />
-                <text
-                  x={x + CHAR_CELL / 2}
-                  y={CHAR_Y + CHAR_H / 2 + 6}
-                  textAnchor="middle"
-                  fontSize={18}
-                  fontWeight={600}
-                  fill={isCurrent ? colors.primary : isProcessed ? colors.lightText : colors.text}
-                >
-                  {ch}
-                </text>
-              </g>
+              <Box
+                key={i}
+                sx={{
+                  width: CELL,
+                  height: CELL,
+                  borderRadius: 1.5,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontFamily: 'monospace',
+                  fontSize: '1.1rem',
+                  fontWeight: 700,
+                  bgcolor: isCurrent ? PALETTE.activeBg : PALETTE.cellBg,
+                  border: 1.5,
+                  borderColor: isCurrent ? PALETTE.activeBorder : PALETTE.cellBorder,
+                  color,
+                  opacity: isPast ? 0.5 : 1,
+                  transition: 'background-color 0.25s, border-color 0.25s, opacity 0.25s',
+                }}
+              >
+                {ch}
+              </Box>
             );
           })}
-
-          {/* Label */}
-          <text
-            x={CHAR_START_X}
-            y={CHAR_Y + CHAR_H + 30}
-            fontSize={13}
-            fontWeight={600}
-            fill={colors.lightText}
-          >
-            Стек:
-          </text>
-
-          {/* Stack visualization — vertical, growing upward */}
-          {step &&
-            step.stack.map((ch, i) => {
-              const y = STACK_BASE_Y - (i + 1) * (STACK_CELL_H + STACK_GAP);
-              const color = bracketColor[ch] || colors.primary;
-              return (
-                <g key={`stack-${i}`}>
-                  <rect
-                    x={STACK_X}
-                    y={y}
-                    width={STACK_CELL_W}
-                    height={STACK_CELL_H}
-                    rx={8}
-                    fill={color + '20'}
-                    stroke={color}
-                    strokeWidth={2}
-                  />
-                  <text
-                    x={STACK_X + STACK_CELL_W / 2}
-                    y={y + STACK_CELL_H / 2 + 6}
-                    textAnchor="middle"
-                    fontSize={18}
-                    fontWeight={600}
-                    fill={color}
-                  >
-                    {ch}
-                  </text>
-                  {/* Arrow indicating top */}
-                  {i === step.stack.length - 1 && (
-                    <>
-                      <text
-                        x={STACK_X + STACK_CELL_W + 14}
-                        y={y + STACK_CELL_H / 2 + 5}
-                        fontSize={12}
-                        fontWeight={600}
-                        fill={colors.primary}
-                      >
-                        ← вершина
-                      </text>
-                    </>
-                  )}
-                </g>
-              );
-            })}
-
-          {/* Stack base line */}
-          <line
-            x1={STACK_X - 10}
-            y1={STACK_BASE_Y + 4}
-            x2={STACK_X + STACK_CELL_W + 10}
-            y2={STACK_BASE_Y + 4}
-            stroke={colors.cellBorder}
-            strokeWidth={2}
-            strokeLinecap="round"
-          />
-
-          {/* Pop checkmark */}
-          {step && step.action === 'pop' && (
-            <g>
-              <circle
-                cx={STACK_X + STACK_CELL_W + 80}
-                cy={STACK_BASE_Y - (step.stack.length + 1) * (STACK_CELL_H + STACK_GAP) + STACK_CELL_H / 2}
-                r={14}
-                fill={colors.success + '20'}
-                stroke={colors.success}
-                strokeWidth={1.5}
-              />
-              <text
-                x={STACK_X + STACK_CELL_W + 80}
-                y={STACK_BASE_Y - (step.stack.length + 1) * (STACK_CELL_H + STACK_GAP) + STACK_CELL_H / 2 + 5}
-                textAnchor="middle"
-                fontSize={16}
-                fill={colors.success}
-              >
-                ✓
-              </text>
-            </g>
-          )}
-
-          {/* Done — valid */}
-          {step && step.action === 'done' && (
-            <text
-              x={STACK_X + STACK_CELL_W / 2}
-              y={STACK_BASE_Y - 20}
-              textAnchor="middle"
-              fontSize={18}
-              fontWeight={700}
-              fill={colors.success}
-            >
-              Валидно!
-            </text>
-          )}
-        </svg>
+        </Box>
       </Box>
 
-      {step && (
-        <Typography
-          variant="body2"
+      {/* Stack — visually grows upward */}
+      <Box sx={{ mt: 3 }}>
+        <Typography variant="overline" color="text.secondary" sx={{ display: 'block', mb: 1, textAlign: 'center' }}>
+          Стек (вершина сверху)
+        </Typography>
+        <Box
           sx={{
-            mt: 2,
-            p: 1.5,
-            borderRadius: 2,
-            bgcolor: step.action === 'done' ? '#34C75918' : step.action === 'pop' ? '#34C75910' : '#F2F2F7',
-            color: step.action === 'done' ? colors.success : colors.text,
-            fontWeight: step.action === 'done' ? 600 : 400,
-            textAlign: 'center',
+            display: 'flex',
+            flexDirection: 'column-reverse',
+            alignItems: 'center',
+            gap: `${GAP}px`,
+            minHeight: 3 * (CELL + GAP),
+            justifyContent: 'flex-start',
           }}
         >
-          Шаг {currentStep}: {step.description}
-        </Typography>
-      )}
+          {step === null || step.stack.length === 0 ? (
+            <Box sx={{ color: 'text.disabled', fontStyle: 'italic', fontSize: '0.85rem' }}>
+              (пусто)
+            </Box>
+          ) : (
+            step.stack.map((ch, i) => {
+              const isTop = i === step.stack.length - 1;
+              return (
+                <Box
+                  key={i}
+                  sx={{
+                    width: CELL * 1.5,
+                    height: CELL,
+                    borderRadius: 1.5,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontFamily: 'monospace',
+                    fontSize: '1.1rem',
+                    fontWeight: 700,
+                    bgcolor: isTop && step.action !== 'done' ? PALETTE.activeBg : PALETTE.cellBg,
+                    border: 1.5,
+                    borderColor: isTop && step.action !== 'done' ? PALETTE.activeBorder : PALETTE.cellBorder,
+                    color: bracketColor[ch] ?? 'text.primary',
+                  }}
+                >
+                  {ch}
+                </Box>
+              );
+            })
+          )}
+        </Box>
+      </Box>
 
-      {!step && (
-        <Typography
-          variant="body2"
-          sx={{
-            mt: 2,
-            textAlign: 'center',
-            color: 'text.disabled',
-            fontStyle: 'italic',
-          }}
-        >
-          Нажмите &laquo;Следующий шаг&raquo; для начала
+      {/* Status */}
+      <Box
+        sx={{
+          mt: 2,
+          px: 2,
+          py: 1.25,
+          borderRadius: 1.5,
+          textAlign: 'center',
+          bgcolor: step?.action === 'done'
+            ? PALETTE.doneBg
+            : (t) => (t.palette.mode === 'dark' ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)'),
+          color: step?.action === 'done' ? 'success.main' : 'text.secondary',
+          fontWeight: step?.action === 'done' ? 600 : 400,
+        }}
+      >
+        <Typography variant="body2" sx={{ color: 'inherit', fontWeight: 'inherit' }}>
+          {step
+            ? `Шаг ${stepIdx} / ${steps.length}: ${step.description}`
+            : 'Нажмите «Следующий шаг», чтобы начать.'}
         </Typography>
-      )}
+      </Box>
 
-      <Box sx={{ display: 'flex', gap: 1.5, mt: 2 }}>
+      <Box sx={{ display: 'flex', gap: 1, mt: 2, justifyContent: 'center' }}>
         <Button
+          size="small"
           variant="contained"
-          disabled={currentStep >= steps.length}
-          onClick={() => setCurrentStep((s) => s + 1)}
-          sx={{
-            bgcolor: colors.primary,
-            textTransform: 'none',
-            borderRadius: 2,
-            '&:hover': { bgcolor: '#005EC4' },
-          }}
+          disabled={stepIdx >= steps.length}
+          onClick={() => setStepIdx((s) => Math.min(s + 1, steps.length))}
+          endIcon={<ArrowForwardIcon />}
         >
           Следующий шаг
         </Button>
         <Button
+          size="small"
           variant="outlined"
-          onClick={() => setCurrentStep(0)}
-          sx={{
-            textTransform: 'none',
-            borderRadius: 2,
-            borderColor: colors.primary,
-            color: colors.primary,
-          }}
+          onClick={() => setStepIdx(0)}
+          startIcon={<RestartAltIcon />}
+          disabled={stepIdx === 0}
         >
           Сбросить
         </Button>
       </Box>
-    </Paper>
+    </Box>
   );
 }

@@ -1,155 +1,73 @@
-import React, { useState } from 'react';
-import { Button, Paper, Typography, Box } from '@mui/material';
-import { useVizColors } from './_colors';
-
-const baseColors = {
-  primary: '#007AFF',
-  success: '#34C759',
-  orange: '#FF9500',
-  red: '#FF3B30',
-  activeBg: '#E8F0FE',
-  inactiveBg: '#E5E5EA',
-  cellBorder: '#C7C7CC',
-  text: '#1C1C1E',
-  lightText: '#8E8E93',
-  visited: '#D1D1D6',
-};
+import { Box, Typography, useTheme } from '@mui/material';
 
 interface TreeNode {
   id: number;
+  label: string;
   x: number;
   y: number;
+  role: 'root' | 'internal' | 'leaf';
   children: number[];
 }
 
 const nodes: TreeNode[] = [
-  { id: 1, x: 200, y: 40, children: [2, 3, 4] },
-  { id: 2, x: 80, y: 120, children: [5, 6] },
-  { id: 3, x: 200, y: 120, children: [] },
-  { id: 4, x: 320, y: 120, children: [7] },
-  { id: 5, x: 40, y: 200, children: [] },
-  { id: 6, x: 120, y: 200, children: [] },
-  { id: 7, x: 320, y: 200, children: [] },
+  { id: 1, label: '1', x: 200, y: 40,  role: 'root',     children: [2, 3, 4] },
+  { id: 2, label: '2', x: 80,  y: 130, role: 'internal', children: [5, 6] },
+  { id: 3, label: '3', x: 200, y: 130, role: 'leaf',     children: [] },
+  { id: 4, label: '4', x: 320, y: 130, role: 'internal', children: [7] },
+  { id: 5, label: '5', x: 40,  y: 220, role: 'leaf',     children: [] },
+  { id: 6, label: '6', x: 120, y: 220, role: 'leaf',     children: [] },
+  { id: 7, label: '7', x: 320, y: 220, role: 'leaf',     children: [] },
 ];
 
 const nodeById = new Map(nodes.map((n) => [n.id, n]));
 
-interface Step {
-  currentNode: number;
-  visited: number[];
-  result: number[];
-  description: string;
-  done: boolean;
-}
-
-const steps: Step[] = [
-  {
-    currentNode: 1,
-    visited: [],
-    result: [1],
-    description: 'Посещаем корень — узел 1',
-    done: false,
-  },
-  {
-    currentNode: 2,
-    visited: [1],
-    result: [1, 2],
-    description: 'Идём в первого потомка узла 1 — узел 2',
-    done: false,
-  },
-  {
-    currentNode: 5,
-    visited: [1, 2],
-    result: [1, 2, 5],
-    description: 'Идём в первого потомка узла 2 — узел 5 (лист)',
-    done: false,
-  },
-  {
-    currentNode: 6,
-    visited: [1, 2, 5],
-    result: [1, 2, 5, 6],
-    description: 'Возвращаемся, идём во второго потомка узла 2 — узел 6 (лист)',
-    done: false,
-  },
-  {
-    currentNode: 3,
-    visited: [1, 2, 5, 6],
-    result: [1, 2, 5, 6, 3],
-    description: 'Возвращаемся к узлу 1, идём в узел 3 (лист)',
-    done: false,
-  },
-  {
-    currentNode: 4,
-    visited: [1, 2, 5, 6, 3],
-    result: [1, 2, 5, 6, 3, 4],
-    description: 'Идём в третьего потомка узла 1 — узел 4',
-    done: false,
-  },
-  {
-    currentNode: 7,
-    visited: [1, 2, 5, 6, 3, 4],
-    result: [1, 2, 5, 6, 3, 4, 7],
-    description: 'Идём в потомка узла 4 — узел 7 (лист)',
-    done: false,
-  },
-  {
-    currentNode: -1,
-    visited: [1, 2, 5, 6, 3, 4, 7],
-    result: [1, 2, 5, 6, 3, 4, 7],
-    description: 'Обход завершён!',
-    done: true,
-  },
-];
-
 const NODE_R = 22;
-const RESULT_CELL = 40;
-const RESULT_GAP = 6;
-const RESULT_Y = 260;
+const SVG_W = 400;
+const SVG_H = 260;
 
 export default function TreeViz() {
-  const colors = useVizColors(baseColors);
-  const [currentStep, setCurrentStep] = useState(0);
+  const theme = useTheme();
+  const isDark = theme.palette.mode === 'dark';
 
-  const step = currentStep > 0 ? steps[currentStep - 1] : null;
-
-  const getNodeFill = (id: number) => {
-    if (!step) return '#FFFFFF';
-    if (step.currentNode === id) return colors.primary;
-    if (step.visited.includes(id)) return colors.visited;
-    return '#FFFFFF';
+  const PALETTE = {
+    edge: isDark ? 'rgba(255,255,255,0.20)' : 'rgba(0,0,0,0.20)',
+    rootFill: isDark ? 'rgba(10,132,255,0.20)' : 'rgba(10,132,255,0.14)',
+    rootStroke: '#0a84ff',
+    internalFill: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)',
+    internalStroke: isDark ? 'rgba(255,255,255,0.30)' : 'rgba(0,0,0,0.30)',
+    leafFill: isDark ? 'rgba(52,199,89,0.18)' : 'rgba(52,199,89,0.14)',
+    leafStroke: '#34c759',
+    text: isDark ? '#f2f2f7' : '#1c1c1e',
   };
 
-  const getNodeTextFill = (id: number) => {
-    if (!step) return colors.text;
-    if (step.currentNode === id) return '#FFFFFF';
-    return colors.text;
+  const styleFor = (role: TreeNode['role']) => {
+    switch (role) {
+      case 'root':
+        return { fill: PALETTE.rootFill, stroke: PALETTE.rootStroke };
+      case 'leaf':
+        return { fill: PALETTE.leafFill, stroke: PALETTE.leafStroke };
+      default:
+        return { fill: PALETTE.internalFill, stroke: PALETTE.internalStroke };
+    }
   };
-
-  const getNodeStroke = (id: number) => {
-    if (!step) return colors.cellBorder;
-    if (step.currentNode === id) return colors.primary;
-    if (step.visited.includes(id)) return colors.visited;
-    return colors.cellBorder;
-  };
-
-  const svgWidth = 400;
-  const svgHeight = 320;
 
   return (
-    <Paper elevation={1} sx={{ p: 3, borderRadius: 3 }}>
-      <Typography variant="h6" sx={{ mb: 0.5, color: colors.text }}>
-        Обход дерева в глубину (DFS)
-      </Typography>
-      <Typography variant="body2" sx={{ mb: 2, color: colors.lightText }}>
-        Прямой обход (pre-order) дерева
+    <Box
+      sx={{
+        p: { xs: 2, sm: 2.5 },
+        borderRadius: 2,
+        border: 1,
+        borderColor: 'divider',
+        backgroundColor: (t) =>
+          t.palette.mode === 'dark' ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.015)',
+      }}
+    >
+      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+        Структура дерева: корень, внутренние узлы и листья.
       </Typography>
 
-      <Box sx={{ overflowX: 'auto' }}>
-        <svg
-          width={svgWidth}
-          height={svgHeight}
-          style={{ display: 'block', margin: '0 auto' }}
-        >
+      <Box sx={{ overflowX: 'auto', display: 'flex', justifyContent: 'center' }}>
+        <svg width={SVG_W} height={SVG_H} viewBox={`0 0 ${SVG_W} ${SVG_H}`}>
           {/* Edges */}
           {nodes.map((node) =>
             node.children.map((childId) => {
@@ -161,151 +79,67 @@ export default function TreeViz() {
                   y1={node.y}
                   x2={child.x}
                   y2={child.y}
-                  stroke={colors.cellBorder}
+                  stroke={PALETTE.edge}
                   strokeWidth={1.5}
                 />
               );
             }),
           )}
-
           {/* Nodes */}
-          {nodes.map((node) => (
-            <g key={node.id}>
-              <circle
-                cx={node.x}
-                cy={node.y}
-                r={NODE_R}
-                fill={getNodeFill(node.id)}
-                stroke={getNodeStroke(node.id)}
-                strokeWidth={2}
-              />
-              <text
-                x={node.x}
-                y={node.y + 5}
-                textAnchor="middle"
-                fontSize={15}
-                fontWeight={600}
-                fill={getNodeTextFill(node.id)}
-              >
-                {node.id}
-              </text>
-              {/* Visited checkmark */}
-              {step && step.visited.includes(node.id) && step.currentNode !== node.id && (
+          {nodes.map((node) => {
+            const s = styleFor(node.role);
+            return (
+              <g key={node.id}>
+                <circle
+                  cx={node.x}
+                  cy={node.y}
+                  r={NODE_R}
+                  fill={s.fill}
+                  stroke={s.stroke}
+                  strokeWidth={2}
+                />
                 <text
-                  x={node.x + NODE_R - 2}
-                  y={node.y - NODE_R + 6}
-                  fontSize={12}
-                  fill={colors.success}
-                  fontWeight={700}
+                  x={node.x}
+                  y={node.y + 5}
+                  textAnchor="middle"
+                  fontSize={15}
+                  fontWeight={600}
+                  fill={PALETTE.text}
                 >
-                  ✓
+                  {node.label}
                 </text>
-              )}
-            </g>
-          ))}
-
-          {/* Result array label */}
-          <text
-            x={20}
-            y={RESULT_Y - 10}
-            fontSize={13}
-            fontWeight={600}
-            fill={colors.lightText}
-          >
-            Результат:
-          </text>
-
-          {/* Result array cells */}
-          {step &&
-            step.result.map((val, i) => {
-              const x = 20 + i * (RESULT_CELL + RESULT_GAP);
-              const isLatest = i === step.result.length - 1 && !step.done;
-              return (
-                <g key={`result-${i}`}>
-                  <rect
-                    x={x}
-                    y={RESULT_Y}
-                    width={RESULT_CELL}
-                    height={RESULT_CELL}
-                    rx={8}
-                    fill={isLatest ? colors.activeBg : '#FFFFFF'}
-                    stroke={isLatest ? colors.primary : colors.cellBorder}
-                    strokeWidth={isLatest ? 2 : 1.5}
-                  />
-                  <text
-                    x={x + RESULT_CELL / 2}
-                    y={RESULT_Y + RESULT_CELL / 2 + 5}
-                    textAnchor="middle"
-                    fontSize={15}
-                    fontWeight={500}
-                    fill={colors.text}
-                  >
-                    {val}
-                  </text>
-                </g>
-              );
-            })}
+              </g>
+            );
+          })}
         </svg>
       </Box>
 
-      {step && (
-        <Typography
-          variant="body2"
-          sx={{
-            mt: 2,
-            p: 1.5,
-            borderRadius: 2,
-            bgcolor: step.done ? '#34C75918' : '#F2F2F7',
-            color: step.done ? colors.success : colors.text,
-            fontWeight: step.done ? 600 : 400,
-            textAlign: 'center',
-          }}
-        >
-          Шаг {currentStep}: {step.description}
-        </Typography>
-      )}
-
-      {!step && (
-        <Typography
-          variant="body2"
-          sx={{
-            mt: 2,
-            textAlign: 'center',
-            color: 'text.disabled',
-            fontStyle: 'italic',
-          }}
-        >
-          Нажмите &laquo;Следующий шаг&raquo; для начала
-        </Typography>
-      )}
-
-      <Box sx={{ display: 'flex', gap: 1.5, mt: 2 }}>
-        <Button
-          variant="contained"
-          disabled={currentStep >= steps.length}
-          onClick={() => setCurrentStep((s) => s + 1)}
-          sx={{
-            bgcolor: colors.primary,
-            textTransform: 'none',
-            borderRadius: 2,
-            '&:hover': { bgcolor: '#005EC4' },
-          }}
-        >
-          Следующий шаг
-        </Button>
-        <Button
-          variant="outlined"
-          onClick={() => setCurrentStep(0)}
-          sx={{
-            textTransform: 'none',
-            borderRadius: 2,
-            borderColor: colors.primary,
-            color: colors.primary,
-          }}
-        >
-          Сбросить
-        </Button>
+      {/* Legend */}
+      <Box sx={{ mt: 2, display: 'flex', gap: 2, justifyContent: 'center', flexWrap: 'wrap' }}>
+        <LegendItem color={PALETTE.rootStroke} bg={PALETTE.rootFill} label="корень" />
+        <LegendItem color={PALETTE.internalStroke} bg={PALETTE.internalFill} label="внутренний узел" />
+        <LegendItem color={PALETTE.leafStroke} bg={PALETTE.leafFill} label="лист" />
       </Box>
-    </Paper>
+    </Box>
+  );
+}
+
+function LegendItem({ color, bg, label }: { color: string; bg: string; label: string }) {
+  return (
+    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+      <Box
+        sx={{
+          width: 16,
+          height: 16,
+          borderRadius: '50%',
+          bgcolor: bg,
+          border: 1.5,
+          borderColor: color,
+        }}
+      />
+      <Typography variant="caption" color="text.secondary">
+        {label}
+      </Typography>
+    </Box>
   );
 }
