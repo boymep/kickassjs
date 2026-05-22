@@ -365,7 +365,7 @@ await readAsync('bad.txt');   // → reject Error: not found
 - \`limit\` — максимальное количество одновременно выполняющихся промисов
 - Возвращает Promise с массивом всех результатов в исходном порядке
 
-Это критично для API, у которых есть rate-limit (не более N запросов одновременно).
+Это критично для API с rate-limit — не более N запросов одновременно.
 
 Примеры:
 \`\`\`
@@ -465,9 +465,9 @@ await limitConcurrency(tasks, 3);
     title: "Определи вывод: await, Promise.then и queueMicrotask",
     difficulty: "medium",
     isContextual: false,
-    description: `Перед вами микс синхронного кода, async/await, Promise.then и queueMicrotask. Введи каждую напечатанную строку в отдельной строчке поля ответа.
+    description: `Перед тобой смесь синхронного кода, \`async\`/\`await\`, \`Promise.then\` и \`queueMicrotask\`. Введи каждую напечатанную строку на отдельной строке поля ответа.
 
-Подсказка: \`await\` — синтаксический сахар над \`Promise.then\`. Каждый \`await\` ставит продолжение в очередь микрозадач. \`queueMicrotask\` и \`Promise.resolve().then\` идут в **одну и ту же** очередь и выполняются в порядке постановки.`,
+**Подсказка:** \`await\` — это синтаксический сахар над \`Promise.then\`. Каждый \`await\` ставит продолжение в очередь микрозадач. \`queueMicrotask\` и \`Promise.resolve().then\` попадают в **ту же самую** очередь и выполняются в порядке постановки.`,
     code: `async function run() {
   console.log('A');
   await Promise.resolve();
@@ -483,20 +483,20 @@ Promise.resolve().then(() => console.log('T'));
 console.log('2');`,
     expected: "1\nA\n2\nB\nQ\nT\nC",
     hints: [
-      "Определи, что выполняется синхронно до первого microtask checkpoint.",
-      "Каждый await ставит продолжение в конец очереди микрозадач. Что уже стоит в очереди к тому моменту, когда run() доходит до второго await?",
+      "Определи, что успевает выполниться синхронно — до того, как движок начнёт обрабатывать очередь микрозадач.",
+      "Каждый `await` ставит продолжение в конец очереди микрозадач. Что уже лежит в очереди к моменту, когда `run()` доходит до второго `await`?",
     ],
-    solutionCode: `// 1 — sync
-// run() начинает выполняться: A — sync (до первого await)
-// первый await ставит continuation-1 (печать B) в microtask queue
-// queueMicrotask(Q) — добавлена в microtask queue ПОСЛЕ continuation-1
-// Promise.resolve().then(T) — добавлена в microtask queue после Q
-// 2 — sync
-// microtask checkpoint (FIFO):
-//   continuation-1: печатает B, ставит continuation-2 (печать C) в очередь
+    solutionCode: `// 1 — синхронно
+// run() начинает выполняться: A — тоже синхронно, до первого await
+// первый await ставит продолжение №1 (печать B) в очередь микрозадач
+// queueMicrotask(Q) — добавлена в очередь микрозадач ПОСЛЕ продолжения №1
+// Promise.resolve().then(T) — добавлена в очередь после Q
+// 2 — синхронно
+// Дальше движок разбирает очередь микрозадач по порядку (FIFO):
+//   продолжение №1: печатает B, ставит продолжение №2 (печать C) в очередь
 //   Q
 //   T
-//   continuation-2: печатает C
+//   продолжение №2: печатает C
 // Итог: 1, A, 2, B, Q, T, C`,
   },
   {
@@ -791,7 +791,7 @@ await myPromiseAny([
 - Одновременно выполняется не более \`concurrency\` задач
 - Возвращает промис массива результатов **в том же порядке**, что и items
 
-Это мощнее, чем простой \`Promise.all\` — он ограничивает параллелизм.
+Отличие от обычного \`Promise.all\`: тот стартует все задачи разом, а здесь у нас есть **потолок параллелизма**.
 
 Примеры:
 \`\`\`
@@ -866,6 +866,262 @@ const results = await asyncPool(2, [1, 2, 3, 4, 5],
   }
   if (scenario === 'empty') {
     return await asyncPool(3, [], async (x) => x);
+  }
+}`,
+  },
+  {
+    id: "jsa-m1",
+    topicId: "js-async",
+    title: "poll — повторять проверку до успеха или таймаута",
+    difficulty: "medium",
+    isContextual: false,
+    description: `Реализуйте \`poll(check, intervalMs, timeoutMs)\` — функцию, которая **повторно** вызывает \`check()\` каждые \`intervalMs\` мс, пока:
+- \`check()\` не вернёт **truthy** значение (синхронно или через промис) — тогда промис резолвится этим значением;
+- либо не истечёт \`timeoutMs\` — тогда промис **реджектится** с \`new Error('Timeout')\`.
+
+Первый вызов \`check()\` происходит **сразу** (без задержки).
+
+Это классический паттерн ожидания готовности (например, появление элемента на странице, готовность бэкенд-задачи).
+
+Пример:
+\`\`\`
+let n = 0;
+const value = await poll(() => (++n >= 3 ? 'done' : null), 50, 1000);
+// value === 'done'    n === 3
+\`\`\``,
+    functionName: 'poll_test',
+    starterCode: `async function poll(check, intervalMs, timeoutMs) {
+  // ваш код
+}`,
+    testCases: [
+      { id: 'jsa-m1-t1', inputDisplay: "check сразу truthy → 1 вызов", inputArgs: ['immediate'], expected: { result: 'ready', calls: 1 } },
+      { id: 'jsa-m1-t2', inputDisplay: "check truthy на 3-й попытке", inputArgs: ['third-try'], expected: { result: 'done', calls: 3 } },
+      { id: 'jsa-m1-t3', inputDisplay: "check никогда не truthy → Timeout", inputArgs: ['timeout'], expected: 'Error: Timeout' },
+      { id: 'jsa-m1-t4', inputDisplay: "async check тоже работает", inputArgs: ['async-check'], expected: 'async-ok' },
+    ],
+    hints: [
+      'Сделайте цикл: `await check()`, если truthy — резолв; иначе ждите `intervalMs` через `await new Promise(r => setTimeout(r, intervalMs))`.',
+      'Для таймаута: запомните время старта, и при каждом проходе проверяйте, не превысили ли мы `timeoutMs`. Либо используйте `Promise.race`.',
+      'Не забудьте: первая проверка — без задержки.',
+    ],
+    solutionCode: `async function poll(check, intervalMs, timeoutMs) {
+  const start = Date.now();
+  while (true) {
+    const val = await check();
+    if (val) return val;
+    if (Date.now() - start >= timeoutMs) throw new Error('Timeout');
+    await new Promise((r) => setTimeout(r, intervalMs));
+  }
+}`,
+    testHelperCode: `async function poll_test(scenario) {
+  if (scenario === 'immediate') {
+    let calls = 0;
+    const result = await poll(() => { calls++; return 'ready'; }, 50, 1000);
+    return { result, calls };
+  }
+  if (scenario === 'third-try') {
+    let calls = 0;
+    const result = await poll(() => { calls++; return calls >= 3 ? 'done' : null; }, 30, 1000);
+    return { result, calls };
+  }
+  if (scenario === 'timeout') {
+    try {
+      await poll(() => null, 30, 100);
+      return 'no-throw';
+    } catch (e) {
+      return 'Error: ' + e.message;
+    }
+  }
+  if (scenario === 'async-check') {
+    let n = 0;
+    return await poll(async () => {
+      await new Promise((r) => setTimeout(r, 10));
+      return ++n >= 2 ? 'async-ok' : null;
+    }, 30, 1000);
+  }
+}`,
+  },
+  {
+    id: "jsa-h3",
+    topicId: "js-async",
+    kind: "implement",
+    title: "myPromiseAllSettled — реализовать Promise.allSettled",
+    difficulty: "hard",
+    isContextual: false,
+    description: `Реализуйте \`myPromiseAllSettled(promises)\` — аналог \`Promise.allSettled\`:
+- возвращает Promise, который **резолвится** после того, как **все** входные промисы завершились (успешно или с ошибкой).
+- никогда не реджектится.
+- результирующий массив имеет **тот же порядок**, что и входной, и состоит из объектов:
+  - \`{ status: 'fulfilled', value }\` — если промис выполнен;
+  - \`{ status: 'rejected', reason }\` — если промис отклонён.
+- значения не-промисы трактуются как уже выполненные промисы.
+
+**Запрещено** использовать \`Promise.allSettled\` внутри.
+
+Хорошая задача на понимание того, как работают коллбэки \`.then(onFulfilled, onRejected)\` и как аккуратно собрать результаты в правильном порядке.`,
+    functionName: 'myAllSettled_test',
+    starterCode: `function myPromiseAllSettled(promises) {
+  // ваш код
+}`,
+    testCases: [
+      { id: 'jsa-h3-t1', inputDisplay: "все fulfilled", inputArgs: ['all-fulfilled'], expected: [{ status: 'fulfilled', value: 1 }, { status: 'fulfilled', value: 2 }, { status: 'fulfilled', value: 3 }] },
+      { id: 'jsa-h3-t2', inputDisplay: "все rejected", inputArgs: ['all-rejected'], expected: [{ status: 'rejected', reason: 'a' }, { status: 'rejected', reason: 'b' }] },
+      { id: 'jsa-h3-t3', inputDisplay: "смешанные fulfilled/rejected", inputArgs: ['mixed'], expected: [{ status: 'fulfilled', value: 1 }, { status: 'rejected', reason: 'boom' }, { status: 'fulfilled', value: 3 }] },
+      { id: 'jsa-h3-t4', inputDisplay: "пустой массив → []", inputArgs: ['empty'], expected: [] },
+      { id: 'jsa-h3-t5', inputDisplay: "не-промисы в массиве как fulfilled", inputArgs: ['non-promises'], expected: [{ status: 'fulfilled', value: 42 }, { status: 'fulfilled', value: 'hi' }] },
+    ],
+    hints: [
+      'Создайте новый промис, в котором каждый input подпишется через `.then(value, reason)` и запишет результат по своему индексу.',
+      'Не забудьте: результаты должны сохранять порядок входного массива, даже если они завершаются в произвольном порядке.',
+      'Считайте число завершённых промисов; когда оно равно длине массива — резолвите итоговый массив.',
+    ],
+    solutionCode: `function myPromiseAllSettled(promises) {
+  return new Promise((resolve) => {
+    const results = new Array(promises.length);
+    if (promises.length === 0) {
+      resolve(results);
+      return;
+    }
+    let done = 0;
+    promises.forEach((p, i) => {
+      Promise.resolve(p).then(
+        (value) => {
+          results[i] = { status: 'fulfilled', value };
+          if (++done === promises.length) resolve(results);
+        },
+        (reason) => {
+          results[i] = { status: 'rejected', reason };
+          if (++done === promises.length) resolve(results);
+        }
+      );
+    });
+  });
+}`,
+    testHelperCode: `async function myAllSettled_test(scenario) {
+  const wait = (ms, v) => new Promise((r) => setTimeout(() => r(v), ms));
+  const fail = (ms, msg) => new Promise((_, rj) => setTimeout(() => rj(msg), ms));
+
+  if (scenario === 'all-fulfilled') {
+    return await myPromiseAllSettled([wait(50, 1), wait(30, 2), wait(10, 3)]);
+  }
+  if (scenario === 'all-rejected') {
+    return await myPromiseAllSettled([fail(20, 'a'), fail(10, 'b')]);
+  }
+  if (scenario === 'mixed') {
+    return await myPromiseAllSettled([wait(10, 1), fail(20, 'boom'), wait(30, 3)]);
+  }
+  if (scenario === 'empty') {
+    return await myPromiseAllSettled([]);
+  }
+  if (scenario === 'non-promises') {
+    return await myPromiseAllSettled([42, 'hi']);
+  }
+}`,
+  },
+  {
+    id: "jsa-h4",
+    topicId: "js-async",
+    kind: "implement",
+    title: "createAsyncQueue — последовательное выполнение задач",
+    difficulty: "hard",
+    isContextual: false,
+    description: `Реализуйте \`createAsyncQueue()\` — фабрику очередей, в которые можно добавлять асинхронные задачи. Очередь выполняет их **строго последовательно**: следующая задача стартует только после того, как предыдущая завершится (успехом или ошибкой).
+
+API:
+- \`q.add(taskFn)\` — taskFn это функция, возвращающая Promise. Метод возвращает Promise, который резолвится результатом задачи (или реджектится её ошибкой).
+- \`q.size\` (геттер) — количество **ожидающих** + текущая выполняющаяся задач.
+
+Поведение:
+- Если задача упала, очередь **продолжает** выполнение следующих.
+- Порядок результатов = порядок добавления.
+
+Это частый вопрос на бэкенд-интервью (Node.js): построение последовательного процессора фоновых задач.`,
+    functionName: 'queue_test',
+    starterCode: `function createAsyncQueue() {
+  // ваш код
+}`,
+    testCases: [
+      { id: 'jsa-h4-t1', inputDisplay: "две задачи выполняются по очереди", inputArgs: ['sequential'], expected: { results: ['a', 'b'], maxConcurrent: 1 } },
+      { id: 'jsa-h4-t2', inputDisplay: "пять задач сохраняют порядок", inputArgs: ['five-order'], expected: ['t1', 't2', 't3', 't4', 't5'] },
+      { id: 'jsa-h4-t3', inputDisplay: "упавшая задача не ломает очередь", inputArgs: ['fail-then-ok'], expected: { caught: 'boom', after: 'ok' } },
+      { id: 'jsa-h4-t4', inputDisplay: "size отражает оставшиеся задачи", inputArgs: ['size-shrinks'], expected: true },
+    ],
+    hints: [
+      'Заведи внутри **цепочку из промисов** — переменную `chain`, к которой подвешиваешь новые задачи через `chain = chain.then(() => taskFn())`.',
+      'Чтобы упавшая задача не ломала цепочку, подвешивай задачу через оба обработчика — `.then(taskFn, taskFn)` — или отдельно ловите ошибку через `.catch`. Тогда следующая задача стартует независимо от исхода предыдущей.',
+      '`add()` должен возвращать **новый** промис, привязанный к конкретной задаче — его `resolve`/`reject` не должны влиять на саму цепочку.',
+    ],
+    solutionCode: `function createAsyncQueue() {
+  let chain = Promise.resolve();
+  let pending = 0;
+
+  return {
+    add(taskFn) {
+      pending++;
+      const runPromise = chain.then(
+        () => taskFn(),
+        () => taskFn() // ошибка предыдущей задачи не отменяет следующую
+      );
+      // chain должна "дождаться" завершения этой задачи (успех или ошибка)
+      chain = runPromise.then(
+        () => { pending--; },
+        () => { pending--; }
+      );
+      return runPromise;
+    },
+    get size() {
+      return pending;
+    },
+  };
+}`,
+    testHelperCode: `async function queue_test(scenario) {
+  if (scenario === 'sequential') {
+    let active = 0;
+    let maxConcurrent = 0;
+    const make = (label, ms) => async () => {
+      active++;
+      if (active > maxConcurrent) maxConcurrent = active;
+      await new Promise((r) => setTimeout(r, ms));
+      active--;
+      return label;
+    };
+    const q = createAsyncQueue();
+    const r1 = q.add(make('a', 50));
+    const r2 = q.add(make('b', 30));
+    const results = await Promise.all([r1, r2]);
+    return { results, maxConcurrent };
+  }
+  if (scenario === 'five-order') {
+    const order = [];
+    const q = createAsyncQueue();
+    const ps = [];
+    for (let i = 1; i <= 5; i++) {
+      ps.push(q.add(async () => {
+        await new Promise((r) => setTimeout(r, 5));
+        order.push('t' + i);
+        return 't' + i;
+      }));
+    }
+    await Promise.all(ps);
+    return order;
+  }
+  if (scenario === 'fail-then-ok') {
+    const q = createAsyncQueue();
+    let caught;
+    const p1 = q.add(async () => { throw new Error('boom'); }).catch((e) => { caught = e.message; });
+    const p2 = q.add(async () => 'ok');
+    await p1;
+    const after = await p2;
+    return { caught, after };
+  }
+  if (scenario === 'size-shrinks') {
+    const q = createAsyncQueue();
+    const p1 = q.add(async () => { await new Promise((r) => setTimeout(r, 30)); });
+    const p2 = q.add(async () => { await new Promise((r) => setTimeout(r, 30)); });
+    const afterAdd = q.size; // 2
+    await Promise.all([p1, p2]);
+    const afterDone = q.size; // 0
+    return afterAdd === 2 && afterDone === 0;
   }
 }`,
   },

@@ -7,8 +7,23 @@ export const stacksQueuesProblems: Problem[] = [
     title: 'Валидные скобки',
     difficulty: 'easy',
     isContextual: false,
-    description:
-      'Дана строка `s`, содержащая только символы `(`, `)`, `{`, `}`, `[` и `]`. Определите, является ли строка валидной.\n\nСтрока валидна, если:\n- Каждая открывающая скобка имеет соответствующую закрывающую того же типа.\n- Скобки закрываются в правильном порядке.\n- Каждой закрывающей скобке соответствует открывающая того же типа.\n\nПустая строка считается валидной.',
+    description: `Дана строка \`s\`, содержащая только символы \`(\`, \`)\`, \`{\`, \`}\`, \`[\` и \`]\`. Определите, является ли строка **валидной**.
+
+Строка валидна, если:
+
+- Каждая открывающая скобка имеет соответствующую закрывающую того же типа.
+- Скобки закрываются в правильном порядке.
+- Каждой закрывающей скобке соответствует открывающая того же типа.
+
+Пустая строка считается валидной.
+
+**Примеры:**
+\`\`\`
+isValid("()")        // → true
+isValid("()[]{}")    // → true
+isValid("(]")        // → false
+isValid("([)]")      // → false
+\`\`\``,
     functionName: 'isValid',
     starterCode: `function isValid(s) {
   // Ваш код здесь
@@ -85,8 +100,15 @@ export const stacksQueuesProblems: Problem[] = [
     title: 'Ежедневная температура',
     difficulty: 'medium',
     isContextual: false,
-    description:
-      'Дан массив целых чисел `temperatures`, где `temperatures[i]` — температура в i-й день. Верните массив `result`, где `result[i]` — количество дней, которое нужно подождать после i-го дня, чтобы наступил более тёплый день.\n\nЕсли нет будущего дня с более высокой температурой, `result[i] = 0`.',
+    description: `Дан массив целых чисел \`temperatures\`, где \`temperatures[i]\` — температура в \`i\`-й день. Верните массив \`result\`, где \`result[i]\` — количество дней, которое нужно подождать после \`i\`-го дня, чтобы наступил **более тёплый** день.
+
+Если нет будущего дня с более высокой температурой — \`result[i] = 0\`.
+
+**Пример:**
+\`\`\`
+dailyTemperatures([73, 74, 75, 71, 69, 72, 76, 73])
+// → [1, 1, 4, 2, 1, 1, 0, 0]
+\`\`\``,
     functionName: 'dailyTemperatures',
     starterCode: `function dailyTemperatures(temperatures) {
   // Ваш код здесь
@@ -154,8 +176,16 @@ export const stacksQueuesProblems: Problem[] = [
     title: 'История просмотров объявлений',
     difficulty: 'medium',
     isContextual: true,
-    description:
-      'Пользователь просматривает объявления. Он начинает на главной странице (id = 0). Каждое действие — это либо переход на страницу объявления (`{ type: "visit", id: <число> }`), либо нажатие кнопки «Назад» (`{ type: "back" }`).\n\nНапишите функцию, которая принимает массив действий пользователя и возвращает id страницы, на которой пользователь окажется в итоге.\n\nПравила:\n- Начальная страница имеет id = 0.\n- `visit` — переход на новую страницу (кладёт её в историю).\n- `back` — возврат на предыдущую страницу (если история не пуста). Если возвращаться некуда (пользователь на главной), действие `back` игнорируется.\n\nВерните id текущей страницы после выполнения всех действий.',
+    description: `Пользователь просматривает объявления. Он начинает на главной странице (\`id = 0\`). Каждое действие — это либо переход на страницу объявления (\`{ type: "visit", id: <число> }\`), либо нажатие кнопки «Назад» (\`{ type: "back" }\`).
+
+Напиши функцию, которая принимает массив действий пользователя и возвращает \`id\` страницы, на которой пользователь окажется в итоге.
+
+**Правила:**
+- Начальная страница имеет \`id = 0\`.
+- \`visit\` — переход на новую страницу (кладёт её в историю).
+- \`back\` — возврат на предыдущую страницу, если история не пуста. Если возвращаться некуда (пользователь на главной), действие \`back\` **игнорируется**.
+
+Верни \`id\` текущей страницы после выполнения всех действий.`,
     functionName: 'getCurrentPage',
     starterCode: `function getCurrentPage(actions) {
   // Ваш код здесь
@@ -250,8 +280,15 @@ export const stacksQueuesProblems: Problem[] = [
     title: 'Валидация вложенных тегов',
     difficulty: 'medium',
     isContextual: true,
-    description:
-      'В простом HTML-подобном шаблоне есть открывающие теги вида `<div>` и закрывающие `</div>`. Дана строка с тегами. Проверьте, правильно ли они вложены (каждый открывающий тег закрыт соответствующим, порядок вложенности корректен). Вернуть true/false.\n\nДопустимые теги: `div`, `span`, `a`, `b`, `p`. Атрибутов и самозакрывающихся тегов нет. Текст между тегами игнорируется.\n\nПример:\n`"<div><span></span></div>"` → true\n`"<div><span></div></span>"` → false',
+    description: `В простом HTML-подобном шаблоне есть открывающие теги вида \`<div>\` и закрывающие \`</div>\`. Дана строка с тегами. Проверьте, правильно ли они вложены: каждый открывающий тег закрыт соответствующим, порядок вложенности корректен. Верните \`true\`/\`false\`.
+
+**Допустимые теги:** \`div\`, \`span\`, \`a\`, \`b\`, \`p\`. Атрибутов и самозакрывающихся тегов нет. Текст между тегами игнорируется.
+
+**Примеры:**
+\`\`\`
+validateTags("<div><span></span></div>")  // → true
+validateTags("<div><span></div></span>")  // → false
+\`\`\``,
     functionName: 'validateTags',
     starterCode: `function validateTags(html) {
   // ваш код
@@ -321,8 +358,22 @@ export const stacksQueuesProblems: Problem[] = [
     title: 'Отмена действий (Undo)',
     difficulty: 'easy',
     isContextual: true,
-    description:
-      'В текстовом редакторе пользователь выполняет действия. Каждое действие — это либо `{ type: "write", text: string }` (добавить текст в конец), либо `{ type: "undo" }` (отменить последнее write). Верните итоговую строку после выполнения всех действий.\n\nЕсли undo вызвано когда нечего отменять — игнорируется.',
+    description: `В текстовом редакторе пользователь выполняет действия. Каждое действие — это либо:
+
+- \`{ type: "write", text: string }\` — добавить текст в конец;
+- \`{ type: "undo" }\` — отменить последний \`write\`.
+
+Верни **итоговую строку** после выполнения всех действий. Если \`undo\` вызвано, когда нечего отменять — действие игнорируется.
+
+**Пример:**
+\`\`\`
+applyActions([
+  { type: 'write', text: 'hello' },
+  { type: 'write', text: ' world' },
+  { type: 'undo' },
+])
+// → 'hello'
+\`\`\``,
     functionName: 'applyActions',
     starterCode: `function applyActions(actions) {
   // ваш код
@@ -722,6 +773,196 @@ slidingWindowMax([9,8,7,6], 2)  // → [9, 8, 7]
     if (i >= k - 1) result.push(nums[deque[0]]);
   }
 
+  return result;
+}`,
+  },
+  {
+    id: 'sq-e2',
+    topicId: 'stacks-queues',
+    title: 'Сравнение строк после backspace',
+    difficulty: 'easy',
+    isContextual: false,
+    description: `Даны две строки \`s\` и \`t\`. Каждая может содержать символ \`'#'\`, означающий **backspace** (удаление предыдущего символа). Верните \`true\`, если после применения backspace результирующие строки **равны**, иначе — \`false\`.
+
+\`#\` на пустой строке ничего не делает.
+
+Примеры:
+\`\`\`
+backspaceCompare('ab#c', 'ad#c')   // → true   ('ac' === 'ac')
+backspaceCompare('ab##', 'c#d#')   // → true   ('' === '')
+backspaceCompare('a##c', '#a#c')   // → true   ('c' === 'c')
+backspaceCompare('a#c', 'b')       // → false  ('c' !== 'b')
+backspaceCompare('', '')           // → true
+backspaceCompare('xywrrmp', 'xywrrmu#p') // → true
+\`\`\`
+
+Это **LeetCode 844** — небольшая, но показательная задача на стек.`,
+    functionName: 'backspaceCompare',
+    starterCode: `function backspaceCompare(s, t) {
+  // ваш код
+}`,
+    testCases: [
+      { id: 'sq-e2-t1', inputDisplay: "backspaceCompare('ab#c', 'ad#c')", inputArgs: ['ab#c', 'ad#c'], expected: true },
+      { id: 'sq-e2-t2', inputDisplay: "backspaceCompare('ab##', 'c#d#')", inputArgs: ['ab##', 'c#d#'], expected: true },
+      { id: 'sq-e2-t3', inputDisplay: "backspaceCompare('a##c', '#a#c')", inputArgs: ['a##c', '#a#c'], expected: true },
+      { id: 'sq-e2-t4', inputDisplay: "backspaceCompare('a#c', 'b')", inputArgs: ['a#c', 'b'], expected: false },
+      { id: 'sq-e2-t5', inputDisplay: "backspaceCompare('', '')", inputArgs: ['', ''], expected: true },
+      { id: 'sq-e2-t6', inputDisplay: "backspaceCompare('xywrrmp', 'xywrrmu#p')", inputArgs: ['xywrrmp', 'xywrrmu#p'], expected: true },
+    ],
+    hints: [
+      'Стек естественно моделирует ввод с backspace: на букву — push, на `#` — pop (если стек не пуст).',
+      'Постройте «итоговую» строку для обеих строк и сравните.',
+    ],
+    solutionCode: `function backspaceCompare(s, t) {
+  function build(str) {
+    const stack = [];
+    for (const ch of str) {
+      if (ch === '#') {
+        stack.pop();
+      } else {
+        stack.push(ch);
+      }
+    }
+    return stack.join('');
+  }
+  return build(s) === build(t);
+}`,
+  },
+  {
+    id: 'sq-h3',
+    topicId: 'stacks-queues',
+    kind: 'implement',
+    title: 'Длиннейшая корректная скобочная последовательность',
+    difficulty: 'hard',
+    isContextual: false,
+    description: `Дана строка \`s\` из символов \`'('\` и \`')'\`. Верните длину **самой длинной корректной (правильно сбалансированной) непрерывной подстроки**.
+
+Примеры:
+\`\`\`
+longestValidParentheses('(()')       // → 2   ('()' внутри)
+longestValidParentheses(')()())')    // → 4   ('()()')
+longestValidParentheses('')          // → 0
+longestValidParentheses('()(()')     // → 2
+longestValidParentheses('()(())')    // → 6
+longestValidParentheses('(()(((()')  // → 2
+\`\`\`
+
+Это **LeetCode 32** — известная hard-задача. Существует элегантное решение через стек индексов за O(n).`,
+    functionName: 'longestValidParentheses',
+    starterCode: `function longestValidParentheses(s) {
+  // ваш код — O(n)
+}`,
+    testCases: [
+      { id: 'sq-h3-t1', inputDisplay: "longestValidParentheses('(()')", inputArgs: ['(()'], expected: 2 },
+      { id: 'sq-h3-t2', inputDisplay: "longestValidParentheses(')()())')", inputArgs: [')()())'], expected: 4 },
+      { id: 'sq-h3-t3', inputDisplay: "longestValidParentheses('')", inputArgs: [''], expected: 0 },
+      { id: 'sq-h3-t4', inputDisplay: "longestValidParentheses('()(()')", inputArgs: ['()(()'], expected: 2 },
+      { id: 'sq-h3-t5', inputDisplay: "longestValidParentheses('()(())')", inputArgs: ['()(())'], expected: 6 },
+      { id: 'sq-h3-t6', inputDisplay: "longestValidParentheses('(()(((()')", inputArgs: ['(()(((()'], expected: 2 },
+      { id: 'sq-h3-t7', inputDisplay: "longestValidParentheses('()')", inputArgs: ['()'], expected: 2 },
+    ],
+    hints: [
+      'Храните в стеке **индексы** (а не символы). В вершине поддерживайте «последнюю несовпадённую границу» — индекс последнего непарного `)` или -1 в начале.',
+      'На `(` — push индекса. На `)` — pop. Если стек пуст после pop, push текущего индекса как новой границы. Иначе обновите ответ как `i - stack.top()`.',
+    ],
+    solutionCode: `function longestValidParentheses(s) {
+  const stack = [-1];
+  let max = 0;
+  for (let i = 0; i < s.length; i++) {
+    if (s[i] === '(') {
+      stack.push(i);
+    } else {
+      stack.pop();
+      if (stack.length === 0) {
+        stack.push(i);
+      } else {
+        const len = i - stack[stack.length - 1];
+        if (len > max) max = len;
+      }
+    }
+  }
+  return max;
+}`,
+  },
+  {
+    id: 'sq-h4',
+    topicId: 'stacks-queues',
+    kind: 'implement',
+    title: 'Базовый калькулятор (+, -, скобки)',
+    difficulty: 'hard',
+    isContextual: false,
+    description: `Реализуйте функцию \`calculate(s)\`, которая принимает строковое арифметическое выражение и вычисляет его значение.
+
+Выражение содержит:
+- неотрицательные целые числа
+- операторы \`+\` и \`-\`
+- открывающие \`(\` и закрывающие \`)\` скобки
+- пробелы (которые игнорируются)
+
+Гарантируется, что выражение синтаксически корректное и не содержит унарного минуса в начале или сразу после \`(\` (в реальных тестах LeetCode такое бывает, но здесь — нет, для упрощения).
+
+Примеры (LeetCode 224):
+\`\`\`
+calculate('1 + 1')                            // → 2
+calculate(' 2-1 + 2 ')                        // → 3
+calculate('(1+(4+5+2)-3)+(6+8)')              // → 23
+calculate('1-1-1')                            // → -1
+calculate('(5)')                              // → 5
+calculate('(1)+(2)')                          // → 3
+\`\`\`
+
+**Не используйте \`eval\` или \`Function\`** — нужно реализовать парсер вручную через стек.`,
+    functionName: 'calculate',
+    starterCode: `function calculate(s) {
+  // ваш код — без eval/Function
+}`,
+    testCases: [
+      { id: 'sq-h4-t1', inputDisplay: "calculate('1 + 1')", inputArgs: ['1 + 1'], expected: 2 },
+      { id: 'sq-h4-t2', inputDisplay: "calculate(' 2-1 + 2 ')", inputArgs: [' 2-1 + 2 '], expected: 3 },
+      { id: 'sq-h4-t3', inputDisplay: "calculate('(1+(4+5+2)-3)+(6+8)')", inputArgs: ['(1+(4+5+2)-3)+(6+8)'], expected: 23 },
+      { id: 'sq-h4-t4', inputDisplay: "calculate('1-1-1')", inputArgs: ['1-1-1'], expected: -1 },
+      { id: 'sq-h4-t5', inputDisplay: "calculate('(5)')", inputArgs: ['(5)'], expected: 5 },
+      { id: 'sq-h4-t6', inputDisplay: "calculate('(1)+(2)')", inputArgs: ['(1)+(2)'], expected: 3 },
+      { id: 'sq-h4-t7', inputDisplay: "calculate('10-(2+3)')", inputArgs: ['10-(2+3)'], expected: 5 },
+    ],
+    hints: [
+      'Ведите переменные: текущий результат `result`, текущее число `num`, текущий знак `sign`.',
+      'При `(` сохраните в стек текущий `result` и `sign`, и обнулите их (новый «суб-калькулятор»). При `)` — закройте текущее, умножьте на знак из стека и прибавьте.',
+      'Накопление числа: при цифре — `num = num * 10 + digit`. При операторе или конце — добавьте `sign * num` к result, сбросьте num, установите новый знак.',
+    ],
+    solutionCode: `function calculate(s) {
+  const stack = [];
+  let result = 0;
+  let num = 0;
+  let sign = 1;
+
+  for (let i = 0; i < s.length; i++) {
+    const ch = s[i];
+    if (ch >= '0' && ch <= '9') {
+      num = num * 10 + (ch.charCodeAt(0) - 48);
+    } else if (ch === '+') {
+      result += sign * num;
+      num = 0;
+      sign = 1;
+    } else if (ch === '-') {
+      result += sign * num;
+      num = 0;
+      sign = -1;
+    } else if (ch === '(') {
+      stack.push(result);
+      stack.push(sign);
+      result = 0;
+      sign = 1;
+    } else if (ch === ')') {
+      result += sign * num;
+      num = 0;
+      result *= stack.pop(); // знак перед '('
+      result += stack.pop(); // результат до '('
+    }
+    // пробелы и любые прочие игнорируем
+  }
+
+  result += sign * num;
   return result;
 }`,
   },

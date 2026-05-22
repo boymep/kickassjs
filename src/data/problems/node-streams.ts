@@ -374,7 +374,7 @@ writer.flush(); // явный flush
     description: `Реализуйте функцию \`splitLines(text)\`:
 - Разбивает текст на строки (по \`\\n\`)
 - Пропускает пустые строки
-- Возвращает массив строк без ведущих/trailing пробелов
+- Возвращает массив строк, у которых обрезаны пробелы в начале и в конце
 
 Примеры:
 \`\`\`
@@ -440,9 +440,9 @@ splitLines("");
     title: "Определи вывод: трассировка событий стрима",
     difficulty: "medium",
     isContextual: false,
-    description: `Перед вами эмуляция Readable-стрима через массив. \`emit\` срабатывает синхронно — как у настоящего EventEmitter в Node.js. Введи каждую напечатанную строку в отдельной строчке поля ответа.
+    description: `Перед тобой эмуляция Readable-стрима через массив. \`emit\` срабатывает синхронно — как у настоящего EventEmitter в Node.js. Введи каждую напечатанную строку на отдельной строке поля ответа.
 
-Подсказка: подписка на \`data\` переводит стрим в flowing mode, и каждый \`push\` синхронно вызывает обработчик до возврата управления. Событие \`end\` стандартно эмитится **асинхронно** (через микрозадачу) — это поведение мы воспроизвели через \`Promise.resolve().then\`.`,
+**Подсказка:** подписка на \`data\` переводит стрим в flowing mode, и каждый \`push\` синхронно вызывает обработчик до возврата управления. Событие \`end\` по стандарту эмитится **асинхронно** (через микрозадачу) — мы воспроизвели это через \`Promise.resolve().then\`.`,
     code: `// Минимальный mock Readable: push сразу emit'ит data,
 // push(null) ставит end в микрозадачу.
 function makeStream() {
@@ -474,11 +474,11 @@ console.log('after');`,
       'push("A") и push("B") синхронно вызывают обработчик data — это flowing mode.',
       'push(null) ставит end-обработчик в микрозадачу через Promise.resolve().then. Микрозадачи выполняются после текущего синхронного кода, поэтому "after" печатается раньше "end".',
     ],
-    solutionCode: `// before  — sync до push
-// data: A — sync, push в flowing mode
-// data: B — sync, push в flowing mode
-// after   — sync console.log
-// end     — микрозадача после текущего стека`,
+    solutionCode: `// before  — синхронно, до push
+// data: A — синхронно: push в flowing mode сразу вызывает обработчик
+// data: B — то же самое
+// after   — синхронный console.log
+// end     — микрозадача, срабатывает после текущего синхронного кода`,
   },
   {
     kind: "find-bug",
@@ -867,6 +867,249 @@ async function createThrottledPipeline_test(scenario) {
     writable.on('finish', () => { finished = true; });
     await createThrottledPipeline(readable, writable, 1000);
     return finished;
+  }
+}`,
+  },
+  {
+    id: "nodes-e2",
+    topicId: "node-streams",
+    title: "bufferAll — собрать все чанки async-итератора в строку",
+    difficulty: "easy",
+    isContextual: false,
+    description: `Реализуйте \`bufferAll(asyncIterable)\` — функцию, которая принимает async-итерируемый источник строковых чанков и возвращает Promise, резолвящийся **конкатенацией** всех чанков в одну строку.
+
+Это базовый паттерн «полностью прочитать поток в память» (например, \`response.text()\`).
+
+Пример:
+\`\`\`
+async function* source() {
+  yield 'Hello, ';
+  yield 'World';
+  yield '!';
+}
+const text = await bufferAll(source());
+// text === 'Hello, World!'
+\`\`\``,
+    functionName: 'bufferAll_test',
+    starterCode: `async function bufferAll(asyncIterable) {
+  // ваш код
+}`,
+    testCases: [
+      { id: 'nodes-e2-t1', inputDisplay: "три чанка", inputArgs: ['three-chunks'], expected: 'Hello, World!' },
+      { id: 'nodes-e2-t2', inputDisplay: "пустой источник → пустая строка", inputArgs: ['empty'], expected: '' },
+      { id: 'nodes-e2-t3', inputDisplay: "один чанк", inputArgs: ['single'], expected: 'only' },
+      { id: 'nodes-e2-t4', inputDisplay: "много чанков", inputArgs: ['many'], expected: 'abcdefghij' },
+    ],
+    hints: [
+      'Используйте `for await...of` для итерации по async-итератору.',
+      'Аккумулируйте чанки в строку (или массив + join в конце).',
+    ],
+    solutionCode: `async function bufferAll(asyncIterable) {
+  const chunks = [];
+  for await (const chunk of asyncIterable) {
+    chunks.push(chunk);
+  }
+  return chunks.join('');
+}`,
+    testHelperCode: `async function bufferAll_test(scenario) {
+  if (scenario === 'three-chunks') {
+    async function* source() { yield 'Hello, '; yield 'World'; yield '!'; }
+    return await bufferAll(source());
+  }
+  if (scenario === 'empty') {
+    async function* source() { /* nothing */ }
+    return await bufferAll(source());
+  }
+  if (scenario === 'single') {
+    async function* source() { yield 'only'; }
+    return await bufferAll(source());
+  }
+  if (scenario === 'many') {
+    async function* source() {
+      const letters = 'abcdefghij';
+      for (const c of letters) yield c;
+    }
+    return await bufferAll(source());
+  }
+}`,
+  },
+  {
+    id: "nodes-h3",
+    topicId: "node-streams",
+    kind: "implement",
+    title: "parseNDJSON — потоковый парсер newline-delimited JSON",
+    difficulty: "hard",
+    isContextual: false,
+    description: `Реализуйте async-генератор \`parseNDJSON(asyncIterable)\`, который принимает поток **строковых чанков** и **построчно** парсит NDJSON (newline-delimited JSON) — формат, где каждая строка — отдельный JSON-объект.
+
+Сложность в том, что **JSON-объект может оказаться разорван между чанками**. Нужно правильно склеивать остатки.
+
+- Пропускайте пустые строки.
+- При неуспешном \`JSON.parse\` — кидайте ошибку (не игнорируйте).
+- Если в последнем чанке нет завершающего \`\\n\` — последняя строка тоже должна быть распарсена (если она не пустая).
+
+Пример:
+\`\`\`
+async function* source() {
+  yield '{"id":1,"name":"';
+  yield 'Alice"}\\n{"id":2,';
+  yield '"name":"Bob"}\\n';
+}
+const result = [];
+for await (const obj of parseNDJSON(source())) result.push(obj);
+// result === [{ id: 1, name: 'Alice' }, { id: 2, name: 'Bob' }]
+\`\`\`
+
+Типичный паттерн на бэкенде: чтение потоков логов, обработка вывода дочернего процесса (\`child_process\`) и других построчных источников данных.`,
+    functionName: 'parseNDJSON_test',
+    starterCode: `async function* parseNDJSON(asyncIterable) {
+  // ваш код
+}`,
+    testCases: [
+      { id: 'nodes-h3-t1', inputDisplay: "разделение объекта между чанками", inputArgs: ['split'], expected: [{ id: 1, name: 'Alice' }, { id: 2, name: 'Bob' }] },
+      { id: 'nodes-h3-t2', inputDisplay: "пустые строки игнорируются", inputArgs: ['empty-lines'], expected: [{ a: 1 }, { b: 2 }] },
+      { id: 'nodes-h3-t3', inputDisplay: "хвост без \\n тоже парсится", inputArgs: ['trailing'], expected: [{ x: 10 }] },
+      { id: 'nodes-h3-t4', inputDisplay: "ошибка парсинга — exception", inputArgs: ['bad-json'], expected: 'threw' },
+      { id: 'nodes-h3-t5', inputDisplay: "пустой источник → []", inputArgs: ['empty-source'], expected: [] },
+    ],
+    hints: [
+      'Поддерживайте буфер для «непрочитанного остатка». На каждый чанк: `buffer += chunk`, затем разделите по `\\n`.',
+      'Последний элемент после `split` может быть **частичной** строкой — оставьте его в буфере для следующего чанка.',
+      'После окончания итерации проверьте остаток в буфере — если он непустой, тоже распарсите.',
+    ],
+    solutionCode: `async function* parseNDJSON(asyncIterable) {
+  let buffer = '';
+  for await (const chunk of asyncIterable) {
+    buffer += chunk;
+    const parts = buffer.split('\\n');
+    buffer = parts.pop(); // последняя часть может быть неполной
+    for (const line of parts) {
+      if (line.length === 0) continue;
+      yield JSON.parse(line);
+    }
+  }
+  if (buffer.length > 0) {
+    yield JSON.parse(buffer);
+  }
+}`,
+    testHelperCode: `async function parseNDJSON_test(scenario) {
+  if (scenario === 'split') {
+    async function* src() {
+      yield '{"id":1,"name":"';
+      yield 'Alice"}\\n{"id":2,';
+      yield '"name":"Bob"}\\n';
+    }
+    const out = [];
+    for await (const o of parseNDJSON(src())) out.push(o);
+    return out;
+  }
+  if (scenario === 'empty-lines') {
+    async function* src() { yield '{"a":1}\\n\\n\\n{"b":2}\\n'; }
+    const out = [];
+    for await (const o of parseNDJSON(src())) out.push(o);
+    return out;
+  }
+  if (scenario === 'trailing') {
+    async function* src() { yield '{"x":10}'; }
+    const out = [];
+    for await (const o of parseNDJSON(src())) out.push(o);
+    return out;
+  }
+  if (scenario === 'bad-json') {
+    async function* src() { yield '{"valid":1}\\nnot-json\\n'; }
+    try {
+      for await (const o of parseNDJSON(src())) { /* drain */ }
+      return 'no-throw';
+    } catch (e) {
+      return 'threw';
+    }
+  }
+  if (scenario === 'empty-source') {
+    async function* src() { /* nothing */ }
+    const out = [];
+    for await (const o of parseNDJSON(src())) out.push(o);
+    return out;
+  }
+}`,
+  },
+  {
+    id: "nodes-h4",
+    topicId: "node-streams",
+    kind: "implement",
+    title: "composeStreams — конвейер async-трансформов",
+    difficulty: "hard",
+    isContextual: false,
+    description: `Реализуйте \`composeStreams(source, ...transforms)\` — функцию, которая собирает конвейер из источника и нескольких трансформ-функций и возвращает финальный async-итератор.
+
+- \`source\` — async-итерируемый источник чанков.
+- \`transforms\` — async-генераторные функции вида \`(asyncIter) => asyncGenerator\`.
+
+Каждая трансформа получает на вход выход предыдущей. Финальный итератор — выход последней трансформы.
+
+Пример:
+\`\`\`
+async function* fromArray(arr) { for (const x of arr) yield x; }
+async function* double(src)    { for await (const x of src) yield x * 2; }
+async function* incThenStr(src) { for await (const x of src) yield String(x + 1); }
+
+const pipe = composeStreams(fromArray([1, 2, 3]), double, incThenStr);
+const out = [];
+for await (const v of pipe) out.push(v);
+// out === ['3', '5', '7']  (1*2+1, 2*2+1, 3*2+1)
+\`\`\`
+
+Это паттерн, лежащий в основе Node.js \`stream.pipeline\` и аналогичных конвейеров.`,
+    functionName: 'composeStreams_test',
+    starterCode: `function composeStreams(source, ...transforms) {
+  // ваш код — верните async-итератор
+}`,
+    testCases: [
+      { id: 'nodes-h4-t1', inputDisplay: "double + incThenStr", inputArgs: ['double-inc-str'], expected: ['3', '5', '7'] },
+      { id: 'nodes-h4-t2', inputDisplay: "без трансформ — пропускает source", inputArgs: ['no-transforms'], expected: [1, 2, 3] },
+      { id: 'nodes-h4-t3', inputDisplay: "одна трансформа", inputArgs: ['one-transform'], expected: [10, 20, 30] },
+      { id: 'nodes-h4-t4', inputDisplay: "пустой источник → []", inputArgs: ['empty'], expected: [] },
+      { id: 'nodes-h4-t5', inputDisplay: "фильтр + map", inputArgs: ['filter-map'], expected: ['even-2', 'even-4'] },
+    ],
+    hints: [
+      'Применяйте `reduce` к массиву трансформ: на каждом шаге оборачивайте текущий итератор в новую трансформу.',
+      'Финальный результат — итератор после применения всех трансформ.',
+      'Каждая трансформа должна работать с async-итераторами (через for await).',
+    ],
+    solutionCode: `function composeStreams(source, ...transforms) {
+  return transforms.reduce((iter, transform) => transform(iter), source);
+}`,
+    testHelperCode: `async function composeStreams_test(scenario) {
+  async function* fromArray(arr) { for (const x of arr) yield x; }
+  async function* double(src) { for await (const x of src) yield x * 2; }
+  async function* incThenStr(src) { for await (const x of src) yield String(x + 1); }
+  async function* times10(src) { for await (const x of src) yield x * 10; }
+  async function* keepEven(src) { for await (const x of src) if (x % 2 === 0) yield x; }
+  async function* tagEven(src) { for await (const x of src) yield 'even-' + x; }
+
+  if (scenario === 'double-inc-str') {
+    const out = [];
+    for await (const v of composeStreams(fromArray([1, 2, 3]), double, incThenStr)) out.push(v);
+    return out;
+  }
+  if (scenario === 'no-transforms') {
+    const out = [];
+    for await (const v of composeStreams(fromArray([1, 2, 3]))) out.push(v);
+    return out;
+  }
+  if (scenario === 'one-transform') {
+    const out = [];
+    for await (const v of composeStreams(fromArray([1, 2, 3]), times10)) out.push(v);
+    return out;
+  }
+  if (scenario === 'empty') {
+    const out = [];
+    for await (const v of composeStreams(fromArray([]), double)) out.push(v);
+    return out;
+  }
+  if (scenario === 'filter-map') {
+    const out = [];
+    for await (const v of composeStreams(fromArray([1, 2, 3, 4, 5]), keepEven, tagEven)) out.push(v);
+    return out;
   }
 }`,
   },

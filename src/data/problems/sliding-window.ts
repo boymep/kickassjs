@@ -7,8 +7,16 @@ export const slidingWindowProblems: Problem[] = [
     title: "Максимальная сумма подмассива длины k",
     difficulty: "easy",
     isContextual: false,
-    description:
-      "Дан массив целых чисел `arr` и число `k`. Найдите максимальную сумму среди всех подмассивов длины `k`.\n\nЕсли длина массива меньше `k`, верните 0.",
+    description: `Дан массив целых чисел \`arr\` и число \`k\`. Найдите **максимальную сумму** среди всех подмассивов длины \`k\`.
+
+Если длина массива меньше \`k\` — верните \`0\`.
+
+**Примеры:**
+\`\`\`
+maxSumSubarray([2, 1, 5, 1, 3, 2], 3)  // → 9   (5+1+3)
+maxSumSubarray([1, 2, 3, 4, 5], 2)     // → 9   (4+5)
+maxSumSubarray([1, 2], 3)              // → 0   (длина массива < k)
+\`\`\``,
     functionName: "maxSumSubarray",
     starterCode: `function maxSumSubarray(arr, k) {
   // Ваш код здесь
@@ -72,8 +80,16 @@ export const slidingWindowProblems: Problem[] = [
     title: "Наименьший подмассив с суммой >= target",
     difficulty: "medium",
     isContextual: false,
-    description:
-      "Дано положительное целое число `target` и массив положительных целых чисел `nums`. Найдите длину наименьшего подмассива, сумма элементов которого больше или равна `target`.\n\nЕсли такого подмассива не существует, верните 0.",
+    description: `Дано положительное целое число \`target\` и массив положительных целых чисел \`nums\`. Найдите длину **наименьшего** подмассива, сумма элементов которого **больше или равна** \`target\`.
+
+Если такого подмассива не существует — верните \`0\`.
+
+**Примеры:**
+\`\`\`
+minSubarrayLen(7, [2, 3, 1, 2, 4, 3])  // → 2   (4+3)
+minSubarrayLen(4, [1, 4, 4])           // → 1   (один элемент 4)
+minSubarrayLen(11, [1, 1, 1, 1, 1])    // → 0   (сумма всех = 5 < 11)
+\`\`\``,
     functionName: "minSubarrayLen",
     starterCode: `function minSubarrayLen(target, nums) {
   // Ваш код здесь
@@ -144,8 +160,15 @@ export const slidingWindowProblems: Problem[] = [
     title: "Самый загруженный час в кофейне",
     difficulty: "medium",
     isContextual: true,
-    description:
-      "В кофейне у входа стоит датчик, который записывает минуту прихода каждого посетителя. За день получился отсортированный массив `arrivals` — например, `[10, 23, 24, 29, 31, 58, 59]` означает, что первый гость пришёл на 10-й минуте, второй — на 23-й, и т.д.\n\nМенеджер хочет узнать: **какое максимальное число гостей приходило в пределах любых `minutes` минут подряд?** Это поможет понять, сколько бариста ставить на смену.\n\nВажно: `minutes` — это не количество гостей, а **длительность отрезка времени**. Количество гостей внутри этого отрезка может быть любым. Два указателя двигаются не с фиксированным шагом, а в зависимости от значений в массиве.\n\nПример: `arrivals = [10, 23, 24, 29, 31, 58, 59]`, `minutes = 10`. Отрезок с 23-й по 31-ю минуту — это 4 гостя за менее чем 10 минут. Это максимум.\n\nМассив отсортирован. Время может повторяться (несколько гостей в одну минуту). Если массив пуст, верните 0.",
+    description: `В кофейне у входа стоит датчик, который записывает минуту прихода каждого посетителя. За день получился отсортированный массив \`arrivals\` — например, \`[10, 23, 24, 29, 31, 58, 59]\` означает, что первый гость пришёл на 10-й минуте, второй — на 23-й, и т.д.
+
+Менеджер хочет узнать: **какое максимальное число гостей приходило в пределах любых \`minutes\` минут подряд?** Это поможет понять, сколько бариста ставить на смену.
+
+**Важно:** \`minutes\` — это не количество гостей, а **длительность отрезка времени**. Количество гостей внутри этого отрезка может быть любым. Два указателя двигаются не с фиксированным шагом, а в зависимости от значений в массиве.
+
+**Пример:** \`arrivals = [10, 23, 24, 29, 31, 58, 59]\`, \`minutes = 10\`. Отрезок с 23-й по 31-ю минуту — это **4 гостя** за менее чем 10 минут. Это максимум.
+
+Массив отсортирован. Время может повторяться (несколько гостей в одну минуту). Если массив пуст — верните \`0\`.`,
     functionName: "maxGuestsInPeriod",
     starterCode: `function maxGuestsInPeriod(arrivals, minutes) {
   // Ваш код здесь
@@ -210,8 +233,15 @@ export const slidingWindowProblems: Problem[] = [
     title: "Средний рейтинг за последние K отзывов",
     difficulty: "easy",
     isContextual: true,
-    description:
-      'На маркетплейсе для каждого продавца ведётся массив оценок от покупателей (от 1 до 5). Для аналитики нужно вычислить средний рейтинг для каждого "окна" из последних `k` отзывов. Верните массив средних значений, округлённых до целого числа.',
+    description: `На маркетплейсе для каждого продавца ведётся массив оценок от покупателей (от \`1\` до \`5\`). Для аналитики нужно вычислить **средний рейтинг** для каждого окна из последних \`k\` отзывов.
+
+Верните массив средних значений, **округлённых до целого числа**.
+
+**Пример:**
+\`\`\`
+averageRatings([5, 4, 3, 5, 4, 3, 5], 3)  // → [4, 4, 4, 4, 4]
+averageRatings([1, 2, 3, 4, 5], 2)        // → [2, 3, 4, 5]
+\`\`\``,
     functionName: "averageRatings",
     starterCode: `function averageRatings(ratings, k) {
   // ваш код
@@ -276,8 +306,9 @@ export const slidingWindowProblems: Problem[] = [
     difficulty: "easy",
     isContextual: false,
     kind: "predict-output",
-    description:
-      'Перед вами реализация задачи «длиннейшая подстрока без повторов» через скользящее окно с \`Set\`. Что выведет код для строки `"pwwkew"`?\n\nВнимательно проследите, как окно сжимается при появлении дубликата и какова длина окна на каждом шаге. Введите ровно одно число — длину длиннейшей подстроки без повторов.',
+    description: `Перед тобой реализация задачи «длиннейшая подстрока без повторов» через скользящее окно с \`Set\`. Что выведет код для строки \`"pwwkew"\`?
+
+Внимательно проследи, как окно сжимается при появлении дубликата и какова длина окна на каждом шаге. Введи **ровно одно число** — длину длиннейшей подстроки без повторов.`,
     code: `function lengthOfLongestSubstring(s) {
   const set = new Set();
   let left = 0, maxLen = 0;
@@ -316,8 +347,9 @@ console.log(lengthOfLongestSubstring("pwwkew"));`,
     difficulty: "medium",
     isContextual: false,
     kind: "find-bug",
-    description:
-      'Реализация «кратчайшего подмассива с суммой ≥ target» через скользящее окно работает неверно: для `minSubarrayLen(7, [2, 3, 1, 2, 4, 3])` вместо ожидаемого `2` функция возвращает что-то другое.\n\nНайдите ошибку и исправьте её.',
+    description: `Реализация «кратчайшего подмассива с суммой ≥ \`target\`» через скользящее окно работает неверно: для \`minSubarrayLen(7, [2, 3, 1, 2, 4, 3])\` вместо ожидаемого \`2\` функция возвращает что-то другое.
+
+Найди ошибку и исправь её.`,
     functionName: "minSubarrayLen",
     buggyCode: `function minSubarrayLen(target, nums) {
   let left = 0;
@@ -392,8 +424,11 @@ console.log(lengthOfLongestSubstring("pwwkew"));`,
     difficulty: "medium",
     isContextual: false,
     kind: "refactor",
-    description:
-      "Перед вами рабочая, но медленная реализация задачи «максимальная сумма подмассива длины k». Для каждого положения окна она заново считает сумму — это O(n·k), и на массиве из 100 000 элементов с `k = 1000` тест не пройдёт по времени.\n\nПерепишите функцию через скользящее окно за O(n): набирайте сумму первого окна один раз, а затем сдвигайте за O(1) — `sum + arr[i] - arr[i - k]`.\n\nКорректность уже проверена на тест-кейсах. Производительный тест требует, чтобы вход размером 100 000 обрабатывался не более чем за 50 мс.",
+    description: `Перед тобой рабочая, но медленная реализация задачи «максимальная сумма подмассива длины \`k\`». Для каждого положения окна она заново считает сумму — это **O(n·k)**, и на массиве из 100 000 элементов с \`k = 1000\` тест не пройдёт по времени.
+
+Перепиши функцию через скользящее окно за **O(n)**: набери сумму первого окна один раз, а затем сдвигай за \`O(1)\` — \`sum + arr[i] - arr[i - k]\`.
+
+Корректность уже проверена на тест-кейсах. **Тест производительности** требует, чтобы вход размером 100 000 обрабатывался не более чем за **50 мс**.`,
     functionName: "maxSumSubarray",
     starterCode: `function maxSumSubarray(arr, k) {
   if (arr.length < k) return 0;
@@ -592,8 +627,15 @@ lengthOfLongestSubstringKDistinct("aabbcc", 2)  // → 4  ("aabb" или "bbcc")
     title: "Максимальная выручка за период",
     difficulty: "medium",
     isContextual: true,
-    description:
-      "Дан массив ежедневной выручки магазина и число days — длина отчётного периода. Найдите максимальную суммарную выручку за любой непрерывный период в days дней. Верните объект { startDay: number, total: number }, где startDay — индекс первого дня лучшего периода (0-based).",
+    description: `Дан массив ежедневной выручки магазина \`revenue\` и число \`days\` — длина отчётного периода. Найдите **максимальную суммарную выручку** за любой непрерывный период в \`days\` дней.
+
+Верните объект \`{ startDay: number, total: number }\`, где \`startDay\` — индекс первого дня лучшего периода (0-based).
+
+**Пример:**
+\`\`\`
+bestPeriod([100, 200, 150, 300, 250, 100], 3)
+// → { startDay: 2, total: 700 }   (период 150 + 300 + 250)
+\`\`\``,
     functionName: "bestPeriod",
     starterCode: `function bestPeriod(revenue, days) {
   // ваш код
@@ -651,6 +693,181 @@ lengthOfLongestSubstringKDistinct("aabbcc", 2)  // → 4  ("aabb" или "bbcc")
   }
 
   return { startDay, total: maxSum };
+}`,
+  },
+  {
+    id: "sw-e2",
+    topicId: "sliding-window",
+    title: "Максимум гласных в подстроке длины k",
+    difficulty: "easy",
+    isContextual: false,
+    description: `Дана строка \`s\` из строчных латинских букв и целое число \`k\`. Верните **максимальное количество гласных** ('a', 'e', 'i', 'o', 'u'), которые могут содержаться в подстроке длины \`k\`.
+
+Гарантируется, что \`1 ≤ k ≤ s.length\`.
+
+Примеры:
+\`\`\`
+maxVowels('abciiidef', 3)  // → 3   ('iii')
+maxVowels('aeiou', 2)       // → 2
+maxVowels('leetcode', 3)    // → 2   ('eet' или 'lee')
+maxVowels('rhythms', 4)     // → 0
+maxVowels('tryhard', 4)     // → 1
+\`\`\`
+
+Это LeetCode 1456 — классический пример sliding window c фиксированным размером окна.`,
+    functionName: "maxVowels",
+    starterCode: `function maxVowels(s, k) {
+  // ваш код — O(n) одним проходом
+}`,
+    testCases: [
+      { id: "sw-e2-t1", inputDisplay: "maxVowels('abciiidef', 3)", inputArgs: ["abciiidef", 3], expected: 3 },
+      { id: "sw-e2-t2", inputDisplay: "maxVowels('aeiou', 2)", inputArgs: ["aeiou", 2], expected: 2 },
+      { id: "sw-e2-t3", inputDisplay: "maxVowels('leetcode', 3)", inputArgs: ["leetcode", 3], expected: 2 },
+      { id: "sw-e2-t4", inputDisplay: "maxVowels('rhythms', 4)", inputArgs: ["rhythms", 4], expected: 0 },
+      { id: "sw-e2-t5", inputDisplay: "maxVowels('tryhard', 4)", inputArgs: ["tryhard", 4], expected: 1 },
+      { id: "sw-e2-t6", inputDisplay: "maxVowels('a', 1)", inputArgs: ["a", 1], expected: 1 },
+    ],
+    hints: [
+      "Размер окна фиксирован. Сначала посчитайте гласные в первом окне, затем при сдвиге обновляйте на разницу: +новый символ, -выпавший.",
+      "Для проверки «гласная ли это» используйте Set — это O(1) на символ.",
+    ],
+    solutionCode: `function maxVowels(s, k) {
+  const vowels = new Set(['a', 'e', 'i', 'o', 'u']);
+  let count = 0;
+  for (let i = 0; i < k; i++) {
+    if (vowels.has(s[i])) count++;
+  }
+  let max = count;
+  for (let i = k; i < s.length; i++) {
+    if (vowels.has(s[i])) count++;
+    if (vowels.has(s[i - k])) count--;
+    if (count > max) max = count;
+  }
+  return max;
+}`,
+  },
+  {
+    id: "sw-h3",
+    topicId: "sliding-window",
+    kind: "implement",
+    title: "Максимум в скользящем окне (Sliding Window Maximum)",
+    difficulty: "hard",
+    isContextual: false,
+    description: `Дан массив целых чисел \`nums\` и целое число \`k\` — размер окна. Окно скользит слева направо: каждый раз внутри окна — ровно \`k\` элементов.
+
+Верните массив максимумов в каждом положении окна.
+
+**Требование сложности**: O(n). Решение за O(n·k) (явный максимум по каждому окну) не принимается.
+
+Примеры:
+\`\`\`
+maxSlidingWindow([1,3,-1,-3,5,3,6,7], 3)  // → [3,3,5,5,6,7]
+maxSlidingWindow([1], 1)                    // → [1]
+maxSlidingWindow([1,-1], 1)                 // → [1,-1]
+maxSlidingWindow([9,11], 2)                 // → [11]
+maxSlidingWindow([4,-2], 2)                 // → [4]
+\`\`\`
+
+**Идея**: монотонный deque, в котором хранятся индексы — голова всегда указывает на текущий максимум окна. Это **LeetCode 239** — классическая hard-задача на скользящее окно с дополнительной структурой.`,
+    functionName: "maxSlidingWindow",
+    starterCode: `function maxSlidingWindow(nums, k) {
+  // ваш код — O(n)
+}`,
+    testCases: [
+      { id: "sw-h3-t1", inputDisplay: "maxSlidingWindow([1,3,-1,-3,5,3,6,7], 3)", inputArgs: [[1, 3, -1, -3, 5, 3, 6, 7], 3], expected: [3, 3, 5, 5, 6, 7] },
+      { id: "sw-h3-t2", inputDisplay: "maxSlidingWindow([1], 1)", inputArgs: [[1], 1], expected: [1] },
+      { id: "sw-h3-t3", inputDisplay: "maxSlidingWindow([1,-1], 1)", inputArgs: [[1, -1], 1], expected: [1, -1] },
+      { id: "sw-h3-t4", inputDisplay: "maxSlidingWindow([9,11], 2)", inputArgs: [[9, 11], 2], expected: [11] },
+      { id: "sw-h3-t5", inputDisplay: "maxSlidingWindow([4,-2], 2)", inputArgs: [[4, -2], 2], expected: [4] },
+      { id: "sw-h3-t6", inputDisplay: "maxSlidingWindow([7,2,4], 2)", inputArgs: [[7, 2, 4], 2], expected: [7, 4] },
+      { id: "sw-h3-t7", inputDisplay: "maxSlidingWindow([1,3,1,2,0,5], 3)", inputArgs: [[1, 3, 1, 2, 0, 5], 3], expected: [3, 3, 2, 5] },
+    ],
+    hints: [
+      "Какой структуры данных хватит, чтобы при сдвиге окна получать максимум за амортизированное O(1)?",
+      "Монотонный deque индексов: храните только те элементы, которые ещё могут быть максимумом. Меньшие справа от большего никогда не пригодятся.",
+      "Не забывайте выкидывать из головы deque индексы, выпавшие из окна (i - k).",
+    ],
+    solutionCode: `function maxSlidingWindow(nums, k) {
+  const result = [];
+  const deque = []; // хранит индексы; nums по этим индексам монотонно убывают
+
+  for (let i = 0; i < nums.length; i++) {
+    // выкидываем из головы индексы, выпавшие из окна
+    while (deque.length && deque[0] <= i - k) {
+      deque.shift();
+    }
+    // выкидываем с хвоста индексы, которые "перебиты" текущим
+    while (deque.length && nums[deque[deque.length - 1]] < nums[i]) {
+      deque.pop();
+    }
+    deque.push(i);
+    if (i >= k - 1) {
+      result.push(nums[deque[0]]);
+    }
+  }
+  return result;
+}`,
+  },
+  {
+    id: "sw-h4",
+    topicId: "sliding-window",
+    kind: "implement",
+    title: "Подмассивы с ровно K различными целыми",
+    difficulty: "hard",
+    isContextual: false,
+    description: `Дан массив положительных целых чисел \`nums\` и целое число \`k\`. Верните количество **подмассивов** (непрерывных), в которых **ровно k** различных целых чисел.
+
+Примеры:
+\`\`\`
+subarraysWithKDistinct([1,2,1,2,3], 2)   // → 7
+subarraysWithKDistinct([1,2,1,3,4], 3)   // → 3
+subarraysWithKDistinct([1,2], 1)         // → 2
+subarraysWithKDistinct([1,2,1,2,3], 1)   // → 3
+\`\`\`
+
+**Ключевая идея**: задача «ровно k» часто сводится к разности \`atMost(k) - atMost(k-1)\`, где \`atMost(k)\` — число подмассивов с **не более чем k** различными. \`atMost\` решается классическим sliding window за O(n).
+
+Это **LeetCode 992** — известная hard-задача, где удачное преобразование сводит трудный подсчёт к двум обычным проходам по массиву.`,
+    functionName: "subarraysWithKDistinct",
+    starterCode: `function subarraysWithKDistinct(nums, k) {
+  // ваш код — O(n)
+}`,
+    testCases: [
+      { id: "sw-h4-t1", inputDisplay: "subarraysWithKDistinct([1,2,1,2,3], 2)", inputArgs: [[1, 2, 1, 2, 3], 2], expected: 7 },
+      { id: "sw-h4-t2", inputDisplay: "subarraysWithKDistinct([1,2,1,3,4], 3)", inputArgs: [[1, 2, 1, 3, 4], 3], expected: 3 },
+      { id: "sw-h4-t3", inputDisplay: "subarraysWithKDistinct([1,2], 1)", inputArgs: [[1, 2], 1], expected: 2 },
+      { id: "sw-h4-t4", inputDisplay: "subarraysWithKDistinct([1,2,1,2,3], 1)", inputArgs: [[1, 2, 1, 2, 3], 1], expected: 3 },
+      { id: "sw-h4-t5", inputDisplay: "subarraysWithKDistinct([1,1,1,1], 1)", inputArgs: [[1, 1, 1, 1], 1], expected: 10 },
+      { id: "sw-h4-t6", inputDisplay: "subarraysWithKDistinct([1,2,3,4,5], 5)", inputArgs: [[1, 2, 3, 4, 5], 5], expected: 1 },
+    ],
+    hints: [
+      "Прямой подсчёт «ровно k» сложен. Преобразуйте: exactly(k) = atMost(k) - atMost(k-1).",
+      "atMost(k): двигайте left, пока число различных в [left..right] не станет ≤ k. К ответу прибавляйте (right - left + 1) — все подмассивы, оканчивающиеся в right.",
+    ],
+    solutionCode: `function subarraysWithKDistinct(nums, k) {
+  function atMost(limit) {
+    if (limit < 0) return 0;
+    const counts = new Map();
+    let left = 0;
+    let distinct = 0;
+    let total = 0;
+    for (let right = 0; right < nums.length; right++) {
+      const x = nums[right];
+      const c = counts.get(x) ?? 0;
+      if (c === 0) distinct++;
+      counts.set(x, c + 1);
+      while (distinct > limit) {
+        const y = nums[left];
+        counts.set(y, counts.get(y) - 1);
+        if (counts.get(y) === 0) distinct--;
+        left++;
+      }
+      total += right - left + 1;
+    }
+    return total;
+  }
+
+  return atMost(k) - atMost(k - 1);
 }`,
   },
 ];

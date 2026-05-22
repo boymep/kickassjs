@@ -395,7 +395,7 @@ pq.dequeue(); // → 'low' (приоритет 3)
     ],
     hints: [
       "Как хранить задачи вместе с их приоритетом и извлекать наиболее приоритетную?",
-      "Есть несколько подходов — с разными трейдоффами по сложности реализации и производительности.",
+      "Есть несколько подходов — с разными компромиссами по сложности реализации и производительности.",
     ],
     solutionCode: `class PriorityQueue {
   constructor() {
@@ -534,7 +534,7 @@ console.log('F');`,
     expected: "A\nF\nC\nE\nD\nB",
     hints: [
       "Сначала выполняется весь синхронный код — это «A» и «F».",
-      "Затем microtask checkpoint опустошает очередь полностью, включая микрозадачи, добавленные внутри других микрозадач.",
+      "Затем движок полностью опустошает очередь микрозадач — включая те, что были добавлены изнутри других микрозадач.",
       "setTimeout — макрозадача и выполняется после всех микрозадач.",
     ],
     solutionCode: `// Порядок:
@@ -542,8 +542,8 @@ console.log('F');`,
 // 2. 'F'  — синхронный console.log в конце.
 // 3. 'C'  — первая микрозадача из queueMicrotask.
 // 4. 'E'  — Promise.resolve().then — следующая микрозадача в очереди.
-// 5. 'D'  — микрозадача, добавленная внутри 'C'; обрабатывается на том же checkpoint.
-// 6. 'B'  — макрозадача setTimeout, выполняется после microtask checkpoint.`,
+// 5. 'D'  — микрозадача, добавленная внутри 'C'; обрабатывается в той же пачке.
+// 6. 'B'  — макрозадача setTimeout, выполняется после того, как очередь микрозадач опустеет.`,
   },
   {
     kind: "find-bug",
@@ -579,7 +579,7 @@ console.log('F');`,
 }`,
     functionName: "nodel_p7_test",
     bugSummary:
-      "При пустой очереди функция перепланировала саму себя через `queueMicrotask`, создавая бесконечный microtask checkpoint и не отпуская event loop. Правильное поведение — резолвить промис, как только очередь опустела.",
+      "При пустой очереди функция бесконечно перепланировала саму себя через `queueMicrotask` — очередь микрозадач никогда не опустошалась, и event loop не мог дойти до таймеров. Правильное поведение — резолвить промис, как только очередь опустела.",
     testCases: [
       {
         id: "nodel-p7-t1",
@@ -662,7 +662,7 @@ console.log('F');`,
 Перепишите функцию так, чтобы:
 1. Сложность стала линейной — O(n).
 2. Сигнатура осталась прежней: \`sumOfSquares(arr)\` возвращает число.
-3. Perf-тест на массиве из 50 000 элементов укладывался в 200 мс.
+3. Тест на производительность для массива из 50 000 элементов укладывался в **200 мс**.
 
 Это типовая задача для Node.js-сервера: один такой запрос на горячем пути в исходном виде задержит обработку всех остальных соединений.`,
     functionName: "sumOfSquares",
@@ -736,9 +736,9 @@ console.log('F');`,
     title: "Предскажи вывод: process.nextTick vs setImmediate vs setTimeout",
     difficulty: "easy",
     isContextual: false,
-    description: `Это базовый вопрос про приоритеты в event loop Node.js. Что выведет этот код?
+    description: `Базовый вопрос на приоритеты в event loop Node.js. Что выведет этот код?
 
-Введите числа через перенос строки.`,
+Введи каждое значение на отдельной строке поля ответа.`,
     code: `setTimeout(() => console.log(1), 0);
 setImmediate(() => console.log(2));
 process.nextTick(() => console.log(3));
@@ -762,9 +762,9 @@ console.log(4);`,
     title: "Предскажи вывод: вложенные nextTick и Promise в Node.js",
     difficulty: "hard",
     isContextual: false,
-    description: `Внимательно проследите порядок: вложенный \`process.nextTick\`, промис и \`setImmediate\` в Node.js.
+    description: `Внимательно проследи порядок: вложенный \`process.nextTick\`, промис и \`setImmediate\` в Node.js.
 
-Что выведет код? Введите числа через перенос строки.`,
+Что выведет код? Введи каждое значение на отдельной строке.`,
     code: `Promise.resolve().then(() => {
   console.log(1);
   process.nextTick(() => console.log(2));
@@ -940,6 +940,310 @@ q.push(async () => 'result'); // вернёт Promise<'result'>
       q.push(async () => 2),
       q.push(async () => 3),
     ]);
+  }
+}`,
+  },
+  {
+    id: "nodel-e2",
+    topicId: "node-event-loop",
+    title: "deferred — Promise с внешним resolve/reject",
+    difficulty: "easy",
+    isContextual: false,
+    description: `Реализуйте \`deferred()\` — функцию, возвращающую объект \`{ promise, resolve, reject }\`, где:
+- \`promise\` — Promise, состояние которого можно резолвить **снаружи**;
+- \`resolve(value)\` — резолвит этот promise;
+- \`reject(reason)\` — реджектит этот promise.
+
+Этот «выделенный» паттерн часто нужен, когда промис надо разрешать из другого места кода (например, из колбэка библиотеки).
+
+Пример:
+\`\`\`
+const d = deferred();
+setTimeout(() => d.resolve('done'), 50);
+const result = await d.promise;
+// result === 'done'
+\`\`\``,
+    functionName: 'deferred_test',
+    starterCode: `function deferred() {
+  // ваш код
+}`,
+    testCases: [
+      { id: 'nodel-e2-t1', inputDisplay: "resolve работает", inputArgs: ['resolve'], expected: 'ok' },
+      { id: 'nodel-e2-t2', inputDisplay: "reject работает", inputArgs: ['reject'], expected: 'Error: bad' },
+      { id: 'nodel-e2-t3', inputDisplay: "resolve вызывается асинхронно — promise ждёт", inputArgs: ['async-resolve'], expected: 42 },
+      { id: 'nodel-e2-t4', inputDisplay: "повторный resolve игнорируется", inputArgs: ['double-resolve'], expected: 'first' },
+    ],
+    hints: [
+      'Создайте Promise с колбэком, в котором "перехватите" функции resolve/reject в переменные внешней области.',
+      'Эти функции — захваченные в замыкании ссылки на внутренние resolve/reject промиса.',
+    ],
+    solutionCode: `function deferred() {
+  let resolve, reject;
+  const promise = new Promise((res, rej) => {
+    resolve = res;
+    reject = rej;
+  });
+  return { promise, resolve, reject };
+}`,
+    testHelperCode: `async function deferred_test(scenario) {
+  if (scenario === 'resolve') {
+    const d = deferred();
+    d.resolve('ok');
+    return await d.promise;
+  }
+  if (scenario === 'reject') {
+    const d = deferred();
+    d.reject(new Error('bad'));
+    try { await d.promise; return 'no-throw'; }
+    catch (e) { return 'Error: ' + e.message; }
+  }
+  if (scenario === 'async-resolve') {
+    const d = deferred();
+    setTimeout(() => d.resolve(42), 30);
+    return await d.promise;
+  }
+  if (scenario === 'double-resolve') {
+    const d = deferred();
+    d.resolve('first');
+    d.resolve('second');
+    return await d.promise;
+  }
+}`,
+  },
+  {
+    id: "nodel-e3",
+    topicId: "node-event-loop",
+    kind: "predict-output",
+    title: "Предскажи вывод: микрозадачи между sync и setTimeout",
+    difficulty: "easy",
+    isContextual: false,
+    description: `Перед вами фрагмент с тремя источниками логов: синхронные \`console.log\`, два \`queueMicrotask\`, один \`Promise.resolve().then\` и один \`setTimeout(..., 0)\`.
+
+Какой будет порядок вывода?
+
+Подсказка: все микротаски (queueMicrotask и Promise.then) обслуживаются в порядке регистрации **до** следующего setTimeout.`,
+    code: `console.log('start');
+
+setTimeout(() => console.log('timeout'), 0);
+queueMicrotask(() => console.log('micro1'));
+Promise.resolve().then(() => console.log('promise'));
+queueMicrotask(() => console.log('micro2'));
+
+console.log('end');`,
+    expected: 'start\nend\nmicro1\npromise\nmicro2\ntimeout',
+    hints: [
+      'Сначала исполняется весь синхронный код: "start", затем "end".',
+      'Микротаски (queueMicrotask и Promise.then) обрабатываются в порядке регистрации: micro1, promise, micro2.',
+      'Только потом — следующая итерация event loop и timeout.',
+    ],
+    solutionCode: `// 1. 'start'    — синхронно.
+// 2. setTimeout, queueMicrotask×2, Promise.then — все запланированы.
+// 3. 'end'      — синхронно.
+// 4. Очередь микрозадач (в порядке регистрации): 'micro1' → 'promise' → 'micro2'.
+// 5. Макрозадача: 'timeout'.`,
+  },
+  {
+    id: "nodel-h3",
+    topicId: "node-event-loop",
+    kind: "implement",
+    title: "runInWaterfall — последовательный конвейер задач",
+    difficulty: "hard",
+    isContextual: false,
+    description: `Реализуйте \`runInWaterfall(tasks, initialValue)\` — функцию, которая выполняет массив **асинхронных** задач **последовательно**, передавая результат каждой как аргумент следующей.
+
+- \`tasks\` — массив функций \`(prev) => Promise<next>\`.
+- \`initialValue\` — значение, передаваемое первой задаче.
+- Возвращает Promise, резолвящийся **результатом последней** задачи.
+- Если **любая** задача упадёт — Promise сразу реджектится, и следующие задачи **не запускаются**.
+- Если \`tasks\` пуст — Promise резолвится \`initialValue\`.
+
+Это паттерн «pipeline» — обычная сценарная задача для бэкенда: пропустить значение через цепочку преобразований, где каждое следующее зависит от результата предыдущего.
+
+Пример:
+\`\`\`
+runInWaterfall([
+  async (x) => x + 1,
+  async (x) => x * 2,
+  async (x) => x.toString(),
+], 5);
+// 5 → 6 → 12 → '12'   итоговый Promise резолвится '12'
+\`\`\``,
+    functionName: 'waterfall_test',
+    starterCode: `async function runInWaterfall(tasks, initialValue) {
+  // ваш код
+}`,
+    testCases: [
+      { id: 'nodel-h3-t1', inputDisplay: "три последовательные задачи", inputArgs: ['three-tasks'], expected: '12' },
+      { id: 'nodel-h3-t2', inputDisplay: "пустой массив → initialValue", inputArgs: ['empty'], expected: 7 },
+      { id: 'nodel-h3-t3', inputDisplay: "упавшая задача останавливает конвейер", inputArgs: ['fails-midway'], expected: { error: 'mid', remaining: 0 } },
+      { id: 'nodel-h3-t4', inputDisplay: "одна задача", inputArgs: ['one-task'], expected: 10 },
+      { id: 'nodel-h3-t5', inputDisplay: "результат предыдущей доступен", inputArgs: ['accumulate'], expected: [1, 2, 3] },
+    ],
+    hints: [
+      'Используйте for...of (или reduce) + await: на каждой итерации вызывайте `task(prev)` и обновляйте prev.',
+      'Если task бросает — естественно прокинется через async-функцию как reject.',
+      'Самое простое решение: цикл с накоплением промежуточного результата.',
+    ],
+    solutionCode: `async function runInWaterfall(tasks, initialValue) {
+  let value = initialValue;
+  for (const task of tasks) {
+    value = await task(value);
+  }
+  return value;
+}`,
+    testHelperCode: `async function waterfall_test(scenario) {
+  if (scenario === 'three-tasks') {
+    return await runInWaterfall([
+      async (x) => x + 1,
+      async (x) => x * 2,
+      async (x) => x.toString(),
+    ], 5);
+  }
+  if (scenario === 'empty') {
+    return await runInWaterfall([], 7);
+  }
+  if (scenario === 'fails-midway') {
+    let remaining = 2;
+    try {
+      await runInWaterfall([
+        async (x) => { remaining--; return x + 1; },
+        async () => { throw new Error('mid'); },
+        async (x) => { remaining--; return x * 100; },
+      ], 0);
+      return { error: 'no-throw', remaining };
+    } catch (e) {
+      return { error: e.message, remaining };
+    }
+  }
+  if (scenario === 'one-task') {
+    return await runInWaterfall([async (x) => x * 2], 5);
+  }
+  if (scenario === 'accumulate') {
+    return await runInWaterfall([
+      async (a) => [...a, 1],
+      async (a) => [...a, 2],
+      async (a) => [...a, 3],
+    ], []);
+  }
+}`,
+  },
+  {
+    id: "nodel-h4",
+    topicId: "node-event-loop",
+    kind: "implement",
+    title: "createMutex — взаимное исключение для async-кода",
+    difficulty: "hard",
+    isContextual: false,
+    description: `Реализуйте \`createMutex()\` — мьютекс (mutual exclusion), который позволяет **сериализовать** доступ к критической секции для async-кода.
+
+API:
+\`\`\`
+const mutex = createMutex();
+
+async function critical() {
+  const release = await mutex.acquire();
+  try {
+    // ... критическая секция (только один acquire активен одновременно)
+  } finally {
+    release();
+  }
+}
+\`\`\`
+
+Поведение:
+- \`acquire()\` возвращает Promise, который резолвится **функцией release**.
+- Если мьютекс свободен — Promise резолвится **немедленно**.
+- Если занят — Promise ждёт, пока предыдущий release не освободит его.
+- Несколько acquire поступают в очередь и обрабатываются в порядке вызова (FIFO).
+
+Хорошая задача на понимание промисов и управления потоком выполнения в async-коде.`,
+    functionName: 'mutex_test',
+    starterCode: `function createMutex() {
+  // ваш код
+}`,
+    testCases: [
+      { id: 'nodel-h4-t1', inputDisplay: "две критические секции выполняются по очереди", inputArgs: ['sequential'], expected: 1 },
+      { id: 'nodel-h4-t2', inputDisplay: "порядок входа — FIFO", inputArgs: ['fifo'], expected: ['a', 'b', 'c'] },
+      { id: 'nodel-h4-t3', inputDisplay: "release освобождает следующего сразу", inputArgs: ['release-passes-on'], expected: 'second-ran' },
+      { id: 'nodel-h4-t4', inputDisplay: "свободный mutex даёт acquire без ожидания", inputArgs: ['immediate'], expected: true },
+    ],
+    hints: [
+      'Внутри храните флаг `locked` и очередь pending-резолверов.',
+      'При `acquire`: если не залочено — выдайте release и заблокируйте. Иначе — поставьте резолвер в очередь.',
+      '`release`: если в очереди есть pending — снимите первого и зарезолвите его новым release. Иначе — снимите блокировку.',
+    ],
+    solutionCode: `function createMutex() {
+  let locked = false;
+  const queue = [];
+
+  function release() {
+    if (queue.length > 0) {
+      const next = queue.shift();
+      next(release); // следующий acquire получит свой release
+    } else {
+      locked = false;
+    }
+  }
+
+  function acquire() {
+    if (!locked) {
+      locked = true;
+      return Promise.resolve(release);
+    }
+    return new Promise((resolve) => {
+      queue.push(resolve);
+    });
+  }
+
+  return { acquire };
+}`,
+    testHelperCode: `async function mutex_test(scenario) {
+  if (scenario === 'sequential') {
+    const mutex = createMutex();
+    let active = 0;
+    let maxActive = 0;
+    async function critical(ms) {
+      const release = await mutex.acquire();
+      active++;
+      if (active > maxActive) maxActive = active;
+      await new Promise((r) => setTimeout(r, ms));
+      active--;
+      release();
+    }
+    await Promise.all([critical(30), critical(30), critical(30)]);
+    return maxActive;
+  }
+  if (scenario === 'fifo') {
+    const mutex = createMutex();
+    const order = [];
+    async function task(label) {
+      const release = await mutex.acquire();
+      order.push(label);
+      await new Promise((r) => setTimeout(r, 10));
+      release();
+    }
+    await Promise.all([task('a'), task('b'), task('c')]);
+    return order;
+  }
+  if (scenario === 'release-passes-on') {
+    const mutex = createMutex();
+    let secondRan = false;
+    const releaseFirst = await mutex.acquire();
+    const p = mutex.acquire().then((release) => {
+      secondRan = true;
+      release();
+    });
+    releaseFirst();
+    await p;
+    return secondRan ? 'second-ran' : 'no';
+  }
+  if (scenario === 'immediate') {
+    const mutex = createMutex();
+    const start = Date.now();
+    const release = await mutex.acquire();
+    const elapsed = Date.now() - start;
+    release();
+    return elapsed < 20;
   }
 }`,
   },

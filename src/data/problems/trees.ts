@@ -7,11 +7,12 @@ export const treesProblems: Problem[] = [
     title: 'Сумма всех значений в дереве',
     difficulty: 'easy',
     isContextual: false,
-    description: `Дано дерево, где каждый узел имеет поле value (число) и необязательное поле children (массив дочерних узлов).
+    description: `Дано дерево, где каждый узел имеет поле \`value\` (число) и необязательное поле \`children\` (массив дочерних узлов).
 
-Напишите функцию, которая возвращает сумму всех значений value в дереве.
+Напишите функцию, которая возвращает **сумму всех значений** \`value\` в дереве.
 
-Пример:
+**Пример:**
+\`\`\`
 const tree = {
   value: 1,
   children: [
@@ -19,7 +20,8 @@ const tree = {
     { value: 3, children: [{ value: 4 }, { value: 5 }] },
   ],
 };
-sumTree(tree) → 15  (1 + 2 + 3 + 4 + 5)`,
+sumTree(tree)  // → 15   (1 + 2 + 3 + 4 + 5)
+\`\`\``,
     functionName: 'sumTree',
     starterCode: `function sumTree(node) {
   // ваш код
@@ -76,11 +78,12 @@ sumTree(tree) → 15  (1 + 2 + 3 + 4 + 5)`,
     title: 'Максимальная глубина дерева',
     difficulty: 'easy',
     isContextual: false,
-    description: `Дано дерево с полями value и children. Найдите максимальную глубину дерева.
+    description: `Дано дерево с полями \`value\` и \`children\`. Найдите **максимальную глубину** дерева.
 
-Глубина корня = 1. Если у узла нет детей, его глубина = 1.
+Глубина корня = \`1\`. Если у узла нет детей, его глубина = \`1\`.
 
-Пример:
+**Пример:**
+\`\`\`
 const tree = {
   value: 1,
   children: [
@@ -88,7 +91,8 @@ const tree = {
     { value: 3, children: [{ value: 4, children: [{ value: 5 }] }] },
   ],
 };
-maxDepth(tree) → 4  (путь: 1 → 3 → 4 → 5)`,
+maxDepth(tree)  // → 4   (путь: 1 → 3 → 4 → 5)
+\`\`\``,
     functionName: 'maxDepth',
     starterCode: `function maxDepth(node) {
   // ваш код
@@ -142,6 +146,7 @@ maxDepth(tree) → 4  (путь: 1 → 3 → 4 → 5)`,
     isContextual: true,
     description: `Дана древовидная структура следующего формата:
 
+\`\`\`
 const tree = {
   type: "nested",
   children: [
@@ -153,20 +158,25 @@ const tree = {
     { type: "added", value: 44 },
   ],
 };
+\`\`\`
 
-Необходимо написать функцию getNodes(tree, type), которая возвращает все ноды в порядке следования, соответствующие переданному типу. Глубина вложенности любая.
+Напиши функцию \`getNodes(tree, type)\`, которая возвращает **все узлы в порядке следования**, соответствующие переданному типу. Глубина вложенности — любая.
 
-Пример:
-getNodes(tree, "added") → [
-  { type: "added", value: 42 },
-  { type: "added", value: 43 },
-  { type: "added", value: 44 },
-]
+**Примеры:**
+\`\`\`
+getNodes(tree, "added")
+// → [
+//   { type: "added", value: 42 },
+//   { type: "added", value: 43 },
+//   { type: "added", value: 44 },
+// ]
 
-getNodes(tree, "nested") → [
-  { type: "nested", children: [...] },  // корень
-  { type: "nested", children: [...] },  // вложенный nested
-]`,
+getNodes(tree, "nested")
+// → [
+//   { type: "nested", children: [...] },  // корень
+//   { type: "nested", children: [...] },  // вложенный nested
+// ]
+\`\`\``,
     functionName: 'getNodes',
     starterCode: `function getNodes(tree, type) {
   // ваш код
@@ -307,11 +317,12 @@ getNodes(tree, "nested") → [
     title: 'Плоское представление дерева категорий',
     difficulty: 'medium',
     isContextual: true,
-    description: `Товары организованы в дерево категорий. Каждая категория имеет id, name и необязательный массив subcategories.
+    description: `Товары организованы в дерево категорий. Каждая категория имеет \`id\`, \`name\` и необязательный массив \`subcategories\`.
 
-Напишите функцию flattenCategories(tree), которая возвращает плоский массив всех категорий с указанием пути (breadcrumb).
+Напиши функцию \`flattenCategories(tree)\`, которая возвращает **плоский массив** всех категорий с указанием пути (breadcrumb).
 
-Пример:
+**Пример:**
+\`\`\`
 const categories = {
   id: 1, name: "Все",
   subcategories: [
@@ -323,15 +334,17 @@ const categories = {
   ],
 };
 
-flattenCategories(categories) → [
-  { id: 1, path: "Все" },
-  { id: 2, path: "Все > Транспорт" },
-  { id: 4, path: "Все > Транспорт > Автомобили" },
-  { id: 5, path: "Все > Транспорт > Мотоциклы" },
-  { id: 3, path: "Все > Недвижимость" },
-]
+flattenCategories(categories)
+// → [
+//   { id: 1, path: "Все" },
+//   { id: 2, path: "Все > Транспорт" },
+//   { id: 4, path: "Все > Транспорт > Автомобили" },
+//   { id: 5, path: "Все > Транспорт > Мотоциклы" },
+//   { id: 3, path: "Все > Недвижимость" },
+// ]
+\`\`\`
 
-Порядок — DFS (в глубину).`,
+Порядок — **DFS** (в глубину).`,
     functionName: 'flattenCategories',
     starterCode: `function flattenCategories(tree) {
   // ваш код
@@ -445,13 +458,15 @@ flattenCategories(categories) → [
     isContextual: true,
     description: `В системе фильтрации данных фильтр представлен деревом. Каждый узел — это либо условие \`{ type: "condition", field: string, value: any }\`, либо группа \`{ type: "and" | "or", children: [...] }\`.
 
-Дан объект (одна запись) и дерево фильтров. Проверьте, проходит ли объект фильтр.
+Дан объект (одна запись) и дерево фильтров. Проверь, **проходит ли объект фильтр**.
 
-Для "condition": obj[field] === value.
-Для "and": все children должны быть true.
-Для "or": хотя бы один child должен быть true.
+**Правила:**
+- \`"condition"\` — \`obj[field] === value\`.
+- \`"and"\` — **все** \`children\` должны быть \`true\`.
+- \`"or"\` — **хотя бы один** \`child\` должен быть \`true\`.
 
-Пример:
+**Пример:**
+\`\`\`
 const filter = {
   type: "and",
   children: [
@@ -459,8 +474,9 @@ const filter = {
     { type: "condition", field: "age", value: 25 },
   ],
 };
-matchesFilter({ city: "Moscow", age: 25 }, filter) → true
-matchesFilter({ city: "Moscow", age: 30 }, filter) → false`,
+matchesFilter({ city: "Moscow", age: 25 }, filter)  // → true
+matchesFilter({ city: "Moscow", age: 30 }, filter)  // → false
+\`\`\``,
     functionName: 'matchesFilter',
     starterCode: `function matchesFilter(obj, filter) {
   // ваш код
@@ -631,11 +647,11 @@ console.log(bfs(tree).join(','));`,
     title: 'Найдите баг: DFS зацикливается на структуре с циклом',
     difficulty: 'medium',
     isContextual: false,
-    description: `Перед вами реализация подсчёта узлов в «дереве». Функция работает корректно на настоящих деревьях, но «дерево» в этом приложении приходит из API, и иногда из-за бага бэкенда содержит обратные ссылки — структура превращается в граф с циклом.
+    description: `Перед тобой реализация подсчёта узлов в «дереве». Функция работает корректно на настоящих деревьях, но «дерево» в этом приложении приходит из API, и иногда из-за бага бэкенда содержит обратные ссылки — структура превращается в **граф с циклом**.
 
-Сейчас функция уходит в бесконечную рекурсию и падает с Maximum call stack. Найдите ошибку и исправьте её, чтобы функция корректно считала уникальные узлы при наличии циклов.
+Сейчас функция уходит в бесконечную рекурсию и падает с \`Maximum call stack\`. Найди ошибку и исправь её — функция должна корректно считать **уникальные** узлы даже при наличии циклов.
 
-Подсказка: в графе обход требует отметки посещённых узлов.`,
+**Подсказка:** в графе обход требует отметки посещённых узлов.`,
     functionName: 'countNodes',
     buggyCode: `function countNodes(root) {
   let count = 1;
@@ -730,11 +746,11 @@ console.log(bfs(tree).join(','));`,
     title: 'Рефакторинг: рекурсивный DFS → итеративный со стеком',
     difficulty: 'medium',
     isContextual: false,
-    description: `Перед вами рекурсивный DFS, собирающий значения всех узлов дерева. Он корректно работает на сбалансированных деревьях, но на дереве-цепочке глубиной 50 000 узлов он падает с Maximum call stack size exceeded — V8 ограничивает стек вызовов примерно 10–15 тысячами кадров.
+    description: `Перед тобой рекурсивный DFS, собирающий значения всех узлов дерева. Он корректно работает на сбалансированных деревьях, но на дереве-цепочке глубиной 50 000 узлов падает с \`Maximum call stack size exceeded\` — V8 ограничивает стек вызовов примерно 10–15 тысячами кадров.
 
-Перепишите функцию итеративно, используя явный стек. Контракт остаётся тем же: вернуть массив значений в pre-order (корень → дети слева направо).
+Перепиши функцию **итеративно**, используя явный стек. Контракт остаётся прежним: вернуть массив значений в **pre-order** (корень → дети слева направо).
 
-Тест производительности: цепочка из 50 000 узлов должна обходиться без падения стека и завершаться за 100 миллисекунд.`,
+**Тест производительности:** цепочка из 50 000 узлов должна обходиться без падения стека и завершаться за **100 мс**.`,
     functionName: 'collectValues',
     starterCode: `function collectValues(root) {
   // Рекурсивный DFS — работает, но падает на глубокой цепочке
@@ -1005,6 +1021,240 @@ function deserialize(data) {
   if (scenario === 'single') root = node(42);
   const restored = deserialize(serialize(root));
   return bfsVals(restored);
+}`,
+  },
+  {
+    id: 'tree-e2',
+    topicId: 'trees',
+    title: 'Подсчёт листьев в дереве',
+    difficulty: 'easy',
+    isContextual: false,
+    description: `Дано дерево, где каждый узел имеет поле \`value\` и необязательное поле \`children\` (массив дочерних узлов).
+
+**Лист** — это узел, у которого нет детей (поле \`children\` отсутствует или массив пуст).
+
+Напишите функцию \`countLeaves(node)\`, которая возвращает количество листьев в дереве.
+
+Примеры:
+\`\`\`
+countLeaves({ value: 1 })                                                   // → 1
+countLeaves({ value: 1, children: [{ value: 2 }, { value: 3 }] })           // → 2
+countLeaves({ value: 1, children: [] })                                     // → 1
+countLeaves({ value: 1, children: [
+  { value: 2, children: [{ value: 4 }, { value: 5 }] },
+  { value: 3 }
+]})                                                                          // → 3
+\`\`\``,
+    functionName: 'countLeaves',
+    starterCode: `function countLeaves(node) {
+  // ваш код
+}`,
+    testCases: [
+      {
+        id: 'tree-e2-t1',
+        inputDisplay: 'countLeaves({1})',
+        inputArgs: [{ value: 1 }],
+        expected: 1,
+      },
+      {
+        id: 'tree-e2-t2',
+        inputDisplay: 'countLeaves({1, [2, 3]})',
+        inputArgs: [{ value: 1, children: [{ value: 2 }, { value: 3 }] }],
+        expected: 2,
+      },
+      {
+        id: 'tree-e2-t3',
+        inputDisplay: 'countLeaves({1, []})',
+        inputArgs: [{ value: 1, children: [] }],
+        expected: 1,
+      },
+      {
+        id: 'tree-e2-t4',
+        inputDisplay: 'countLeaves({1, [{2, [4, 5]}, 3]})',
+        inputArgs: [{ value: 1, children: [{ value: 2, children: [{ value: 4 }, { value: 5 }] }, { value: 3 }] }],
+        expected: 3,
+      },
+      {
+        id: 'tree-e2-t5',
+        inputDisplay: 'countLeaves(глубокая цепочка)',
+        inputArgs: [{ value: 1, children: [{ value: 2, children: [{ value: 3, children: [{ value: 4 }] }] }] }],
+        expected: 1,
+      },
+      {
+        id: 'tree-e2-t6',
+        inputDisplay: 'countLeaves(широкое дерево с 5 листьями)',
+        inputArgs: [{ value: 1, children: [{ value: 2 }, { value: 3 }, { value: 4 }, { value: 5 }, { value: 6 }] }],
+        expected: 5,
+      },
+    ],
+    hints: [
+      'Базовый случай: узел без детей (или с пустым массивом children) — это сам лист. Сколько он добавляет к ответу?',
+      'Иначе суммируйте количество листьев по всем детям рекурсивно.',
+    ],
+    solutionCode: `function countLeaves(node) {
+  if (!node.children || node.children.length === 0) return 1;
+  let total = 0;
+  for (const child of node.children) {
+    total += countLeaves(child);
+  }
+  return total;
+}`,
+  },
+  {
+    id: 'tree-h3',
+    topicId: 'trees',
+    kind: 'implement',
+    title: 'Максимальная сумма пути в бинарном дереве',
+    difficulty: 'hard',
+    isContextual: false,
+    description: `Дано бинарное дерево с узлами \`{ val, left, right }\`. **Путь** — любая последовательность узлов, в которой каждая пара соседей соединена ребром. Путь **не обязан** начинаться или заканчиваться в корне, и **не обязан** содержать корень. Путь использует каждый узел не более одного раза.
+
+Верните **максимальную сумму** значений узлов в любом таком пути.
+
+Это **LeetCode 124** — классическая hard-задача на рекурсию по дереву с двойным учётом: «вклад поддерева вверх» и «лучший путь, замыкающийся в текущем узле».
+
+Пример:
+\`\`\`
+//       -10
+//      /    \\
+//     9     20
+//           / \\
+//          15  7
+
+maxPathSum(root)  // → 42   (путь 15 → 20 → 7)
+\`\`\`
+
+Примеры:
+\`\`\`
+maxPathSum(node(1, node(2), node(3)))       // → 6   (2+1+3)
+maxPathSum(node(-3))                         // → -3
+maxPathSum(node(2, node(-1)))                // → 2   (только корень)
+maxPathSum(node(1, node(-2), node(3)))       // → 4   (1+3, минуем -2)
+\`\`\``,
+    functionName: 'maxPathSum_test',
+    starterCode: `function maxPathSum(root) {
+  // ваш код
+}`,
+    testCases: [
+      { id: 'tree-h3-t1', inputDisplay: 'maxPathSum([1,2,3]) → 6', inputArgs: ['simple'], expected: 6 },
+      { id: 'tree-h3-t2', inputDisplay: 'maxPathSum([-10,9,20,null,null,15,7]) → 42', inputArgs: ['with-neg'], expected: 42 },
+      { id: 'tree-h3-t3', inputDisplay: 'maxPathSum([-3]) → -3', inputArgs: ['single'], expected: -3 },
+      { id: 'tree-h3-t4', inputDisplay: 'maxPathSum([2,-1]) → 2', inputArgs: ['two'], expected: 2 },
+      { id: 'tree-h3-t5', inputDisplay: 'maxPathSum([1,-2,3]) → 4', inputArgs: ['positive-third'], expected: 4 },
+      { id: 'tree-h3-t6', inputDisplay: 'maxPathSum([1,2,null,3,null,4]) → 10', inputArgs: ['chain'], expected: 10 },
+    ],
+    hints: [
+      'Различайте две величины: «вклад поддерева в путь, продолжающий вверх» (только одна ветвь идёт к родителю) и «лучший путь, замыкающийся в текущем узле» (можно взять обе ветви).',
+      'При спуске вниз отрицательные вклады поддеревьев можно «отбрасывать» — заменяя на 0, мы решаем не идти в это поддерево.',
+      'Поддерживайте глобальный максимум в замыкании и обновляйте его при каждом узле.',
+    ],
+    solutionCode: `function maxPathSum(root) {
+  let max = -Infinity;
+  function gain(node) {
+    if (!node) return 0;
+    const left  = Math.max(gain(node.left), 0);
+    const right = Math.max(gain(node.right), 0);
+    const localMax = node.val + left + right;
+    if (localMax > max) max = localMax;
+    return node.val + Math.max(left, right);
+  }
+  gain(root);
+  return max;
+}`,
+    testHelperCode: `function maxPathSum_test(scenario) {
+  function node(val, left = null, right = null) { return { val, left, right }; }
+  let root = null;
+  if (scenario === 'simple') root = node(1, node(2), node(3));
+  if (scenario === 'with-neg') root = node(-10, node(9), node(20, node(15), node(7)));
+  if (scenario === 'single') root = node(-3);
+  if (scenario === 'two') root = node(2, node(-1));
+  if (scenario === 'positive-third') root = node(1, node(-2), node(3));
+  if (scenario === 'chain') root = node(1, node(2, node(3, node(4))));
+  return maxPathSum(root);
+}`,
+  },
+  {
+    id: 'tree-h4',
+    topicId: 'trees',
+    kind: 'implement',
+    title: 'Построить бинарное дерево из preorder и inorder',
+    difficulty: 'hard',
+    isContextual: false,
+    description: `Даны два массива:
+- \`preorder\` — preorder-обход бинарного дерева (узел → лево → право)
+- \`inorder\` — inorder-обход того же дерева (лево → узел → право)
+
+Восстановите дерево и верните его корень. Гарантируется, что **все значения в дереве уникальны**.
+
+Это **LeetCode 105** — классическая задача на восстановление дерева из двух обходов.
+
+Пример:
+\`\`\`
+buildTree([3,9,20,15,7], [9,3,15,20,7])
+// →   3
+//    / \\
+//   9   20
+//       / \\
+//      15  7
+\`\`\`
+
+Для проверки в тестах мы сериализуем восстановленное дерево обходом BFS (с обрезанием хвостовых null).`,
+    functionName: 'build_test',
+    starterCode: `function buildTree(preorder, inorder) {
+  // ваш код
+}`,
+    testCases: [
+      { id: 'tree-h4-t1', inputDisplay: 'buildTree([3,9,20,15,7], [9,3,15,20,7])', inputArgs: ['simple'], expected: [3, 9, 20, null, null, 15, 7] },
+      { id: 'tree-h4-t2', inputDisplay: 'buildTree([1], [1])', inputArgs: ['single'], expected: [1] },
+      { id: 'tree-h4-t3', inputDisplay: 'buildTree([1,2,3], [3,2,1]) — левая цепочка', inputArgs: ['left-only'], expected: [1, 2, null, 3] },
+      { id: 'tree-h4-t4', inputDisplay: 'buildTree([1,2,3], [1,2,3]) — правая цепочка', inputArgs: ['right-only'], expected: [1, null, 2, null, 3] },
+      { id: 'tree-h4-t5', inputDisplay: 'buildTree([3,9,1,2,20,15,7], [1,9,2,3,15,20,7])', inputArgs: ['mixed'], expected: [3, 9, 20, 1, 2, 15, 7] },
+    ],
+    hints: [
+      'Первый элемент preorder — корень. Найдите его в inorder: всё слева — левое поддерево, всё справа — правое.',
+      'Размер левого поддерева равен числу элементов слева от корня в inorder. На основе этого делите preorder.',
+      'Для ускорения поиска корня в inorder заведите Map<значение, индекс>.',
+    ],
+    solutionCode: `function buildTree(preorder, inorder) {
+  if (!preorder.length) return null;
+  const idx = new Map();
+  for (let i = 0; i < inorder.length; i++) idx.set(inorder[i], i);
+
+  let preIdx = 0;
+  function build(inLo, inHi) {
+    if (inLo > inHi) return null;
+    const val = preorder[preIdx++];
+    const m = idx.get(val);
+    const node = { val, left: null, right: null };
+    node.left  = build(inLo, m - 1);
+    node.right = build(m + 1, inHi);
+    return node;
+  }
+  return build(0, inorder.length - 1);
+}`,
+    testHelperCode: `function build_test(scenario) {
+  let pre, ino;
+  if (scenario === 'simple')      { pre = [3,9,20,15,7];        ino = [9,3,15,20,7]; }
+  if (scenario === 'single')      { pre = [1];                  ino = [1]; }
+  if (scenario === 'left-only')   { pre = [1,2,3];              ino = [3,2,1]; }
+  if (scenario === 'right-only')  { pre = [1,2,3];              ino = [1,2,3]; }
+  if (scenario === 'mixed')       { pre = [3,9,1,2,20,15,7];    ino = [1,9,2,3,15,20,7]; }
+  const root = buildTree(pre, ino);
+  // BFS-сериализация с null-местами; обрезаем висящие null
+  if (!root) return [];
+  const result = [];
+  const q = [root];
+  while (q.length) {
+    const n = q.shift();
+    if (n === null) { result.push(null); continue; }
+    result.push(n.val);
+    if (n.left !== null || n.right !== null) {
+      q.push(n.left);
+      q.push(n.right);
+    }
+  }
+  while (result.length && result[result.length - 1] === null) result.pop();
+  return result;
 }`,
   },
 ];

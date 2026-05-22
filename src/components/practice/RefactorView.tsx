@@ -20,7 +20,7 @@ interface RefactorViewProps {
 export default function RefactorView({ problem }: RefactorViewProps) {
   const [code, setCode] = useState(problem.starterCode);
   const [showSolution, setShowSolution] = useState(false);
-  const { results, running, run } = useCodeRunner();
+  const { results, running, run } = useCodeRunner(problem.id);
   const { markSolved } = useProgress(problem.topicId);
   const { hintIndex, showNext } = useHints(problem.id);
 

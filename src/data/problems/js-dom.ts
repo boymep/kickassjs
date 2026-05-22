@@ -947,7 +947,7 @@ function patch(parent, oldVNode, newVNode, domNode) {
     return newEl;
   }
 
-  // Одинаковые теги — патчим in-place
+  // Одинаковые теги — обновляем узел на месте
   const oldAttrs = oldVNode.attrs ?? {};
   const newAttrs = newVNode.attrs ?? {};
   for (const [k, v] of Object.entries(newAttrs)) {
@@ -1027,6 +1027,258 @@ function patch(parent, oldVNode, newVNode, domNode) {
 
   document.body.removeChild(container);
   return result ?? null;
+}`,
+  },
+  {
+    id: 'jsdom-e2',
+    topicId: 'js-dom',
+    kind: 'predict-output',
+    title: 'Предскажи вывод: event.target vs event.currentTarget',
+    difficulty: 'easy',
+    isContextual: false,
+    description: `На \`<div id="outer">\` повесили обработчик клика. Внутри лежит \`<button id="btn">\`. Пользователь кликнул по кнопке.
+
+В обработчике логируются \`event.target.id\` и \`event.currentTarget.id\`. Что выведется?
+
+Подсказка: \`event.target\` — тот, **по кому** кликнули. \`event.currentTarget\` — тот, **где висит** обработчик.`,
+    code: `document.body.innerHTML = '<div id="outer"><button id="btn">click</button></div>';
+
+document.getElementById('outer').addEventListener('click', (e) => {
+  console.log(e.target.id);
+  console.log(e.currentTarget.id);
+});
+
+document.getElementById('btn').click();`,
+    expected: 'btn\nouter',
+    hints: [
+      '`event.target` — элемент, по которому изначально произошёл клик.',
+      '`event.currentTarget` — элемент, на котором сейчас выполняется обработчик (тот, где навесили listener).',
+    ],
+    solutionCode: `// event.target.id === 'btn'         (исходный источник события)
+// event.currentTarget.id === 'outer' (элемент, на котором висит обработчик)`,
+  },
+  {
+    id: 'jsdom-h3',
+    topicId: 'js-dom',
+    kind: 'implement',
+    title: 'waitForElement — дождаться появления элемента в DOM',
+    difficulty: 'hard',
+    isContextual: false,
+    description: `Реализуйте \`waitForElement(selector, timeoutMs)\` — функцию, которая возвращает Promise, резолвящийся **появившимся** в DOM элементом, удовлетворяющим CSS-селектору.
+
+Если элемент уже есть на момент вызова — резолвитесь сразу. Если не появляется за \`timeoutMs\` мс — реджектитесь с \`new Error('Timeout')\`.
+
+**Используйте \`MutationObserver\`** для наблюдения за изменениями DOM — это эффективнее, чем поллинг через \`setInterval\`. После резолва/реджекта обязательно отключите observer (\`disconnect()\`).
+
+Полезное упражнение на знание DOM API и асинхронного программирования.
+
+Пример:
+\`\`\`
+const promise = waitForElement('.dynamic', 1000);
+setTimeout(() => {
+  const div = document.createElement('div');
+  div.className = 'dynamic';
+  document.body.appendChild(div);
+}, 200);
+const el = await promise;
+el.className;  // 'dynamic'
+\`\`\``,
+    functionName: 'waitForElement_test',
+    starterCode: `function waitForElement(selector, timeoutMs) {
+  // ваш код — MutationObserver, не setInterval
+}`,
+    testCases: [
+      { id: 'jsdom-h3-t1', inputDisplay: "элемент уже есть → резолв сразу", inputArgs: ['already-there'], expected: 'PRESENT' },
+      { id: 'jsdom-h3-t2', inputDisplay: "элемент появляется позже → резолв", inputArgs: ['appears-later'], expected: 'LATE' },
+      { id: 'jsdom-h3-t3', inputDisplay: "не появляется → Timeout", inputArgs: ['never-appears'], expected: 'Error: Timeout' },
+      { id: 'jsdom-h3-t4', inputDisplay: "после резолва observer отключается", inputArgs: ['observer-cleanup'], expected: true },
+    ],
+    hints: [
+      'Сначала проверьте `document.querySelector(selector)` — может, элемент уже есть.',
+      'Иначе создайте `MutationObserver`, подписанный на `document.body` с `childList: true, subtree: true`. В колбэке снова проверяйте селектор.',
+      'И не забудьте `setTimeout` для таймаута, который реджектит и отключает observer.',
+    ],
+    solutionCode: `function waitForElement(selector, timeoutMs) {
+  return new Promise((resolve, reject) => {
+    const existing = document.querySelector(selector);
+    if (existing) {
+      resolve(existing);
+      return;
+    }
+    const observer = new MutationObserver(() => {
+      const el = document.querySelector(selector);
+      if (el) {
+        observer.disconnect();
+        clearTimeout(timer);
+        resolve(el);
+      }
+    });
+    const timer = setTimeout(() => {
+      observer.disconnect();
+      reject(new Error('Timeout'));
+    }, timeoutMs);
+    observer.observe(document.body, { childList: true, subtree: true });
+  });
+}`,
+    testHelperCode: `async function waitForElement_test(scenario) {
+  document.body.innerHTML = '';
+  if (scenario === 'already-there') {
+    const d = document.createElement('div');
+    d.id = 'present';
+    document.body.appendChild(d);
+    const el = await waitForElement('#present', 500);
+    return el && el.id ? el.id.toUpperCase() : 'NO';
+  }
+  if (scenario === 'appears-later') {
+    setTimeout(() => {
+      const d = document.createElement('div');
+      d.id = 'late';
+      document.body.appendChild(d);
+    }, 100);
+    const el = await waitForElement('#late', 1000);
+    return el && el.id ? el.id.toUpperCase() : 'NO';
+  }
+  if (scenario === 'never-appears') {
+    try {
+      await waitForElement('.absent', 100);
+      return 'no-throw';
+    } catch (e) {
+      return 'Error: ' + e.message;
+    }
+  }
+  if (scenario === 'observer-cleanup') {
+    // Проверяем, что после успешного резолва добавление новых узлов
+    // не вызывает побочного эффекта. Косвенно: после await элемент один.
+    setTimeout(() => {
+      const d = document.createElement('div');
+      d.id = 'cleanup-target';
+      document.body.appendChild(d);
+    }, 50);
+    await waitForElement('#cleanup-target', 1000);
+    // добавляем ещё один такой же элемент — мы не должны "сломаться"
+    const d2 = document.createElement('div');
+    d2.id = 'cleanup-target-2';
+    document.body.appendChild(d2);
+    return document.querySelectorAll('div').length >= 2;
+  }
+}`,
+  },
+  {
+    id: 'jsdom-h4',
+    topicId: 'js-dom',
+    kind: 'implement',
+    title: 'createElementTree — построить дерево DOM из описания',
+    difficulty: 'hard',
+    isContextual: false,
+    description: `Реализуйте \`createElementTree(spec)\` — функцию, которая принимает JSON-описание дерева элементов и возвращает **корневой DOM-элемент** этого дерева. Это упрощённая версия React.createElement / JSX.
+
+Формат \`spec\`:
+\`\`\`ts
+type Spec = string | {
+  tag: string;
+  attrs?: Record<string, string>;
+  events?: Record<string, (e: Event) => void>;
+  children?: Spec[];
+}
+\`\`\`
+
+- Строки превращаются в текстовые узлы.
+- \`attrs\` устанавливаются через \`setAttribute\`.
+- \`events\` — ключ это имя события (без префикса \`on\`), значение — обработчик.
+- \`children\` — массив, в котором могут быть как другие spec-объекты, так и строки.
+
+Пример:
+\`\`\`
+const root = createElementTree({
+  tag: 'div',
+  attrs: { class: 'card' },
+  children: [
+    { tag: 'h2', children: ['Title'] },
+    { tag: 'p', children: ['Hello, world!'] },
+    { tag: 'button', events: { click: () => alert('clicked') }, children: ['OK'] },
+  ],
+});
+\`\`\``,
+    functionName: 'tree_test',
+    starterCode: `function createElementTree(spec) {
+  // ваш код
+}`,
+    testCases: [
+      { id: 'jsdom-h4-t1', inputDisplay: "плоский div с текстом", inputArgs: ['simple'], expected: '<div>hi</div>' },
+      { id: 'jsdom-h4-t2', inputDisplay: "вложенные элементы", inputArgs: ['nested'], expected: '<div class="card"><h2>Title</h2><p>Body</p></div>' },
+      { id: 'jsdom-h4-t3', inputDisplay: "обработчик события вызывается", inputArgs: ['event'], expected: 'clicked' },
+      { id: 'jsdom-h4-t4', inputDisplay: "несколько атрибутов", inputArgs: ['multi-attrs'], expected: '<a href="/x" target="_blank">Link</a>' },
+      { id: 'jsdom-h4-t5', inputDisplay: "только строка → текстовый узел", inputArgs: ['string-only'], expected: 'plain text' },
+    ],
+    hints: [
+      'Если `spec` строка — верните `document.createTextNode(spec)`.',
+      'Иначе создайте элемент через `document.createElement(spec.tag)`, навесьте атрибуты и обработчики событий.',
+      'Рекурсивно создайте детей и добавьте через `appendChild`.',
+    ],
+    solutionCode: `function createElementTree(spec) {
+  if (typeof spec === 'string') {
+    return document.createTextNode(spec);
+  }
+  const el = document.createElement(spec.tag);
+  if (spec.attrs) {
+    for (const [k, v] of Object.entries(spec.attrs)) {
+      el.setAttribute(k, v);
+    }
+  }
+  if (spec.events) {
+    for (const [k, handler] of Object.entries(spec.events)) {
+      el.addEventListener(k, handler);
+    }
+  }
+  if (spec.children) {
+    for (const child of spec.children) {
+      el.appendChild(createElementTree(child));
+    }
+  }
+  return el;
+}`,
+    testHelperCode: `function tree_test(scenario) {
+  document.body.innerHTML = '';
+  if (scenario === 'simple') {
+    const n = createElementTree({ tag: 'div', children: ['hi'] });
+    document.body.appendChild(n);
+    return n.outerHTML;
+  }
+  if (scenario === 'nested') {
+    const n = createElementTree({
+      tag: 'div',
+      attrs: { class: 'card' },
+      children: [
+        { tag: 'h2', children: ['Title'] },
+        { tag: 'p', children: ['Body'] },
+      ],
+    });
+    document.body.appendChild(n);
+    return n.outerHTML;
+  }
+  if (scenario === 'event') {
+    let clicked = '';
+    const n = createElementTree({
+      tag: 'button',
+      events: { click: () => { clicked = 'clicked'; } },
+      children: ['OK'],
+    });
+    document.body.appendChild(n);
+    n.click();
+    return clicked;
+  }
+  if (scenario === 'multi-attrs') {
+    const n = createElementTree({
+      tag: 'a',
+      attrs: { href: '/x', target: '_blank' },
+      children: ['Link'],
+    });
+    return n.outerHTML;
+  }
+  if (scenario === 'string-only') {
+    const t = createElementTree('plain text');
+    return t.textContent;
+  }
 }`,
   },
 ];

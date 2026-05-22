@@ -7,8 +7,18 @@ export const hashMapProblems: Problem[] = [
     title: 'Two Sum',
     difficulty: 'easy',
     isContextual: false,
-    description:
-      'Дан массив целых чисел `nums` и целое число `target`. Верните индексы двух элементов, сумма которых равна `target`.\n\nМожно считать, что каждый вход имеет ровно одно решение, и нельзя использовать один и тот же элемент дважды.\n\nВерните массив из двух индексов `[i, j]`, где `i < j`.',
+    description: `Дан массив целых чисел \`nums\` и целое число \`target\`. Верните индексы двух элементов, сумма которых равна \`target\`.
+
+Можно считать, что каждый вход имеет **ровно одно решение**, и нельзя использовать один и тот же элемент дважды.
+
+Верните массив из двух индексов \`[i, j]\`, где \`i < j\`.
+
+**Примеры:**
+\`\`\`
+twoSum([2, 7, 11, 15], 9)  // → [0, 1]
+twoSum([3, 2, 4], 6)       // → [1, 2]
+twoSum([3, 3], 6)          // → [0, 1]
+\`\`\``,
     functionName: 'twoSum',
     starterCode: `function twoSum(nums, target) {
   // ваш код
@@ -71,8 +81,18 @@ export const hashMapProblems: Problem[] = [
     title: 'Проверка анаграммы',
     difficulty: 'easy',
     isContextual: false,
-    description:
-      'Даны две строки `s` и `t`. Определите, является ли `t` анаграммой `s`.\n\nАнаграмма — это слово, полученное перестановкой букв другого слова. Обе строки состоят только из строчных латинских букв.\n\nВерните `true`, если строки являются анаграммами, и `false` в противном случае.',
+    description: `Даны две строки \`s\` и \`t\`. Определите, является ли \`t\` **анаграммой** \`s\`.
+
+Анаграмма — это слово, полученное перестановкой букв другого слова. Обе строки состоят только из строчных латинских букв.
+
+Верните \`true\`, если строки являются анаграммами, и \`false\` в противном случае.
+
+**Примеры:**
+\`\`\`
+isAnagram('anagram', 'nagaram')  // → true
+isAnagram('listen', 'silent')    // → true
+isAnagram('rat', 'car')          // → false
+\`\`\``,
     functionName: 'isAnagram',
     starterCode: `function isAnagram(s, t) {
   // ваш код
@@ -142,8 +162,16 @@ export const hashMapProblems: Problem[] = [
     title: 'Чемпионы шагов',
     difficulty: 'medium',
     isContextual: true,
-    description:
-      'В компании проходит корпоративный челлендж по шагам. Каждый день фиксируются результаты участников — количество пройденных шагов.\n\nДан массив `days`, где каждый элемент — это массив объектов `{ userId: number, steps: number }`, представляющий результаты за один день.\n\nНужно найти чемпионов — пользователей, которые:\n1. Участвовали **каждый** день (имеют запись в каждом дне).\n2. Среди таких пользователей набрали **максимальное** суммарное количество шагов за все дни.\n\nВерните объект `{ userIds: number[], steps: number }`, где `userIds` — отсортированный по возрастанию массив id чемпионов, а `steps` — их суммарное количество шагов. Если несколько пользователей набрали одинаковое максимальное количество, верните всех.',
+    description: `В компании проходит корпоративный челлендж по шагам. Каждый день фиксируются результаты участников — количество пройденных шагов.
+
+Дан массив \`days\`, где каждый элемент — массив объектов \`{ userId: number, steps: number }\`, представляющий результаты за один день.
+
+Нужно найти **чемпионов** — пользователей, которые:
+
+1. Участвовали **каждый** день (имеют запись в каждом дне).
+2. Среди таких пользователей набрали **максимальное** суммарное количество шагов за все дни.
+
+Верните объект \`{ userIds: number[], steps: number }\`, где \`userIds\` — отсортированный по возрастанию массив id чемпионов, а \`steps\` — их суммарное количество шагов. Если несколько пользователей набрали одинаковое максимальное количество — верните всех.`,
     functionName: 'findChampions',
     starterCode: `function findChampions(days) {
   // ваш код
@@ -270,8 +298,14 @@ export const hashMapProblems: Problem[] = [
     title: 'Подсчёт уникальных посетителей',
     difficulty: 'easy',
     isContextual: true,
-    description:
-      'Дан массив логов визитов — каждый элемент это userId (число). Один пользователь может посетить сайт несколько раз. Верните количество уникальных посетителей.',
+    description: `Дан массив логов визитов — каждый элемент это \`userId\` (число). Один пользователь может посетить сайт несколько раз. Верните **количество уникальных посетителей**.
+
+**Примеры:**
+\`\`\`
+countUnique([1, 2, 3, 1, 2])  // → 3
+countUnique([1, 1, 1])        // → 1
+countUnique([])               // → 0
+\`\`\``,
     functionName: 'countUnique',
     starterCode: `function countUnique(visits) {
   // ваш код
@@ -321,8 +355,17 @@ export const hashMapProblems: Problem[] = [
     title: 'Группировка объявлений по категориям',
     difficulty: 'medium',
     isContextual: true,
-    description:
-      'Дан массив объявлений, каждое — объект { id: number, category: string }. Сгруппируйте объявления по категориям. Верните объект, где ключ — категория, значение — массив id объявлений этой категории (в порядке появления).',
+    description: `Дан массив объявлений, каждое — объект \`{ id: number, category: string }\`. Сгруппируйте объявления по категориям. Верните объект, где **ключ** — категория, **значение** — массив id объявлений этой категории (в порядке появления).
+
+**Пример:**
+\`\`\`
+groupByCategory([
+  { id: 1, category: 'авто' },
+  { id: 2, category: 'недвижимость' },
+  { id: 3, category: 'авто' },
+])
+// → { 'авто': [1, 3], 'недвижимость': [2] }
+\`\`\``,
     functionName: 'groupByCategory',
     starterCode: `function groupByCategory(ads) {
   // ваш код
@@ -406,8 +449,9 @@ export const hashMapProblems: Problem[] = [
     title: 'Что выведет код с Map и Set?',
     difficulty: 'medium',
     isContextual: false,
-    description:
-      'Перед вами фрагмент кода, использующий Map и Set с разными типами ключей. Что попадёт в stdout?\n\nПодсказка: вспомните, как Map сравнивает ключи (SameValueZero) и принимает ли Set значение `NaN`.',
+    description: `Перед тобой фрагмент кода, использующий \`Map\` и \`Set\` с разными типами ключей. Что попадёт в stdout?
+
+**Подсказка:** вспомни, как \`Map\` сравнивает ключи (**SameValueZero**) и принимает ли \`Set\` значение \`NaN\`.`,
     code: `const map = new Map();
 map.set(1, 'number-one');
 map.set('1', 'string-one');
@@ -437,8 +481,14 @@ console.log(set.size);`,
     title: 'Баг: Map с объектным ключом',
     difficulty: 'medium',
     isContextual: false,
-    description:
-      'Функция `findUserSession` должна вернуть `sessionId` пользователя по объекту-ключу. Но тесты падают: каждый раз возвращается `undefined`.\n\nНайдите баг и исправьте функцию так, чтобы поиск по совпадающему `userId` работал. Сигнатура и поведение должны остаться прежними: на вход — массив записей `{ user: { id }, sessionId }` и искомый объект `query`. На выход — найденный `sessionId` или `null`.\n\nПодсказка: подумайте, как Map сравнивает объектные ключи.',
+    description: `Функция \`findUserSession\` должна вернуть \`sessionId\` пользователя по объекту-ключу. Но тесты падают: каждый раз возвращается \`undefined\`.
+
+Найди баг и исправь функцию так, чтобы поиск по совпадающему \`userId\` работал. Сигнатура и поведение должны остаться прежними:
+
+- **Вход:** массив записей \`{ user: { id }, sessionId }\` и искомый объект \`query\`.
+- **Выход:** найденный \`sessionId\` или \`null\`.
+
+**Подсказка:** подумай, как \`Map\` сравнивает объектные ключи.`,
     functionName: 'findUserSession',
     buggyCode: `function findUserSession(records, query) {
   const sessions = new Map();
@@ -524,11 +574,16 @@ console.log(set.size);`,
     id: 'hm-p8',
     topicId: 'hash-map',
     kind: 'refactor',
-    title: 'Refactor: пары с заданной разностью за O(n)',
+    title: 'Рефакторинг: пары с заданной разностью за O(n)',
     difficulty: 'medium',
     isContextual: false,
-    description:
-      'Функция `countPairsWithDiff(nums, k)` должна вернуть количество пар индексов `(i, j)` таких, что `i < j` и `|nums[i] - nums[j]| === k`. В массиве могут быть дубликаты.\n\nТекущая реализация работает за O(n²) — вложенный цикл. На входе из 100 000 элементов это уже не проходит по времени.\n\n**Задача:** перепишите функцию через Map (или Set) так, чтобы она работала за O(n). Подсказка: для каждого числа нас интересуют только два «соседа» — `num + k` и `num - k`. Если построить частотный Map за один проход и второй проход проверять наличие соседей, получится O(n).',
+    description: `Функция \`countPairsWithDiff(nums, k)\` должна вернуть количество пар индексов \`(i, j)\` таких, что \`i < j\` и \`|nums[i] - nums[j]| === k\`. В массиве могут быть дубликаты.
+
+Текущая реализация работает за **O(n²)** — вложенный цикл. На входе из 100 000 элементов это уже не проходит по времени.
+
+**Задача:** перепиши функцию через \`Map\` (или \`Set\`) так, чтобы она работала за **O(n)**.
+
+**Подсказка:** для каждого числа нас интересуют только два «соседа» — \`num + k\` и \`num - k\`. Если построить частотный \`Map\` за один проход и во втором проверять наличие соседей — получится \`O(n)\`.`,
     functionName: 'countPairsWithDiff',
     starterCode: `function countPairsWithDiff(nums, k) {
   let count = 0;
@@ -621,7 +676,7 @@ console.log(set.size);`,
     title: 'Длиннейшая последовательная цепочка — O(n)',
     difficulty: 'hard',
     isContextual: false,
-    description: `Дан неотсортированный массив целых чисел \`nums\`. Найдите длину **длиннейшей последовательной цепочки** (consecutive sequence).
+    description: `Дан неотсортированный массив целых чисел \`nums\`. Найдите длину **длиннейшей последовательной цепочки** — то есть самой длинной последовательности подряд идущих целых чисел, которую можно собрать из элементов массива.
 
 Например, в \`[100, 4, 200, 1, 3, 2]\` цепочка \`1, 2, 3, 4\` имеет длину **4**.
 
@@ -734,6 +789,282 @@ findZeroSumSubarrays([0])               // → [[0,0]]
   }
 
   result.sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+  return result;
+}`,
+  },
+  {
+    id: 'hm-e2',
+    topicId: 'hash-map',
+    title: 'Первый уникальный символ в строке',
+    difficulty: 'easy',
+    isContextual: false,
+    description: `Дана строка \`s\`. Найдите **первый не повторяющийся** символ и верните его **индекс**. Если такого символа нет, верните \`-1\`.
+
+Примеры:
+\`\`\`
+firstUniqChar('leetcode')      // → 0
+firstUniqChar('loveleetcode')  // → 2
+firstUniqChar('aabb')          // → -1
+firstUniqChar('z')             // → 0
+firstUniqChar('')              // → -1
+firstUniqChar('abca')          // → 1
+\`\`\`
+
+Это **LeetCode 387**. Решается за O(n): один проход — посчитать частоты, второй — найти первый символ с частотой 1.`,
+    functionName: 'firstUniqChar',
+    starterCode: `function firstUniqChar(s) {
+  // ваш код
+}`,
+    testCases: [
+      { id: 'hm-e2-t1', inputDisplay: "firstUniqChar('leetcode')", inputArgs: ['leetcode'], expected: 0 },
+      { id: 'hm-e2-t2', inputDisplay: "firstUniqChar('loveleetcode')", inputArgs: ['loveleetcode'], expected: 2 },
+      { id: 'hm-e2-t3', inputDisplay: "firstUniqChar('aabb')", inputArgs: ['aabb'], expected: -1 },
+      { id: 'hm-e2-t4', inputDisplay: "firstUniqChar('z')", inputArgs: ['z'], expected: 0 },
+      { id: 'hm-e2-t5', inputDisplay: "firstUniqChar('')", inputArgs: [''], expected: -1 },
+      { id: 'hm-e2-t6', inputDisplay: "firstUniqChar('abca')", inputArgs: ['abca'], expected: 1 },
+    ],
+    hints: [
+      'Сначала подсчитайте частоты всех символов. Какой структуры данных хватит для O(1) доступа к счётчику?',
+      'Затем пройдите по строке ещё раз и верните индекс первого символа с частотой 1.',
+    ],
+    solutionCode: `function firstUniqChar(s) {
+  const counts = new Map();
+  for (const ch of s) {
+    counts.set(ch, (counts.get(ch) ?? 0) + 1);
+  }
+  for (let i = 0; i < s.length; i++) {
+    if (counts.get(s[i]) === 1) return i;
+  }
+  return -1;
+}`,
+  },
+  {
+    id: 'hm-h3',
+    topicId: 'hash-map',
+    kind: 'implement',
+    title: 'LRU Cache — операции get/put',
+    difficulty: 'hard',
+    isContextual: false,
+    description: `Реализуйте LRU Cache (Least Recently Used) — кеш с фиксированной ёмкостью, который при переполнении вытесняет **наименее недавно использованный** элемент.
+
+API в виде функции \`lruOperations(capacity, operations)\`:
+- \`capacity\` — максимальный размер кеша
+- \`operations\` — массив команд:
+  - \`['put', key, value]\` — добавить/обновить значение; считается «использованием»
+  - \`['get', key]\` — получить значение; считается «использованием»
+
+Верните массив результатов: для \`put\` — \`null\`, для \`get\` — значение или \`-1\` если ключа нет.
+
+**Требование сложности**: каждая операция — O(1).
+
+Пример (LeetCode 146):
+\`\`\`
+lruOperations(2, [
+  ['put', 1, 1],
+  ['put', 2, 2],
+  ['get', 1],
+  ['put', 3, 3],   // вытесняет ключ 2
+  ['get', 2],      // -1
+  ['put', 4, 4],   // вытесняет ключ 1
+  ['get', 1],      // -1
+  ['get', 3],
+  ['get', 4]
+])
+// → [null, null, 1, null, -1, null, -1, 3, 4]
+\`\`\`
+
+**Подсказка**: \`Map\` в JS сохраняет порядок вставки — это можно использовать для O(1) реализации.`,
+    functionName: 'lruOperations',
+    starterCode: `function lruOperations(capacity, operations) {
+  // ваш код
+}`,
+    testCases: [
+      {
+        id: 'hm-h3-t1',
+        inputDisplay: 'lruOperations(2, [put 1 1, put 2 2, get 1, put 3 3, get 2, put 4 4, get 1, get 3, get 4])',
+        inputArgs: [2, [['put', 1, 1], ['put', 2, 2], ['get', 1], ['put', 3, 3], ['get', 2], ['put', 4, 4], ['get', 1], ['get', 3], ['get', 4]]],
+        expected: [null, null, 1, null, -1, null, -1, 3, 4],
+      },
+      {
+        id: 'hm-h3-t2',
+        inputDisplay: 'lruOperations(1, [put 1 1, put 2 2, get 1, get 2])',
+        inputArgs: [1, [['put', 1, 1], ['put', 2, 2], ['get', 1], ['get', 2]]],
+        expected: [null, null, -1, 2],
+      },
+      {
+        id: 'hm-h3-t3',
+        inputDisplay: 'lruOperations(2, [put 2 1, put 1 1, put 2 3, put 4 1, get 1, get 2])',
+        inputArgs: [2, [['put', 2, 1], ['put', 1, 1], ['put', 2, 3], ['put', 4, 1], ['get', 1], ['get', 2]]],
+        expected: [null, null, null, null, -1, 3],
+      },
+      {
+        id: 'hm-h3-t4',
+        inputDisplay: 'lruOperations(2, [get 2, put 2 6, get 1, put 1 5, put 1 2, get 1, get 2])',
+        inputArgs: [2, [['get', 2], ['put', 2, 6], ['get', 1], ['put', 1, 5], ['put', 1, 2], ['get', 1], ['get', 2]]],
+        expected: [-1, null, -1, null, null, 2, 6],
+      },
+      {
+        id: 'hm-h3-t5',
+        inputDisplay: 'lruOperations(3, [put a 1, put b 2, put c 3, get a, put d 4, get b])',
+        inputArgs: [3, [['put', 'a', 1], ['put', 'b', 2], ['put', 'c', 3], ['get', 'a'], ['put', 'd', 4], ['get', 'b']]],
+        expected: [null, null, null, 1, null, -1],
+      },
+    ],
+    hints: [
+      'Что должно происходить с ключом при обращении (`get` или повторный `put`)? Какое свойство `Map` облегчает поддержку «порядка использования»?',
+      'При промахе кеша на `put` (нужно добавить новый ключ, но размер уже capacity) — какой ключ выбрасывается? Как его быстро найти?',
+      'Чтобы «обновить порядок» использования ключа в `Map`, можно `delete` + `set` — итератор будет ставить такой ключ в конец.',
+    ],
+    solutionCode: `function lruOperations(capacity, operations) {
+  const cache = new Map();
+  const out = [];
+
+  for (const op of operations) {
+    if (op[0] === 'put') {
+      const key = op[1];
+      const value = op[2];
+      if (cache.has(key)) {
+        cache.delete(key);
+      }
+      cache.set(key, value);
+      if (cache.size > capacity) {
+        const oldest = cache.keys().next().value;
+        cache.delete(oldest);
+      }
+      out.push(null);
+    } else if (op[0] === 'get') {
+      const key = op[1];
+      if (cache.has(key)) {
+        const value = cache.get(key);
+        cache.delete(key);
+        cache.set(key, value);
+        out.push(value);
+      } else {
+        out.push(-1);
+      }
+    }
+  }
+
+  return out;
+}`,
+  },
+  {
+    id: 'hm-h4',
+    topicId: 'hash-map',
+    kind: 'implement',
+    title: 'Подстрока из конкатенации всех слов',
+    difficulty: 'hard',
+    isContextual: false,
+    description: `Дана строка \`s\` и массив строк \`words\`, где **все слова одинаковой длины**. Верните массив начальных индексов всех подстрок в \`s\`, которые являются **конкатенацией каждого слова из \`words\` ровно один раз** в любом порядке (без перекрытий по символам).
+
+Порядок индексов в ответе — по возрастанию.
+
+Примеры:
+\`\`\`
+findSubstring('barfoothefoobarman', ['foo', 'bar'])
+// → [0, 9]   (s[0..6]='barfoo', s[9..15]='foobar')
+
+findSubstring('wordgoodgoodgoodbestword', ['word','good','best','word'])
+// → []
+
+findSubstring('barfoofoobarthefoobarman', ['bar','foo','the'])
+// → [6, 9, 12]
+\`\`\`
+
+Это **LeetCode 30** — классическая hard-задача. Эффективное решение — sliding window с двумя счётчиками-словарями.`,
+    functionName: 'findSubstring',
+    starterCode: `function findSubstring(s, words) {
+  // ваш код
+}`,
+    testCases: [
+      {
+        id: 'hm-h4-t1',
+        inputDisplay: "findSubstring('barfoothefoobarman', ['foo','bar'])",
+        inputArgs: ['barfoothefoobarman', ['foo', 'bar']],
+        expected: [0, 9],
+      },
+      {
+        id: 'hm-h4-t2',
+        inputDisplay: "findSubstring('wordgoodgoodgoodbestword', ['word','good','best','word'])",
+        inputArgs: ['wordgoodgoodgoodbestword', ['word', 'good', 'best', 'word']],
+        expected: [],
+      },
+      {
+        id: 'hm-h4-t3',
+        inputDisplay: "findSubstring('barfoofoobarthefoobarman', ['bar','foo','the'])",
+        inputArgs: ['barfoofoobarthefoobarman', ['bar', 'foo', 'the']],
+        expected: [6, 9, 12],
+      },
+      {
+        id: 'hm-h4-t4',
+        inputDisplay: "findSubstring('aaa', ['a','a'])",
+        inputArgs: ['aaa', ['a', 'a']],
+        expected: [0, 1],
+      },
+      {
+        id: 'hm-h4-t5',
+        inputDisplay: "findSubstring('abc', ['xy'])",
+        inputArgs: ['abc', ['xy']],
+        expected: [],
+      },
+      {
+        id: 'hm-h4-t6',
+        inputDisplay: "findSubstring('foobar', ['foo','bar'])",
+        inputArgs: ['foobar', ['foo', 'bar']],
+        expected: [0],
+      },
+    ],
+    hints: [
+      'Все слова одной длины w. Подстрока-кандидат имеет длину w * words.length. Что нужно проверять для каждой позиции?',
+      'Постройте map ожидаемых частот слов. По мере сканирования собирайте окно из w-символьных кусочков и сравнивайте со словарём.',
+      'Чтобы избежать O(n*m) — двигайте окно по w позициям. Запустите w отдельных проходов с разными стартовыми смещениями (0..w-1).',
+    ],
+    solutionCode: `function findSubstring(s, words) {
+  if (!words.length || !s) return [];
+  const w = words[0].length;
+  const m = words.length;
+  const totalLen = w * m;
+  if (s.length < totalLen) return [];
+
+  const need = new Map();
+  for (const word of words) {
+    need.set(word, (need.get(word) ?? 0) + 1);
+  }
+
+  const result = [];
+
+  for (let offset = 0; offset < w; offset++) {
+    let left = offset;
+    let count = 0;
+    const have = new Map();
+
+    for (let right = offset; right + w <= s.length; right += w) {
+      const piece = s.substring(right, right + w);
+      if (!need.has(piece)) {
+        have.clear();
+        count = 0;
+        left = right + w;
+        continue;
+      }
+      have.set(piece, (have.get(piece) ?? 0) + 1);
+      count++;
+      while ((have.get(piece) ?? 0) > need.get(piece)) {
+        const leftPiece = s.substring(left, left + w);
+        have.set(leftPiece, have.get(leftPiece) - 1);
+        count--;
+        left += w;
+      }
+      if (count === m) {
+        result.push(left);
+        const leftPiece = s.substring(left, left + w);
+        have.set(leftPiece, have.get(leftPiece) - 1);
+        count--;
+        left += w;
+      }
+    }
+  }
+
+  result.sort((a, b) => a - b);
   return result;
 }`,
   },

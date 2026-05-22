@@ -19,11 +19,14 @@ interface ImplementProblemViewProps {
 export default function ImplementProblemView({ problem }: ImplementProblemViewProps) {
   const [code, setCode] = useState(problem.starterCode);
   const [showSolution, setShowSolution] = useState(false);
-  const { results, running, run } = useCodeRunner();
+  const { results, running, run } = useCodeRunner(problem.id);
   const { markSolved } = useProgress(problem.topicId);
   const { hintIndex, showNext } = useHints(problem.id);
 
-  useEffect(() => setCode(problem.starterCode), [problem.id, problem.starterCode]);
+  useEffect(() => {
+    setCode(problem.starterCode);
+    setShowSolution(false);
+  }, [problem.id, problem.starterCode]);
 
   useEffect(() => {
     if (results && results.length > 0 && results.every((r) => r.passed)) {

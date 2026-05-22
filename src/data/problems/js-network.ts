@@ -104,7 +104,7 @@ parseCookieString('');
       },
       {
         id: 'jsnet-p2-t2',
-        inputDisplay: 'три кuki через "; "',
+        inputDisplay: 'три куки через "; "',
         inputArgs: ['a=1; b=2; c=3'],
         expected: { a: '1', b: '2', c: '3' },
       },
@@ -271,9 +271,9 @@ limiter('user2'); // true (другой пользователь)
       },
     ],
     hints: [
-      'Используйте `Map` для хранения данных о каждом пользователе: `{ count, resetAt }`.',
-      'При каждом вызове: проверьте, не истёк ли window (`Date.now() > resetAt`). Если истёк — сбросьте count.',
-      'Если count < limit — инкрементируйте и верните true. Иначе — false.',
+      'Используй `Map` для хранения данных о каждом пользователе: `{ count, resetAt }`.',
+      'При каждом вызове проверяй, не истекло ли window (`Date.now() > resetAt`). Если истекло — сбрось `count`.',
+      'Если `count < limit` — увеличь его и верни `true`. Иначе — `false`.',
     ],
     solutionCode: `function createRateLimiter(limit, windowMs) {
   const clients = new Map();
@@ -852,6 +852,241 @@ const [r1, r2] = await Promise.all([fetcher('user'), fetcher('user')]);
     const fetcher = dedupeRequest(async (key) => { await delay(10); return key + '_val'; });
     const [r1, r2, r3] = await Promise.all([fetcher('x'), fetcher('x'), fetcher('x')]);
     return r1 === r2 && r2 === r3 && r1 === 'x_val';
+  }
+}`,
+  },
+  {
+    id: 'jsnet-h3',
+    topicId: 'js-network',
+    kind: 'implement',
+    title: 'createTTLCache — кеш HTTP-ответов с временем жизни',
+    difficulty: 'hard',
+    isContextual: false,
+    description: `Реализуйте \`createTTLCache(ttlMs)\` — кеш с **временем жизни** записей (TTL):
+
+API:
+- \`.get(key)\` — возвращает закешированное значение или \`undefined\`, если ключа нет или запись истекла.
+- \`.set(key, value)\` — записать значение со сроком жизни \`ttlMs\` с момента вставки.
+- \`.has(key)\` — \`true\`, если ключ есть **и** не истёк; иначе \`false\`. **Истёкшая запись должна быть удалена прямо в момент обращения** — не нужно отдельных таймеров на каждую запись.
+- \`.size\` (геттер) — количество **живых** записей (истёкшие не считаются и удаляются при опросе).
+
+Типичный сценарий из бэкенда/мобайла: кешировать ответы API на короткое время.
+
+Пример:
+\`\`\`
+const cache = createTTLCache(50);
+cache.set('a', 1);
+cache.get('a');     // 1
+// через 100 мс:
+cache.get('a');     // undefined
+cache.has('a');     // false
+\`\`\``,
+    functionName: 'ttlCache_test',
+    starterCode: `function createTTLCache(ttlMs) {
+  // ваш код
+}`,
+    testCases: [
+      { id: 'jsnet-h3-t1', inputDisplay: "get до истечения → значение", inputArgs: ['fresh'], expected: 1 },
+      { id: 'jsnet-h3-t2', inputDisplay: "get после истечения → undefined", inputArgs: ['expired'], expected: undefined },
+      { id: 'jsnet-h3-t3', inputDisplay: "has → true до, false после истечения", inputArgs: ['has-flow'], expected: [true, false] },
+      { id: 'jsnet-h3-t4', inputDisplay: "set обновляет время жизни", inputArgs: ['refresh-on-set'], expected: 'new' },
+      { id: 'jsnet-h3-t5', inputDisplay: "size учитывает только живые записи", inputArgs: ['size-counts-live'], expected: [2, 0] },
+    ],
+    hints: [
+      'Внутри Map<key, { value, expiresAt }>. expiresAt = Date.now() + ttlMs.',
+      'На .get/.has сначала проверяйте Date.now() >= expiresAt — и удаляйте просроченное.',
+      'Геттер `.size` должен очищать просроченные записи или хотя бы их не считать. Простая реализация — пройти `Map` и почистить.',
+    ],
+    solutionCode: `function createTTLCache(ttlMs) {
+  const store = new Map();
+  function checkExpire(key) {
+    const entry = store.get(key);
+    if (!entry) return false;
+    if (Date.now() >= entry.expiresAt) {
+      store.delete(key);
+      return false;
+    }
+    return true;
+  }
+  return {
+    get(key) {
+      return checkExpire(key) ? store.get(key).value : undefined;
+    },
+    set(key, value) {
+      store.set(key, { value, expiresAt: Date.now() + ttlMs });
+    },
+    has(key) {
+      return checkExpire(key);
+    },
+    get size() {
+      for (const k of [...store.keys()]) checkExpire(k);
+      return store.size;
+    },
+  };
+}`,
+    testHelperCode: `async function ttlCache_test(scenario) {
+  const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+  if (scenario === 'fresh') {
+    const c = createTTLCache(500);
+    c.set('a', 1);
+    return c.get('a');
+  }
+  if (scenario === 'expired') {
+    const c = createTTLCache(50);
+    c.set('a', 1);
+    await wait(100);
+    return c.get('a');
+  }
+  if (scenario === 'has-flow') {
+    const c = createTTLCache(50);
+    c.set('x', 'v');
+    const before = c.has('x');
+    await wait(100);
+    const after = c.has('x');
+    return [before, after];
+  }
+  if (scenario === 'refresh-on-set') {
+    const c = createTTLCache(100);
+    c.set('k', 'old');
+    await wait(60);
+    c.set('k', 'new'); // обновляем — новая запись с полным TTL
+    await wait(60);    // суммарно ~120мс с первого set, но 60мс со второго
+    return c.get('k');
+  }
+  if (scenario === 'size-counts-live') {
+    const c = createTTLCache(50);
+    c.set('a', 1);
+    c.set('b', 2);
+    const before = c.size;
+    await wait(100);
+    const after = c.size;
+    return [before, after];
+  }
+}`,
+  },
+  {
+    id: 'jsnet-h4',
+    topicId: 'js-network',
+    kind: 'implement',
+    title: 'createBatcher — батчирование запросов в один HTTP-вызов',
+    difficulty: 'hard',
+    isContextual: false,
+    description: `Реализуйте \`createBatcher({ fetchBatch, maxSize, delayMs })\` — обёртку, которая собирает индивидуальные запросы в **батч** и отправляет один \`fetchBatch(keys)\` либо когда накопилось \`maxSize\` ключей, либо когда прошло \`delayMs\` мс с момента первого запроса в текущем батче.
+
+API:
+- \`.request(key)\` — возвращает Promise, резолвящийся значением для этого \`key\`.
+- \`fetchBatch(keys: string[]) -> Promise<{ [key]: value }>\` — функция, выполняющая батч-запрос.
+
+Это паттерн **DataLoader** из GraphQL: помогает избавиться от проблемы N+1, когда вместо одного запроса на список делаются десятки запросов по одному элементу.
+
+Пример:
+\`\`\`
+const fetchBatch = async (keys) => {
+  // один HTTP-запрос на все keys
+  return Object.fromEntries(keys.map((k) => [k, 'user_' + k]));
+};
+const batcher = createBatcher({ fetchBatch, maxSize: 10, delayMs: 50 });
+
+const [u1, u2, u3] = await Promise.all([
+  batcher.request('1'),
+  batcher.request('2'),
+  batcher.request('3'),
+]);
+// fetchBatch вызвана 1 раз с keys=['1','2','3']
+\`\`\``,
+    functionName: 'batcher_test',
+    starterCode: `function createBatcher({ fetchBatch, maxSize, delayMs }) {
+  // ваш код
+}`,
+    testCases: [
+      { id: 'jsnet-h4-t1', inputDisplay: "3 запроса в пределах окна → 1 батч-вызов", inputArgs: ['within-window'], expected: { results: ['v_1', 'v_2', 'v_3'], batches: 1 } },
+      { id: 'jsnet-h4-t2', inputDisplay: "maxSize=2: 5 запросов → 3 батча", inputArgs: ['fills-up'], expected: 3 },
+      { id: 'jsnet-h4-t3', inputDisplay: "по истечении delayMs батч отправляется", inputArgs: ['delay-flush'], expected: ['v_a'] },
+      { id: 'jsnet-h4-t4', inputDisplay: "разные значения возвращаются каждому", inputArgs: ['distinct-values'], expected: ['x', 'y'] },
+    ],
+    hints: [
+      'Внутри — массив накопленных ключей и массив их resolve-функций (или Map ключ → resolve).',
+      'При вызове `.request(key)`: если буфер пуст — запускайте setTimeout на flush через delayMs. При достижении maxSize — flush сразу.',
+      'Внутри flush: вызовите fetchBatch(keys), распределите результаты по resolve-функциям, очистите буфер.',
+    ],
+    solutionCode: `function createBatcher({ fetchBatch, maxSize, delayMs }) {
+  let queue = [];
+  let timer = null;
+
+  async function flush() {
+    if (timer !== null) {
+      clearTimeout(timer);
+      timer = null;
+    }
+    if (queue.length === 0) return;
+    const batch = queue;
+    queue = [];
+    try {
+      const keys = batch.map((b) => b.key);
+      const result = await fetchBatch(keys);
+      for (const { key, resolve } of batch) {
+        resolve(result[key]);
+      }
+    } catch (e) {
+      for (const { reject } of batch) reject(e);
+    }
+  }
+
+  function request(key) {
+    return new Promise((resolve, reject) => {
+      queue.push({ key, resolve, reject });
+      if (queue.length >= maxSize) {
+        flush();
+      } else if (timer === null) {
+        timer = setTimeout(flush, delayMs);
+      }
+    });
+  }
+
+  return { request };
+}`,
+    testHelperCode: `async function batcher_test(scenario) {
+  if (scenario === 'within-window') {
+    let batches = 0;
+    const fetchBatch = async (keys) => {
+      batches++;
+      return Object.fromEntries(keys.map((k) => [k, 'v_' + k]));
+    };
+    const b = createBatcher({ fetchBatch, maxSize: 10, delayMs: 50 });
+    const results = await Promise.all([b.request('1'), b.request('2'), b.request('3')]);
+    return { results, batches };
+  }
+  if (scenario === 'fills-up') {
+    let batches = 0;
+    const fetchBatch = async (keys) => {
+      batches++;
+      return Object.fromEntries(keys.map((k) => [k, 'v_' + k]));
+    };
+    const b = createBatcher({ fetchBatch, maxSize: 2, delayMs: 200 });
+    await Promise.all([
+      b.request('1'), b.request('2'),
+      b.request('3'), b.request('4'),
+      b.request('5'),
+    ]);
+    return batches;
+  }
+  if (scenario === 'delay-flush') {
+    const fetchBatch = async (keys) => Object.fromEntries(keys.map((k) => [k, 'v_' + k]));
+    const b = createBatcher({ fetchBatch, maxSize: 10, delayMs: 30 });
+    const result = await b.request('a');
+    return [result];
+  }
+  if (scenario === 'distinct-values') {
+    const fetchBatch = async (keys) => {
+      const out = {};
+      for (const k of keys) {
+        if (k === 'a') out[k] = 'x';
+        if (k === 'b') out[k] = 'y';
+      }
+      return out;
+    };
+    const b = createBatcher({ fetchBatch, maxSize: 10, delayMs: 50 });
+    return await Promise.all([b.request('a'), b.request('b')]);
   }
 }`,
   },

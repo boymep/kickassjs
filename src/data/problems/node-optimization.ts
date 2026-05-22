@@ -616,9 +616,9 @@ await cb(); // HALF-OPEN: вызывает fn, если успех → CLOSED
     title: "Определи вывод: трассировка LRU cache",
     difficulty: "medium",
     isContextual: false,
-    description: `Перед вами LRU cache на 2 элемента. Запомните: при \`get\` ключ становится «свежим» (переезжает в конец), при \`put\` в полный кэш вытесняется самый старый.
+    description: `Перед тобой LRU cache на 2 элемента. Запомни: при \`get\` ключ становится «свежим» (переезжает в конец), при \`put\` в полный кэш вытесняется самый старый.
 
-Введи каждую напечатанную строку в отдельной строчке поля ответа.`,
+Введи каждое напечатанное значение на отдельной строке.`,
     code: `class LRUCache {
   constructor(capacity) {
     this.capacity = capacity;
@@ -671,9 +671,11 @@ console.log(c.get(4));`,
     title: "Найди баг: мемоизация без ограничения памяти",
     difficulty: "medium",
     isContextual: false,
-    description: `Эта мемоизация работает, но в production «съедает» память: на множестве уникальных аргументов кэш растёт до OOM.
+    description: `Эта мемоизация работает, но в production «съедает» память: на множестве уникальных аргументов кэш растёт до **OOM**.
 
-Почини так, чтобы кэш хранил **не более 100** записей: при превышении вытесняется самая старая (FIFO достаточно для прохождения тестов). Подсказка: используй \`Map\` и его свойство «порядок вставки» — самый старый ключ это \`map.keys().next().value\`.`,
+Почини так, чтобы кэш хранил **не более 100** записей: при превышении вытесняется самая старая (FIFO достаточно для прохождения тестов).
+
+**Подсказка:** используй \`Map\` и его свойство «порядок вставки» — самый старый ключ это \`map.keys().next().value\`.`,
     buggyCode: `function memoize(fn) {
   const cache = new Map();
   return function (...args) {
@@ -791,7 +793,7 @@ console.log(c.get(4));`,
     kind: "refactor",
     id: "no-p3",
     topicId: "node-optimization",
-    title: "Refactor: array-based LRU → O(1) через Map",
+    title: "Рефакторинг: LRU на массиве → O(1) через Map",
     difficulty: "medium",
     isContextual: false,
     description: `Дан LRU cache на массиве: \`get\` и \`put\` ищут ключ через \`findIndex\` и сдвигают массив через \`splice\` — это O(n). На 100 000 операций он не проходит по времени.
@@ -942,7 +944,7 @@ console.log(c.get(4));`,
     isContextual: false,
     description: `В Node.js-сервисе есть кеш ответов API. Разработчик заметил, что процесс со временем потребляет всё больше памяти.
 
-Найдите и исправьте утечку памяти. Кеш должен хранить не более 1000 записей — при добавлении 1001-й удалять самую старую.`,
+Найди и исправь **утечку памяти**. Кеш должен хранить **не более 1000** записей — при добавлении 1001-й удалять самую старую.`,
     functionName: "apiCache",
     buggyCode: `class ApiCache {
   constructor() {
@@ -959,7 +961,7 @@ console.log(c.get(4));`,
   }
 }`,
     bugSummary:
-      "Кеш растёт без ограничений. Решение: ограничить размер и удалять старые записи при превышении. Для O(1) операций — использовать Map (сохраняет порядок вставки) и удалять первый ключ при overflow.",
+      "Кеш растёт без ограничений. Решение: ограничить размер и удалять старые записи при превышении. Для O(1) операций — использовать `Map` (сохраняет порядок вставки) и удалять первый ключ, когда размер выходит за лимит.",
     testCases: [
       {
         id: "nodeopt-easy1-t1",
@@ -1025,9 +1027,9 @@ console.log(c.get(4));`,
     title: "Оптимизируй: O(n²) поиск дубликатов → O(n)",
     difficulty: "easy",
     isContextual: false,
-    description: `Функция находит все дублирующиеся элементы в массиве. Текущая реализация O(n²) — на большом массиве работает слишком медленно.
+    description: `Функция находит все дублирующиеся элементы в массиве. Текущая реализация работает за **O(n²)** — на большом массиве это слишком медленно.
 
-Перепишите через Set/Map за **O(n)**.`,
+Перепиши через \`Set\` / \`Map\` так, чтобы алгоритм работал за **O(n)**.`,
     functionName: "findDuplicates",
     starterCode: `function findDuplicates(arr) {
   // O(n²): для каждого элемента проверяем все остальные
@@ -1272,7 +1274,7 @@ async function WorkerPool_test(scenario) {
     topicId: "node-optimization",
     kind: "implement",
     title:
-      "Memory-efficient stream processing — агрегация без загрузки всего в память",
+      "Потоковая агрегация — без загрузки всех данных в память",
     difficulty: "hard",
     isContextual: false,
     description: `Реализуйте функцию \`aggregateStream(readable, { groupBy, aggregate })\`, которая:
@@ -1383,6 +1385,356 @@ async function aggregateStream_test(scenario) {
       groupBy: 'key',
       aggregate: (acc) => acc,
     });
+  }
+}`,
+  },
+  {
+    id: "nodeopt-easy3",
+    topicId: "node-optimization",
+    title: "deepFlatten — рекурсивное выпрямление массива",
+    difficulty: "easy",
+    isContextual: false,
+    description: `Реализуйте \`deepFlatten(arr)\` — функцию, которая «выпрямляет» массив **любой** глубины вложенности в плоский массив.
+
+Условие задачи: реализуйте **сами**, без \`Array.prototype.flat(Infinity)\`.
+
+Пример:
+\`\`\`
+deepFlatten([1, [2, [3, [4]], 5]])       // → [1, 2, 3, 4, 5]
+deepFlatten([])                           // → []
+deepFlatten([1, 2, 3])                    // → [1, 2, 3]
+deepFlatten([[], [[]], [[1]]])            // → [1]
+\`\`\``,
+    functionName: 'deepFlatten',
+    starterCode: `function deepFlatten(arr) {
+  // ваш код — без flat(Infinity)
+}`,
+    testCases: [
+      { id: 'nodeopt-easy3-t1', inputDisplay: "deepFlatten([1, [2, [3, [4]], 5]])", inputArgs: [[1, [2, [3, [4]], 5]]], expected: [1, 2, 3, 4, 5] },
+      { id: 'nodeopt-easy3-t2', inputDisplay: "deepFlatten([])", inputArgs: [[]], expected: [] },
+      { id: 'nodeopt-easy3-t3', inputDisplay: "deepFlatten([1, 2, 3])", inputArgs: [[1, 2, 3]], expected: [1, 2, 3] },
+      { id: 'nodeopt-easy3-t4', inputDisplay: "deepFlatten([[], [[]], [[1]]])", inputArgs: [[[], [[]], [[1]]]], expected: [1] },
+      { id: 'nodeopt-easy3-t5', inputDisplay: "глубокая 5-уровневая вложенность", inputArgs: [[1, [2, [3, [4, [5]]]]]], expected: [1, 2, 3, 4, 5] },
+    ],
+    hints: [
+      'Используйте рекурсию: если элемент — массив, разверните его рекурсивно и добавьте к результату через spread или push.',
+      'Альтернатива — стек: пушите элементы и в цикле разбирайте, разворачивая массивы.',
+    ],
+    solutionCode: `function deepFlatten(arr) {
+  const result = [];
+  for (const x of arr) {
+    if (Array.isArray(x)) {
+      result.push(...deepFlatten(x));
+    } else {
+      result.push(x);
+    }
+  }
+  return result;
+}`,
+  },
+  {
+    id: "nodeopt-easy4",
+    topicId: "node-optimization",
+    title: "uniqBy — O(n) уникализация по ключу",
+    difficulty: "easy",
+    isContextual: false,
+    description: `Реализуйте \`uniqBy(items, keyFn)\` — функцию, которая возвращает массив элементов \`items\` без дубликатов **по значению ключа**. Ключ для каждого элемента вычисляется через \`keyFn(item)\`.
+
+Из дубликатов сохраняется **первый** встретившийся.
+
+**Требование:** O(n) — не используйте вложенные циклы или \`includes\`.
+
+Пример:
+\`\`\`
+uniqBy([1, 2, 2, 3, 1], (x) => x)
+// → [1, 2, 3]
+
+uniqBy([{ id: 1 }, { id: 2 }, { id: 1 }], (u) => u.id)
+// → [{ id: 1 }, { id: 2 }]
+
+uniqBy(['apple', 'banana', 'apricot'], (s) => s[0])
+// → ['apple', 'banana']
+\`\`\``,
+    functionName: 'uniqBy_test',
+    starterCode: `function uniqBy(items, keyFn) {
+  // ваш код — O(n)
+}`,
+    testCases: [
+      { id: 'nodeopt-easy4-t1', inputDisplay: "uniqBy([1, 2, 2, 3, 1], x => x)", inputArgs: ['nums'], expected: [1, 2, 3] },
+      { id: 'nodeopt-easy4-t2', inputDisplay: "uniqBy объектов по id", inputArgs: ['by-id'], expected: [{ id: 1 }, { id: 2 }] },
+      { id: 'nodeopt-easy4-t3', inputDisplay: "uniqBy строк по первой букве", inputArgs: ['by-first-letter'], expected: ['apple', 'banana'] },
+      { id: 'nodeopt-easy4-t4', inputDisplay: "пустой массив", inputArgs: ['empty'], expected: [] },
+      { id: 'nodeopt-easy4-t5', inputDisplay: "все элементы одинаковые → один", inputArgs: ['all-same'], expected: [5] },
+    ],
+    hints: [
+      'Используйте Set для отслеживания уже встреченных ключей. Set.has/add — O(1).',
+      'Итерируйтесь один раз по items: для каждого вычислите ключ, и если он не в Set — добавьте элемент в результат и ключ в Set.',
+    ],
+    solutionCode: `function uniqBy(items, keyFn) {
+  const seen = new Set();
+  const result = [];
+  for (const item of items) {
+    const key = keyFn(item);
+    if (!seen.has(key)) {
+      seen.add(key);
+      result.push(item);
+    }
+  }
+  return result;
+}`,
+    testHelperCode: `function uniqBy_test(scenario) {
+  if (scenario === 'nums') return uniqBy([1, 2, 2, 3, 1], (x) => x);
+  if (scenario === 'by-id') return uniqBy([{ id: 1 }, { id: 2 }, { id: 1 }], (u) => u.id);
+  if (scenario === 'by-first-letter') return uniqBy(['apple', 'banana', 'apricot'], (s) => s[0]);
+  if (scenario === 'empty') return uniqBy([], (x) => x);
+  if (scenario === 'all-same') return uniqBy([5, 5, 5, 5], (x) => x);
+}`,
+  },
+  {
+    id: "nodeopt-h3",
+    topicId: "node-optimization",
+    kind: "implement",
+    title: "createPriorityQueue — приоритетная очередь (binary heap)",
+    difficulty: "hard",
+    isContextual: false,
+    description: `Реализуйте \`createPriorityQueue(compare)\` — приоритетную очередь на основе **бинарной кучи** (min-heap или max-heap, в зависимости от compare).
+
+API:
+- \`.push(value)\` — добавить в очередь (O(log n)).
+- \`.pop()\` — извлечь и вернуть элемент с **наивысшим приоритетом** (O(log n)). Если очередь пуста — вернуть \`undefined\`.
+- \`.peek()\` — посмотреть верхний элемент без извлечения (O(1)).
+- \`.size\` (геттер) — текущий размер.
+
+\`compare(a, b)\` — функция сравнения: возвращает отрицательное, если \`a\` должен идти первым; положительное — если \`b\`; ноль — равны. Это согласуется с \`Array.sort\`.
+
+Пример (min-heap):
+\`\`\`
+const pq = createPriorityQueue((a, b) => a - b);
+pq.push(3); pq.push(1); pq.push(2);
+pq.pop();  // → 1
+pq.pop();  // → 2
+pq.pop();  // → 3
+\`\`\`
+
+Это базовая алгоритмическая структура: применяется в алгоритме Дейкстры, в поиске медианы в потоке, в задачах top-K. Полезно один раз написать руками — потом она встречается во многих местах.`,
+    functionName: 'pq_test',
+    starterCode: `function createPriorityQueue(compare) {
+  // ваш код — бинарная куча на массиве
+}`,
+    testCases: [
+      { id: 'nodeopt-h3-t1', inputDisplay: "min-heap: push 3,1,2 → pop порядок", inputArgs: ['min-heap'], expected: [1, 2, 3] },
+      { id: 'nodeopt-h3-t2', inputDisplay: "max-heap: push 1,5,3 → pop порядок", inputArgs: ['max-heap'], expected: [5, 3, 1] },
+      { id: 'nodeopt-h3-t3', inputDisplay: "size отражает push/pop", inputArgs: ['size-flow'], expected: [0, 3, 2] },
+      { id: 'nodeopt-h3-t4', inputDisplay: "peek не извлекает", inputArgs: ['peek'], expected: { peek: 1, size: 3 } },
+      { id: 'nodeopt-h3-t5', inputDisplay: "pop пустой → undefined", inputArgs: ['empty-pop'], expected: undefined },
+      { id: 'nodeopt-h3-t6', inputDisplay: "100 рандомных значений сортируются", inputArgs: ['random-many'], expected: true },
+    ],
+    hints: [
+      'Heap хранится в массиве: для индекса i — потомки 2i+1 и 2i+2, родитель floor((i-1)/2).',
+      'push: добавьте в конец, sift-up (поднимайте, пока не правильный порядок).',
+      'pop: сохраните корень, переставьте последний элемент в корень, sift-down (опускайте, пока не правильный порядок).',
+    ],
+    solutionCode: `function createPriorityQueue(compare) {
+  const heap = [];
+
+  function siftUp(i) {
+    while (i > 0) {
+      const parent = (i - 1) >> 1;
+      if (compare(heap[i], heap[parent]) < 0) {
+        [heap[i], heap[parent]] = [heap[parent], heap[i]];
+        i = parent;
+      } else break;
+    }
+  }
+
+  function siftDown(i) {
+    const n = heap.length;
+    while (true) {
+      const l = 2 * i + 1;
+      const r = 2 * i + 2;
+      let smallest = i;
+      if (l < n && compare(heap[l], heap[smallest]) < 0) smallest = l;
+      if (r < n && compare(heap[r], heap[smallest]) < 0) smallest = r;
+      if (smallest !== i) {
+        [heap[i], heap[smallest]] = [heap[smallest], heap[i]];
+        i = smallest;
+      } else break;
+    }
+  }
+
+  return {
+    push(v) {
+      heap.push(v);
+      siftUp(heap.length - 1);
+    },
+    pop() {
+      if (heap.length === 0) return undefined;
+      const top = heap[0];
+      const last = heap.pop();
+      if (heap.length > 0) {
+        heap[0] = last;
+        siftDown(0);
+      }
+      return top;
+    },
+    peek() {
+      return heap[0];
+    },
+    get size() {
+      return heap.length;
+    },
+  };
+}`,
+    testHelperCode: `function pq_test(scenario) {
+  if (scenario === 'min-heap') {
+    const pq = createPriorityQueue((a, b) => a - b);
+    pq.push(3); pq.push(1); pq.push(2);
+    return [pq.pop(), pq.pop(), pq.pop()];
+  }
+  if (scenario === 'max-heap') {
+    const pq = createPriorityQueue((a, b) => b - a);
+    pq.push(1); pq.push(5); pq.push(3);
+    return [pq.pop(), pq.pop(), pq.pop()];
+  }
+  if (scenario === 'size-flow') {
+    const pq = createPriorityQueue((a, b) => a - b);
+    const empty = pq.size;
+    pq.push(1); pq.push(2); pq.push(3);
+    const full = pq.size;
+    pq.pop();
+    const afterPop = pq.size;
+    return [empty, full, afterPop];
+  }
+  if (scenario === 'peek') {
+    const pq = createPriorityQueue((a, b) => a - b);
+    pq.push(3); pq.push(1); pq.push(2);
+    return { peek: pq.peek(), size: pq.size };
+  }
+  if (scenario === 'empty-pop') {
+    const pq = createPriorityQueue((a, b) => a - b);
+    return pq.pop();
+  }
+  if (scenario === 'random-many') {
+    const pq = createPriorityQueue((a, b) => a - b);
+    const arr = [];
+    let s = 12345;
+    for (let i = 0; i < 100; i++) {
+      s = (s * 16807) % 2147483647;
+      arr.push(s);
+      pq.push(s);
+    }
+    arr.sort((a, b) => a - b);
+    const popped = [];
+    while (pq.size > 0) popped.push(pq.pop());
+    return JSON.stringify(popped) === JSON.stringify(arr);
+  }
+}`,
+  },
+  {
+    id: "nodeopt-h4",
+    topicId: "node-optimization",
+    kind: "implement",
+    title: "createTrie — префиксное дерево (autocomplete)",
+    difficulty: "hard",
+    isContextual: false,
+    description: `Реализуйте \`createTrie()\` — структуру данных «префиксное дерево» для быстрого поиска слов и префиксов.
+
+API:
+- \`.insert(word)\` — добавить слово (O(L), где L — длина слова).
+- \`.search(word)\` — возвращает \`true\`, если **полное** слово было вставлено.
+- \`.startsWith(prefix)\` — возвращает \`true\`, если есть хотя бы одно слово, начинающееся с этого префикса.
+
+Это классическая задача **LeetCode 208** — трай (trie) часто всплывает в задачах на автодополнение, словари и поиск по префиксу.
+
+Пример:
+\`\`\`
+const t = createTrie();
+t.insert('apple');
+t.search('apple');     // → true
+t.search('app');       // → false  (не было вставлено как слово)
+t.startsWith('app');   // → true
+t.insert('app');
+t.search('app');       // → true
+\`\`\``,
+    functionName: 'trie_test',
+    starterCode: `function createTrie() {
+  // ваш код
+}`,
+    testCases: [
+      { id: 'nodeopt-h4-t1', inputDisplay: "стандартный сценарий из LC", inputArgs: ['classic'], expected: [true, false, true, true] },
+      { id: 'nodeopt-h4-t2', inputDisplay: "поиск отсутствующего слова", inputArgs: ['miss'], expected: false },
+      { id: 'nodeopt-h4-t3', inputDisplay: "startsWith пустой строки → true (есть слова)", inputArgs: ['empty-prefix'], expected: true },
+      { id: 'nodeopt-h4-t4', inputDisplay: "пустой trie: search/startsWith → false", inputArgs: ['empty-trie'], expected: [false, false] },
+      { id: 'nodeopt-h4-t5', inputDisplay: "перекрывающиеся слова", inputArgs: ['overlap'], expected: [true, true, false, true] },
+    ],
+    hints: [
+      'Каждый узел — объект с полями: дочерние (Map или объект <char, child>) и флаг `isEnd`.',
+      'insert: проходим по символам, создаём ноды по пути, в конце ставим isEnd=true.',
+      'search vs startsWith: оба идут по символам; search проверяет ещё isEnd в конце.',
+    ],
+    solutionCode: `function createTrie() {
+  const root = { children: new Map(), isEnd: false };
+
+  function walk(s) {
+    let node = root;
+    for (const ch of s) {
+      const next = node.children.get(ch);
+      if (!next) return null;
+      node = next;
+    }
+    return node;
+  }
+
+  return {
+    insert(word) {
+      let node = root;
+      for (const ch of word) {
+        if (!node.children.has(ch)) {
+          node.children.set(ch, { children: new Map(), isEnd: false });
+        }
+        node = node.children.get(ch);
+      }
+      node.isEnd = true;
+    },
+    search(word) {
+      const node = walk(word);
+      return !!node && node.isEnd;
+    },
+    startsWith(prefix) {
+      return walk(prefix) !== null;
+    },
+  };
+}`,
+    testHelperCode: `function trie_test(scenario) {
+  const t = createTrie();
+  if (scenario === 'classic') {
+    t.insert('apple');
+    const a = t.search('apple');
+    const b = t.search('app');
+    const c = t.startsWith('app');
+    t.insert('app');
+    const d = t.search('app');
+    return [a, b, c, d];
+  }
+  if (scenario === 'miss') {
+    t.insert('hello');
+    return t.search('world');
+  }
+  if (scenario === 'empty-prefix') {
+    t.insert('foo');
+    return t.startsWith('');
+  }
+  if (scenario === 'empty-trie') {
+    return [t.search('x'), t.startsWith('x')];
+  }
+  if (scenario === 'overlap') {
+    t.insert('car');
+    t.insert('card');
+    const a = t.search('car');
+    const b = t.search('card');
+    const c = t.search('cards');
+    const d = t.startsWith('car');
+    return [a, b, c, d];
   }
 }`,
   },

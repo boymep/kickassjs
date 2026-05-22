@@ -464,11 +464,11 @@ function applyStyles(elements, stylesFn) {
     title: "Определи вывод: getBoundingClientRect в цикле и счётчик reflow",
     difficulty: "medium",
     isContextual: false,
-    description: `Перед вами модель браузера: переменная \`reflows\` инкрементируется каждый раз, когда **читается** геометрия элемента после того, как layout стал «грязным» (\`layoutDirty = true\`). Запись стиля устанавливает \`layoutDirty = true\`. Чтение \`offsetWidth\` сбрасывает флаг и при необходимости добавляет +1 к \`reflows\`.
+    description: `Перед тобой упрощённая модель браузера: переменная \`reflows\` увеличивается каждый раз, когда **читается** геометрия элемента, а layout перед этим стал «грязным» (\`layoutDirty = true\`). Запись стиля помечает layout как «грязный». Чтение \`offsetWidth\` сбрасывает флаг и при необходимости прибавляет \`+1\` к \`reflows\`.
 
-Это упрощённая, но рабочая модель **layout thrashing**. Введи последнюю напечатанную строку — значение \`reflows\` и финальный \`total\`, разделённые пробелом, в формате как в примере вывода.
+Это рабочая модель **layout thrashing** — ситуации, когда чтения и записи перемешаны и браузер вынужден пересчитывать layout снова и снова. Введи последнюю напечатанную строку: значение \`reflows\` и финальный \`total\`, разделённые пробелом — в том же формате, что выводит \`console.log\`.
 
-Подсказка: посмотри, на каждой ли итерации цикла происходит forced reflow, и сколько всего READ-ов после dirty-write.`,
+**Подсказка:** посмотри, на каждой ли итерации цикла происходит принудительный пересчёт (reflow) и сколько всего раз чтение приходится после «грязной» записи.`,
     code: `let reflows = 0;
 let layoutDirty = true;
 
@@ -601,7 +601,7 @@ function jsb_p7_test(arg) {
     isContextual: false,
     description: `Функция \`buildList(parent, items, createNode)\` вставляет в \`parent\` новые узлы в порядке \`items\`, используя \`createNode(item)\` для создания каждого. Текущая реализация делает \`parent.insertBefore(node, null)\` в цикле — каждая вставка отдельной операцией. В реальном DOM это запускает reflow и paint после **каждой** вставки.
 
-Перепиши функцию так, чтобы все узлы сначала собирались в **DocumentFragment**, а в конце фрагмент **одной операцией** вставлялся в \`parent\`. Корректность: финальное содержимое \`parent.children\` должно совпадать с прежним порядок-в-порядок.
+Перепиши функцию так, чтобы все узлы сначала собирались в **DocumentFragment**, а в конце фрагмент **одной операцией** вставлялся в \`parent\`. Корректность: финальное содержимое \`parent.children\` должно совпадать с прежним — элемент к элементу, в том же порядке.
 
 В тестах используется mock-DOM со счётчиком \`getInsertCount()\`. Правильная реализация делает ровно **1** вставку в \`parent\` (фрагмент), независимо от количества items.`,
     functionName: "jsb_p8_test",
@@ -921,7 +921,7 @@ manager.fetch('/api?q=hel');   // завершается
       return globalThis.fetch(url, { signal })
         .then(r => r.text())
         .catch(err => {
-          if (err.name === 'AbortError') return new Promise(() => {}); // навсегда pending
+          if (err.name === 'AbortError') return new Promise(() => {}); // навсегда «подвисший» промис
           throw err;
         });
     }
@@ -973,6 +973,248 @@ manager.fetch('/api?q=hel');   // завершается
     await manager.fetch('c');
     globalThis.fetch = origFetch;
     return abortedCount >= 1;
+  }
+}`,
+  },
+  {
+    id: "jsbr-e2",
+    topicId: "js-browser",
+    title: "classNames — собрать CSS-классы из условий",
+    difficulty: "easy",
+    isContextual: false,
+    description: `Реализуйте утилиту \`classNames(...args)\` — она принимает произвольное число аргументов и собирает из них **строку с CSS-классами**, разделённых пробелом. Это аналог популярной библиотеки [classnames](https://www.npmjs.com/package/classnames).
+
+Поддерживаемые типы аргументов:
+- **строка** — добавляется как есть.
+- **массив** — рекурсивно обрабатывается.
+- **объект** — ключи, значения которых **truthy**, добавляются. Ключи с **falsy** значениями игнорируются.
+- **falsy-значения** (\`null\`, \`undefined\`, \`false\`, \`0\`, \`''\`) — игнорируются.
+
+Дубликатов и пробелов в конце быть не должно? — нет, для простоты не дедуплицируем; просто склеиваем непустые сегменты через один пробел.
+
+Пример:
+\`\`\`
+classNames('a', 'b');                              // → 'a b'
+classNames('a', null, undefined, false, 'b');      // → 'a b'
+classNames('btn', { primary: true, large: false }); // → 'btn primary'
+classNames(['a', 'b'], 'c');                       // → 'a b c'
+classNames();                                      // → ''
+\`\`\`
+
+Такая утилита постоянно встречается в React-проектах, и её часто просят реализовать на собеседовании.`,
+    functionName: 'classNames',
+    starterCode: `function classNames(...args) {
+  // ваш код
+}`,
+    testCases: [
+      { id: 'jsbr-e2-t1', inputDisplay: "classNames('a', 'b')", inputArgs: ['a', 'b'], expected: 'a b' },
+      { id: 'jsbr-e2-t2', inputDisplay: "falsy values пропускаются", inputArgs: ['a', null, undefined, false, 0, '', 'b'], expected: 'a b' },
+      { id: 'jsbr-e2-t3', inputDisplay: "object с условиями", inputArgs: ['btn', { primary: true, large: false, disabled: 1 }], expected: 'btn primary disabled' },
+      { id: 'jsbr-e2-t4', inputDisplay: "массивы и вложенные", inputArgs: [['a', 'b'], 'c', ['d', ['e']]], expected: 'a b c d e' },
+      { id: 'jsbr-e2-t5', inputDisplay: "пустой вызов → ''", inputArgs: [], expected: '' },
+      { id: 'jsbr-e2-t6', inputDisplay: "только одно значение", inputArgs: ['x'], expected: 'x' },
+    ],
+    hints: [
+      'Сделайте рекурсивную обработку: для каждого аргумента — собирайте кусочки в массив.',
+      'Для object — переберите ключи через `Object.entries` и пропустите те, где значение falsy.',
+      'В конце — `result.join(" ")`.',
+    ],
+    solutionCode: `function classNames(...args) {
+  const parts = [];
+  function add(x) {
+    if (!x) return;
+    if (typeof x === 'string') {
+      parts.push(x);
+    } else if (Array.isArray(x)) {
+      for (const item of x) add(item);
+    } else if (typeof x === 'object') {
+      for (const [k, v] of Object.entries(x)) {
+        if (v) parts.push(k);
+      }
+    }
+  }
+  for (const a of args) add(a);
+  return parts.join(' ');
+}`,
+  },
+  {
+    id: "jsbr-h3",
+    topicId: "js-browser",
+    kind: "implement",
+    title: "rafThrottle — троттлинг через requestAnimationFrame",
+    difficulty: "hard",
+    isContextual: false,
+    description: `Реализуйте \`rafThrottle(fn)\` — обёртку, которая ограничивает частоту вызова \`fn\` **одним вызовом за кадр** (через \`requestAnimationFrame\`):
+
+- если \`throttled()\` вызывается несколько раз внутри одного кадра — \`fn\` вызовется **один раз** в следующем кадре с аргументами **первого** вызова, остальные игнорируются.
+- следующий «слот» открывается только после того, как RAF сработал.
+
+Это типичный приём оптимизации обработчиков \`scroll\`, \`mousemove\` и \`resize\`: вместо десятков срабатываний за миллисекунду мы делаем работу ровно один раз перед следующей отрисовкой кадра.
+
+Пример:
+\`\`\`
+let n = 0;
+const t = rafThrottle((x) => { n = x; });
+t(1); t(2); t(3);  // три вызова в одном тике
+// после requestAnimationFrame: n === 1   (выиграл первый, не последний)
+\`\`\``,
+    functionName: 'rafThrottle_test',
+    starterCode: `function rafThrottle(fn) {
+  // ваш код — requestAnimationFrame, не setTimeout
+}`,
+    testCases: [
+      { id: 'jsbr-h3-t1', inputDisplay: "3 быстрых вызова → fn вызвана 1 раз", inputArgs: ['rapid-three'], expected: 1 },
+      { id: 'jsbr-h3-t2', inputDisplay: "выигрывает аргумент первого вызова", inputArgs: ['first-wins'], expected: 'A' },
+      { id: 'jsbr-h3-t3', inputDisplay: "после кадра — новый слот", inputArgs: ['two-frames'], expected: 2 },
+      { id: 'jsbr-h3-t4', inputDisplay: "без вызовов fn не сработает", inputArgs: ['no-calls'], expected: 0 },
+    ],
+    hints: [
+      'Используйте `let scheduled = false` и `requestAnimationFrame` для отложенного вызова.',
+      'Запомните аргументы **первого** вызова и используйте их при вызове fn в кадре.',
+      'Не забудьте сбросить `scheduled` после вызова, чтобы открыть слот для следующего кадра.',
+    ],
+    solutionCode: `function rafThrottle(fn) {
+  let scheduled = false;
+  let savedArgs = null;
+  return function (...args) {
+    if (scheduled) return;
+    scheduled = true;
+    savedArgs = args;
+    requestAnimationFrame(() => {
+      fn(...savedArgs);
+      scheduled = false;
+      savedArgs = null;
+    });
+  };
+}`,
+    testHelperCode: `async function rafThrottle_test(scenario) {
+  const nextFrame = () => new Promise((r) => requestAnimationFrame(() => r()));
+
+  if (scenario === 'rapid-three') {
+    let calls = 0;
+    const t = rafThrottle(() => { calls++; });
+    t(); t(); t();
+    await nextFrame();
+    await nextFrame();
+    return calls;
+  }
+  if (scenario === 'first-wins') {
+    let value = null;
+    const t = rafThrottle((x) => { value = x; });
+    t('A'); t('B'); t('C');
+    await nextFrame();
+    await nextFrame();
+    return value;
+  }
+  if (scenario === 'two-frames') {
+    let calls = 0;
+    const t = rafThrottle(() => { calls++; });
+    t();
+    await nextFrame();
+    await nextFrame();
+    t();
+    await nextFrame();
+    await nextFrame();
+    return calls;
+  }
+  if (scenario === 'no-calls') {
+    let calls = 0;
+    rafThrottle(() => { calls++; });
+    await nextFrame();
+    return calls;
+  }
+}`,
+  },
+  {
+    id: "jsbr-h4",
+    topicId: "js-browser",
+    kind: "implement",
+    title: "formToJSON — сериализация HTML-формы в объект",
+    difficulty: "hard",
+    isContextual: false,
+    description: `Реализуйте \`formToJSON(form)\` — функцию, которая принимает DOM-элемент \`<form>\` и возвращает объект с её значениями:
+
+- Поле \`<input name="email">\` → ключ \`email\`.
+- Несколько полей с одним и тем же \`name\` (например, чекбоксы или multi-select) → массив значений.
+- Чекбокс **не отмечен** → ключ **отсутствует** в результате.
+- Поле \`<input type="number">\` → строковое значение (как и в нативном FormData).
+- Не включаются: \`<button>\`, \`<input type="submit">\`, поля без \`name\`.
+
+**Запрещено** использовать \`new FormData()\` — реализуйте через обход \`form.elements\`.
+
+Хорошее упражнение на знание DOM API и работы с формами.`,
+    functionName: 'formToJSON_test',
+    starterCode: `function formToJSON(form) {
+  // ваш код — без new FormData()
+}`,
+    testCases: [
+      { id: 'jsbr-h4-t1', inputDisplay: "простая форма с тремя полями", inputArgs: ['basic'], expected: { name: 'Alice', age: '30', email: 'a@b.com' } },
+      { id: 'jsbr-h4-t2', inputDisplay: "неотмеченный чекбокс — ключ отсутствует", inputArgs: ['unchecked'], expected: { agree: 'on' } },
+      { id: 'jsbr-h4-t3', inputDisplay: "несколько чекбоксов с тем же name → массив", inputArgs: ['multi-checkbox'], expected: { hobby: ['code', 'read'] } },
+      { id: 'jsbr-h4-t4', inputDisplay: "select-one + textarea", inputArgs: ['select-textarea'], expected: { country: 'RU', bio: 'Hello' } },
+      { id: 'jsbr-h4-t5', inputDisplay: "поля без name и кнопки пропускаются", inputArgs: ['skip-noname-and-button'], expected: { used: 'yes' } },
+    ],
+    hints: [
+      'Обойдите `form.elements` — это коллекция всех элементов формы.',
+      'Пропускайте: элементы без `name`, кнопки (`type==="submit"`/`"button"`), неотмеченные чекбоксы/радио.',
+      'Для multi-полей (несколько с одним name) собирайте значения в массив.',
+    ],
+    solutionCode: `function formToJSON(form) {
+  const result = {};
+  for (const el of form.elements) {
+    if (!el.name) continue;
+    if (el.type === 'submit' || el.type === 'button' || el.type === 'reset') continue;
+    if ((el.type === 'checkbox' || el.type === 'radio') && !el.checked) continue;
+    const value = el.value;
+    if (result[el.name] !== undefined) {
+      if (Array.isArray(result[el.name])) {
+        result[el.name].push(value);
+      } else {
+        result[el.name] = [result[el.name], value];
+      }
+    } else {
+      result[el.name] = value;
+    }
+  }
+  return result;
+}`,
+    testHelperCode: `function formToJSON_test(scenario) {
+  document.body.innerHTML = '';
+  const form = document.createElement('form');
+  const add = (html) => { form.insertAdjacentHTML('beforeend', html); };
+
+  if (scenario === 'basic') {
+    add('<input name="name" value="Alice">');
+    add('<input name="age" value="30">');
+    add('<input name="email" value="a@b.com">');
+    document.body.appendChild(form);
+    return formToJSON(form);
+  }
+  if (scenario === 'unchecked') {
+    add('<input type="checkbox" name="agree" checked>');
+    add('<input type="checkbox" name="news">');
+    document.body.appendChild(form);
+    return formToJSON(form);
+  }
+  if (scenario === 'multi-checkbox') {
+    add('<input type="checkbox" name="hobby" value="code" checked>');
+    add('<input type="checkbox" name="hobby" value="read" checked>');
+    add('<input type="checkbox" name="hobby" value="run">');
+    document.body.appendChild(form);
+    return formToJSON(form);
+  }
+  if (scenario === 'select-textarea') {
+    add('<select name="country"><option value="RU" selected>RU</option><option value="US">US</option></select>');
+    add('<textarea name="bio">Hello</textarea>');
+    document.body.appendChild(form);
+    return formToJSON(form);
+  }
+  if (scenario === 'skip-noname-and-button') {
+    add('<input value="no-name-field">');
+    add('<button type="submit" name="submit-btn">Send</button>');
+    add('<input name="used" value="yes">');
+    document.body.appendChild(form);
+    return formToJSON(form);
   }
 }`,
   },

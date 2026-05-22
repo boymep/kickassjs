@@ -8,7 +8,7 @@ export const jsPrototypesProblems: Problem[] = [
     title: "Определи вывод: переопределение метода в цепочке",
     difficulty: "easy",
     isContextual: false,
-    description: `Что выведет этот код по строкам? Введи каждую строку в отдельной строчке поля ответа.`,
+    description: `Что выведет этот код по строкам? Введи ответ построчно — по одному значению на строку.`,
     code: `class Animal {
   speak() { return 'generic'; }
 }
@@ -307,10 +307,10 @@ myInstanceof(null, Object);   // → false
     description: `Реализуйте свой метод \`Array.prototype.myMap\`, аналог встроенного \`Array.prototype.map\`.
 
 Метод должен:
-- Принимать callback \`(element, index, array) => newValue\`
+- Принимать callback вида \`(element, index, array) => newValue\`
 - Возвращать новый массив с результатами callback для каждого элемента
 - Не изменять оригинальный массив
-- Пропускать "дырки" (sparse arrays)
+- Пропускать «дырки» в разреженных массивах — пустые ячейки между индексами, например \`[1, , 3]\`
 
 Примеры:
 \`\`\`
@@ -354,9 +354,9 @@ myInstanceof(null, Object);   // → false
       },
     ],
     hints: [
-      "Метод будет вызываться как `arr.myMap(fn)` — как внутри метода получить доступ к исходному массиву?",
+      "Метод вызывается как `arr.myMap(fn)` — как изнутри метода получить доступ к исходному массиву?",
       "Какую сигнатуру имеет callback у стандартного `Array.prototype.map`? Сколько аргументов он принимает?",
-      "Как корректно обработать разреженный массив (sparse array) с «дырками»?",
+      "Как корректно обработать разреженный массив — тот, в котором между индексами есть пустые ячейки?",
     ],
     solutionCode: `Array.prototype.myMap = function(callback) {
   const result = new Array(this.length);
@@ -749,9 +749,9 @@ p instanceof Person  // → true
     title: "Mixin — множественное наследование через примеси",
     difficulty: "hard",
     isContextual: false,
-    description: `Реализуйте функцию \`applyMixins(Base, ...mixins)\`, которая создаёт новый класс, унаследованный от \`Base\` и включающий все методы из \`mixins\` (массив объектов с методами).
+    description: `Реализуйте функцию \`applyMixins(Base, ...mixins)\`, которая создаёт новый класс, унаследованный от \`Base\` и включающий все методы из миксинов. Каждый миксин — это **объект с методами**, передаваемый отдельным аргументом.
 
-Если метод определён в нескольких миксинах — более поздний перекрывает ранний.
+Если один и тот же метод определён в нескольких миксинах — более поздний перекрывает более ранний.
 
 Примеры:
 \`\`\`
@@ -839,6 +839,225 @@ d instanceof Animal  // → true
     const M2 = { tag() { return 'v2'; } };
     const C = applyMixins(Animal, M1, M2);
     return new C('x').tag();
+  }
+}`,
+  },
+  {
+    id: "jsp-e2",
+    topicId: "js-prototypes",
+    kind: "predict-output",
+    title: "Предскажи вывод: hasOwnProperty vs in",
+    difficulty: "easy",
+    isContextual: false,
+    description: `Объект \`child\` создан через \`Object.create(parent)\` — поэтому \`parent\` оказывается в его цепочке прототипов. У \`child\` есть собственное свойство \`own\`, у \`parent\` — свойство \`inherited\`.
+
+Что выведется?
+
+**Подсказка:** \`in\` смотрит **всю** цепочку прототипов; \`hasOwnProperty\` — только **собственные** свойства объекта.`,
+    code: `const parent = { inherited: 1 };
+const child = Object.create(parent);
+child.own = 2;
+
+console.log('own' in child);
+console.log('inherited' in child);
+console.log(child.hasOwnProperty('own'));
+console.log(child.hasOwnProperty('inherited'));`,
+    expected: 'true\ntrue\ntrue\nfalse',
+    hints: [
+      "'own' in child — да: own — собственное свойство.",
+      "'inherited' in child — да: in идёт вверх по прототипам.",
+      "hasOwnProperty('inherited') — нет: inherited лежит на parent, а не на child.",
+    ],
+    solutionCode: `// 'own' in child              → true  (собственное свойство)
+// 'inherited' in child        → true  (in проверяет всю цепочку прототипов)
+// hasOwnProperty('own')       → true  (собственное свойство)
+// hasOwnProperty('inherited') → false (не своё — унаследованное)`,
+  },
+  {
+    id: "jsp-h3",
+    topicId: "js-prototypes",
+    kind: "implement",
+    title: "deepClone — глубокое клонирование с сохранением прототипа",
+    difficulty: "hard",
+    isContextual: false,
+    description: `Реализуйте \`deepClone(value)\` — глубокое клонирование значения.
+
+Требования:
+
+- Объекты и массивы клонируются рекурсивно.
+- **Прототип объекта сохраняется**: \`Object.getPrototypeOf(clone) === Object.getPrototypeOf(original)\`.
+- Поддерживаются **циклические ссылки** — здесь поможет \`Map<original, clone>\`.
+- Примитивы возвращаются как есть.
+- \`Date\` клонируется как новая \`Date\` с тем же временем.
+- \`null\` остаётся \`null\`.
+- Функции и \`Symbol\` можно не поддерживать — это выходит за рамки задачи.
+
+Хорошее упражнение на знание прототипного наследования и обхода объектов с циклами.`,
+    functionName: 'deepClone_test',
+    starterCode: `function deepClone(value) {
+  // ваш код
+}`,
+    testCases: [
+      { id: 'jsp-h3-t1', inputDisplay: "плоский объект → равен исходному", inputArgs: ['flat'], expected: true },
+      { id: 'jsp-h3-t2', inputDisplay: "вложенный объект — клон независим", inputArgs: ['nested-independent'], expected: true },
+      { id: 'jsp-h3-t3', inputDisplay: "массив + объекты внутри", inputArgs: ['array'], expected: true },
+      { id: 'jsp-h3-t4', inputDisplay: "циклическая ссылка не вызывает переполнение стека", inputArgs: ['circular'], expected: 'cycle-handled' },
+      { id: 'jsp-h3-t5', inputDisplay: "прототип сохраняется", inputArgs: ['preserve-proto'], expected: true },
+      { id: 'jsp-h3-t6', inputDisplay: "Date клонируется", inputArgs: ['date'], expected: true },
+      { id: 'jsp-h3-t7', inputDisplay: "примитивы возвращаются как есть", inputArgs: ['primitives'], expected: [42, 'hi', null, true] },
+    ],
+    hints: [
+      'Заведи `Map<original, clone>`, чтобы не клонировать одно и то же значение дважды — заодно это поможет корректно отрабатывать циклы.',
+      'Чтобы сохранить прототип, создавай клон через `Object.create(Object.getPrototypeOf(value))`, а не через литерал `{}`.',
+      'Не забудь про особые случаи: `null` (у него `typeof === "object"`), `Date` и `Array`.',
+    ],
+    solutionCode: `function deepClone(value, seen = new Map()) {
+  if (value === null || typeof value !== 'object') return value;
+  if (value instanceof Date) return new Date(value.getTime());
+  if (seen.has(value)) return seen.get(value);
+
+  const proto = Object.getPrototypeOf(value);
+  const clone = Array.isArray(value) ? [] : Object.create(proto);
+  seen.set(value, clone);
+
+  for (const key of Object.keys(value)) {
+    clone[key] = deepClone(value[key], seen);
+  }
+  return clone;
+}`,
+    testHelperCode: `function deepClone_test(scenario) {
+  if (scenario === 'flat') {
+    const o = { a: 1, b: 'x' };
+    const c = deepClone(o);
+    return c !== o && c.a === 1 && c.b === 'x';
+  }
+  if (scenario === 'nested-independent') {
+    const o = { inner: { v: 1 } };
+    const c = deepClone(o);
+    c.inner.v = 2;
+    return o.inner.v === 1 && c.inner.v === 2;
+  }
+  if (scenario === 'array') {
+    const o = [{ x: 1 }, { x: 2 }];
+    const c = deepClone(o);
+    c[0].x = 99;
+    return Array.isArray(c) && o[0].x === 1 && c[0].x === 99;
+  }
+  if (scenario === 'circular') {
+    const o = { name: 'root' };
+    o.self = o;
+    const c = deepClone(o);
+    return c !== o && c.name === 'root' && c.self === c ? 'cycle-handled' : 'failed';
+  }
+  if (scenario === 'preserve-proto') {
+    class Animal { speak() { return 'sound'; } }
+    const a = new Animal();
+    a.name = 'Rex';
+    const c = deepClone(a);
+    return c instanceof Animal && c.speak() === 'sound' && c.name === 'Rex';
+  }
+  if (scenario === 'date') {
+    const d = new Date(2024, 0, 1);
+    const c = deepClone(d);
+    return c instanceof Date && c !== d && c.getTime() === d.getTime();
+  }
+  if (scenario === 'primitives') {
+    return [deepClone(42), deepClone('hi'), deepClone(null), deepClone(true)];
+  }
+}`,
+  },
+  {
+    id: "jsp-h4",
+    topicId: "js-prototypes",
+    kind: "implement",
+    title: "inherit — ES5-наследование двух конструкторов",
+    difficulty: "hard",
+    isContextual: false,
+    description: `Реализуйте функцию \`inherit(Child, Parent)\`, которая настраивает **цепочку прототипов** так, чтобы:
+
+1. \`Child.prototype\` наследовал все методы \`Parent.prototype\`.
+2. \`new Child(...)\` был \`instanceof\` и для \`Child\`, и для \`Parent\`.
+3. \`Child.prototype.constructor === Child\` (а не \`Parent\`).
+
+Использовать \`class extends\` или \`Object.setPrototypeOf\` **нельзя**. Решение строится на \`Object.create\` и точечной правке \`constructor\`.
+
+До ES2015 наследование в JS делалось именно так — полезное упражнение, чтобы понимать, что класс на самом деле делает под капотом.
+
+Пример:
+\`\`\`
+function Animal(name) { this.name = name; }
+Animal.prototype.greet = function () { return 'Hi, ' + this.name; };
+
+function Dog(name, breed) {
+  Animal.call(this, name);  // super-конструктор
+  this.breed = breed;
+}
+inherit(Dog, Animal);
+
+const d = new Dog('Rex', 'Lab');
+d.greet();           // → 'Hi, Rex'
+d instanceof Dog;    // → true
+d instanceof Animal; // → true
+\`\`\``,
+    functionName: 'inherit_test',
+    starterCode: `function inherit(Child, Parent) {
+  // ваш код — без class extends и Object.setPrototypeOf
+}`,
+    testCases: [
+      { id: 'jsp-h4-t1', inputDisplay: "методы родителя доступны через child", inputArgs: ['method-access'], expected: 'Hi, Rex' },
+      { id: 'jsp-h4-t2', inputDisplay: "child instanceof child и parent", inputArgs: ['instanceof'], expected: [true, true] },
+      { id: 'jsp-h4-t3', inputDisplay: "constructor правильный", inputArgs: ['constructor'], expected: true },
+      { id: 'jsp-h4-t4', inputDisplay: "переопределение метода у child работает", inputArgs: ['override'], expected: 'Bark!' },
+      { id: 'jsp-h4-t5', inputDisplay: "новые методы child не текут в parent", inputArgs: ['no-leak'], expected: true },
+      { id: 'jsp-h4-t6', inputDisplay: "двойное наследование A → B → C работает", inputArgs: ['triple-chain'], expected: 'A.greet' },
+    ],
+    hints: [
+      '`Object.create(Parent.prototype)` создаёт объект с уже настроенной цепочкой прототипов.',
+      'Не присваивай `Child.prototype = Parent.prototype` напрямую — это будет один и тот же объект, и любые изменения в `Child.prototype` уедут и в `Parent.prototype`.',
+      'После настройки цепочки восстанови `Child.prototype.constructor = Child`.',
+    ],
+    solutionCode: `function inherit(Child, Parent) {
+  Child.prototype = Object.create(Parent.prototype);
+  Child.prototype.constructor = Child;
+}`,
+    testHelperCode: `function inherit_test(scenario) {
+  function Animal(name) { this.name = name; }
+  Animal.prototype.greet = function () { return 'Hi, ' + this.name; };
+
+  function Dog(name, breed) {
+    Animal.call(this, name);
+    this.breed = breed;
+  }
+  inherit(Dog, Animal);
+
+  if (scenario === 'method-access') {
+    return new Dog('Rex', 'Lab').greet();
+  }
+  if (scenario === 'instanceof') {
+    const d = new Dog('Rex', 'Lab');
+    return [d instanceof Dog, d instanceof Animal];
+  }
+  if (scenario === 'constructor') {
+    const d = new Dog('Rex', 'Lab');
+    return d.constructor === Dog;
+  }
+  if (scenario === 'override') {
+    Dog.prototype.greet = function () { return 'Bark!'; };
+    return new Dog('Rex', 'Lab').greet();
+  }
+  if (scenario === 'no-leak') {
+    Dog.prototype.bark = function () { return 'woof'; };
+    const a = new Animal('plain');
+    return a.bark === undefined;
+  }
+  if (scenario === 'triple-chain') {
+    function A() {}
+    A.prototype.greet = function () { return 'A.greet'; };
+    function B() {}
+    inherit(B, A);
+    function C() {}
+    inherit(C, B);
+    return new C().greet();
   }
 }`,
   },

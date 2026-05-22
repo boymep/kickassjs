@@ -1,4 +1,5 @@
 import type { Problem } from "../../types/problem";
+import { VIRTUAL_TIME_PRELUDE } from "./_virtualTime";
 
 export const jsEventLoopProblems: Problem[] = [
   {
@@ -79,103 +80,98 @@ await delay(50);
   {
     id: "jsel-p2",
     topicId: "js-event-loop",
-    title: "debounce",
+    title: "promiseTimeout — обернуть промис в таймаут",
     difficulty: "medium",
     isContextual: false,
-    description: `Реализуйте функцию \`debounce(fn, ms)\`.
+    description: `Реализуйте функцию \`promiseTimeout(promise, ms)\`.
 
-Возвращаемая функция откладывает вызов \`fn\` на \`ms\` миллисекунд после последнего вызова. Если функция вызывается снова до истечения таймера — таймер сбрасывается.
+Она возвращает **новый** промис, который:
 
-Это ключевой паттерн для оптимизации: поиск при вводе, обработка ресайза окна.
+- резолвится тем же значением, что и исходный \`promise\` — если он успел разрешиться за \`ms\` миллисекунд;
+- режектится с \`new Error('timeout')\` — если исходный промис не успел;
+- режектится исходной причиной — если \`promise\` сам зареджектился до таймаута.
+
+Это типичный паттерн для сетевых запросов: «не ждём ответа дольше N секунд».
+
+Подсказка по архитектуре: внутри запускаешь гонку между исходным промисом и таймером \`setTimeout\`. Кто первый — тот и решает судьбу обёртки.
 
 Примеры:
 \`\`\`
-const debouncedSearch = debounce(search, 300);
-debouncedSearch('h');
-debouncedSearch('he');
-debouncedSearch('hel'); // только этот вызов выполнится через 300ms
+await promiseTimeout(fetch('/api'), 5000);
+// → ответ от сервера, если успел за 5 сек
+// → иначе Error('timeout')
 \`\`\``,
-    functionName: "debounce_test",
-    starterCode: `function debounce(fn, ms) {
+    functionName: "promiseTimeout_test",
+    starterCode: `function promiseTimeout(promise, ms) {
   // ваш код
 }`,
     testCases: [
       {
         id: "jsel-p2-t1",
-        inputDisplay: "3 быстрых вызова → fn вызвана 1 раз",
-        inputArgs: ["call-count-3"],
-        expected: 1,
+        inputDisplay: "промис резолвится до таймаута → возвращает значение",
+        inputArgs: ["resolves-in-time"],
+        expected: "ok",
       },
       {
         id: "jsel-p2-t2",
-        inputDisplay: "fn вызвана с последними аргументами",
-        inputArgs: ["last-args"],
-        expected: "hello",
+        inputDisplay: "промис не успел → reject с 'timeout'",
+        inputArgs: ["times-out"],
+        expected: "timeout",
       },
       {
         id: "jsel-p2-t3",
-        inputDisplay: "два вызова с паузой > ms → fn вызвана 2 раза",
-        inputArgs: ["two-separate-calls"],
-        expected: 2,
+        inputDisplay: "исходный промис зареджектился → причина пробрасывается",
+        inputArgs: ["rejects-in-time"],
+        expected: "boom",
       },
       {
         id: "jsel-p2-t4",
-        inputDisplay: "debounce возвращает функцию",
-        inputArgs: ["returns-function"],
+        inputDisplay: "promiseTimeout возвращает Promise",
+        inputArgs: ["returns-promise"],
         expected: true,
       },
       {
         id: "jsel-p2-t5",
-        inputDisplay: "один вызов → fn вызвана ровно 1 раз через ms",
-        inputArgs: ["single-call"],
-        expected: 1,
+        inputDisplay: "уже зарезолвленный промис → значение возвращается мгновенно",
+        inputArgs: ["already-resolved"],
+        expected: 42,
       },
     ],
     hints: [
-      "Как «отменить» предыдущий запланированный вызов, если пришёл новый до истечения паузы?",
-      "Функция должна «помнить» таймер между вызовами — где хранить это состояние?",
+      "Какой статичный метод Promise позволяет дождаться того, что произошло первым — резолв или таймер?",
+      "Таймер должен сам режектить промис ошибкой 'timeout'. Создай отдельный 'таймаут-промис' через `new Promise`.",
     ],
-    solutionCode: `function debounce(fn, ms) {
-  let timer = null;
-  return function(...args) {
-    clearTimeout(timer);
-    timer = setTimeout(() => {
-      fn.apply(this, args);
-    }, ms);
-  };
+    solutionCode: `function promiseTimeout(promise, ms) {
+  const timeout = new Promise((_, reject) => {
+    setTimeout(() => reject(new Error('timeout')), ms);
+  });
+  return Promise.race([promise, timeout]);
 }`,
-    testHelperCode: `async function debounce_test(arg) {
-  const wait = (ms) => new Promise(r => setTimeout(r, ms));
-  if (arg === 'call-count-3') {
-    let count = 0;
-    const fn = debounce(() => count++, 30);
-    fn(); fn(); fn();
-    await wait(100);
-    return count;
+    testHelperCode: `${VIRTUAL_TIME_PRELUDE}
+async function promiseTimeout_test(scenario) {
+  resetVirtualTime();
+
+  const slowResolve = (value, ms) => new Promise((res) => setTimeout(() => res(value), ms));
+  const slowReject = (reason, ms) => new Promise((_, rej) => setTimeout(() => rej(new Error(reason)), ms));
+
+  if (scenario === 'resolves-in-time') {
+    const r = await settle(promiseTimeout(slowResolve('ok', 30), 100), 500);
+    return r.ok ? r.value : 'reject:' + r.reason;
   }
-  if (arg === 'last-args') {
-    let lastArg;
-    const fn = debounce((x) => { lastArg = x; }, 30);
-    fn('a'); fn('b'); fn('hello');
-    await wait(100);
-    return lastArg;
+  if (scenario === 'times-out') {
+    const r = await settle(promiseTimeout(slowResolve('late', 200), 50), 500);
+    return r.ok ? 'unexpected-resolve' : r.reason;
   }
-  if (arg === 'two-separate-calls') {
-    let count = 0;
-    const fn = debounce(() => count++, 30);
-    fn();
-    await wait(100);
-    fn();
-    await wait(100);
-    return count;
+  if (scenario === 'rejects-in-time') {
+    const r = await settle(promiseTimeout(slowReject('boom', 30), 100), 500);
+    return r.ok ? 'unexpected-resolve' : r.reason;
   }
-  if (arg === 'returns-function') return typeof debounce(() => {}, 30) === 'function';
-  if (arg === 'single-call') {
-    let count = 0;
-    const fn = debounce(() => count++, 30);
-    fn();
-    await wait(100);
-    return count;
+  if (scenario === 'returns-promise') {
+    return promiseTimeout(Promise.resolve(1), 100) instanceof Promise;
+  }
+  if (scenario === 'already-resolved') {
+    const r = await settle(promiseTimeout(Promise.resolve(42), 100), 500);
+    return r.ok ? r.value : 'reject:' + r.reason;
   }
 }`,
   },
@@ -371,9 +367,9 @@ await runSequentially(fns); // → [1, 2, 3]
     title: "Определи вывод: async/await и Promise.then вместе",
     difficulty: "medium",
     isContextual: false,
-    description: `Перед вами async-функция рядом с обычным \`Promise.then\`. Введи каждую напечатанную строку в отдельной строчке поля ответа.
+    description: `Перед тобой async-функция рядом с обычным \`Promise.then\`. Введи каждую напечатанную строку на отдельной строке поля ответа.
 
-Подсказка: каждый \`await\` ставит продолжение функции в очередь микрозадач и возвращает управление вызывающему коду.`,
+**Подсказка:** каждый \`await\` ставит продолжение функции в очередь микрозадач и возвращает управление вызывающему коду.`,
     code: `async function run() {
   console.log('A');
   await null;
@@ -388,15 +384,15 @@ Promise.resolve().then(() => console.log('2'));
 console.log('3');`,
     expected: "1\nA\n3\nB\n2\nC",
     hints: [
-      "Выдели, что выполняется синхронно, а что — после microtask checkpoint.",
-      "Каждый `await` ставит продолжение функции в очередь микрозадач. В каком порядке микрозадачи встают в очередь?",
+      "Раздели вывод на части: что успевает выполниться синхронно, а что — когда движок дойдёт до очереди микрозадач?",
+      "Каждый `await` ставит продолжение функции в очередь микрозадач. В каком порядке туда попадают продолжения двух функций и `Promise.then`?",
     ],
-    solutionCode: `// 1  — sync
-// A  — sync внутри run()
-// 3  — sync (run() приостановлена на await)
-// --- microtask checkpoint ---
-// B  — продолжение run() после первого await; ставит второй await в очередь
-// 2  — Promise.then (стоял в очереди перед вторым продолжением run)
+    solutionCode: `// 1  — синхронно
+// A  — синхронно внутри run()
+// 3  — синхронно (run() приостановлена на await)
+// --- движок разбирает очередь микрозадач ---
+// B  — продолжение run() после первого await; ставит второе продолжение в очередь
+// 2  — Promise.then (стоял в очереди раньше второго продолжения run)
 // C  — продолжение run() после второго await`,
   },
   {
@@ -682,9 +678,9 @@ await retryWithDelay(unstable, 3, 0); // → 'success'
     title: "Предскажи вывод: две async-функции и queueMicrotask",
     difficulty: "hard",
     isContextual: false,
-    description: `Два async-вызова запускаются подряд. Какой порядок вывода?
+    description: `Два async-вызова запускаются подряд. В каком порядке окажутся строки в выводе?
 
-Введи каждую строку в отдельной строчке поля ответа.`,
+Введи каждое значение на отдельной строке поля ответа.`,
     code: `async function first() {
   console.log('f1');
   await null;
@@ -705,18 +701,18 @@ queueMicrotask(() => console.log('micro'));
 console.log('end');`,
     expected: "start\nf1\ns1\nend\nf2\ns2\nmicro\ntimeout",
     hints: [
-      "Сколько синхронных шагов выполнится до первого microtask checkpoint?",
-      "В каком порядке продолжения двух async-функций встают в очередь микрозадач? Когда в ней появляется queueMicrotask?",
+      "Сколько синхронных шагов выполнится до того, как движок начнёт разбирать очередь микрозадач?",
+      "В каком порядке продолжения двух async-функций попадают в очередь микрозадач? А когда туда попадает `queueMicrotask`?",
     ],
-    solutionCode: `// start — sync
-// f1   — sync внутри first() до первого await
-// s1   — sync внутри second() до первого await
-// end  — sync
-// --- microtask checkpoint ---
+    solutionCode: `// start — синхронно
+// f1   — синхронно внутри first(), до первого await
+// s1   — синхронно внутри second(), до первого await
+// end  — синхронно
+// --- движок разбирает очередь микрозадач ---
 // f2   — продолжение first() после await
 // s2   — продолжение second() после await
-// micro — queueMicrotask (поставлен после обоих await)
-// --- macrotask ---
+// micro — queueMicrotask (поставлен в очередь после обоих await)
+// --- следующая итерация event loop, макрозадачи ---
 // timeout — setTimeout`,
   },
   {
@@ -833,6 +829,269 @@ scheduler.add(t(100, 'd')); // ждёт освобождения слота
     const task = (id, ms) => () => new Promise(res => setTimeout(() => { order.push(id); res(); }, ms));
     await Promise.all([s.add(task(1, 10)), s.add(task(2, 1)), s.add(task(3, 1))]);
     return order[0] === 1; // 1 стартует первым
+  }
+}`,
+  },
+  {
+    id: "jsel-e2",
+    topicId: "js-event-loop",
+    kind: "predict-output",
+    title: "Предскажи вывод: setTimeout 0 vs Promise vs sync",
+    difficulty: "easy",
+    isContextual: false,
+    description: `Перед тобой короткий фрагмент с тремя источниками логов: \`setTimeout(..., 0)\`, синхронный \`console.log\` и \`Promise.resolve().then(...)\`.
+
+В каком порядке строки появятся в выводе?
+
+**Подсказка:** очередь микрозадач (\`Promise.then\`) опустошается полностью — **до** того, как event loop возьмёт следующую макрозадачу (например, очередной \`setTimeout\`).`,
+    code: `console.log('A');
+
+setTimeout(() => console.log('B'), 0);
+
+Promise.resolve().then(() => console.log('C'));
+
+console.log('D');`,
+    expected: 'A\nD\nC\nB',
+    hints: [
+      'Сначала выполняется весь синхронный код.',
+      'Затем — все микрозадачи (продолжения промисов), которые были запланированы за это время.',
+      'И только потом — следующая макрозадача (`setTimeout`).',
+    ],
+    solutionCode: `// 1. 'A' — синхронный console.log.
+// 2. setTimeout планирует макрозадачу — она выполнится на следующей итерации event loop.
+// 3. Promise.resolve().then() планирует микрозадачу.
+// 4. 'D' — синхронный console.log.
+// 5. Стек пуст → движок опустошает очередь микрозадач → 'C'.
+// 6. Следующая итерация event loop → берётся макрозадача → 'B'.`,
+  },
+  {
+    id: "jsel-e3",
+    topicId: "js-event-loop",
+    title: "nextTick — отложить на следующий микротик",
+    difficulty: "easy",
+    isContextual: false,
+    description: `Реализуйте функцию \`nextTick(fn)\`, которая откладывает вызов \`fn\` на **ближайший микротик** (microtask), то есть гарантированно после текущего синхронного кода, но **раньше** любого \`setTimeout\`.
+
+Используйте \`queueMicrotask\` или \`Promise.resolve().then(...)\`.
+
+Функция должна возвращать \`undefined\` сразу.
+
+Пример:
+\`\`\`
+const log = [];
+log.push(1);
+nextTick(() => log.push(2));
+log.push(3);
+// сразу после: log === [1, 3]
+// после микротиков: log === [1, 3, 2]
+\`\`\``,
+    functionName: 'nextTick_test',
+    starterCode: `function nextTick(fn) {
+  // ваш код
+}`,
+    testCases: [
+      { id: "jsel-e3-t1", inputDisplay: "fn вызывается после синхронного кода", inputArgs: ['sync-after'], expected: [1, 3, 2] },
+      { id: "jsel-e3-t2", inputDisplay: "nextTick раньше setTimeout(0)", inputArgs: ['before-setTimeout'], expected: ['micro', 'macro'] },
+      { id: "jsel-e3-t3", inputDisplay: "вложенные nextTick сохраняют порядок", inputArgs: ['nested'], expected: ['outer', 'inner'] },
+      { id: "jsel-e3-t4", inputDisplay: "nextTick возвращает undefined", inputArgs: ['returns-undefined'], expected: true },
+    ],
+    hints: [
+      'Что добавляет задачу именно в очередь микротасков? `queueMicrotask` или `Promise.resolve().then`.',
+      'Помните: микротики опустошаются до следующего рендеринга и до следующего setTimeout.',
+    ],
+    solutionCode: `function nextTick(fn) {
+  queueMicrotask(fn);
+}`,
+    testHelperCode: `async function nextTick_test(scenario) {
+  if (scenario === 'sync-after') {
+    const log = [];
+    log.push(1);
+    nextTick(() => log.push(2));
+    log.push(3);
+    await Promise.resolve();
+    return log;
+  }
+  if (scenario === 'before-setTimeout') {
+    const log = [];
+    setTimeout(() => log.push('macro'), 0);
+    nextTick(() => log.push('micro'));
+    await new Promise((r) => setTimeout(r, 50));
+    return log;
+  }
+  if (scenario === 'nested') {
+    const log = [];
+    nextTick(() => {
+      log.push('outer');
+      nextTick(() => log.push('inner'));
+    });
+    await Promise.resolve();
+    await Promise.resolve();
+    return log;
+  }
+  if (scenario === 'returns-undefined') {
+    const result = nextTick(() => {});
+    await Promise.resolve();
+    return result === undefined;
+  }
+}`,
+  },
+  {
+    id: "jsel-h3",
+    topicId: "js-event-loop",
+    kind: "implement",
+    title: "Реализуйте Promise.race",
+    difficulty: "hard",
+    isContextual: false,
+    description: `Реализуйте функцию \`myRace(promises)\`, которая ведёт себя как \`Promise.race\`:
+- возвращает Promise, который **разрешается или отклоняется** значением/ошибкой **первого** завершившегося промиса из массива.
+- если массив пуст — возвращённый промис **никогда не разрешается** (это поведение стандартного \`Promise.race\` — тестируем только содержательные случаи).
+- значения в массиве могут быть не только промисами, но и обычными значениями — их следует трактовать как уже разрешённые промисы.
+
+Запрещено использовать \`Promise.race\` или \`Promise.any\` внутри решения.
+
+Хорошее упражнение на понимание того, как работают подписки на промисы и event loop.`,
+    functionName: 'myRace_test',
+    starterCode: `function myRace(promises) {
+  // ваш код
+}`,
+    testCases: [
+      { id: "jsel-h3-t1", inputDisplay: "первый resolve выигрывает", inputArgs: ['resolve-first'], expected: 'A' },
+      { id: "jsel-h3-t2", inputDisplay: "первый reject отбрасывает", inputArgs: ['reject-first'], expected: 'Error: BOOM' },
+      { id: "jsel-h3-t3", inputDisplay: "не-промис трактуется как resolved", inputArgs: ['non-promise'], expected: 42 },
+      { id: "jsel-h3-t4", inputDisplay: "поздний reject не перебивает ранний resolve", inputArgs: ['late-reject'], expected: 'fast' },
+      { id: "jsel-h3-t5", inputDisplay: "несколько resolve — выигрывает самый ранний", inputArgs: ['multiple-resolves'], expected: 'first' },
+    ],
+    hints: [
+      'Создайте новый промис через `new Promise((resolve, reject) => ...)`. В колбэке подпишитесь на каждый элемент через `Promise.resolve(p).then(resolve, reject)`.',
+      'Promise.resolve работает и для не-промисов: оборачивает их в уже-resolved промис.',
+      'Не забывайте: после первого resolve/reject — последующие вызовы resolve/reject игнорируются.',
+    ],
+    solutionCode: `function myRace(promises) {
+  return new Promise((resolve, reject) => {
+    for (const p of promises) {
+      Promise.resolve(p).then(resolve, reject);
+    }
+  });
+}`,
+    testHelperCode: `async function myRace_test(scenario) {
+  const wait = (ms, v) => new Promise((r) => setTimeout(() => r(v), ms));
+  const fail = (ms, msg) => new Promise((_, rj) => setTimeout(() => rj(new Error(msg)), ms));
+
+  if (scenario === 'resolve-first') {
+    return myRace([wait(50, 'A'), wait(200, 'B')]);
+  }
+  if (scenario === 'reject-first') {
+    try {
+      await myRace([fail(50, 'BOOM'), wait(200, 'B')]);
+      return 'no-throw';
+    } catch (e) {
+      return 'Error: ' + e.message;
+    }
+  }
+  if (scenario === 'non-promise') {
+    return myRace([42, wait(100, 'late')]);
+  }
+  if (scenario === 'late-reject') {
+    return myRace([wait(50, 'fast'), fail(200, 'late')]);
+  }
+  if (scenario === 'multiple-resolves') {
+    return myRace([wait(50, 'first'), wait(100, 'second'), wait(150, 'third')]);
+  }
+}`,
+  },
+  {
+    id: "jsel-h4",
+    topicId: "js-event-loop",
+    kind: "implement",
+    title: "asyncRetry — повтор с экспоненциальной задержкой",
+    difficulty: "hard",
+    isContextual: false,
+    description: `Реализуйте \`asyncRetry(fn, { retries, delay, factor })\` — обёртку, которая вызывает асинхронную функцию \`fn()\` и при отказе **повторяет** её с экспоненциальной задержкой:
+- \`retries\` — максимальное количество повторных попыток после первого вызова (например, retries=3 ⇒ всего 4 попытки).
+- \`delay\` — начальная задержка между попытками (мс).
+- \`factor\` — множитель задержки между попытками (например, factor=2 ⇒ \`delay\`, \`delay*2\`, \`delay*4\`, ...).
+
+Если \`fn()\` в итоге успешна — резолвится её результатом. Если все попытки исчерпаны — реджектится **последней** ошибкой.
+
+Классический сценарий для сетевых запросов: при сбое не «долбить» сервер с одинаковой паузой, а растягивать интервалы между попытками — это и называют **экспоненциальной задержкой** (exponential backoff).`,
+    functionName: 'asyncRetry_test',
+    starterCode: `function asyncRetry(fn, { retries, delay, factor }) {
+  // ваш код
+}`,
+    testCases: [
+      { id: "jsel-h4-t1", inputDisplay: "fn успешна с первого раза → 1 вызов", inputArgs: ['success-first'], expected: { result: 'ok', calls: 1 } },
+      { id: "jsel-h4-t2", inputDisplay: "fn успешна со 2-й попытки → 2 вызова", inputArgs: ['success-second'], expected: { result: 'ok', calls: 2 } },
+      { id: "jsel-h4-t3", inputDisplay: "fn падает все retries+1 раз → последняя ошибка", inputArgs: ['always-fail'], expected: 'Error: fail-3' },
+      { id: "jsel-h4-t4", inputDisplay: "retries=0 → ровно 1 попытка", inputArgs: ['no-retries'], expected: 'Error: only-once' },
+      { id: "jsel-h4-t5", inputDisplay: "задержки следуют delay * factor^i", inputArgs: ['exp-delay'], expected: true },
+    ],
+    hints: [
+      'Сделайте рекурсию или цикл, увеличивая текущую задержку в `factor` раз после каждой неудачной попытки.',
+      'Между попытками используйте `await new Promise(r => setTimeout(r, currentDelay))`.',
+      'Не забудьте: общее количество попыток = `retries + 1`. Когда исчерпали — пробрасывайте последнюю ошибку.',
+    ],
+    solutionCode: `async function asyncRetry(fn, { retries, delay, factor }) {
+  let current = delay;
+  let lastErr;
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      return await fn();
+    } catch (e) {
+      lastErr = e;
+      if (attempt === retries) break;
+      await new Promise((r) => setTimeout(r, current));
+      current *= factor;
+    }
+  }
+  throw lastErr;
+}`,
+    testHelperCode: `${VIRTUAL_TIME_PRELUDE}
+async function asyncRetry_test(scenario) {
+  resetVirtualTime();
+
+  if (scenario === 'success-first') {
+    let calls = 0;
+    const fn = async () => { calls++; return 'ok'; };
+    const r = await settle(asyncRetry(fn, { retries: 3, delay: 10, factor: 2 }));
+    return { result: r.value, calls };
+  }
+  if (scenario === 'success-second') {
+    let calls = 0;
+    const fn = async () => {
+      calls++;
+      if (calls < 2) throw new Error('first-fail');
+      return 'ok';
+    };
+    const r = await settle(asyncRetry(fn, { retries: 3, delay: 10, factor: 2 }));
+    return { result: r.value, calls };
+  }
+  if (scenario === 'always-fail') {
+    let calls = 0;
+    const fn = async () => { calls++; throw new Error('fail-' + calls); };
+    const r = await settle(asyncRetry(fn, { retries: 2, delay: 10, factor: 2 }));
+    return r.ok ? 'no-throw' : 'Error: ' + r.reason;
+  }
+  if (scenario === 'no-retries') {
+    let calls = 0;
+    const fn = async () => { calls++; throw new Error('only-once'); };
+    const r = await settle(asyncRetry(fn, { retries: 0, delay: 10, factor: 2 }));
+    return r.ok ? 'no-throw' : 'Error: ' + r.reason;
+  }
+  if (scenario === 'exp-delay') {
+    const stamps = [];
+    let calls = 0;
+    const fn = async () => {
+      calls++;
+      stamps.push(getNow());
+      if (calls < 4) throw new Error('retry');
+      return 'ok';
+    };
+    await settle(asyncRetry(fn, { retries: 3, delay: 50, factor: 2 }));
+    return stamps.length === 4
+      && stamps[0] === 0
+      && stamps[1] === 50
+      && stamps[2] === 150
+      && stamps[3] === 350;
   }
 }`,
   },

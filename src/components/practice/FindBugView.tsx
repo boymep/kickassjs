@@ -20,7 +20,7 @@ interface FindBugViewProps {
 export default function FindBugView({ problem }: FindBugViewProps) {
   const [code, setCode] = useState(problem.buggyCode);
   const [showSolution, setShowSolution] = useState(false);
-  const { results, running, run } = useCodeRunner();
+  const { results, running, run } = useCodeRunner(problem.id);
   const { markSolved } = useProgress(problem.topicId);
   const { hintIndex, showNext } = useHints(problem.id);
 

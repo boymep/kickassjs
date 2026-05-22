@@ -535,9 +535,9 @@ fetchWithRetry = async function (arg) {
     title: "Определи вывод: middleware-цепочка Express",
     difficulty: "medium",
     isContextual: false,
-    description: `Перед вами middleware-цепочка в стиле Express: каждый middleware печатает строку до next() и опционально после. Введите каждую напечатанную строку в отдельной строчке поля ответа.
+    description: `Перед тобой middleware-цепочка в стиле Express: каждый middleware печатает строку до \`next()\` и (опционально) после. Введи каждую напечатанную строку на отдельной строке поля ответа.
 
-Подсказка: middleware выполняются строго в порядке регистрации. \`next()\` синхронно вызывает следующий middleware, а после его возврата управление возвращается обратно — поэтому строки «после next()» печатаются в обратном порядке.`,
+**Подсказка:** middleware выполняются строго в порядке регистрации. \`next()\` синхронно вызывает следующий middleware, а после его возврата управление возвращается обратно — поэтому строки «после \`next()\`» печатаются в обратном порядке.`,
     code: `function runPipeline(middlewares, req, res) {
   let i = 0;
   function next() {
@@ -701,9 +701,9 @@ function nn_p7_test(arg) {
     title: "Оптимизируй: цепочка if-ов → словарь маршрутов",
     difficulty: "easy",
     isContextual: false,
-    description: `Функция \`route(method, path)\` — наивный роутер на цепочке \`if/else if\`. С каждым новым маршрутом конструкция растёт линейно и плохо читается. Перепишите функцию так, чтобы маршруты хранились в **словаре** (\`Map\` или объекте) с ключом \`\`\${method} \${path}\`\`, а \`route\` делал \`O(1)\` lookup.
+    description: `Функция \`route(method, path)\` — наивный роутер на цепочке \`if/else if\`. С каждым новым маршрутом конструкция растёт линейно и плохо читается. Перепишите функцию так, чтобы маршруты хранились в **словаре** (\`Map\` или объекте) с ключом \`\`\${method} \${path}\`\`, а \`route\` делал поиск за \`O(1)\`.
 
-Сигнатура остаётся: \`route(method, path)\` возвращает строку — имя обработчика — или \`'404'\`, если маршрут не зарегистрирован. Корректность: результат должен совпадать со starter-кодом для всех тест-кейсов.`,
+Сигнатура остаётся: \`route(method, path)\` возвращает строку — имя обработчика — или \`'404'\`, если маршрут не зарегистрирован. Корректность: результат должен совпадать со стартовым кодом для всех тест-кейсов.`,
     functionName: "route",
     starterCode: `function route(method, path) {
   if (method === 'GET' && path === '/users') return 'getAllUsers';
@@ -1066,6 +1066,269 @@ const pool = new ConnectionPool({
     await pool.destroy();
     return closed.length === 2;
   }
+}`,
+  },
+  {
+    id: "nodn-h3",
+    topicId: "node-network",
+    kind: "implement",
+    title: "Middleware chain — конвейер обработчиков (Koa-style)",
+    difficulty: "hard",
+    isContextual: false,
+    description: `Реализуйте функцию \`compose(middlewares)\`, которая принимает массив middleware-функций и возвращает одну композитную функцию.
+
+Каждый middleware имеет сигнатуру \`(ctx, next) => Promise | void\`:
+- \`ctx\` — общий объект-контекст, который передаётся через всю цепочку.
+- \`next\` — функция, возвращающая Promise; её вызов запускает **следующий** middleware.
+
+Возвращаемая \`compose(...)\` функция вызывается так: \`compose(mws)(ctx)\` — и обрабатывает middleware **снизу вверх**, в стиле Koa.
+
+Хорошая задача на понимание async-композиции и того, как один middleware «оборачивает» следующий.
+
+Пример:
+\`\`\`
+const stack = [
+  async (ctx, next) => { ctx.order.push('a-in'); await next(); ctx.order.push('a-out'); },
+  async (ctx, next) => { ctx.order.push('b-in'); await next(); ctx.order.push('b-out'); },
+  async (ctx) =>       { ctx.order.push('c'); },
+];
+
+const ctx = { order: [] };
+await compose(stack)(ctx);
+// ctx.order === ['a-in', 'b-in', 'c', 'b-out', 'a-out']
+\`\`\``,
+    functionName: 'compose_test',
+    starterCode: `function compose(middlewares) {
+  // ваш код
+}`,
+    testCases: [
+      { id: 'nodn-h3-t1', inputDisplay: "порядок in/out у трёх middleware", inputArgs: ['order'], expected: ['a-in', 'b-in', 'c', 'b-out', 'a-out'] },
+      { id: 'nodn-h3-t2', inputDisplay: "ctx общий для всех", inputArgs: ['shared-ctx'], expected: { a: 1, b: 2, c: 3 } },
+      { id: 'nodn-h3-t3', inputDisplay: "пустой массив middleware — no-op", inputArgs: ['empty'], expected: 'no-error' },
+      { id: 'nodn-h3-t4', inputDisplay: "middleware не вызвавший next прерывает цепочку", inputArgs: ['no-next'], expected: ['a', 'b'] },
+      { id: 'nodn-h3-t5', inputDisplay: "ошибка в middleware ловится через await", inputArgs: ['error'], expected: 'caught: oops' },
+    ],
+    hints: [
+      'Рекурсивный диспатчер: функция `dispatch(i)` запускает i-й middleware и передаёт ему `() => dispatch(i+1)` как next.',
+      'Защита от двойного вызова next в одной middleware: можно проверить флаг и бросить ошибку.',
+      'Базовый случай: i === middlewares.length → вернуть Promise.resolve().',
+    ],
+    solutionCode: `function compose(middlewares) {
+  return function (ctx) {
+    function dispatch(i) {
+      if (i >= middlewares.length) return Promise.resolve();
+      const mw = middlewares[i];
+      try {
+        return Promise.resolve(mw(ctx, () => dispatch(i + 1)));
+      } catch (e) {
+        return Promise.reject(e);
+      }
+    }
+    return dispatch(0);
+  };
+}`,
+    testHelperCode: `async function compose_test(scenario) {
+  if (scenario === 'order') {
+    const ctx = { order: [] };
+    const stack = [
+      async (ctx, next) => { ctx.order.push('a-in'); await next(); ctx.order.push('a-out'); },
+      async (ctx, next) => { ctx.order.push('b-in'); await next(); ctx.order.push('b-out'); },
+      async (ctx) =>       { ctx.order.push('c'); },
+    ];
+    await compose(stack)(ctx);
+    return ctx.order;
+  }
+  if (scenario === 'shared-ctx') {
+    const ctx = {};
+    await compose([
+      async (c, next) => { c.a = 1; await next(); },
+      async (c, next) => { c.b = 2; await next(); },
+      async (c)       => { c.c = 3; },
+    ])(ctx);
+    return ctx;
+  }
+  if (scenario === 'empty') {
+    try {
+      await compose([])({});
+      return 'no-error';
+    } catch (e) {
+      return 'error';
+    }
+  }
+  if (scenario === 'no-next') {
+    const ctx = { order: [] };
+    await compose([
+      async (ctx, next) => { ctx.order.push('a'); await next(); },
+      async (ctx) =>       { ctx.order.push('b'); /* без next */ },
+      async (ctx) =>       { ctx.order.push('c'); },
+    ])(ctx);
+    return ctx.order;
+  }
+  if (scenario === 'error') {
+    const stack = [
+      async (ctx, next) => {
+        try { await next(); }
+        catch (e) { ctx.caught = 'caught: ' + e.message; }
+      },
+      async () => { throw new Error('oops'); },
+    ];
+    const ctx = {};
+    await compose(stack)(ctx);
+    return ctx.caught;
+  }
+}`,
+  },
+  {
+    id: "nodn-h4",
+    topicId: "node-network",
+    kind: "implement",
+    title: "parseHTTPRequest — парсер сырого HTTP-запроса",
+    difficulty: "hard",
+    isContextual: false,
+    description: `Реализуйте \`parseHTTPRequest(raw)\` — функцию, которая принимает строку с **сырым HTTP-запросом** и возвращает объект \`{ method, path, query, headers, body }\`.
+
+Формат входа:
+\`\`\`
+METHOD PATH?QUERY HTTP/1.1\\r\\n
+Header-Name: value\\r\\n
+Header-Name-2: value\\r\\n
+\\r\\n
+[body]
+\`\`\`
+
+Требования:
+- \`method\` — в верхнем регистре.
+- \`path\` — без query.
+- \`query\` — объект декодированных параметров (значения через \`decodeURIComponent\`). Если query нет — \`{}\`.
+- \`headers\` — объект с **именами в lower-case**. Значения нужно обрезать от пробелов в начале и в конце (\`trim\`) — так требует спецификация HTTP.
+- \`body\` — всё, что после пустой строки. Если тела нет — пустая строка.
+
+Задача проф-уровня: проверяет знание HTTP, парсинга и обработку угловых случаев.
+
+Пример:
+\`\`\`
+parseHTTPRequest(
+  'POST /api/users?role=admin HTTP/1.1\\r\\n' +
+  'Host: api.com\\r\\n' +
+  'Content-Type: application/json\\r\\n' +
+  '\\r\\n' +
+  '{"name":"Alice"}'
+)
+// → {
+//   method: 'POST',
+//   path: '/api/users',
+//   query: { role: 'admin' },
+//   headers: { host: 'api.com', 'content-type': 'application/json' },
+//   body: '{"name":"Alice"}'
+// }
+\`\`\``,
+    functionName: 'parseHTTPRequest',
+    starterCode: `function parseHTTPRequest(raw) {
+  // ваш код
+}`,
+    testCases: [
+      {
+        id: 'nodn-h4-t1',
+        inputDisplay: "POST с JSON-телом",
+        inputArgs: ['POST /api/users?role=admin HTTP/1.1\r\nHost: api.com\r\nContent-Type: application/json\r\n\r\n{"name":"Alice"}'],
+        expected: {
+          method: 'POST',
+          path: '/api/users',
+          query: { role: 'admin' },
+          headers: { host: 'api.com', 'content-type': 'application/json' },
+          body: '{"name":"Alice"}',
+        },
+      },
+      {
+        id: 'nodn-h4-t2',
+        inputDisplay: "GET без query и тела",
+        inputArgs: ['GET /about HTTP/1.1\r\nHost: example.com\r\n\r\n'],
+        expected: {
+          method: 'GET',
+          path: '/about',
+          query: {},
+          headers: { host: 'example.com' },
+          body: '',
+        },
+      },
+      {
+        id: 'nodn-h4-t3',
+        inputDisplay: "несколько query-параметров с URI-кодированием",
+        inputArgs: ['GET /search?q=hello%20world&page=2 HTTP/1.1\r\nHost: x\r\n\r\n'],
+        expected: {
+          method: 'GET',
+          path: '/search',
+          query: { q: 'hello world', page: '2' },
+          headers: { host: 'x' },
+          body: '',
+        },
+      },
+      {
+        id: 'nodn-h4-t4',
+        inputDisplay: "заголовки приходят к lower-case",
+        inputArgs: ['GET / HTTP/1.1\r\nAuthorization: Bearer xyz\r\nX-Custom: 42\r\n\r\n'],
+        expected: {
+          method: 'GET',
+          path: '/',
+          query: {},
+          headers: { authorization: 'Bearer xyz', 'x-custom': '42' },
+          body: '',
+        },
+      },
+      {
+        id: 'nodn-h4-t5',
+        inputDisplay: "method в верхнем регистре",
+        inputArgs: ['delete /x HTTP/1.1\r\nHost: y\r\n\r\n'],
+        expected: {
+          method: 'DELETE',
+          path: '/x',
+          query: {},
+          headers: { host: 'y' },
+          body: '',
+        },
+      },
+    ],
+    hints: [
+      'Разделите сначала по `\\r\\n\\r\\n` — на «голову» и «тело».',
+      'Голова: первая строка — request-line (METHOD URL HTTP/version), остальные — headers (Name: Value).',
+      'URL разделите по `?` на path и querystring. querystring → разбейте по `&`, каждый — по `=`, значения через `decodeURIComponent`.',
+    ],
+    solutionCode: `function parseHTTPRequest(raw) {
+  const headerBodySplit = raw.indexOf('\\r\\n\\r\\n');
+  const headPart = headerBodySplit === -1 ? raw : raw.slice(0, headerBodySplit);
+  const body = headerBodySplit === -1 ? '' : raw.slice(headerBodySplit + 4);
+
+  const lines = headPart.split('\\r\\n');
+  const requestLine = lines[0];
+  const [methodRaw, urlRaw] = requestLine.split(' ');
+  const method = methodRaw.toUpperCase();
+
+  let path = urlRaw;
+  const query = {};
+  const qIdx = urlRaw.indexOf('?');
+  if (qIdx !== -1) {
+    path = urlRaw.slice(0, qIdx);
+    const qs = urlRaw.slice(qIdx + 1);
+    for (const pair of qs.split('&')) {
+      if (!pair) continue;
+      const eq = pair.indexOf('=');
+      const k = eq === -1 ? pair : pair.slice(0, eq);
+      const v = eq === -1 ? '' : pair.slice(eq + 1);
+      query[decodeURIComponent(k)] = decodeURIComponent(v);
+    }
+  }
+
+  const headers = {};
+  for (let i = 1; i < lines.length; i++) {
+    const line = lines[i];
+    const colon = line.indexOf(':');
+    if (colon === -1) continue;
+    const name = line.slice(0, colon).trim().toLowerCase();
+    const value = line.slice(colon + 1).trim();
+    headers[name] = value;
+  }
+
+  return { method, path, query, headers, body };
 }`,
   },
 ];

@@ -64,6 +64,7 @@ export default function PracticePage() {
       <ListItemButton
         key={p.id}
         onClick={() => navigate(`/topic/${slug}/practice/${p.id}`)}
+        sx={{ m: 0, borderRadius: 0, px: 2, py: 1.25 }}
       >
         <Box sx={{ display: "flex", alignItems: "center", gap: 1, mr: 1.5 }}>
           <CheckCircleIcon
@@ -104,7 +105,7 @@ export default function PracticePage() {
               {group.problems.length} {group.problems.length === 1 ? "задача" : "задач"}
             </Typography>
           </Box>
-          <Paper>
+          <Paper sx={{ overflow: "hidden" }}>
             <List disablePadding>
               {group.problems.map((p, idx) => (
                 <Box key={p.id}>
