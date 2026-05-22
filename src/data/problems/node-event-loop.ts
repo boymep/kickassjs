@@ -549,7 +549,7 @@ console.log('F');`,
     kind: "find-bug",
     id: "nodel-p7",
     topicId: "node-event-loop",
-    title: "Найди баг: очередь задач не завершается",
+    title: "Найдите баг: очередь задач не завершается",
     difficulty: "medium",
     isContextual: true,
     description: `Функция \`runWithDelay(initialQueue, work)\` должна:
@@ -607,7 +607,7 @@ console.log('F');`,
       },
     ],
     hints: [
-      "Найди ветку, которая выполняется при пустой очереди. Что должна делать функция в этом случае — продолжать работу или завершаться?",
+      "Найдите ветку, которая выполняется при пустой очереди. Что должна делать функция в этом случае — продолжать работу или завершаться?",
       "Что конкретно мешает промису когда-либо зарезолвиться?",
     ],
     solutionCode: `function runWithDelay(initialQueue, work) {
@@ -733,12 +733,12 @@ console.log('F');`,
     id: "nodel-easy1",
     topicId: "node-event-loop",
     kind: "predict-output",
-    title: "Предскажи вывод: process.nextTick vs setImmediate vs setTimeout",
+    title: "Что выведет код: process.nextTick vs setImmediate vs setTimeout",
     difficulty: "easy",
     isContextual: false,
     description: `Базовый вопрос на приоритеты в event loop Node.js. Что выведет этот код?
 
-Введи каждое значение на отдельной строке поля ответа.`,
+Введите каждое значение на отдельной строке поля ответа.`,
     code: `setTimeout(() => console.log(1), 0);
 setImmediate(() => console.log(2));
 process.nextTick(() => console.log(3));
@@ -759,12 +759,12 @@ console.log(4);`,
     id: "nodel-h1",
     topicId: "node-event-loop",
     kind: "predict-output",
-    title: "Предскажи вывод: вложенные nextTick и Promise в Node.js",
+    title: "Что выведет код: вложенные nextTick и Promise в Node.js",
     difficulty: "hard",
     isContextual: false,
-    description: `Внимательно проследи порядок: вложенный \`process.nextTick\`, промис и \`setImmediate\` в Node.js.
+    description: `Внимательно проследите порядок: вложенный \`process.nextTick\`, промис и \`setImmediate\` в Node.js.
 
-Что выведет код? Введи каждое значение на отдельной строке.`,
+Что выведет код? Введите каждое значение на отдельной строке.`,
     code: `Promise.resolve().then(() => {
   console.log(1);
   process.nextTick(() => console.log(2));
@@ -1014,7 +1014,7 @@ const result = await d.promise;
     id: "nodel-e3",
     topicId: "node-event-loop",
     kind: "predict-output",
-    title: "Предскажи вывод: микрозадачи между sync и setTimeout",
+    title: "Что выведет код: микрозадачи между sync и setTimeout",
     difficulty: "easy",
     isContextual: false,
     description: `Перед вами фрагмент с тремя источниками логов: синхронные \`console.log\`, два \`queueMicrotask\`, один \`Promise.resolve().then\` и один \`setTimeout(..., 0)\`.

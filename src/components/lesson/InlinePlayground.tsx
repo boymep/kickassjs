@@ -135,7 +135,7 @@ export default function InlinePlayground({ playground }: InlinePlaygroundProps) 
             </Alert>
           ) : passed === false ? (
             <Alert severity="warning" icon={<HighlightOffIcon />}>
-              Вывод не совпадает с ожидаемым. Сравни строки внимательно.
+              Вывод не совпадает с ожидаемым. Сравните строки внимательно.
             </Alert>
           ) : null}
           <Typography variant="overline" color="text.secondary" sx={{ display: 'block', mt: 1.5 }}>

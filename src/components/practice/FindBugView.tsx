@@ -43,7 +43,7 @@ export default function FindBugView({ problem }: FindBugViewProps) {
     <>
       <ProblemHeader problem={problem} />
       <Alert severity="warning" sx={{ mb: 2 }}>
-        В коде ниже спрятан баг — код пройдёт лишь часть тестов. Найди и почини.
+        В коде ниже спрятан баг — код пройдёт лишь часть тестов. Найдите и почини.
       </Alert>
       <CodeEditor value={code} onChange={setCode} />
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 2, flexWrap: 'wrap', mt: 2 }}>

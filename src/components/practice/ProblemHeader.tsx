@@ -5,7 +5,7 @@ import { getProblemKind } from "../../types/problem";
 
 const KIND_LABEL: Record<NonNullable<Problem["kind"]>, string> = {
   implement: "Реализовать",
-  "predict-output": "Определить вывод",
+  "predict-output": "Что выведет код?",
   "find-bug": "Найти баг",
   refactor: "Оптимизировать",
 };

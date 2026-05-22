@@ -5,11 +5,11 @@ export const jsBrowserFlashcards: TopicFlashcards = {
   cards: [
     {
       id: 'jsbr-f1',
-      question: 'Что такое Critical Rendering Path? Опиши основные шаги.',
+      question: 'Что такое Critical Rendering Path? Опишите основные шаги.',
       answer:
         'CRP — последовательность шагов браузера от получения HTML до первого пикселя на экране: HTML→DOM, CSS→CSSOM, объединение в Render Tree, Layout (геометрия), Paint (пиксели), Composite (слои).',
       keyPoints: [
-        'JS блокирует парсинг HTML! Используй defer/async',
+        'JS блокирует парсинг HTML! Используйте defer/async',
         'CSS блокирует рендер — критические стили инлайни',
         'defer: выполняется после парсинга, в порядке',
         'async: выполняется сразу как загрузится, порядок не гарантирован',

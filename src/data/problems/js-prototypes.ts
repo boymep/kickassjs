@@ -8,7 +8,7 @@ export const jsPrototypesProblems: Problem[] = [
     title: "Определи вывод: переопределение метода в цепочке",
     difficulty: "easy",
     isContextual: false,
-    description: `Что выведет этот код по строкам? Введи ответ построчно — по одному значению на строку.`,
+    description: `Что выведет этот код по строкам? Введите ответ построчно — по одному значению на строку.`,
     code: `class Animal {
   speak() { return 'generic'; }
 }
@@ -40,10 +40,10 @@ console.log(p instanceof Animal);`,
     kind: "find-bug",
     id: "jsp-p7",
     topicId: "js-prototypes",
-    title: "Найди баг: constructor после наследования через прототип",
+    title: "Найдите баг: constructor после наследования через прототип",
     difficulty: "medium",
     isContextual: false,
-    description: `Класс Dog наследует от Animal через ручную сборку прототипа. Но что-то не так: после создания экземпляра \`new Dog('Rex').constructor\` указывает не на Dog. Найди и почини баг, чтобы все тесты прошли.`,
+    description: `Класс Dog наследует от Animal через ручную сборку прототипа. Но что-то не так: после создания экземпляра \`new Dog('Rex').constructor\` указывает не на Dog. Найдите и почини баг, чтобы все тесты прошли.`,
     buggyCode: `function Animal(name) {
   this.name = name;
 }
@@ -127,17 +127,17 @@ Dog.prototype.bark = function () {
     kind: "refactor",
     id: "jsp-p8",
     topicId: "js-prototypes",
-    title: "Перепиши: прототипное наследование → ES2015 class",
+    title: "Перепишите: прототипное наследование → ES2015 class",
     difficulty: "medium",
     isContextual: false,
-    description: `Дан рабочий код с ручным прототипным наследованием в стиле ES5. Перепиши его на современный синтаксис \`class\` / \`extends\` / \`super\`.
+    description: `Дан рабочий код с ручным прототипным наследованием в стиле ES5. Перепишите его на современный синтаксис \`class\` / \`extends\` / \`super\`.
 
 Поведение должно остаться идентичным:
 - \`new Square(3).area()\` → \`9\`
 - \`new Square(3).describe()\` → \`'Фигура: square, площадь 9'\`
 - \`new Square(3) instanceof Shape\` → \`true\`
 
-Используй \`class Shape\`, \`class Square extends Shape\` и \`super(...)\` в конструкторе.`,
+Используйте \`class Shape\`, \`class Square extends Shape\` и \`super(...)\` в конструкторе.`,
     functionName: "jsp_p8_test",
     starterCode: `function Shape(kind) {
   this.kind = kind;
@@ -655,7 +655,7 @@ Object.getPrototypeOf(noProto); // → null
     id: "jsp-h1",
     topicId: "js-prototypes",
     kind: "implement",
-    title: "Реализуй оператор new как функцию",
+    title: "Реализуйте оператор new как функцию",
     difficulty: "hard",
     isContextual: false,
     description: `Реализуйте функцию \`myNew(Constructor, ...args)\`, которая воспроизводит поведение оператора \`new\`:
@@ -846,7 +846,7 @@ d instanceof Animal  // → true
     id: "jsp-e2",
     topicId: "js-prototypes",
     kind: "predict-output",
-    title: "Предскажи вывод: hasOwnProperty vs in",
+    title: "Что выведет код: hasOwnProperty vs in",
     difficulty: "easy",
     isContextual: false,
     description: `Объект \`child\` создан через \`Object.create(parent)\` — поэтому \`parent\` оказывается в его цепочке прототипов. У \`child\` есть собственное свойство \`own\`, у \`parent\` — свойство \`inherited\`.
@@ -909,7 +909,7 @@ console.log(child.hasOwnProperty('inherited'));`,
     hints: [
       'Заведи `Map<original, clone>`, чтобы не клонировать одно и то же значение дважды — заодно это поможет корректно отрабатывать циклы.',
       'Чтобы сохранить прототип, создавай клон через `Object.create(Object.getPrototypeOf(value))`, а не через литерал `{}`.',
-      'Не забудь про особые случаи: `null` (у него `typeof === "object"`), `Date` и `Array`.',
+      'Не забудьте про особые случаи: `null` (у него `typeof === "object"`), `Date` и `Array`.',
     ],
     solutionCode: `function deepClone(value, seen = new Map()) {
   if (value === null || typeof value !== 'object') return value;

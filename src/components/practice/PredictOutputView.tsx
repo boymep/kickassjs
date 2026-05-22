@@ -72,7 +72,7 @@ export default function PredictOutputView({ problem }: PredictOutputViewProps) {
           multiline
           minRows={3}
           fullWidth
-          placeholder="Введи ожидаемый вывод по строкам, как в консоли"
+          placeholder="Введите ожидаемый вывод по строкам, как в консоли"
           slotProps={{ htmlInput: { spellCheck: false, style: { fontFamily: '"Fira Code", "SF Mono", Consolas, monospace', fontSize: 13 } } }}
           disabled={submitted && isCorrect}
         />
@@ -104,7 +104,7 @@ export default function PredictOutputView({ problem }: PredictOutputViewProps) {
             </Alert>
           ) : (
             <Alert severity="warning" icon={<HighlightOffIcon />}>
-              Не совпадает. Обрати внимание на пробелы, переводы строк и порядок вывода.
+              Не совпадает. Обратите внимание на пробелы, переводы строк и порядок вывода.
             </Alert>
           )}
         </Box>

@@ -139,7 +139,7 @@ export default function Sidebar({ onClose }: { onClose?: () => void }) {
       </ListItemButton>
       <ListItemButton selected={location.pathname === '/bug-hunt'} onClick={() => go('/bug-hunt')}>
         <ListItemIcon><BugReportIcon /></ListItemIcon>
-        <ListItemText primary="Найди баг" />
+        <ListItemText primary="Найдите баг" />
       </ListItemButton>
     </List>
   );

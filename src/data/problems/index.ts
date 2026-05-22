@@ -39,6 +39,16 @@ const problemsMap: Record<string, Problem[]> = {
   'node-optimization': nodeOptimizationProblems,
 };
 
+const DIFFICULTY_RANK: Record<Problem['difficulty'], number> = {
+  easy: 0,
+  medium: 1,
+  hard: 2,
+};
+
 export function getProblems(slug: string): Problem[] {
-  return problemsMap[slug] ?? [];
+  const list = problemsMap[slug];
+  if (!list) return [];
+  return [...list].sort(
+    (a, b) => DIFFICULTY_RANK[a.difficulty] - DIFFICULTY_RANK[b.difficulty],
+  );
 }

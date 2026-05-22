@@ -535,7 +535,7 @@ fetchWithRetry = async function (arg) {
     title: "Определи вывод: middleware-цепочка Express",
     difficulty: "medium",
     isContextual: false,
-    description: `Перед тобой middleware-цепочка в стиле Express: каждый middleware печатает строку до \`next()\` и (опционально) после. Введи каждую напечатанную строку на отдельной строке поля ответа.
+    description: `Перед вами middleware-цепочка в стиле Express: каждый middleware печатает строку до \`next()\` и (опционально) после. Введите каждую напечатанную строку на отдельной строке поля ответа.
 
 **Подсказка:** middleware выполняются строго в порядке регистрации. \`next()\` синхронно вызывает следующий middleware, а после его возврата управление возвращается обратно — поэтому строки «после \`next()\`» печатаются в обратном порядке.`,
     code: `function runPipeline(middlewares, req, res) {
@@ -581,7 +581,7 @@ runPipeline([a, b, c], {}, {});`,
     kind: "find-bug",
     id: "nn-p7",
     topicId: "node-network",
-    title: "Найди баг: конвейер middleware обрывается",
+    title: "Найдите баг: конвейер middleware обрывается",
     difficulty: "easy",
     isContextual: false,
     description: `Функция \`runPipeline(middlewares, req)\` имитирует Express-конвейер: запускает middleware по очереди, и каждый из них дописывает свой идентификатор в \`req.trace\`. Тесты ожидают, что после прогона цепочки \`req.trace === 'AUTH|LOG|HANDLER'\`.
@@ -651,7 +651,7 @@ function nn_p7_test(arg) {
     ],
     hints: [
       'Пройди по коду мысленно: что происходит после того, как authMw выполнил свою работу? Управление должно перейти дальше — что для этого нужно вызвать?',
-      'Сравни authMw с logMw. Что делает logMw, чего нет в authMw?',
+      'Сравните authMw с logMw. Что делает logMw, чего нет в authMw?',
     ],
     solutionCode: `function authMw(req, res, next) {
   req.trace = (req.trace ?? '') + 'AUTH';

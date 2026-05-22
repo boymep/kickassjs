@@ -5,7 +5,7 @@ export const jsAsyncFlashcards: TopicFlashcards = {
   cards: [
     {
       id: 'jsa-f1',
-      question: 'Что такое Promise? Опиши три состояния и переходы между ними.',
+      question: 'Что такое Promise? Опишите три состояния и переходы между ними.',
       answer:
         'Promise — объект-обёртка над асинхронной операцией. Состояния: pending (ожидание), fulfilled (успех), rejected (ошибка). Переход из pending — необратим: промис либо выполнен, либо отклонён навсегда.',
       keyPoints: [
@@ -21,7 +21,7 @@ export const jsAsyncFlashcards: TopicFlashcards = {
       answer:
         'Четыре метода параллельного запуска промисов с разной семантикой: all — все или ошибка, allSettled — все с результатами, race — первый завершившийся, any — первый успешный.',
       keyPoints: [
-        'Promise.all: первый rejected → общий reject. Используй когда нужны все результаты',
+        'Promise.all: первый rejected → общий reject. Используйте когда нужны все результаты',
         'Promise.allSettled: всегда ждёт всех, возвращает [{status, value/reason}]',
         'Promise.race: первый resolved или rejected — победитель',
         'Promise.any: первый fulfilled. AggregateError если все rejected',

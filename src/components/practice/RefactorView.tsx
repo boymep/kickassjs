@@ -56,7 +56,7 @@ export default function RefactorView({ problem }: RefactorViewProps) {
     <>
       <ProblemHeader problem={problem} />
       <Alert severity="info" sx={{ mb: 2 }}>
-        Стартовый код корректен, но медленный. Сделай его быстрее, не ломая правильность.
+        Стартовый код корректен, но медленный. Сделайте его быстрее, не ломая правильность.
         {problem.perfTest && (
           <Box sx={{ mt: 0.5, fontSize: '0.85em' }}>
             <SpeedIcon fontSize="inherit" sx={{ verticalAlign: 'middle', mr: 0.5 }} />

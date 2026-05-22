@@ -271,9 +271,9 @@ limiter('user2'); // true (другой пользователь)
       },
     ],
     hints: [
-      'Используй `Map` для хранения данных о каждом пользователе: `{ count, resetAt }`.',
+      'Используйте `Map` для хранения данных о каждом пользователе: `{ count, resetAt }`.',
       'При каждом вызове проверяй, не истекло ли window (`Date.now() > resetAt`). Если истекло — сбрось `count`.',
-      'Если `count < limit` — увеличь его и верни `true`. Иначе — `false`.',
+      'Если `count < limit` — увеличьте его и верни `true`. Иначе — `false`.',
     ],
     solutionCode: `function createRateLimiter(limit, windowMs) {
   const clients = new Map();

@@ -201,7 +201,7 @@ export default function HomePage() {
                   <Typography variant="h6" sx={{ fontSize: '1rem' }}>Определи паттерн</Typography>
                 </Box>
                 <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.8rem' }}>
-                  Читаешь условие задачи — выбираешь алгоритм
+                  Читаете условие задачи — выбираете алгоритм
                 </Typography>
               </CardContent>
             </CardActionArea>
@@ -243,10 +243,10 @@ export default function HomePage() {
               <CardContent sx={{ p: 1 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
                   <BugReportIcon sx={{ fontSize: 32 }} />
-                  <Typography variant="h6" sx={{ fontSize: '1rem' }}>Найди баг</Typography>
+                  <Typography variant="h6" sx={{ fontSize: '1rem' }}>Найдите баг</Typography>
                 </Box>
                 <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.8rem' }}>
-                  20 реальных ошибок из кода JS / Node.js — найди и объясни
+                  20 реальных ошибок из кода JS / Node.js — найдите и объясните
                 </Typography>
               </CardContent>
             </CardActionArea>

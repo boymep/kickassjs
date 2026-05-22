@@ -35,7 +35,7 @@ const DIFFICULTY_COLOR: Record<
 
 const KIND_LABEL: Record<ProblemKind, string> = {
   implement: "Реализовать",
-  "predict-output": "Определить вывод",
+  "predict-output": "Что выведет код?",
   "find-bug": "Найти баг",
   refactor: "Оптимизировать",
 };

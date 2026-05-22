@@ -565,7 +565,7 @@ btn.click();`,
   {
     id: 'jsd-p2',
     topicId: 'js-dom',
-    title: 'Найди баг: отписка от события не работает',
+    title: 'Найдите баг: отписка от события не работает',
     difficulty: 'medium',
     isContextual: false,
     kind: 'find-bug',
@@ -614,7 +614,7 @@ btn.click();`,
       },
     ],
     hints: [
-      'Посмотри внимательно на то, что передаётся в addEventListener и removeEventListener. Это одно и то же?',
+      'Посмотрите внимательно на то, что передаётся в addEventListener и removeEventListener. Это одно и то же?',
       'removeEventListener удаляет обработчик по ссылке. Что происходит при создании новой функции на каждой строке?',
     ],
     solutionCode: `function subscribe(emitter, type, fn) {
@@ -839,7 +839,7 @@ closestBySelector(item, '.missing')    // → null
       { id: 'jsdom-h1-t5', inputDisplay: 'нет совпадения → null', inputArgs: ['no-match'], expected: null },
     ],
     hints: [
-      'Как двигаться от элемента вверх по дереву DOM, пока не найдёшь совпадение или не достигнешь вершины?',
+      'Как двигаться от элемента вверх по дереву DOM, пока не найдёте совпадение или не достигнете вершины?',
       'Селектор может быть тегом, классом, id или атрибутом. По какому признаку понять, что именно задано?',
     ],
     solutionCode: `function closestBySelector(element, selector) {
@@ -1033,7 +1033,7 @@ function patch(parent, oldVNode, newVNode, domNode) {
     id: 'jsdom-e2',
     topicId: 'js-dom',
     kind: 'predict-output',
-    title: 'Предскажи вывод: event.target vs event.currentTarget',
+    title: 'Что выведет код: event.target vs event.currentTarget',
     difficulty: 'easy',
     isContextual: false,
     description: `На \`<div id="outer">\` повесили обработчик клика. Внутри лежит \`<button id="btn">\`. Пользователь кликнул по кнопке.
