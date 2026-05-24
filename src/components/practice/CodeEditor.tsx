@@ -17,7 +17,7 @@ export default function CodeEditor({ value, onChange }: Props) {
   return (
     <Box
       sx={{
-        my: 2,
+        mb: 3,
         border: isDark ? '1px solid rgba(255,255,255,0.08)' : '1px solid rgba(0,0,0,0.08)',
         borderRadius: '6px',
         overflow: 'hidden',

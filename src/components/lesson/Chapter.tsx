@@ -24,11 +24,7 @@ export default function Chapter({ chapter, showCheckpoint = true }: ChapterProps
         <TheoryBlocks blocks={chapter.blocks} />
       </Box>
 
-      {chapter.playground && (
-        <Box sx={{ mt: 3 }}>
-          <InlinePlayground playground={chapter.playground} />
-        </Box>
-      )}
+      {chapter.playground && <InlinePlayground playground={chapter.playground} />}
 
       {showCheckpoint && chapter.checkpoint && chapter.checkpoint.length > 0 && (
         <CheckpointQuiz questions={chapter.checkpoint} />

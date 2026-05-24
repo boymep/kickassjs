@@ -36,7 +36,7 @@ export default function CheckpointQuiz({ questions }: CheckpointQuizProps) {
           t.palette.mode === 'dark' ? 'rgba(0,122,255,0.05)' : 'rgba(0,122,255,0.04)',
       }}
     >
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5, color: 'primary.main' }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2, color: 'primary.main' }}>
         <LightbulbIcon fontSize="small" />
         <Typography variant="subtitle2" sx={{ lineHeight: 1.3, m: 0, color: 'inherit' }}>
           Проверьте себя
@@ -45,7 +45,7 @@ export default function CheckpointQuiz({ questions }: CheckpointQuizProps) {
       </Box>
       <QuestionRenderer question={current} answered={answered} onAnswer={() => setAnswered(true)} />
       {answered && !isLast && (
-        <Box sx={{ mt: 1.5, display: 'flex', justifyContent: 'flex-end' }}>
+        <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end' }}>
           <Button
             variant="contained"
             size="small"

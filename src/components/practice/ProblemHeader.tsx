@@ -33,7 +33,7 @@ interface ProblemHeaderProps {
 export default function ProblemHeader({ problem }: ProblemHeaderProps) {
   const kind = getProblemKind(problem);
   return (
-    <Paper sx={{ p: 3, mb: 3 }}>
+    <Paper sx={{ p: { xs: 2.5, md: 3 }, mb: 3 }}>
       <Box
         sx={{
           display: "flex",
@@ -68,7 +68,7 @@ export default function ProblemHeader({ problem }: ProblemHeaderProps) {
       </Box>
       <Box
         sx={{
-          "& p": { mt: 0, mb: 1 },
+          "& p": { mt: 0, mb: 1.5, '&:last-child': { mb: 0 } },
           "& code": {
             backgroundColor: "action.hover",
             px: 0.5,

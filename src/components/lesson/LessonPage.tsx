@@ -179,7 +179,7 @@ export default function LessonPage() {
 function IntroPage({ lesson }: { lesson: Lesson }) {
   return (
     <Paper sx={{ p: { xs: 2.5, md: 4 } }}>
-      <Typography variant="h4" sx={{ mb: 2.5, lineHeight: 1.2 }}>
+      <Typography variant="h4" sx={{ mb: 3, lineHeight: 1.2 }}>
         Введение
       </Typography>
       <Markdown>{lesson.intro.whyItMatters}</Markdown>
@@ -195,7 +195,7 @@ function IntroPage({ lesson }: { lesson: Lesson }) {
               t.palette.mode === 'dark' ? 'rgba(0,122,255,0.08)' : 'rgba(0,122,255,0.05)',
           }}
         >
-          <Typography variant="overline" color="primary" sx={{ display: 'block', mb: 0.5 }}>
+          <Typography variant="overline" color="primary" sx={{ display: 'block', mb: 1 }}>
             На собеседовании
           </Typography>
           <Typography variant="body1" sx={{ lineHeight: 1.6 }}>
@@ -210,7 +210,7 @@ function IntroPage({ lesson }: { lesson: Lesson }) {
 function CheatsheetPage({ cheatsheet }: { cheatsheet: string }) {
   return (
     <Paper sx={{ p: { xs: 2.5, md: 4 } }}>
-      <Typography variant="h4" sx={{ mb: 2, lineHeight: 1.2 }}>
+      <Typography variant="h4" sx={{ mb: 1, lineHeight: 1.2 }}>
         Шпаргалка
       </Typography>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>

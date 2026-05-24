@@ -57,13 +57,15 @@ export default function PredictOutputView({ problem }: PredictOutputViewProps) {
   return (
     <>
       <ProblemHeader problem={problem} />
-      <Paper sx={{ p: 2, mb: 3 }}>
-        <Typography variant="overline" color="text.secondary">Код</Typography>
+      <Paper sx={{ p: { xs: 2.5, md: 3 }, mb: 3 }}>
+        <Typography variant="overline" color="text.secondary" sx={{ display: 'block', mb: 1.5 }}>
+          Код
+        </Typography>
         <CodeBlock code={problem.code} />
       </Paper>
 
-      <Paper sx={{ p: 2, mb: 2 }}>
-        <Typography variant="overline" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
+      <Paper sx={{ p: { xs: 2.5, md: 3 }, mb: 3 }}>
+        <Typography variant="overline" color="text.secondary" sx={{ display: 'block', mb: 1.5 }}>
           Что выведет console.log?
         </Typography>
         <TextField
@@ -78,7 +80,7 @@ export default function PredictOutputView({ problem }: PredictOutputViewProps) {
         />
       </Paper>
 
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 2, flexWrap: 'wrap', mt: 2 }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 2, flexWrap: 'wrap', mb: 3 }}>
         <Box sx={{ display: 'flex', gap: 1.5 }}>
           <Button variant="contained" startIcon={<CheckCircleIcon />} onClick={handleSubmit} disabled={!answer.trim()}>
             Проверить
@@ -97,7 +99,7 @@ export default function PredictOutputView({ problem }: PredictOutputViewProps) {
       <HintsDisplay hints={problem.hints} hintIndex={hintIndex} />
 
       {submitted && (
-        <Box sx={{ mt: 2 }}>
+        <Box sx={{ mb: 3 }}>
           {isCorrect ? (
             <Alert severity="success" icon={<CheckCircleIcon />}>
               Верно. Это и есть фактический вывод.
@@ -111,8 +113,8 @@ export default function PredictOutputView({ problem }: PredictOutputViewProps) {
       )}
 
       {actualRun !== null && (
-        <Paper variant="outlined" sx={{ p: 2, mt: 2 }}>
-          <Typography variant="overline" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
+        <Paper variant="outlined" sx={{ p: { xs: 2.5, md: 3 }, mb: 3 }}>
+          <Typography variant="overline" color="text.secondary" sx={{ display: 'block', mb: 1.5 }}>
             Фактический вывод
           </Typography>
           {result?.error ? (
@@ -137,8 +139,8 @@ export default function PredictOutputView({ problem }: PredictOutputViewProps) {
       )}
 
       <Collapse in={showSolution}>
-        <Paper sx={{ p: 2, mt: 2 }}>
-          <Typography variant="h6" gutterBottom>Эталонный вывод</Typography>
+        <Paper sx={{ p: { xs: 2.5, md: 3 }, mb: 3 }}>
+          <Typography variant="h6" sx={{ mb: 2 }}>Эталонный вывод</Typography>
           <Box
             component="pre"
             sx={{
@@ -153,7 +155,7 @@ export default function PredictOutputView({ problem }: PredictOutputViewProps) {
           >
             {problem.expected}
           </Box>
-          <Typography variant="h6" sx={{ mt: 2 }} gutterBottom>Разбор</Typography>
+          <Typography variant="h6" sx={{ mt: 3, mb: 2 }}>Разбор</Typography>
           <CodeBlock code={problem.solutionCode} />
         </Paper>
       </Collapse>

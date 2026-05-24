@@ -13,7 +13,7 @@ export default function TestResults({ results, testCases }: Props) {
   const total = results.length;
 
   return (
-    <Paper sx={{ p: 2, mt: 2 }}>
+    <Paper sx={{ p: { xs: 2.5, md: 3 }, mb: 3 }}>
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
         <Typography variant="h6">Результаты</Typography>
         <Chip

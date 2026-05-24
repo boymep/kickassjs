@@ -75,7 +75,7 @@ export default function ProblemView() {
 
   return (
     <Box>
-      <Box sx={{ mb: 2 }}>{navBar}</Box>
+      <Box sx={{ mb: 3 }}>{navBar}</Box>
       {isImplement(problem) && <ImplementProblemView problem={problem} />}
       {isPredictOutput(problem) && <PredictOutputView problem={problem} />}
       {isFindBug(problem) && <FindBugView problem={problem} />}

@@ -87,7 +87,7 @@ export default function TheoryBlocks({ blocks }: TheoryBlocksProps) {
               <Typography
                 key={idx}
                 variant="h6"
-                sx={{ mt: 4, mb: 1.5, fontSize: '1.15rem', fontWeight: 600 }}
+                sx={{ mt: 3, mb: 1.5, fontSize: '1.15rem', fontWeight: 600 }}
               >
                 {block.content}
               </Typography>
@@ -98,7 +98,7 @@ export default function TheoryBlocks({ blocks }: TheoryBlocksProps) {
                 key={idx}
                 variant="body1"
                 sx={{
-                  mb: 1.75,
+                  mb: 2,
                   whiteSpace: 'pre-line',
                   lineHeight: 1.75,
                   color: 'text.primary',
@@ -108,7 +108,11 @@ export default function TheoryBlocks({ blocks }: TheoryBlocksProps) {
               </Typography>
             );
           case 'code':
-            return <CodeBlock key={idx} code={block.content} language={block.language} />;
+            return (
+              <Box key={idx} sx={{ mb: 2 }}>
+                <CodeBlock code={block.content} language={block.language} />
+              </Box>
+            );
           case 'list':
             return (
               <Box
@@ -157,7 +161,7 @@ export default function TheoryBlocks({ blocks }: TheoryBlocksProps) {
               <Box
                 key={idx}
                 sx={{
-                  my: 2.5,
+                  my: 3,
                   p: 2,
                   borderRadius: 2,
                   borderLeft: 3,

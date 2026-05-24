@@ -249,7 +249,7 @@ export default function ClosureScopeViz() {
         </Typography>
       </Box>
 
-      <Box sx={{ display: 'flex', gap: 1, mt: 2, justifyContent: 'center' }}>
+      <Box sx={{ display: 'flex', gap: 1, mt: 2 }}>
         <Button
           size="small"
           variant="contained"

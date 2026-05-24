@@ -20,8 +20,8 @@ export default function OutputQuestion({ question, onAnswer, answered }: Props) 
   };
 
   return (
-    <Paper sx={{ p: 3 }}>
-      <Typography variant="h6" gutterBottom>
+    <Paper sx={{ p: { xs: 2.5, md: 3 } }}>
+      <Typography variant="h6" sx={{ mb: 2 }}>
         Что выведет код?
       </Typography>
       <Typography variant="body1" sx={{ mb: 2 }}>

@@ -205,7 +205,7 @@ export default function FinalQuiz({ questions }: FinalQuizProps) {
   return (
     <Box ref={containerRef}>
       {/* Header */}
-      <Box sx={{ mb: 2 }}>
+      <Box sx={{ mb: 3 }}>
         <Box
           sx={{
             display: "flex",

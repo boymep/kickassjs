@@ -55,7 +55,11 @@ export default function Markdown({ children, compact = false }: MarkdownProps) {
             const langMatch = /language-([\w-]+)/.exec(className ?? '');
             const isBlock = !!langMatch || text.includes('\n');
             if (isBlock) {
-              return <CodeBlock code={text} language={langMatch?.[1] ?? 'javascript'} />;
+              return (
+                <Box sx={{ mb: 2 }}>
+                  <CodeBlock code={text} language={langMatch?.[1] ?? 'javascript'} />
+                </Box>
+              );
             }
             return (
               <Box

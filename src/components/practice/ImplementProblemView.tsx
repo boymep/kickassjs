@@ -42,7 +42,7 @@ export default function ImplementProblemView({ problem }: ImplementProblemViewPr
     <>
       <ProblemHeader problem={problem} />
       <CodeEditor value={code} onChange={setCode} />
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 2, flexWrap: 'wrap', mt: 2 }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 2, flexWrap: 'wrap', mb: 3 }}>
         <Box sx={{ display: 'flex', gap: 1.5 }}>
           <Button variant="contained" startIcon={<PlayArrowIcon />} onClick={handleRun} disabled={running}>
             {running ? 'Выполняется...' : 'Запустить'}
@@ -57,8 +57,8 @@ export default function ImplementProblemView({ problem }: ImplementProblemViewPr
       </Box>
       <HintsDisplay hints={problem.hints} hintIndex={hintIndex} />
       <Collapse in={showSolution}>
-        <Paper sx={{ p: 2, mt: 2 }}>
-          <Typography variant="h6" gutterBottom>Решение</Typography>
+        <Paper sx={{ p: { xs: 2.5, md: 3 }, mb: 3 }}>
+          <Typography variant="h6" sx={{ mb: 2 }}>Решение</Typography>
           <CodeBlock code={problem.solutionCode} />
         </Paper>
       </Collapse>

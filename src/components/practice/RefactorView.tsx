@@ -55,7 +55,7 @@ export default function RefactorView({ problem }: RefactorViewProps) {
   return (
     <>
       <ProblemHeader problem={problem} />
-      <Alert severity="info" sx={{ mb: 2 }}>
+      <Alert severity="info" sx={{ mb: 3 }}>
         Стартовый код корректен, но медленный. Сделайте его быстрее, не ломая правильность.
         {problem.perfTest && (
           <Box sx={{ mt: 0.5, fontSize: '0.85em' }}>
@@ -65,7 +65,7 @@ export default function RefactorView({ problem }: RefactorViewProps) {
         )}
       </Alert>
       <CodeEditor value={code} onChange={setCode} />
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 2, flexWrap: 'wrap', mt: 2 }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 2, flexWrap: 'wrap', mb: 3 }}>
         <Box sx={{ display: 'flex', gap: 1.5 }}>
           <Button variant="contained" startIcon={<PlayArrowIcon />} onClick={handleRun} disabled={running}>
             {running ? 'Выполняется...' : 'Запустить'}
@@ -81,8 +81,8 @@ export default function RefactorView({ problem }: RefactorViewProps) {
       <HintsDisplay hints={problem.hints} hintIndex={hintIndex} />
       {results && <TestResults results={results} testCases={allTestCases} />}
       <Collapse in={showSolution}>
-        <Paper sx={{ p: 2, mt: 2 }}>
-          <Typography variant="h6" gutterBottom>Эффективное решение</Typography>
+        <Paper sx={{ p: { xs: 2.5, md: 3 }, mb: 3 }}>
+          <Typography variant="h6" sx={{ mb: 2 }}>Эффективное решение</Typography>
           <CodeBlock code={problem.solutionCode} />
         </Paper>
       </Collapse>

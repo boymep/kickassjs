@@ -29,9 +29,9 @@ interface HintsDisplayProps {
 export function HintsDisplay({ hints, hintIndex }: HintsDisplayProps) {
   if (hintIndex < 0 || hints.length === 0) return null;
   return (
-    <Box sx={{ mt: 2 }}>
+    <Box sx={{ mb: 3 }}>
       {hints.slice(0, hintIndex + 1).map((hint, i) => (
-        <Alert key={i} severity="info" sx={{ mb: 1 }}>
+        <Alert key={i} severity="info" sx={{ mb: 1, '&:last-child': { mb: 0 } }}>
           Подсказка {i + 1}: {hint}
         </Alert>
       ))}

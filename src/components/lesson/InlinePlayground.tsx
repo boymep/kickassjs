@@ -51,8 +51,8 @@ export default function InlinePlayground({ playground }: InlinePlaygroundProps) 
       : null;
 
   return (
-    <Paper variant="outlined" sx={{ p: 2, my: 3, borderRadius: 2 }}>
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1, flexWrap: 'wrap' }}>
+    <Paper variant="outlined" sx={{ p: { xs: 2, md: 2.5 }, my: 3, borderRadius: 2 }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5, flexWrap: 'wrap' }}>
         <Typography
           variant="overline"
           color="primary"
@@ -71,7 +71,7 @@ export default function InlinePlayground({ playground }: InlinePlaygroundProps) 
         )}
       </Box>
       {playground.description && (
-        <Typography variant="body2" sx={{ mb: 1.5 }}>
+        <Typography variant="body2" sx={{ mb: 2 }}>
           <Inline>{playground.description}</Inline>
         </Typography>
       )}
@@ -80,7 +80,7 @@ export default function InlinePlayground({ playground }: InlinePlaygroundProps) 
           border: isDark ? '1px solid rgba(255,255,255,0.08)' : '1px solid rgba(0,0,0,0.08)',
           borderRadius: 1.5,
           overflow: 'hidden',
-          mb: 1.5,
+          mb: 2,
           '& .cm-editor': { fontSize: '13.5px' },
           '& .cm-editor.cm-focused': { outline: '2px solid #007AFF', outlineOffset: '-1px' },
           '& .cm-gutters': {
@@ -124,7 +124,7 @@ export default function InlinePlayground({ playground }: InlinePlaygroundProps) 
         </Button>
       </Stack>
       {result && (
-        <Box sx={{ mt: 2 }}>
+        <Box sx={{ mt: 3 }}>
           {result.error ? (
             <Alert severity="error" icon={<HighlightOffIcon />}>
               <Box sx={{ fontFamily: 'monospace', fontSize: 13 }}>{result.error}</Box>
@@ -138,7 +138,7 @@ export default function InlinePlayground({ playground }: InlinePlaygroundProps) 
               Вывод не совпадает с ожидаемым. Сравните строки внимательно.
             </Alert>
           ) : null}
-          <Typography variant="overline" color="text.secondary" sx={{ display: 'block', mt: 1.5 }}>
+          <Typography variant="overline" color="text.secondary" sx={{ display: 'block', mt: 2, mb: 1 }}>
             Вывод
           </Typography>
           <Box
@@ -159,7 +159,7 @@ export default function InlinePlayground({ playground }: InlinePlaygroundProps) 
           </Box>
           {expectedNormalised && passed === false && (
             <>
-              <Typography variant="overline" color="text.secondary" sx={{ display: 'block', mt: 1.5 }}>
+              <Typography variant="overline" color="text.secondary" sx={{ display: 'block', mt: 2, mb: 1 }}>
                 Ожидалось
               </Typography>
               <Box

@@ -42,11 +42,11 @@ export default function FindBugView({ problem }: FindBugViewProps) {
   return (
     <>
       <ProblemHeader problem={problem} />
-      <Alert severity="warning" sx={{ mb: 2 }}>
+      <Alert severity="warning" sx={{ mb: 3 }}>
         В коде ниже спрятан баг — код пройдёт лишь часть тестов. Найдите и почини.
       </Alert>
       <CodeEditor value={code} onChange={setCode} />
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 2, flexWrap: 'wrap', mt: 2 }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 2, flexWrap: 'wrap', mb: 3 }}>
         <Box sx={{ display: 'flex', gap: 1.5 }}>
           <Button variant="contained" startIcon={<PlayArrowIcon />} onClick={handleRun} disabled={running}>
             {running ? 'Выполняется...' : 'Запустить'}
@@ -65,15 +65,15 @@ export default function FindBugView({ problem }: FindBugViewProps) {
       <HintsDisplay hints={problem.hints} hintIndex={hintIndex} />
       {results && <TestResults results={results} testCases={problem.testCases} />}
       {allPassed && (
-        <Alert severity="success" sx={{ mt: 2 }}>
+        <Alert severity="success" sx={{ mb: 3 }}>
           <strong>Готово.</strong> {problem.bugSummary}
         </Alert>
       )}
       <Collapse in={showSolution}>
-        <Paper sx={{ p: 2, mt: 2 }}>
-          <Typography variant="h6" gutterBottom>Что было не так</Typography>
-          <Typography variant="body2" sx={{ mb: 2 }}>{problem.bugSummary}</Typography>
-          <Typography variant="h6" gutterBottom>Чистая версия</Typography>
+        <Paper sx={{ p: { xs: 2.5, md: 3 }, mb: 3 }}>
+          <Typography variant="h6" sx={{ mb: 2 }}>Что было не так</Typography>
+          <Typography variant="body2" sx={{ mb: 3 }}>{problem.bugSummary}</Typography>
+          <Typography variant="h6" sx={{ mb: 2 }}>Чистая версия</Typography>
           <CodeBlock code={problem.solutionCode} />
         </Paper>
       </Collapse>

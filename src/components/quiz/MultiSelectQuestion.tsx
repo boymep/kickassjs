@@ -45,8 +45,8 @@ export default function MultiSelectQuestion({ question, onAnswer, answered }: Pr
     [...selected].every((i) => correct.has(i));
 
   return (
-    <Paper sx={{ p: 3 }}>
-      <Typography variant="h6" gutterBottom>
+    <Paper sx={{ p: { xs: 2.5, md: 3 } }}>
+      <Typography variant="h6" sx={{ mb: 2 }}>
         Выберите все правильные
       </Typography>
       <Typography variant="body1" sx={{ mb: 2 }}>

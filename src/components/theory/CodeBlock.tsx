@@ -19,7 +19,7 @@ export default function CodeBlock({ code, language = 'javascript' }: CodeBlockPr
   };
 
   return (
-    <Box sx={{ position: 'relative', my: 2 }}>
+    <Box sx={{ position: 'relative' }}>
       <IconButton
         size="small"
         onClick={handleCopy}
