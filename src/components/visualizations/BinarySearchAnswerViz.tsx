@@ -43,8 +43,8 @@ function buildSteps(): Step[] {
       fits,
       result: fits ? mid : best,
       description: fits
-        ? `speed=${mid}: ${total} ≤ ${maxHours} — подходит, сужаем right=${mid - 1}`
-        : `speed=${mid}: ${total} > ${maxHours} — не подходит, сужаем left=${mid + 1}`,
+        ? `speed=${mid}: ${total} ч ≤ ${maxHours} ч — успеваем, пробуем меньшую скорость (right=${mid - 1})`
+        : `speed=${mid}: ${total} ч > ${maxHours} ч — не успеваем, нужно быстрее (left=${mid + 1})`,
       calcDetail: `${detail} = ${total}`,
     });
     if (fits) right = mid - 1;
@@ -113,12 +113,40 @@ export default function BinarySearchAnswerViz() {
           t.palette.mode === 'dark' ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.015)',
       }}
     >
-      <Typography variant="body2" color="text.secondary" sx={{ mb: 0.25 }}>
-        Задача: orders = [{orders.join(', ')}], hours = <b>{maxHours}</b>
-      </Typography>
-      <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 2 }}>
-        Ищем минимальную скорость доставки. Пространство ответов: speed от 1 до {Math.max(...orders)}.
-      </Typography>
+      <Box
+        sx={{
+          mb: 2,
+          p: 1.5,
+          borderRadius: 1.5,
+          bgcolor: (t) =>
+            t.palette.mode === 'dark' ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)',
+        }}
+      >
+        <Typography variant="body2" sx={{ mb: 1, color: 'text.primary' }}>
+          <b>Задача.</b> Есть 4 заказа —{' '}
+          <Box component="code" sx={{ fontFamily: 'monospace' }}>
+            {orders.join(', ')}
+          </Box>{' '}
+          посылок в каждом. За один час курьер обрабатывает <b>speed</b> посылок и только из
+          одного заказа (за следующий заказ берётся со следующего часа). Какая{' '}
+          <b>минимальная</b> speed позволит развезти всё за <b>{maxHours} часов</b>?
+        </Typography>
+        <Typography variant="body2" sx={{ mb: 1, color: 'text.secondary' }}>
+          На один заказ из <i>size</i> посылок уходит{' '}
+          <Box component="code" sx={{ fontFamily: 'monospace' }}>⌈size / speed⌉</Box>{' '}
+          часов (потолок, потому что неполный час всё равно занят). Суммируем по всем заказам —
+          получаем общее время.
+        </Typography>
+        <Typography variant="body2" sx={{ mb: 1, color: 'text.secondary' }}>
+          Чем больше speed — тем меньше общее время. Значит если справились со скоростью{' '}
+          <i>k</i>, то и с любой большей справимся тоже. Это <b>монотонность</b> — можно искать
+          границу бинарным поиском, не перебирая все варианты подряд.
+        </Typography>
+        <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+          Пространство ответов: <b>speed ∈ [1; {Math.max(...orders)}]</b>. Больше{' '}
+          {Math.max(...orders)} нет смысла — даже самый крупный заказ тогда делается за 1 час.
+        </Typography>
+      </Box>
 
       <Box sx={{ overflowX: 'auto', pb: 1 }}>
         <Box sx={{ display: 'inline-flex', flexDirection: 'column', gap: 0.5, minWidth: '100%' }}>

@@ -9,12 +9,12 @@ export const nodeStreamsLesson: Lesson = {
   topicId: 'node-streams',
 
   intro: {
-    whyItMatters: `Streams — основной API Node.js для работы с большими объёмами данных. Файл на 10 GB нельзя прочитать целиком в память, но можно обработать построчно через \`createReadStream\`. HTTP-ответ, чтение из БД, обработка CSV, gzip-компрессия — везде стримы.
+    whyItMatters: `Streams — основной API Node.js для работы с большими объёмами данных. Файл размером 10 ГБ нельзя прочитать целиком в память, но можно обработать построчно через \`createReadStream\`. HTTP-ответ, чтение из БД, обработка CSV, gzip-компрессия — везде используются стримы.
 
-На собеседовании по Node.js проверяют четыре типа стримов (Readable, Writable, Duplex, Transform), понимание backpressure, разницу между \`pipe\` и \`pipeline\`, и умение писать собственный Transform.`,
-    estimatedMinutes: 26,
+Backpressure — механизм согласования скорости источника и приёмника. Понимание четырёх типов стримов, отличий \`pipe\` от \`pipeline\`, режимов paused/flowing и совместимости с Web Streams API позволяет писать конвейеры, которые корректно работают на любых объёмах данных и не текут по памяти при ошибках.`,
+    estimatedMinutes: 28,
     interviewAngle:
-      'Интервьюера интересуют backpressure, как \`pipeline\` отличается от \`pipe\`, что произойдёт без него при ошибке, и как реализовать кастомный Transform с правильной обработкой objectMode.',
+      'Ключевые темы: четыре типа стримов (Readable, Writable, Duplex, Transform); backpressure и роль \`highWaterMark\`; различия \`pipe\` и \`pipeline\`, поведение при ошибке без \`pipeline\`; режимы paused/flowing и async-итераторы; реализация кастомного Transform с корректной обработкой \`objectMode\`; совместимость с Web Streams API.',
     prerequisites: [{ slug: 'node-event-loop', title: 'Event loop в Node.js' }],
   },
 
@@ -22,8 +22,8 @@ export const nodeStreamsLesson: Lesson = {
     // ─────────────────────────────────────────────────────────────
     {
       id: 'four-types',
-      title: 'Четыре типа стримов',
-      estimatedMinutes: 5,
+      title: 'Четыре типа стримов и режимы чтения',
+      estimatedMinutes: 6,
       blocks: [
         {
           type: 'text',
@@ -32,29 +32,37 @@ export const nodeStreamsLesson: Lesson = {
         },
         {
           type: 'list',
-          content: `**Readable** — источник данных: \`fs.createReadStream\`, HTTP-запрос на сервере, \`stdin\`. События: \`data\`, \`end\`, \`error\`.
-**Writable** — приёмник данных: \`fs.createWriteStream\`, HTTP-ответ, \`stdout\`. Методы: \`write\`, \`end\`.
-**Duplex** — и читает, и пишет независимо: TCP-сокет.
-**Transform** — Duplex, который преобразует данные «на лету»: \`zlib.createGzip\`, \`crypto.createCipher\`.`,
+          content: `Readable — источник данных: \`fs.createReadStream\`, HTTP-запрос на сервере, \`stdin\`. События: \`data\`, \`end\`, \`error\`, \`close\`.
+Writable — приёмник данных: \`fs.createWriteStream\`, HTTP-ответ, \`stdout\`. Методы: \`write\`, \`end\`, \`destroy\`.
+Duplex — и читает, и пишет независимо: TCP-сокет.
+Transform — частный случай Duplex, в котором каждый входящий чанк преобразуется и поступает на выход: \`zlib.createGzip\`, \`crypto.createCipheriv\`.`,
+        },
+        { type: 'heading', content: 'Режимы paused и flowing' },
+        {
+          type: 'text',
+          content:
+            'Readable изначально находится в режиме not flowing: данные не читаются из источника, пока их никто не запросит. Стрим переходит в режим flowing после одного из трёх действий: подписка на событие \`data\`, вызов \`resume()\` или \`pipe()\` в Writable. Обратно — через \`pause()\`. В режиме flowing данные толкаются в обработчики автоматически; в paused — читаются явным \`read()\`.',
+        },
+        { type: 'heading', content: 'Async-итераторы — современный способ чтения' },
+        {
+          type: 'text',
+          content:
+            'Любой Readable-стрим реализует \`Symbol.asyncIterator\`, поэтому его можно обходить через \`for await...of\`. Ошибки внутри цикла попадают в обычный \`try / catch\`. Выход из цикла через \`break\` или исключение автоматически уничтожает стрим, освобождая ресурсы. Это, как правило, проще ручной работы с \`pause\` / \`resume\`.',
         },
         {
           type: 'code',
           language: 'javascript',
           content: `const fs = require('node:fs');
 
-const readable = fs.createReadStream('input.txt', { encoding: 'utf8' });
-const writable = fs.createWriteStream('output.txt');
-
-readable.on('data', (chunk) => {
-  writable.write(chunk);
-});
-readable.on('end', () => writable.end());`,
+for await (const chunk of fs.createReadStream('file.txt')) {
+  process(chunk);
+}`,
         },
         {
           type: 'callout',
           calloutType: 'info',
           content:
-            'У стримов два режима: **buffer mode** (\`Buffer\` или строки) и **object mode** (произвольные JS-объекты). Object mode включается опцией \`objectMode: true\` и нужен для конвейеров обработки данных — например, парсинг JSON по строкам и далее запись в БД.',
+            'У стримов два формата данных: buffer mode (\`Buffer\` или строки) и object mode (произвольные JS-объекты). Object mode включается опцией \`objectMode: true\` и нужен для конвейеров обработки структурированных данных — например, парсинг JSON-строк и далее запись в БД. Для Transform можно задать формат раздельно: \`readableObjectMode\` и \`writableObjectMode\`.',
         },
       ],
       checkpoint: [Q['nodes-q1']!, {
@@ -81,7 +89,7 @@ readable.on('end', () => writable.end());`,
         {
           type: 'text',
           content:
-            '**Backpressure** — механизм согласования скорости источника и приёмника. Если читать из быстрого файла и писать в медленную сеть, без backpressure данные накопятся в памяти и исчерпают всю доступную RAM. Стримы решают это автоматически: \`writable.write(chunk)\` возвращает \`false\`, когда внутренний буфер заполнен (свыше \`highWaterMark\`).',
+            'Backpressure — механизм согласования скорости источника и приёмника. При чтении из быстрого файла и записи в медленную сеть без backpressure данные накапливаются в памяти и могут исчерпать всю доступную RAM. Стримы решают это автоматически: вызов \`writable.write(chunk)\` возвращает \`false\`, когда после записи объём в буфере достиг или превысил \`highWaterMark\`. Это сигнал «приостановить отправку до события \`drain\`»; данные всё ещё принимаются, но новые \`write\` приведут к ещё большему росту буфера.',
         },
         {
           type: 'code',
@@ -99,13 +107,13 @@ readable.on('data', (chunk) => {
           type: 'callout',
           calloutType: 'tip',
           content:
-            'На практике вручную backpressure пишется редко — \`pipe\` и \`pipeline\` делают это автоматически. Понимать механизм нужно, чтобы диагностировать утечки памяти и латенси в кастомных Transform.',
+            'На практике вручную backpressure пишется редко — \`pipe\`, \`pipeline\` и \`for await\` решают это автоматически. Понимание механизма необходимо для диагностики утечек памяти и роста задержек в кастомных Transform.',
         },
         { type: 'heading', content: 'highWaterMark' },
         {
           type: 'text',
           content:
-            '\`highWaterMark\` — порог буфера, при превышении которого Writable перестаёт принимать новые \`write\`. По умолчанию 16 KB для buffer-режима, 16 объектов для object-режима. Уменьшение порога даёт более плавный backpressure и меньшее пиковое потребление памяти, но больше переключений контекста.',
+            '\`highWaterMark\` — порог буфера, при превышении которого стрим перестаёт активно запрашивать или принимать данные. По умолчанию около 16 КБ для buffer-режима и 16 объектов для object-режима. У Writable это размер внутреннего буфера до сигнала \`drain\`; у Readable — лимит на количество данных, которое будет накоплено до приостановки чтения из источника. Уменьшение порога даёт более плавный backpressure и меньшее пиковое потребление памяти, но больше переключений контекста.',
         },
       ],
       checkpoint: [Q['nodes-q3']!],
@@ -114,13 +122,13 @@ readable.on('data', (chunk) => {
     // ─────────────────────────────────────────────────────────────
     {
       id: 'pipe-vs-pipeline',
-      title: 'pipe и pipeline',
+      title: 'pipe, pipeline и stream.finished',
       estimatedMinutes: 5,
       blocks: [
         {
           type: 'text',
           content:
-            '\`stream.pipe(dest)\` — простой способ перенаправить данные. Решает backpressure автоматически. Минус: при ошибке в одной из стадий другие стримы не закрываются — это утечка дескрипторов файлов и сокетов.',
+            '\`stream.pipe(dest)\` — простой способ перенаправить данные. Решает backpressure автоматически. Главный минус: \`pipe\` не подписывается на событие \`error\` целевого стрима и не разрушает источник при ошибке приёмника. При сбое в середине конвейера остальные стримы остаются открытыми — это утечка дескрипторов файлов и сокетов.',
         },
         {
           type: 'code',
@@ -135,11 +143,11 @@ createReadStream('input.txt')
 
 // Если ошибка в gzip — input и output останутся открытыми`,
         },
-        { type: 'heading', content: 'pipeline — современная замена' },
+        { type: 'heading', content: 'pipeline — рекомендуемая замена pipe' },
         {
           type: 'text',
           content:
-            '\`stream.pipeline\` корректно закрывает все стримы при ошибке и предоставляет коллбэк или промис с результатом. Стандартный способ работы со стримами в современном коде.',
+            '\`stream.pipeline\` корректно закрывает все стримы при ошибке и предоставляет коллбэк или промис с результатом. Это стандартный способ построения конвейеров в современном коде.',
         },
         {
           type: 'code',
@@ -156,11 +164,32 @@ async function compress(input, output) {
   );
 }`,
         },
+        { type: 'heading', content: 'stream.finished — ожидание одного стрима' },
+        {
+          type: 'text',
+          content:
+            '\`stream.finished\` — современный способ дождаться завершения одиночного стрима и гарантированно выполнить cleanup. По сути, это аналог \`pipeline\`, но для одного стрима. Возвращает промис в варианте \`node:stream/promises\`.',
+        },
+        {
+          type: 'code',
+          language: 'javascript',
+          content: `const { finished } = require('node:stream/promises');
+
+const rs = createReadStream('huge.log');
+rs.on('data', process);
+await finished(rs); // ждёт end или ошибку, освобождает ресурсы`,
+        },
         {
           type: 'callout',
           calloutType: 'warning',
           content:
-            '\`pipe\` не подходит для боевого кода с несколькими стадиями без обработки ошибок. \`pipeline\` гарантирует закрытие всех стримов даже при сбое в середине.',
+            'Конструктор \`createCipher\` из \`node:crypto\` устарел с Node 10. Современный аналог — \`createCipheriv(algorithm, key, iv)\`. В новом коде используется именно он.',
+        },
+        {
+          type: 'callout',
+          calloutType: 'info',
+          content:
+            'Метод \`destroy(err)\` уничтожает стрим: испускает \`error\` (если err передан) и \`close\`. Это отличается от \`end()\`, который штатно завершает Writable и не разрушает связанные стримы. \`pipeline\` использует \`destroy\` под капотом, чтобы закрыть все стримы конвейера при сбое.',
         },
       ],
       checkpoint: [Q['nodes-q7']!, {
@@ -189,7 +218,7 @@ async function compress(input, output) {
         {
           type: 'text',
           content:
-            'Transform — стрим, который читает чанк и записывает преобразованный результат. Реализуется через подкласс \`Transform\` или \`Transform.from\`. Реализуется \`_transform(chunk, encoding, callback)\` и опционально \`_flush(callback)\` для финальной порции.',
+            'Transform — стрим, который читает чанк, преобразует и записывает результат. Реализация — подкласс \`Transform\` с методом \`_transform(chunk, encoding, callback)\` и опциональным \`_flush(callback)\` для финальной порции данных, оставшихся в буфере. Параметр \`encoding\` указывает кодировку строкового чанка (например, \`utf8\`) — он не используется, если входной формат — \`Buffer\` или режим объектный.',
         },
         {
           type: 'code',
@@ -220,13 +249,69 @@ class LineSplitter extends Transform {
           type: 'callout',
           calloutType: 'info',
           content:
-            '\`pipeline\` принимает не только стримы, но и async-генераторы — это удобный способ вставить произвольную логику без подкласса \`Transform\`.',
+            '\`pipeline\` принимает не только стримы, но и async-генераторы — это удобный способ вставить произвольную логику без подкласса \`Transform\`. В Node 19+ доступен \`stream.compose\`, который собирает массив стримов и генераторов в один Duplex-стрим, который можно встраивать в другие конвейеры.',
         },
         { type: 'heading', content: 'Object mode' },
         {
           type: 'text',
           content:
-            'Если Transform читает буфер, а выдаёт объекты — \`readableObjectMode: true\`. Если читает объекты — \`writableObjectMode: true\`. Если оба — \`objectMode: true\`. Без флага попытка передать объект через \`push\` приведёт к ошибке.',
+            'Если Transform читает буфер, а выдаёт объекты, используется \`readableObjectMode: true\`. Если читает объекты — \`writableObjectMode: true\`. Если оба — \`objectMode: true\`. Object mode отключает буферизацию по байтам и снимает проверку, что чанк является \`Buffer\` или строкой; \`push\` принимает любое значение. В \`LineSplitter\` выше \`push(line)\` пушит строки именно благодаря \`readableObjectMode\`.',
+        },
+      ],
+    },
+
+    // ─────────────────────────────────────────────────────────────
+    {
+      id: 'web-streams-and-readable-from',
+      title: 'Readable.from, stream.compose и Web Streams',
+      estimatedMinutes: 5,
+      blocks: [
+        { type: 'heading', content: 'Readable.from' },
+        {
+          type: 'text',
+          content:
+            '\`Readable.from(iterable)\` — фабрика, превращающая массив, генератор или async-итератор в Readable-стрим. Удобно для тестов и для встраивания произвольных источников в конвейеры \`pipeline\`.',
+        },
+        {
+          type: 'code',
+          language: 'javascript',
+          content: `const { Readable } = require('node:stream');
+
+async function* lines() {
+  yield 'one\\n';
+  yield 'two\\n';
+}
+
+const src = Readable.from(lines());
+await pipeline(src, fs.createWriteStream('out.txt'));`,
+        },
+        { type: 'heading', content: 'stream.compose' },
+        {
+          type: 'text',
+          content:
+            '\`stream.compose(...streams)\` (Node 19+) объединяет цепочку стримов и асинхронных функций в один Duplex-стрим. Получившийся объект можно подставлять в другие конвейеры или возвращать из библиотек как единый «фильтр».',
+        },
+        { type: 'heading', content: 'Web Streams API и интероп' },
+        {
+          type: 'text',
+          content:
+            'Параллельно с Node-стримами существует Web Streams API: \`ReadableStream\`, \`WritableStream\`, \`TransformStream\`. Это стандарт WHATWG, используемый в браузерах, в \`fetch\` и Service Worker. В Node.js они доступны как глобальные классы и используются, например, для тела ответа \`fetch\`.',
+        },
+        {
+          type: 'text',
+          content:
+            'Для совместимости с уже написанным кодом в \`node:stream\` есть конвертеры: \`Readable.toWeb(readable)\` превращает Node-Readable в \`ReadableStream\`, \`Readable.fromWeb(rs)\` — обратно. Аналогичные пары есть для Writable и Duplex.',
+        },
+        {
+          type: 'code',
+          language: 'javascript',
+          content: `const { Readable } = require('node:stream');
+
+// Тело ответа fetch — это ReadableStream (Web Streams)
+const res = await fetch('https://example.com/large.json');
+const nodeStream = Readable.fromWeb(res.body);
+
+await pipeline(nodeStream, fs.createWriteStream('out.json'));`,
         },
       ],
     },
@@ -237,7 +322,7 @@ class LineSplitter extends Transform {
       title: 'Типовые применения',
       estimatedMinutes: 4,
       blocks: [
-        { type: 'heading', content: 'Стриминг HTTP-ответа' },
+        { type: 'heading', content: 'Передача HTTP-ответа потоком' },
         {
           type: 'code',
           language: 'javascript',
@@ -257,7 +342,7 @@ http.createServer(async (req, res) => {
   }
 }).listen(3000);`,
         },
-        { type: 'heading', content: 'Парсинг больших CSV' },
+        { type: 'heading', content: 'Обработка больших CSV-файлов' },
         {
           type: 'code',
           language: 'javascript',
@@ -274,19 +359,6 @@ await pipeline(
   fs.createWriteStream('out.jsonl'),
 );`,
         },
-        { type: 'heading', content: 'Async-итераторы' },
-        {
-          type: 'text',
-          content:
-            'Любой Readable-стрим — это async-итератор. Можно использовать \`for await\` без явной подписки на событие \`data\`. Это часто читаемее и проще обрабатывает ошибки.',
-        },
-        {
-          type: 'code',
-          language: 'javascript',
-          content: `for await (const chunk of fs.createReadStream('file.txt')) {
-  process(chunk);
-}`,
-        },
       ],
     },
 
@@ -300,19 +372,19 @@ await pipeline(
         {
           type: 'text',
           content:
-            '\`pipe\` не пробрасывает ошибки между стримами. Если в gzip-Transform упало исключение, Readable остаётся открытым — файл не закроется, дескриптор утечёт. Решение — \`pipeline\` либо ручная подписка на \`error\` на каждом стриме.',
+            '\`pipe\` не пробрасывает ошибки между стримами. Если в gzip-Transform упало исключение, Readable остаётся открытым — файл не закроется, дескриптор будет висеть. Решение — \`pipeline\` либо ручная подписка на \`error\` на каждом стриме.',
         },
-        { type: 'heading', content: 'Смешивание режимов data и paused' },
+        { type: 'heading', content: 'Смешивание режимов flowing и paused' },
         {
           type: 'text',
           content:
-            'У Readable два режима: paused (по умолчанию) и flowing (после подписки на \`data\`). Если подписаться на \`data\`, потом вызвать \`pause()\` — стрим встанет; забыв \`resume()\`, обработка остановится навсегда.',
+            'Если подписаться на \`data\` (включив flowing), а потом вызвать \`pause()\`, стрим встанет; без \`resume()\` обработка не возобновится. Async-итераторы и \`pipeline\` снимают эту проблему — управление режимом происходит автоматически.',
         },
         { type: 'heading', content: 'Запись в закрытый стрим' },
         {
           type: 'text',
           content:
-            'Запись в Writable после \`end()\` бросает ошибку \`ERR_STREAM_WRITE_AFTER_END\`. Часто возникает при сложной асинхронной логике — ответ HTTP уже закрыт, а коллбэк продолжает писать. Защита — флаг \`writable.writableEnded\` перед \`write\`.',
+            'Запись в Writable после \`end()\` бросает ошибку \`ERR_STREAM_WRITE_AFTER_END\`. Часто возникает при сложной асинхронной логике — ответ HTTP уже закрыт, а коллбэк продолжает писать. Защита — проверка \`writable.writableEnded\` перед \`write\`.',
         },
         { type: 'heading', content: 'highWaterMark и память' },
         {
@@ -330,20 +402,25 @@ await pipeline(
   cheatsheet: `### Шпаргалка по стримам Node.js
 
 **Четыре типа**
-- **Readable** — источник: \`fs.createReadStream\`, HTTP request
-- **Writable** — приёмник: \`fs.createWriteStream\`, HTTP response
-- **Duplex** — и читает, и пишет: TCP-сокет
-- **Transform** — преобразование: \`zlib.createGzip\`, \`crypto.createCipher\`
+- Readable — источник: \`fs.createReadStream\`, HTTP request
+- Writable — приёмник: \`fs.createWriteStream\`, HTTP response
+- Duplex — и читает, и пишет: TCP-сокет
+- Transform — преобразование: \`zlib.createGzip\`, \`crypto.createCipheriv\`
+
+**Режимы Readable**
+- not flowing (изначально) → flowing после \`data\`, \`resume()\` или \`pipe()\`
+- \`pause()\` возвращает в not flowing
+- \`for await...of\` управляет режимом автоматически
 
 **Backpressure**
-- \`writable.write(chunk)\` → \`false\`, если буфер полный
+- \`writable.write(chunk)\` → \`false\`, когда буфер достиг \`highWaterMark\` — сигнал «приостановить»
 - \`writable.once('drain')\` — сигнал «можно писать дальше»
-- \`readable.pause()\` / \`readable.resume()\` — ручное управление
-- \`pipe\` и \`pipeline\` решают это автоматически
+- \`pipe\`, \`pipeline\` и \`for await\` решают это автоматически
 
-**pipe vs pipeline**
-- \`pipe\` — простой, но не закрывает стримы при ошибке
-- \`pipeline\` — закрывает стримы при ошибке, async / await, принимает iterables
+**pipe vs pipeline vs finished**
+- \`pipe\` — простой, не закрывает стримы при ошибке
+- \`pipeline\` — закрывает стримы при ошибке, async/await, принимает iterables
+- \`stream.finished\` — дождаться завершения одного стрима с cleanup
 - В production-коде — \`pipeline\`
 
 **Кастомный Transform**
@@ -362,20 +439,18 @@ class MyTransform extends Transform {
 
 **Object mode**
 - \`readableObjectMode\`, \`writableObjectMode\`, или \`objectMode\` для обоих
-- Без флага \`push\` объекта бросает ошибку
+- Снимает проверку Buffer/string, можно push любого значения
 
-**Async-итераторы**
-\`\`\`js
-for await (const chunk of readable) {
-  process(chunk);
-}
-\`\`\`
+**Современные API**
+- \`Readable.from(iterable)\` — массив или генератор → Readable
+- \`stream.compose(...)\` — собрать конвейер в один Duplex (Node 19+)
+- \`Readable.toWeb\` / \`fromWeb\` — мост к Web Streams API
 
 **Подводные камни**
 - \`pipe\` не закрывает стримы при ошибке — \`pipeline\`
-- \`write\` после \`end\` бросает \`ERR_STREAM_WRITE_AFTER_END\`
+- \`write\` после \`end\` → \`ERR_STREAM_WRITE_AFTER_END\`
 - Игнорирование backpressure → утечка памяти
-- \`highWaterMark\` контролирует размер внутреннего буфера`,
+- \`createCipher\` устарел, использовать \`createCipheriv\``,
 
   nextTopics: [
     {

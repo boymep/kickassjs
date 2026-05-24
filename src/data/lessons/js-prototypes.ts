@@ -11,10 +11,10 @@ export const jsPrototypesLesson: Lesson = {
   intro: {
     whyItMatters: `Прототипы — основа объектной модели JavaScript. У каждого объекта есть скрытая ссылка \`[[Prototype]]\` на другой объект. Когда выполняется \`arr.map(...)\` или \`'hello'.toUpperCase()\`, движок не находит метод на самом значении: он поднимается по цепочке прототипов до \`Array.prototype\` или \`String.prototype\`.
 
-Ключевое слово \`class\` (ES2015) — синтаксический сахар над функциями-конструкторами и \`prototype\`. \`class Dog extends Animal\` под капотом устанавливает \`Dog.prototype.[[Prototype]] = Animal.prototype\`. Понимание этого превращает «магию» классов в простую цепочку ссылок.`,
+Ключевое слово \`class\` (ES2015) — синтаксический сахар над функциями-конструкторами и \`prototype\`. \`class Dog extends Animal\` устанавливает \`Dog.prototype.[[Prototype]] = Animal.prototype\`. Без понимания цепочки прототипов поведение классов и встроенных типов воспринимается как набор разрозненных правил.`,
     estimatedMinutes: 30,
     interviewAngle:
-      'Интервьюера интересуют конкретные вещи: как работает поиск свойства, что делает \`new\` под капотом, чем \`class\` отличается от function-конструктора, как реализовать наследование без \`class\` и как работает \`instanceof\`.',
+      'Типичные вопросы: как работает поиск свойства, какие шаги выполняет \`new\`, чем \`class\` отличается от function-конструктора, как реализовать наследование без \`class\`, как работает \`instanceof\`, что такое prototype pollution и shadowing.',
     prerequisites: [{ slug: 'js-this', title: 'this и контекст' }],
   },
 
@@ -28,7 +28,7 @@ export const jsPrototypesLesson: Lesson = {
         {
           type: 'text',
           content:
-            'У каждого объекта в JavaScript есть скрытая ссылка \`[[Prototype]]\` на другой объект. При обращении к свойству движок ищет его сначала на самом объекте, затем на \`[[Prototype]]\`, затем на прототипе прототипа — вплоть до \`null\`. Это и есть **цепочка прототипов** — фундамент всей объектной модели JS.',
+            'У каждого объекта в JavaScript есть скрытая ссылка \`[[Prototype]]\` на другой объект. Двойные квадратные скобки в названии — общепринятая нотация для внутренних слотов (internal slot), доступных только через специальные функции, а не напрямую. Прочитать значение \`[[Prototype]]\` можно через \`Object.getPrototypeOf(obj)\` или (устаревший аксессор) \`obj.__proto__\`. При обращении к свойству движок ищет его сначала на самом объекте, затем на \`[[Prototype]]\`, затем на прототипе прототипа — вплоть до \`null\`. Эта последовательность ссылок называется цепочкой прототипов.',
         },
         {
           type: 'code',
@@ -77,7 +77,27 @@ arr.hasOwnProperty('map'); // false
         {
           type: 'text',
           content:
-            'Это объясняет «магию» массивов и строк: методы не дублируются в каждом экземпляре, а живут централизованно на \`Array.prototype\` и \`String.prototype\`. Поэтому \`arr.map(fn)\` и \`[].map.call(arrayLike, fn)\` — это вызов одной и той же функции с разным \`this\`.',
+            'Поэтому методы массивов и строк не дублируются в каждом экземпляре, а хранятся на \`Array.prototype\` и \`String.prototype\`. \`arr.map(fn)\` и \`[].map.call(arrayLike, fn)\` — это вызов одной и той же функции с разным \`this\`.',
+        },
+        { type: 'heading', content: 'Shadowing — теневое перекрытие' },
+        {
+          type: 'text',
+          content:
+            'Если присвоить объекту свойство с тем же именем, что и у прототипа, создаётся собственное свойство — оно «затеняет» прототипное. Операция присваивания всегда создаёт собственное свойство (за исключением сеттеров), даже если в прототипе уже есть свойство с таким именем.',
+        },
+        {
+          type: 'code',
+          language: 'javascript',
+          content: `const parent = { greeting: 'Привет' };
+const child  = Object.create(parent);
+
+child.greeting;            // 'Привет' — найдено в прототипе
+child.greeting = 'Hi';     // создаётся собственное свойство
+child.greeting;            // 'Hi'
+parent.greeting;           // 'Привет' — прототип не изменился
+
+delete child.greeting;
+child.greeting;            // 'Привет' — снова из прототипа`,
         },
       ],
       checkpoint: [Q['jsp-q1']!, Q['jsp-q5']!, {
@@ -97,6 +117,67 @@ arr.hasOwnProperty('map'); // false
 
     // ─────────────────────────────────────────────────────────────
     {
+      id: 'new-and-prototypes',
+      title: 'Как работает new',
+      estimatedMinutes: 5,
+      blocks: [
+        {
+          type: 'text',
+          content:
+            'Оператор \`new\` выполняет фиксированную последовательность шагов:',
+        },
+        {
+          type: 'list',
+          content: `Создаётся новый пустой объект.
+Его внутренний прототип \`[[Prototype]]\` устанавливается равным \`Constructor.prototype\`.
+Конструктор вызывается с \`this\` = новый объект.
+Если конструктор вернул объект, возвращается именно он; иначе возвращается созданный на первом шаге объект.`,
+        },
+        {
+          type: 'code',
+          language: 'javascript',
+          content: `// Реализация new в пользовательском коде
+function myNew(Ctor, ...args) {
+  const obj = Object.create(Ctor.prototype);   // шаги 1-2
+  const result = Ctor.apply(obj, args);         // шаг 3
+  return (result && typeof result === 'object') // шаг 4
+    ? result
+    : obj;
+}
+
+function Person(name) { this.name = name; }
+const alice = myNew(Person, 'Алиса');
+alice instanceof Person; // true`,
+        },
+        {
+          type: 'callout',
+          calloutType: 'info',
+          content:
+            'Тонкость: на четвёртом шаге заменителем считается только объект. Возврат примитива (числа, строки, \`null\`) игнорируется. Это используется в паттерне «фабрика на конструкторе», где функция-конструктор может вернуть \`Proxy\` или экземпляр другого класса.',
+        },
+        { type: 'heading', content: '__proto__ и Object.setPrototypeOf' },
+        {
+          type: 'text',
+          content:
+            '\`__proto__\` — устаревший аксессор, оставленный в стандарте для совместимости. В современном коде вместо чтения и записи используются \`Object.getPrototypeOf\` и \`Object.setPrototypeOf\`. Изменение прототипа уже существующего объекта через \`setPrototypeOf\` поддерживается всеми движками, но крайне нежелательно: оптимизатор V8 «деоптимизирует» все объекты той же скрытой структуры, и работа с ними становится в разы медленнее.',
+        },
+        {
+          type: 'code',
+          language: 'javascript',
+          content: `const proto = { greet() { return 'hi'; } };
+
+// Запись прототипа при создании — это нормально
+const a = Object.create(proto);
+
+// Запись прототипа уже существующего объекта — антипаттерн по перфу
+const b = {};
+Object.setPrototypeOf(b, proto);   // работает, но дорого`,
+        },
+      ],
+    },
+
+    // ─────────────────────────────────────────────────────────────
+    {
       id: 'object-create-and-inheritance',
       title: 'Object.create и наследование без class',
       estimatedMinutes: 6,
@@ -104,7 +185,7 @@ arr.hasOwnProperty('map'); // false
         {
           type: 'text',
           content:
-            '\`Object.create(proto)\` — самый прямой способ создать объект с заданным прототипом. До появления \`class\` в ES2015 всё наследование строилось именно так. На собеседовании могут попросить реализовать наследование без \`class\` — это проверяет понимание прототипов под капотом.',
+            '\`Object.create(proto)\` создаёт новый объект с указанным прототипом. До появления \`class\` в ES2015 всё наследование строилось именно так. Реализация наследования без \`class\` — типовая задача на собеседовании.',
         },
         {
           type: 'code',
@@ -139,7 +220,7 @@ rex instanceof Animal;  // true`,
           type: 'callout',
           calloutType: 'tip',
           content:
-            'Три обязательных шага наследования без \`class\`: (1) \`Parent.call(this, ...)\` в конструкторе ребёнка; (2) \`Child.prototype = Object.create(Parent.prototype)\`; (3) \`Child.prototype.constructor = Child\`. Пропуск любого шага ломает либо инициализацию полей, либо \`instanceof\`, либо \`f.constructor\`.',
+            'Три обязательных шага наследования без \`class\`: (1) \`Parent.call(this, ...)\` в конструкторе ребёнка; (2) \`Child.prototype = Object.create(Parent.prototype)\`; (3) \`Child.prototype.constructor = Child\`. Без первого шага не инициализируются поля родителя; без второго не работает \`instanceof Parent\`; без третьего \`instance.constructor\` указывает на \`Parent\`.',
         },
         { type: 'heading', content: 'Object.create(null) — словарь без прототипа' },
         {
@@ -163,7 +244,35 @@ for (const key in dict) {
         {
           type: 'text',
           content:
-            'Шаблон \`Object.create(null)\` часто используют в библиотеках для безопасного хранения произвольных ключей: маршрутизаторы, кеши, парсеры JSON. Это исключает класс уязвимостей prototype pollution.',
+            '\`Object.create(null)\` применяется, когда объект используется как словарь с произвольными ключами от пользователя и нужно исключить коллизии с методами \`Object.prototype\`, а также класс уязвимостей prototype pollution.',
+        },
+        { type: 'heading', content: 'Prototype pollution' },
+        {
+          type: 'text',
+          content:
+            'Если код «глубокого слияния» (\`deepMerge\`) не проверяет ключи, в \`Object.prototype\` можно записать произвольное свойство — оно мгновенно станет видно во всех объектах программы. Через JSON-вход вида \`{"__proto__": {"isAdmin": true}}\` атакующий может изменить поведение чужого кода.',
+        },
+        {
+          type: 'code',
+          language: 'javascript',
+          content: `// Уязвимый deepMerge
+function deepMerge(dst, src) {
+  for (const key in src) {                  // нет фильтрации
+    if (typeof src[key] === 'object') {
+      dst[key] = dst[key] || {};
+      deepMerge(dst[key], src[key]);
+    } else {
+      dst[key] = src[key];
+    }
+  }
+}
+
+const userInput = JSON.parse('{"__proto__":{"isAdmin":true}}');
+deepMerge({}, userInput);
+({}).isAdmin;   // true — загрязнили Object.prototype
+
+// Защита: пропускать __proto__, constructor, prototype;
+// или использовать Object.create(null) как dst.`,
         },
       ],
       playground: {
@@ -225,7 +334,7 @@ new Animal('Кот').speak(); // 'Кот говорит'`,
           type: 'callout',
           calloutType: 'info',
           content:
-            'Различия \`class\` и function-конструктора: (1) \`class\` нельзя вызвать без \`new\` — \`Animal()\` бросит TypeError; (2) \`class\` не всплывает — обращение до объявления даст ReferenceError; (3) тело \`class\` выполняется в strict mode; (4) методы класса non-enumerable.',
+            'Различия \`class\` и function-конструктора: (1) \`class\` нельзя вызвать без \`new\` — \`Animal()\` бросит TypeError; (2) объявления \`class\` не поднимаются (hoisting): обращение к классу до его объявления вызовет ReferenceError; (3) тело \`class\` всегда выполняется в strict mode (это режим JavaScript с более строгими правилами: \`this\` в обычной функции — \`undefined\`, нельзя присваивать необъявленные переменные); (4) методы класса non-enumerable — не попадают в \`for...in\` и \`Object.keys\`.',
         },
         { type: 'heading', content: 'extends в терминах прототипов' },
         {
@@ -240,13 +349,23 @@ class Dog extends Animal {
   }
 }
 
-// Под капотом extends делает:
-// 1) Dog.prototype.[[Prototype]] = Animal.prototype   — наследование методов экземпляра
-// 2) Dog.[[Prototype]] = Animal                        — наследование статических методов
+// extends устанавливает две связи прототипов:
+// 1) Dog.prototype.[[Prototype]] = Animal.prototype   — для методов экземпляра
+// 2) Dog.[[Prototype]] = Animal                        — для статических методов
 Object.getPrototypeOf(Dog.prototype) === Animal.prototype; // true
 Object.getPrototypeOf(Dog) === Animal;                     // true`,
         },
-        { type: 'heading', content: 'Приватные поля и static' },
+        {
+          type: 'text',
+          content:
+            '\`super.method()\` — особый синтаксис: метод ищется в прототипе родителя, но вызывается с \`this\` текущего экземпляра. Это позволяет переопределённому методу расширять поведение родительского, оставаясь полиморфным.',
+        },
+        { type: 'heading', content: 'Поля экземпляра и static' },
+        {
+          type: 'text',
+          content:
+            'Поля экземпляра (\`#balance = 0\`, \`label = \'\'\`, стрелочные поля) создаются для каждого экземпляра как собственные writable enumerable configurable свойства. Методы прототипа, напротив, non-enumerable. Из-за этого поля видны в \`Object.keys\` и \`for...in\`, а методы — нет.',
+        },
         {
           type: 'code',
           language: 'javascript',
@@ -267,6 +386,30 @@ acc.deposit(100);
 acc.balance;            // 100
 BankAccount.MAX;        // 1000000
 new BankAccount().MAX;  // undefined — static не наследуется экземплярами`,
+        },
+        { type: 'heading', content: 'Наследование от встроенных классов' },
+        {
+          type: 'text',
+          content:
+            'Подкласс \`Error\` — стандартный паттерн для собственных типов исключений. При наследовании от \`Error\` важно вызвать \`super(message)\`, иначе свойство \`message\` не установится. В старых рантаймах с транспиляцией в ES5 \`instanceof\` для подклассов Error мог работать некорректно — при необходимости приходится восстанавливать прототип вручную через \`Object.setPrototypeOf(this, new.target.prototype)\`.',
+        },
+        {
+          type: 'code',
+          language: 'javascript',
+          content: `class NotFoundError extends Error {
+  constructor(resource) {
+    super(\`Not found: \${resource}\`);
+    this.name = 'NotFoundError';
+    this.resource = resource;
+  }
+}
+
+try {
+  throw new NotFoundError('/users/42');
+} catch (err) {
+  err instanceof NotFoundError; // true
+  err instanceof Error;          // true
+}`,
         },
       ],
       checkpoint: [Q['jsp-q7']!, Q['jsp-q10']!, {
@@ -317,7 +460,25 @@ myInstanceof([], String);  // false`,
           type: 'callout',
           calloutType: 'warning',
           content:
-            '\`instanceof\` ломается между разными realm (iframe, worker): у каждого realm свой \`Array.prototype\`. Массив из iframe не будет \`instanceof Array\` для родительского окна. Решение — \`Array.isArray()\` или \`Object.prototype.toString.call(value)\`.',
+            '\`instanceof\` даёт неверный результат при работе с объектами из другого realm (iframe, worker, vm-контекст Node.js): у каждого realm свой \`Array.prototype\`. Массив из iframe не будет \`instanceof Array\` для родительского окна. Решение — \`Array.isArray()\` или \`Object.prototype.toString.call(value)\`.',
+        },
+        { type: 'heading', content: 'Symbol.hasInstance — настройка instanceof' },
+        {
+          type: 'text',
+          content:
+            'Точный механизм \`obj instanceof Constructor\` — вызов \`Constructor[Symbol.hasInstance](obj)\`. По умолчанию этот метод реализует подъём по цепочке прототипов, но его можно переопределить и сделать кастомную проверку.',
+        },
+        {
+          type: 'code',
+          language: 'javascript',
+          content: `class Even {
+  static [Symbol.hasInstance](value) {
+    return typeof value === 'number' && value % 2 === 0;
+  }
+}
+
+4 instanceof Even;  // true
+5 instanceof Even;  // false`,
         },
         { type: 'heading', content: 'hasOwn vs hasOwnProperty vs in' },
         {
@@ -341,6 +502,28 @@ const evil = { hasOwnProperty: () => true };
 evil.hasOwnProperty('foo');        // true — но 'foo' не существует
 Object.hasOwn(evil, 'foo');        // false — корректно`,
         },
+        { type: 'heading', content: 'enumerable: что видно при переборе' },
+        {
+          type: 'text',
+          content:
+            'У каждого свойства есть дескрипторы: \`writable\`, \`enumerable\`, \`configurable\`. \`enumerable: true\` означает, что свойство будет показано в \`for...in\` и \`Object.keys\`. Методы прототипа классов и встроенные методы типа \`Array.prototype.map\` объявлены non-enumerable — поэтому при итерации по объекту вы видите только данные, а не методы.',
+        },
+        {
+          type: 'code',
+          language: 'javascript',
+          content: `const obj = { visible: 1 };
+Object.defineProperty(obj, 'hidden', {
+  value: 2,
+  enumerable: false,
+});
+
+Object.keys(obj);              // ['visible']
+for (const k in obj) console.log(k); // visible
+
+// Но свойство существует и доступно
+obj.hidden;                    // 2
+Object.hasOwn(obj, 'hidden');  // true`,
+        },
         {
           type: 'list',
           content: `\`Object.hasOwn(obj, key)\` — современный безопасный способ проверки собственного свойства.
@@ -358,6 +541,11 @@ Object.hasOwn(evil, 'foo');        // false — корректно`,
       title: 'Подводные камни',
       estimatedMinutes: 5,
       blocks: [
+        {
+          type: 'text',
+          content:
+            'Ниже собраны типичные ошибки при работе с прототипами: потеря \`constructor\`, расширение нативных объектов, неосторожная работа с \`Object.assign\` и спред-оператором, использование стрелочных функций в полях класса.',
+        },
         { type: 'heading', content: 'Потеря constructor при замене prototype' },
         {
           type: 'code',
@@ -408,6 +596,28 @@ last([1, 2, 3]);`,
           content:
             '\`Object.prototype\` расширять не следует: добавленное свойство станет видно во всех объектах программы и в каждом цикле \`for...in\`. Это ломает любой код, который не фильтрует через \`Object.hasOwn\`.',
         },
+        { type: 'heading', content: 'Object.assign и спред теряют прототип' },
+        {
+          type: 'text',
+          content:
+            '\`Object.assign({}, instance)\` и \`{ ...instance }\` копируют только собственные перечисляемые свойства, прототип получателя — \`Object.prototype\`. Это часто приводит к неожиданному поведению: методы класса исчезают, \`instanceof\` ломается.',
+        },
+        {
+          type: 'code',
+          language: 'javascript',
+          content: `class User {
+  constructor(name) { this.name = name; }
+  greet() { return \`Hi, \${this.name}\`; }
+}
+
+const user = new User('Алиса');
+user.greet();                // 'Hi, Алиса'
+
+const copy = { ...user };
+copy.name;                   // 'Алиса'
+copy.greet;                  // undefined — метода нет, прототип теряется
+copy instanceof User;         // false`,
+        },
         { type: 'heading', content: 'Стрелочные функции как поле класса' },
         {
           type: 'code',
@@ -425,7 +635,13 @@ Object.getPrototypeOf(f).normal; // [Function: normal] — на прототип
 Object.getPrototypeOf(f).arrow;  // undefined — arrow создан на экземпляре
 
 // Каждый экземпляр получает свою копию arrow → больше памяти.
-// Зато this всегда привязан к экземпляру лексически.`,
+// При этом this внутри стрелочной функции лексически привязан к экземпляру.`,
+        },
+        {
+          type: 'callout',
+          calloutType: 'info',
+          content:
+            'Из-за того, что стрелочное поле создаётся на экземпляре, а не на прототипе, его невозможно переопределить через \`super\` в подклассе и непросто замокать в тестах через \`ClassName.prototype.method = jest.fn()\`. Если эти сценарии важны — оставляйте обычный метод и используйте \`bind\` в конструкторе.',
         },
       ],
     },
@@ -439,6 +655,13 @@ Object.getPrototypeOf(f).arrow;  // undefined — arrow создан на экз
 - У каждого объекта есть скрытая ссылка \`[[Prototype]]\` на другой объект
 - Поиск свойства идёт: собственные → \`[[Prototype]]\` → \`[[Prototype]]\` прототипа → \`null\`
 - \`Array.prototype.map\` живёт на \`Array.prototype\`, а не на каждом массиве
+- Присваивание создаёт собственное свойство (shadowing), не меняя прототип
+
+**new — четыре шага**
+1. Создать пустой объект
+2. obj.[[Prototype]] = Constructor.prototype
+3. Вызвать Constructor с this = obj
+4. Вернуть результат (объект из Constructor) или obj
 
 **Object.create**
 \`\`\`js
@@ -460,7 +683,8 @@ Child.prototype.constructor = Child;
 
 **class — это сахар**
 - \`typeof MyClass === 'function'\`
-- Методы попадают на \`MyClass.prototype\`
+- Методы попадают на \`MyClass.prototype\` (non-enumerable)
+- Поля экземпляра — собственные enumerable-свойства
 - \`extends\` устанавливает прототипы и для методов экземпляра, и для статических
 - \`super.method()\` вызывается с \`this\` = экземпляр подкласса
 - Тело класса всегда в strict mode
@@ -468,14 +692,17 @@ Child.prototype.constructor = Child;
 **Проверки**
 - \`Object.hasOwn(obj, key)\` — собственное свойство (ES2022)
 - \`'key' in obj\` — с учётом прототипов
-- \`obj instanceof Constructor\` — \`Constructor.prototype\` в цепочке
+- \`obj instanceof Constructor\` — \`Constructor.prototype\` в цепочке (можно переопределить через \`Symbol.hasInstance\`)
 - \`Array.isArray(value)\` — надёжнее \`instanceof Array\` между realm
 
 **Подводные камни**
 - Замена \`prototype\` целиком стирает \`constructor\` — нужно восстанавливать
 - Расширение \`Array.prototype\` / \`Object.prototype\` конфликтует с библиотеками и будущими стандартами
+- Prototype pollution: незащищённый \`deepMerge\` через \`__proto__\` позволяет записать в \`Object.prototype\`
+- \`Object.assign\` и спред теряют прототип — методы и \`instanceof\` ломаются
 - Стрелочная функция как поле класса не попадает на прототип — копия в каждом экземпляре
-- \`instanceof\` ломается между iframe / worker — используйте \`isArray\` или \`toString.call\``,
+- \`instanceof\` ломается между iframe / worker — используйте \`isArray\` или \`toString.call\`
+- \`Object.setPrototypeOf\` деоптимизирует объект в V8 — задавайте прототип при создании`,
 
   nextTopics: [
     {

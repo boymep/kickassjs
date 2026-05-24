@@ -135,6 +135,18 @@ findClosest([1, 10], 5)          // → 1
         inputArgs: [[1, 2, 3, 4, 5], 3],
         expected: 3,
       },
+      {
+        id: 'bs-p2-t6',
+        inputDisplay: 'findClosest([1, 3, 5], 10)',
+        inputArgs: [[1, 3, 5], 10],
+        expected: 5,
+      },
+      {
+        id: 'bs-p2-t7',
+        inputDisplay: 'findClosest([10, 20, 30], 1)',
+        inputArgs: [[10, 20, 30], 1],
+        expected: 10,
+      },
     ],
     hints: [
       'Что делать, если точное совпадение не найдено? Какую информацию несут указатели после завершения цикла?',

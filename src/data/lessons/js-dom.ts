@@ -9,12 +9,12 @@ export const jsDomLesson: Lesson = {
   topicId: 'js-dom',
 
   intro: {
-    whyItMatters: `DOM — древовидное представление HTML-документа, с которым работает JavaScript. Из коробки доступны API: \`document.querySelector\`, \`addEventListener\`, \`createElement\`. Понимание модели событий, делегирования и стоимости операций отличает код, который работает плавно, от того, что дёргается на простых страницах.
+    whyItMatters: `DOM — древовидное представление HTML-документа, с которым работает JavaScript. В стандартном API браузера доступны методы поиска (\`document.querySelector\`), регистрации обработчиков (\`addEventListener\`) и создания узлов (\`document.createElement\`). Понимание модели событий, делегирования и стоимости операций отличает плавно работающий код от того, который вызывает заметные задержки рендеринга даже на простых страницах.
 
-На собеседовании проверяют разницу между фазами события (capture / target / bubble), как работает делегирование, что вызывает перерасчёт layout, и как реализовать debounce / throttle для обработчиков ввода и скролла.`,
+На собеседовании проверяют разницу между фазами события (capture, target, bubble), как работает делегирование, что вызывает перерасчёт layout, и как реализовать debounce и throttle для обработчиков ввода и скролла.`,
     estimatedMinutes: 26,
     interviewAngle:
-      'Интервьюера интересуют фазы событий, делегирование и то, как кандидат измеряет стоимость операций с DOM. Знание API важно меньше, чем понимание, какие действия вызывают layout, а какие — только paint или composite.',
+      'Интервьюера интересуют фазы событий, делегирование, момент готовности DOM (\`DOMContentLoaded\` против \`load\`) и то, как кандидат измеряет стоимость операций. Знание API важно меньше, чем понимание, какие действия вызывают layout, а какие — только paint или composite.',
     prerequisites: [{ slug: 'js-event-loop', title: 'Event Loop' }],
   },
 
@@ -28,7 +28,7 @@ export const jsDomLesson: Lesson = {
         {
           type: 'text',
           content:
-            '**DOM** (Document Object Model) — древовидная структура, в которую браузер парсит HTML. Корень — \`document\`, дети — \`<html>\`, \`<head>\`, \`<body>\` и далее. JavaScript видит документ именно как это дерево объектов, а не как текст.',
+            'DOM (Document Object Model) — древовидная структура, в которую браузер парсит HTML. Корень — \`document\`, дети — \`<html>\`, \`<head>\`, \`<body>\` и далее. JavaScript видит документ именно как это дерево объектов, а не как текст.',
         },
         {
           type: 'code',
@@ -48,6 +48,8 @@ document.body.append(div);
 heading.textContent = 'Новый заголовок';
 heading.style.color = 'red';
 heading.setAttribute('data-state', 'active');
+// dataset: data-* атрибуты доступны как свойства
+heading.dataset.state;        // 'active'
 
 // Удалить
 div.remove();`,
@@ -56,17 +58,37 @@ div.remove();`,
           type: 'callout',
           calloutType: 'info',
           content:
-            '\`querySelector\` принимает CSS-селектор и возвращает первый совпавший элемент или \`null\`. \`querySelectorAll\` возвращает статический \`NodeList\` — он не обновляется при изменении DOM. \`getElementsByClassName\` возвращает живую \`HTMLCollection\`, которая обновляется автоматически.',
+            '\`querySelector\` принимает CSS-селектор и возвращает первый совпавший элемент или \`null\`. \`querySelectorAll\` возвращает статический \`NodeList\` — он не обновляется при изменении DOM. \`getElementsByClassName\` и \`getElementsByTagName\` возвращают живые \`HTMLCollection\`, которые обновляются автоматически. \`Node.childNodes\` тоже живой — это часто путают.',
         },
         { type: 'heading', content: 'Прохождение по дереву' },
         {
           type: 'list',
           content: `\`parentElement\` — родитель.
 \`children\` — дочерние элементы (без текстовых узлов).
-\`childNodes\` — все дети, включая текстовые узлы и комментарии.
+\`childNodes\` — все дети, включая текстовые узлы и комментарии (живая коллекция).
 \`firstElementChild\` / \`lastElementChild\` — первый / последний дочерний элемент.
 \`nextElementSibling\` / \`previousElementSibling\` — соседние элементы.
-\`closest(selector)\` — поднимается вверх до первого родителя, совпавшего с селектором.`,
+\`closest(selector)\` — поднимается вверх до первого родителя, совпавшего с селектором.
+\`matches(selector)\` — проверка, удовлетворяет ли сам элемент селектору.`,
+        },
+        { type: 'heading', content: 'Когда DOM готов: DOMContentLoaded и load' },
+        {
+          type: 'text',
+          content:
+            'Событие \`DOMContentLoaded\` срабатывает на \`document\` после полного построения DOM и парсинга всех скриптов без \`defer\` / \`async\`. Стили, изображения и внешние \`<script async>\` к этому моменту могут быть ещё не загружены. Событие \`load\` срабатывает на \`window\` после полной загрузки страницы вместе со всеми ресурсами. Текущее состояние можно прочитать в \`document.readyState\`: \`loading\`, \`interactive\`, \`complete\`.',
+        },
+        {
+          type: 'code',
+          language: 'javascript',
+          content: `if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', init);
+} else {
+  init(); // DOM уже готов
+}
+
+window.addEventListener('load', () => {
+  // все ресурсы (шрифты, картинки) загружены
+});`,
         },
       ],
       checkpoint: [Q['jsdom-q1']!],
@@ -76,12 +98,12 @@ div.remove();`,
     {
       id: 'events-phases',
       title: 'События: capture, target, bubble',
-      estimatedMinutes: 5,
+      estimatedMinutes: 6,
       blocks: [
         {
           type: 'text',
           content:
-            'Когда пользователь нажимает на элемент, событие проходит три фазы: **capture** (от корня вниз до цели), **target** (на самой цели), **bubble** (от цели обратно к корню). Большинство обработчиков работают на bubble. Для capture-фазы используется \`{ capture: true }\` в третьем аргументе \`addEventListener\`.',
+            'Когда пользователь нажимает на элемент, событие проходит три фазы: capture (от корня вниз до цели), target (на самой цели), bubble (от цели обратно к корню). Большинство обработчиков работают на bubble. Для capture-фазы используется \`{ capture: true }\` в третьем аргументе \`addEventListener\`.',
         },
         {
           type: 'code',
@@ -92,6 +114,8 @@ document.body.addEventListener('click', () => console.log('body capture'), { cap
 button.addEventListener('click', (e) => {
   console.log('button click, phase =', e.eventPhase);
   // 1 = capturing, 2 = at target, 3 = bubbling
+  // Значение 2 (at target) ставится для обработчиков, висящих на самой цели —
+  // независимо от того, регистрировались они на capture или bubble.
 });
 
 // Клик по button даёт:
@@ -104,13 +128,58 @@ button.addEventListener('click', (e) => {
           type: 'list',
           content: `\`event.stopPropagation()\` — останавливает дальнейшее распространение по фазам.
 \`event.stopImmediatePropagation()\` — плюс отменяет остальные обработчики того же события на текущем элементе.
-\`event.preventDefault()\` — отменяет действие по умолчанию (переход по ссылке, отправка формы). Не отменяет всплытие.`,
+\`event.preventDefault()\` — отменяет действие по умолчанию (переход по ссылке, отправка формы). Не отменяет всплытие.
+\`event.composedPath()\` — возвращает массив элементов, через которые прошло событие (полезно при работе с Shadow DOM).
+\`event.isTrusted\` — \`true\` для событий, инициированных пользователем; \`false\` для созданных через \`new Event\` и \`dispatchEvent\`.`,
         },
         {
           type: 'callout',
           calloutType: 'warning',
           content:
-            'Чрезмерное использование \`stopPropagation\` ломает делегирование и аналитику кликов. Используется только когда действительно нужно. Для пассивных событий (\`touchstart\`, \`wheel\`) \`preventDefault\` не сработает — нужно \`{ passive: false }\` в опциях \`addEventListener\`.',
+            '\`stopPropagation\` следует применять только при реальной необходимости: он ломает делегирование на родительских элементах и системы аналитики, которые опираются на всплытие кликов.',
+        },
+        { type: 'heading', content: 'Passive listeners' },
+        {
+          type: 'text',
+          content:
+            'Опция \`{ passive: true }\` обещает браузеру, что обработчик не вызовет \`preventDefault()\`. Благодаря этому браузер не ждёт выполнения обработчика и может сразу начать скролл — это даёт плавную прокрутку даже на тяжёлых страницах. С 2017 года Chrome применяет \`passive: true\` по умолчанию к слушателям \`touchstart\` и \`touchmove\` на корневых узлах. Если в таком обработчике вызвать \`preventDefault\`, он не сработает и в консоли появится предупреждение. Решение: явно передать \`{ passive: false }\`.',
+        },
+        { type: 'heading', content: 'CustomEvent' },
+        {
+          type: 'text',
+          content:
+            'Любой элемент может сгенерировать пользовательское событие и передать данные через \`detail\`. Это удобно для коммуникации между компонентами без прямой ссылки друг на друга.',
+        },
+        {
+          type: 'code',
+          language: 'javascript',
+          content: `const event = new CustomEvent('user:logout', {
+  detail: { userId: 42 },
+  bubbles: true,
+});
+element.dispatchEvent(event);
+
+document.addEventListener('user:logout', (e) => {
+  console.log('user logged out:', e.detail.userId);
+});`,
+        },
+        { type: 'heading', content: 'AbortController для группы обработчиков' },
+        {
+          type: 'text',
+          content:
+            'Опция \`signal\` у \`addEventListener\` позволяет снять обработчик через \`AbortController\`. Это особенно удобно, когда нужно отписаться сразу от нескольких событий — например, при уничтожении компонента.',
+        },
+        {
+          type: 'code',
+          language: 'javascript',
+          content: `const controller = new AbortController();
+const { signal } = controller;
+
+el.addEventListener('click', onClick, { signal });
+el.addEventListener('focus', onFocus, { signal });
+el.addEventListener('blur',  onBlur,  { signal });
+
+controller.abort(); // снимает все три обработчика`,
         },
       ],
       checkpoint: [Q['jsdom-q4']!, {
@@ -136,7 +205,7 @@ button.addEventListener('click', (e) => {
         {
           type: 'text',
           content:
-            '**Делегирование** — один обработчик на родителе вместо отдельного обработчика на каждом ребёнке. Использует bubble-фазу: клик по любому ребёнку всплывает до родителя. Внутри обработчика \`event.target\` определяет, что именно кликнули.',
+            'Делегирование — один обработчик на родителе вместо отдельного обработчика на каждом ребёнке. Использует bubble-фазу: клик по любому ребёнку всплывает до родителя. Внутри обработчика \`event.target\` определяет, что именно кликнули, а \`event.target.closest(selector)\` поднимается до нужного уровня.',
         },
         {
           type: 'code',
@@ -157,13 +226,13 @@ document.querySelector('.list').addEventListener('click', (e) => {
           type: 'callout',
           calloutType: 'tip',
           content:
-            'Делегирование выгодно по трём причинам: один обработчик вместо тысяч (меньше памяти), работает на динамически добавленных элементах, не требует ручного снятия обработчиков при удалении ребёнка.',
+            'Делегирование выгодно по трём причинам: один обработчик вместо n по числу детей (меньше памяти), автоматически работает на динамически добавленных элементах, не требует ручного снятия обработчиков при удалении ребёнка.',
         },
-        { type: 'heading', content: 'event.target.closest' },
+        { type: 'heading', content: 'event.target.closest и контейнер' },
         {
           type: 'text',
           content:
-            '\`event.target\` — конкретный элемент, по которому кликнули. Если клик пришёлся на дочерний \`<span>\` внутри \`<li>\`, \`target\` будет \`<span>\`. Поэтому используют \`event.target.closest(selector)\` — он поднимается вверх до элемента, удовлетворяющего селектору.',
+            '\`event.target\` — конкретный элемент, по которому кликнули. Если клик пришёлся на дочерний \`<span>\` внутри \`<li>\`, \`target\` будет \`<span>\`. \`closest(selector)\` поднимается вверх до элемента, удовлетворяющего селектору. Этот метод может «вылететь» за пределы делегирующего контейнера — поэтому полезна дополнительная проверка \`container.contains(item)\`.',
         },
         {
           type: 'code',
@@ -193,35 +262,15 @@ document.querySelector('.list').addEventListener('click', (e) => {
 
     // ─────────────────────────────────────────────────────────────
     {
-      id: 'custom-events-observer',
-      title: 'CustomEvent и MutationObserver',
-      estimatedMinutes: 4,
+      id: 'observers',
+      title: 'Наблюдатели: MutationObserver и IntersectionObserver',
+      estimatedMinutes: 5,
       blocks: [
-        { type: 'heading', content: 'CustomEvent' },
-        {
-          type: 'text',
-          content:
-            'Любой элемент может сгенерировать пользовательское событие и передать данные через \`detail\`. Это удобно для коммуникации между компонентами без прямой ссылки друг на друга.',
-        },
-        {
-          type: 'code',
-          language: 'javascript',
-          content: `const event = new CustomEvent('user:logout', {
-  detail: { userId: 42 },
-  bubbles: true,
-});
-element.dispatchEvent(event);
-
-// Где-то в другом месте — слушать
-document.addEventListener('user:logout', (e) => {
-  console.log('user logged out:', e.detail.userId);
-});`,
-        },
         { type: 'heading', content: 'MutationObserver' },
         {
           type: 'text',
           content:
-            '\`MutationObserver\` отслеживает изменения в DOM: добавление и удаление узлов, изменение атрибутов и текста. Срабатывает асинхронно как микрозадача — после завершения текущего синхронного кода.',
+            '\`MutationObserver\` отслеживает изменения в DOM: добавление и удаление узлов, изменение атрибутов и текста. Браузер накапливает изменения и передаёт их одним вызовом — коллбэк ставится в очередь микрозадач.',
         },
         {
           type: 'code',
@@ -240,11 +289,31 @@ observer.observe(targetNode, {
 
 observer.disconnect(); // не забыть отключить`,
         },
+        { type: 'heading', content: 'IntersectionObserver' },
+        {
+          type: 'text',
+          content:
+            '\`IntersectionObserver\` сообщает, когда отслеживаемый элемент попадает во вьюпорт или другую заданную область. Используется для lazy-loading изображений, infinite scroll, sticky-эффектов, аналитики «видимости» баннеров. Срабатывает асинхронно и не блокирует главный поток.',
+        },
+        {
+          type: 'code',
+          language: 'javascript',
+          content: `const io = new IntersectionObserver((entries) => {
+  for (const entry of entries) {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+      io.unobserve(entry.target); // больше не нужно следить
+    }
+  }
+}, { rootMargin: '100px', threshold: 0.1 });
+
+document.querySelectorAll('.card').forEach((el) => io.observe(el));`,
+        },
         {
           type: 'callout',
           calloutType: 'info',
           content:
-            '\`MutationObserver\` использует один поток коллбэков на все наблюдатели — браузер батчит изменения. На каждое изменение коллбэк не вызывается, накопленные мутации приходят пакетом.',
+            'Рядом с этими двумя API часто упоминают \`ResizeObserver\` (изменение размеров элемента) и \`PerformanceObserver\` (метрики производительности). Все они построены по одному принципу: \`observe\`, асинхронные коллбэки, \`disconnect\` в финале.',
         },
       ],
     },
@@ -258,7 +327,7 @@ observer.disconnect(); // не забыть отключить`,
         {
           type: 'text',
           content:
-            'DOM-операции дороги. Чтение свойств вроде \`offsetWidth\`, \`getBoundingClientRect\`, \`offsetTop\` принуждает браузер пересчитать layout — это блокирующая работа на главном потоке. Если в цикле чередуются чтение и запись, происходит **layout thrashing** — десятки лишних перерасчётов.',
+            'Часть DOM-операций запускает дорогие этапы рендер-конвейера. Layout — этап вычисления размеров и позиций элементов; paint — отрисовка пикселей; composite — наложение слоёв на GPU. Чтение свойств вроде \`offsetWidth\`, \`getBoundingClientRect\`, \`offsetTop\` принуждает браузер пересчитать layout прямо здесь и сейчас — это блокирующая работа на главном потоке. Если в цикле чередуются чтение и запись, происходит layout thrashing — десятки лишних перерасчётов.',
         },
         {
           type: 'code',
@@ -279,9 +348,9 @@ items.forEach((el, i) => {
           type: 'callout',
           calloutType: 'warning',
           content:
-            'Чтения и записи стоит группировать. Запись в стиль после чтения геометрии заставляет браузер пересчитать layout ещё раз. Если в цикле n итераций — до n перерасчётов вместо одного.',
+            'Чтения и записи стоит группировать. Запись в стиль после чтения геометрии заставляет браузер пересчитать layout ещё раз. Если в цикле n итераций, происходит до n перерасчётов вместо одного.',
         },
-        { type: 'heading', content: 'requestAnimationFrame и Document Fragment' },
+        { type: 'heading', content: 'requestAnimationFrame и DocumentFragment' },
         {
           type: 'code',
           language: 'javascript',
@@ -306,6 +375,42 @@ list.appendChild(fragment); // один reflow`,
         },
       ],
       checkpoint: [Q['jsdom-q9']!, Q['jsdom-q11']!],
+    },
+
+    // ─────────────────────────────────────────────────────────────
+    {
+      id: 'accessibility-and-shadow',
+      title: 'Доступность и Shadow DOM',
+      estimatedMinutes: 4,
+      blocks: [
+        { type: 'heading', content: 'Управление фокусом и клавиатурой' },
+        {
+          type: 'text',
+          content:
+            'Кастомные интерактивные элементы (выпадающие меню, диалоги, табы) должны корректно вести себя с клавиатурой и со скринридерами. Базовый минимум: \`tabindex="0"\` делает элемент фокусируемым в обычном порядке, \`tabindex="-1"\` — фокусируемым только программно. Событие \`keydown\` обрабатывает нажатия (Enter, Space, Escape, стрелки). \`element.focus()\` перемещает фокус.',
+        },
+        {
+          type: 'code',
+          language: 'javascript',
+          content: `// Диалог: ловим Escape, ставим фокус на кнопку закрытия
+dialog.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') close();
+});
+dialog.querySelector('.close').focus();`,
+        },
+        { type: 'heading', content: 'ARIA-атрибуты' },
+        {
+          type: 'text',
+          content:
+            'ARIA-атрибуты (\`role\`, \`aria-label\`, \`aria-expanded\`, \`aria-hidden\`) описывают семантику и состояние элемента для вспомогательных технологий. Используются, когда стандартного HTML-тега недостаточно — например, для пользовательского \`<div>\`, выполняющего роль кнопки. По возможности предпочитают семантические теги (\`<button>\`, \`<nav>\`, \`<dialog>\`) — у них доступность реализована из коробки.',
+        },
+        { type: 'heading', content: 'Shadow DOM' },
+        {
+          type: 'text',
+          content:
+            'Shadow DOM — изолированное поддерево, прикреплённое к элементу через \`element.attachShadow({ mode: \'open\' })\`. Стили внутри shadow root не «вытекают» наружу и не подвержены внешним стилям; селекторы \`querySelector\` снаружи не видят узлы внутри. Эта изоляция используется в Web Components. Событие, поднимающееся из shadow root, на пути наружу теряет конкретный \`target\` (становится самим компонентом) — узнать реальный путь можно через \`event.composedPath()\`.',
+        },
+      ],
     },
 
     // ─────────────────────────────────────────────────────────────
@@ -337,27 +442,19 @@ container.append(div);`,
         {
           type: 'text',
           content:
-            'Если на DOM-узле висит обработчик, замкнутый на большие данные, и узел удаляют со страницы, но ссылка на обработчик остаётся — данные не освобождаются. Решения: \`removeEventListener\` при удалении, \`AbortController\` для группы обработчиков, \`WeakMap\` для метаданных узлов.',
+            'Если на DOM-узле висит обработчик, замкнутый на большие данные, и узел удалён со страницы, но ссылка на обработчик остаётся, данные не освобождаются. Решения: \`removeEventListener\` при удалении, опция \`signal\` от \`AbortController\` (см. главу про события), \`WeakMap\` для метаданных узлов.',
         },
-        {
-          type: 'code',
-          language: 'javascript',
-          content: `// AbortController — снять группу обработчиков одной командой
-const controller = new AbortController();
-const { signal } = controller;
-
-el.addEventListener('click', onClick, { signal });
-el.addEventListener('focus', onFocus, { signal });
-el.addEventListener('blur',  onBlur,  { signal });
-
-// Когда компонент уничтожается:
-controller.abort(); // снимет все три обработчика`,
-        },
-        { type: 'heading', content: 'Живые и статические коллекции' },
+        { type: 'heading', content: 'Итерация по живой коллекции с удалением' },
         {
           type: 'text',
           content:
-            '\`getElementsByClassName\` и \`getElementsByTagName\` возвращают **живую** \`HTMLCollection\` — она обновляется при изменении DOM. Итерация по ней с одновременным удалением элементов даёт неожиданные результаты. \`querySelectorAll\` возвращает **статический** \`NodeList\`, который не меняется.',
+            'Удаление элементов во время итерации по \`HTMLCollection\` (например, по \`getElementsByClassName\`) приводит к пропуску элементов или бесконечному циклу: индексы сдвигаются по мере удаления. Решения: предварительно сделать снимок коллекции через \`Array.from(...)\` или \`querySelectorAll\` (статический \`NodeList\`).',
+        },
+        { type: 'heading', content: 'Сравнение event.target и event.currentTarget' },
+        {
+          type: 'text',
+          content:
+            'В обработчике делегирования \`event.currentTarget\` — это контейнер, к которому привязан слушатель, а \`event.target\` — фактический источник события. Чтение размеров или классов из \`currentTarget\` вместо \`target\` приводит к багам, когда обработчик «срабатывает», но действует на родителя.',
         },
       ],
     },
@@ -369,6 +466,7 @@ controller.abort(); // снимет все три обработчика`,
 
 **Поиск и навигация**
 - \`document.querySelector\` / \`querySelectorAll\` — статический \`NodeList\`
+- \`getElementsByClassName\` / \`getElementsByTagName\` — живой \`HTMLCollection\`
 - \`getElementById\` — единственный элемент
 - \`element.closest(selector)\` — ближайший родитель по селектору
 - \`element.matches(selector)\` — проверка совпадения
@@ -380,12 +478,24 @@ controller.abort(); // снимет все три обработчика`,
 - \`classList.add / remove / toggle / contains\`
 - \`element.dataset.foo\` ⇄ атрибут \`data-foo\`
 
+**Готовность DOM**
+- \`document.readyState\`: loading → interactive → complete
+- \`DOMContentLoaded\` — DOM построен (стили/картинки ещё могут грузиться)
+- \`load\` (на window) — все ресурсы загружены
+
 **События**
 - Три фазы: capture → target → bubble
 - \`addEventListener(name, fn, { capture, once, passive, signal })\`
 - \`event.target\` — где произошло, \`event.currentTarget\` — где висит обработчик
 - \`event.stopPropagation()\` — остановить распространение
 - \`event.preventDefault()\` — отменить действие по умолчанию
+- \`event.composedPath()\` — путь события (важно для Shadow DOM)
+- \`event.isTrusted\` — пользовательское или синтетическое
+
+**Passive listeners**
+- \`{ passive: true }\` — браузер не ждёт обработчик, скролл плавный
+- \`touchstart\` / \`touchmove\` в Chrome по умолчанию passive
+- Для \`preventDefault\` нужно явно \`{ passive: false }\`
 
 **Делегирование**
 \`\`\`js
@@ -401,10 +511,11 @@ const event = new CustomEvent('app:ready', { detail: {...}, bubbles: true });
 el.dispatchEvent(event);
 \`\`\`
 
-**MutationObserver**
-- Асинхронные коллбэки (микрозадача)
-- Опции: \`childList\`, \`attributes\`, \`subtree\`, \`characterData\`
-- Не забыть \`observer.disconnect()\`
+**Наблюдатели**
+- \`MutationObserver\` — изменения DOM (микрозадача)
+- \`IntersectionObserver\` — попадание во вьюпорт
+- \`ResizeObserver\` — изменение размеров
+- Все требуют \`disconnect()\` при ненадобности
 
 **Производительность**
 - Группировать чтения и записи — избегать layout thrashing
@@ -412,9 +523,14 @@ el.dispatchEvent(event);
 - \`requestAnimationFrame\` для обработчиков скролла и resize
 - \`AbortController\` для группового снятия обработчиков
 
+**Доступность**
+- \`tabindex="0"\` / \`tabindex="-1"\`, \`element.focus()\`
+- Семантические теги перед ARIA-атрибутами
+- Shadow DOM изолирует стили и DOM, \`composedPath\` для пути события
+
 **Подводные камни**
 - \`innerHTML\` + пользовательский ввод → XSS
-- Живые коллекции ведут себя неожиданно при изменении DOM
+- Удаление в живой коллекции при итерации → пропуски и зависание
 - Утечки памяти через незакрытые обработчики`,
 
   nextTopics: [

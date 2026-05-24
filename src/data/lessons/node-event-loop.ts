@@ -9,12 +9,12 @@ export const nodeEventLoopLesson: Lesson = {
   topicId: 'node-event-loop',
 
   intro: {
-    whyItMatters: `Node.js — однопоточная среда, которая при этом обслуживает тысячи одновременных соединений. Этот трюк держится на event loop, реализованном в библиотеке **libuv**. В отличие от браузера, где спецификация HTML описывает абстрактные task и microtask, в Node.js цикл разделён на **шесть явных фаз**: timers, pending callbacks, idle/prepare, poll, check, close.
+    whyItMatters: `Node.js — однопоточная среда, которая при этом обслуживает тысячи одновременных соединений. Эта модель построена на event loop, реализованном в библиотеке libuv. В отличие от браузера, где спецификация HTML описывает абстрактные task и microtask, в Node.js цикл разделён на шесть явных фаз: timers, pending callbacks, idle/prepare, poll, check, close.
 
-Между каждой фазой движок проверяет две дополнительные очереди — \`process.nextTick\` и Promise microtasks. На собеседовании в Node.js-команды эту тему задают почти всегда: что выведет код с миксом таймеров и промисов, зачем нужен \`setImmediate\` отдельно от \`setTimeout(0)\`, как обработать CPU-bound задачу.`,
+Между каждой фазой движок проверяет две дополнительные очереди — \`process.nextTick\` и Promise microtasks. На собеседовании на позиции, связанные с Node.js, тема встречается регулярно: вопросы о порядке вывода кода со смесью таймеров и промисов, о роли \`setImmediate\` отдельно от \`setTimeout(0)\`, о подходах к CPU-bound задачам.`,
     estimatedMinutes: 30,
     interviewAngle:
-      'Интервьюера интересуют три вещи: шесть фаз libuv и порядок очередей между ними, разница между \`process.nextTick\`, \`queueMicrotask\` и \`setImmediate\`, и умение диагностировать starvation event loop на конкретных примерах.',
+      'Основные блоки вопросов: шесть фаз libuv и порядок очередей между ними; разница между \`process.nextTick\`, \`queueMicrotask\` и \`setImmediate\`; диагностика starvation event loop на конкретных примерах; механизм graceful shutdown по сигналам SIGTERM/SIGINT.',
     prerequisites: [{ slug: 'js-event-loop', title: 'Event Loop в браузере' }],
   },
 
@@ -32,12 +32,12 @@ export const nodeEventLoopLesson: Lesson = {
         },
         {
           type: 'list',
-          content: `**timers** — коллбэки \`setTimeout\` и \`setInterval\`, у которых наступило время.
-**pending callbacks** — отложенные системные коллбэки (например, ECONNREFUSED).
-**idle / prepare** — внутренние нужды libuv.
-**poll** — основная фаза: I/O-коллбэки (чтение файла, ответ от сети, обработчики соединений). Может блокироваться, ожидая новых событий.
-**check** — коллбэки \`setImmediate\`.
-**close callbacks** — события \`close\` для сокетов и хендлов.`,
+          content: `timers — коллбэки \`setTimeout\` и \`setInterval\`, у которых наступило время.
+pending callbacks — отложенные системные коллбэки (ошибки сокетов от ОС вроде ECONNREFUSED, доставленные после завершения предыдущей итерации).
+idle / prepare — внутренние нужды libuv.
+poll — основная фаза: I/O-коллбэки (чтение файла, ответ от сети, обработчики соединений). Может блокироваться, ожидая новых событий.
+check — коллбэки \`setImmediate\`.
+close callbacks — события \`close\` для сокетов и хендлов.`,
         },
         {
           type: 'visualization',
@@ -48,13 +48,22 @@ export const nodeEventLoopLesson: Lesson = {
           type: 'callout',
           calloutType: 'info',
           content:
-            'Между каждой фазой полностью опустошаются две очереди: \`process.nextTick\` и Promise microtasks. \`nextTick\` имеет приоритет над промисами — это особенность Node.js, не описанная в спецификации языка.',
+            'Между каждой фазой полностью опустошаются две очереди: \`process.nextTick\` и Promise microtasks. \`nextTick\` имеет приоритет над промисами — это особенность Node.js, не описанная в спецификации языка. Начиная с Node 11, обе очереди опустошаются также после каждого отдельного коллбэка внутри фаз timers, check и I/O — поэтому код выводит «one tick → one micro → two tick → two micro», а не «one tick → two tick → one micro → two micro», как было в Node 10.',
+        },
+        { type: 'heading', content: 'Сравнение с браузерным event loop' },
+        {
+          type: 'list',
+          content: `В браузере одна общая очередь macrotask и одна microtask; в Node.js — шесть фаз libuv плюс две очереди микрозадач между ними.
+\`process.nextTick\` существует только в Node.js; в браузере его нет.
+\`setImmediate\` существует только в Node.js (в браузерах был удалён из стандарта).
+\`requestAnimationFrame\` существует только в браузере — он привязан к циклу рендеринга.
+\`queueMicrotask\` доступен в обеих средах одинаково.`,
         },
         { type: 'heading', content: 'setImmediate против setTimeout(0)' },
         {
           type: 'text',
           content:
-            'Главная разница: \`setImmediate\` всегда выполняется в фазе **check**, \`setTimeout(fn, 0)\` — в фазе **timers**. Если вызвать оба вне I/O-коллбэка, порядок может быть любым (зависит от точности измерения времени libuv). Но если оба запланированы изнутри I/O-коллбэка — \`setImmediate\` гарантированно сработает раньше: фаза check идёт сразу после poll, а timers — на следующей итерации.',
+            'Главная разница: \`setImmediate\` всегда выполняется в фазе check, \`setTimeout(fn, 0)\` — в фазе timers. Если вызвать оба вне I/O-коллбэка, порядок может быть любым (зависит от точности измерения времени libuv). Но если оба запланированы изнутри I/O-коллбэка, \`setImmediate\` гарантированно сработает раньше: фаза check идёт сразу после poll, а timers — на следующей итерации.',
         },
         {
           type: 'code',
@@ -95,14 +104,14 @@ fs.readFile(__filename, () => {
         {
           type: 'text',
           content:
-            'В Node.js три разных способа «отложить» функцию, и у них разный приоритет. Перепутать их — частая причина странного порядка вывода.',
+            'В Node.js три разных способа отложить функцию, и у них разный приоритет. Различие между ними часто становится источником неочевидных багов при последовательности вывода.',
         },
         {
           type: 'list',
-          content: `**process.nextTick(fn)** — отложить до конца текущей операции, но **до** микрозадач. Очередь nextTick опустошается полностью между любыми двумя фазами.
-**queueMicrotask(fn)** / **Promise.then(fn)** — микрозадача, опустошается после nextTick, между фазами.
-**setImmediate(fn)** — макрозадача, фаза check. Выполнится на следующей итерации event loop.
-**setTimeout(fn, 0)** — макрозадача, фаза timers. Минимальная задержка — 1 мс.`,
+          content: `\`process.nextTick(fn)\` — отложить до конца текущей операции, но до микрозадач. Очередь \`nextTick\` опустошается полностью между любыми двумя фазами.
+\`queueMicrotask(fn)\` и \`Promise.then(fn)\` — микрозадачи, опустошаются после \`nextTick\`, между фазами.
+\`setImmediate(fn)\` — макрозадача, фаза check. Выполнится на следующей итерации event loop.
+\`setTimeout(fn, 0)\` — макрозадача, фаза timers. Минимальная задержка — 1 мс (значение округляется в libuv).`,
         },
         {
           type: 'code',
@@ -125,7 +134,7 @@ setTimeout(() => console.log('timeout 0'), 0);
           type: 'callout',
           calloutType: 'warning',
           content:
-            '\`process.nextTick\` имеет приоритет над промисами. Рекурсивный \`process.nextTick\` способен полностью заблокировать переход к следующей фазе и заморозить I/O — это и есть starvation.',
+            '\`process.nextTick\` имеет приоритет над промисами. Рекурсивный \`process.nextTick\` способен полностью заблокировать переход к следующей фазе и заморозить I/O — это и есть starvation. Тонкость: исключение в коллбэке \`queueMicrotask\` поднимается как \`uncaughtException\`, тогда как исключение в \`.then\` превращается в rejection.',
         },
       ],
       checkpoint: [Q['nodel-q4']!, {
@@ -148,13 +157,13 @@ setTimeout(() => console.log('timeout 0'), 0);
     // ─────────────────────────────────────────────────────────────
     {
       id: 'starvation',
-      title: 'Starvation: как заморозить event loop',
+      title: 'Starvation: блокировка event loop',
       estimatedMinutes: 5,
       blocks: [
         {
           type: 'text',
           content:
-            '**Starvation** — ситуация, когда event loop не может перейти к следующей фазе, потому что текущая очередь постоянно пополняется. Чаще всего это происходит с \`process.nextTick\` или с микрозадачами.',
+            'Starvation (буквально «голодание» — ситуация, когда одна очередь не даёт другим получить процессорное время) возникает, когда event loop не может перейти к следующей фазе, потому что текущая очередь постоянно пополняется. Чаще всего это происходит с \`process.nextTick\` или с микрозадачами.',
         },
         {
           type: 'code',
@@ -165,7 +174,7 @@ function endlessTick() {
 }
 endlessTick();
 
-// HTTP-сервер на той же странице перестанет отвечать —
+// HTTP-сервер в этом процессе перестанет отвечать —
 // поскольку очередь nextTick опустошается перед фазой poll,
 // I/O-коллбэки никогда не запустятся.`,
         },
@@ -173,7 +182,7 @@ endlessTick();
           type: 'callout',
           calloutType: 'tip',
           content:
-            'Если нужно «разбить» долгую работу на части, не блокируя event loop — подходит \`setImmediate\`, а не \`process.nextTick\` или \`queueMicrotask\`. \`setImmediate\` отдаёт управление libuv на одну итерацию, и I/O успевает обработаться.',
+            'Для разделения длительной синхронной работы на части без блокировки event loop используется \`setImmediate\`, а не \`process.nextTick\` или \`queueMicrotask\`. \`setImmediate\` отдаёт управление libuv на одну итерацию, и I/O успевает обработаться.',
         },
         { type: 'heading', content: 'Чанкование тяжёлой работы' },
         {
@@ -199,11 +208,11 @@ endlessTick();
   });
 }`,
         },
-        { type: 'heading', content: 'Профилирование event loop lag' },
+        { type: 'heading', content: 'Профилирование event loop delay' },
         {
           type: 'text',
           content:
-            'Latency event loop можно измерять через \`monitorEventLoopDelay\` (Node.js Perf Hooks). Если задержка превышает 100 мс, на загруженном сервере это уже видно как «лаг» в ответах. В продакшене этот показатель отслеживают как метрику инфраструктуры.',
+            'Задержку event loop можно измерять через \`monitorEventLoopDelay\` (Node.js Perf Hooks). Если задержка превышает 100 мс, на нагруженном сервере это приводит к заметному росту времени ответа. В продакшене этот показатель отслеживают как метрику инфраструктуры наряду с CPU и памятью.',
         },
         {
           type: 'code',
@@ -225,19 +234,32 @@ setInterval(() => {
     // ─────────────────────────────────────────────────────────────
     {
       id: 'cpu-bound',
-      title: 'CPU-bound задачи и worker threads',
-      estimatedMinutes: 5,
+      title: 'CPU-bound задачи, libuv thread pool и worker threads',
+      estimatedMinutes: 6,
       blocks: [
         {
           type: 'text',
           content:
-            'Event loop хорош для I/O — сеть, файлы, очереди. CPU-bound задачи (парсинг больших JSON, хеширование, обработка изображений, сжатие) блокируют главный поток и резко увеличивают задержку для всех клиентов. Решений два: вынести в \`worker_threads\` или в отдельный процесс.',
+            'Event loop хорошо обслуживает I/O — сеть, файлы, очереди. CPU-bound задачи (парсинг больших JSON, хеширование, обработка изображений, сжатие) блокируют главный поток и резко увеличивают задержку для всех клиентов.',
+        },
+        { type: 'heading', content: 'Thread pool libuv' },
+        {
+          type: 'text',
+          content:
+            'Часть API Node.js не работает в главном потоке: она использует пул libuv размером 4 потока по умолчанию. В этот пул попадают операции \`fs.*\` (кроме fs-watcher), \`dns.lookup\`, \`crypto.pbkdf2\`, \`crypto.scrypt\`, \`crypto.randomBytes\` в асинхронном виде, а также \`zlib.*\`. Если все 4 потока заняты, новые операции встают в очередь — это видно как рост задержки в чтении файлов или DNS-резолве на нагруженном сервере. Размер пула настраивается переменной окружения \`UV_THREADPOOL_SIZE\` (до 1024).',
         },
         {
+          type: 'callout',
+          calloutType: 'warning',
+          content:
+            'Метод \`dns.lookup\` использует libuv thread pool через системный getaddrinfo. На нагруженном сервисе он может оказаться узким местом. Альтернатива — \`dns.resolve\` (поверх c-ares, не использует thread pool) или собственный DNS-кеш в Agent.',
+        },
+        { type: 'heading', content: 'Worker threads и cluster' },
+        {
           type: 'list',
-          content: `**worker_threads** — отдельный поток внутри одного процесса. Передача данных через \`postMessage\` (структурное клонирование) или \`SharedArrayBuffer\` для нулевого копирования.
-**child_process** — отдельный процесс. Дороже worker_threads, но изоляция полная — крах не валит главный процесс.
-**cluster** — N процессов того же приложения за общим портом. Балансировка нагрузки на уровне ОС.`,
+          content: `\`worker_threads\` — отдельный поток внутри одного процесса, с собственным V8 isolate. Передача данных через \`postMessage\` (структурное клонирование — копирование данных по спецификации HTML) или \`SharedArrayBuffer\` для нулевого копирования (вместе с \`Atomics\` для синхронизации). Опция \`transferList\` позволяет передать ArrayBuffer без копирования.
+\`child_process\` — отдельный процесс. Дороже worker_threads (отдельная инициализация V8), зато сбой не приводит к падению главного процесса.
+\`cluster\` — N процессов того же приложения, балансировка соединений на уровне ОС. В современных деплоях вместо cluster обычно запускают N контейнеров под управлением Kubernetes.`,
         },
         {
           type: 'code',
@@ -257,11 +279,65 @@ const worker = new Worker('./worker.js');
 worker.postMessage(largeInput);
 worker.on('message', (result) => console.log('done:', result));`,
         },
+      ],
+    },
+
+    // ─────────────────────────────────────────────────────────────
+    {
+      id: 'shutdown-and-context',
+      title: 'Graceful shutdown и AsyncLocalStorage',
+      estimatedMinutes: 5,
+      blocks: [
+        { type: 'heading', content: 'Обработка сигналов и graceful shutdown' },
+        {
+          type: 'text',
+          content:
+            'В контейнерных средах (Docker, Kubernetes) orchestration отправляет приложению сигнал \`SIGTERM\` перед остановкой и через grace-период — \`SIGKILL\`. Правильная реакция на \`SIGTERM\` — прекратить принимать новые соединения, дождаться завершения текущих и закрыть ресурсы (БД, очереди).',
+        },
+        {
+          type: 'code',
+          language: 'javascript',
+          content: `const server = app.listen(port);
+
+function shutdown(signal) {
+  console.log(\`Received \${signal}, shutting down...\`);
+  server.close(async () => {
+    await db.close();
+    process.exit(0);
+  });
+  // Если соединения зависли — выйти принудительно через 10 секунд
+  setTimeout(() => process.exit(1), 10_000).unref();
+}
+
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+process.on('SIGINT',  () => shutdown('SIGINT'));`,
+        },
+        { type: 'heading', content: 'AsyncLocalStorage — контекст запроса' },
+        {
+          type: 'text',
+          content:
+            '\`AsyncLocalStorage\` из модуля \`node:async_hooks\` позволяет хранить данные, привязанные к асинхронной цепочке вызовов, — например, идентификатор запроса или пользователя. Контекст автоматически прокидывается через \`await\`, \`setTimeout\` и коллбэки, не требуя передачи параметром.',
+        },
+        {
+          type: 'code',
+          language: 'javascript',
+          content: `const { AsyncLocalStorage } = require('node:async_hooks');
+const requestContext = new AsyncLocalStorage();
+
+app.use((req, _res, next) => {
+  requestContext.run({ requestId: req.headers['x-request-id'] }, next);
+});
+
+function logger(message) {
+  const ctx = requestContext.getStore();
+  console.log(\`[\${ctx?.requestId}] \${message}\`);
+}`,
+        },
         {
           type: 'callout',
           calloutType: 'info',
           content:
-            'Thread pool libuv (по умолчанию 4 потока) уже используется для блокирующих операций \`fs\`, \`dns\`, \`crypto\`. Размер настраивается через \`UV_THREADPOOL_SIZE\`. Если всех 4 потоков не хватает — операции встают в очередь и латенси растёт.',
+            '\`AsyncLocalStorage\` особенно полезен для логирования и трейсинга: один раз сохранив \`requestId\` в начале обработки запроса, можно получать его в любой функции, вызванной по цепочке, без явной передачи.',
         },
       ],
     },
@@ -275,7 +351,7 @@ worker.on('message', (result) => console.log('done:', result));`,
         {
           type: 'text',
           content:
-            'В Node.js 15+ необработанный rejected-промис по умолчанию завершает процесс с ненулевым кодом. Это поведение защищает от «тихих» багов, но требует дисциплины — каждый промис нужно обрабатывать.',
+            'В Node.js 15+ необработанный rejected-промис по умолчанию завершает процесс с ненулевым кодом. Это поведение защищает от незаметного накопления необработанных ошибок, но требует дисциплины — каждый промис нужно обрабатывать.',
         },
         {
           type: 'code',
@@ -301,7 +377,7 @@ process.on('uncaughtException', (err, origin) => {
         {
           type: 'text',
           content:
-            'AbortController работает в \`fetch\`, \`fs.promises\`, \`http.request\`, таймерах \`setTimeout\` / \`setImmediate\` (Node 17+). Это стандартный способ отменять долгие операции и реализовывать таймауты.',
+            'AbortController работает в \`fetch\`, \`fs.promises\`, \`http.request\`, таймерах \`setTimeout\` и \`setImmediate\` (Node 17+). Это стандартный способ отменять долгие операции и реализовывать таймауты.',
         },
         {
           type: 'code',
@@ -333,13 +409,13 @@ async function fetchWithTimeout(url, ms) {
         {
           type: 'text',
           content:
-            'JSON.parse на мегабайтах, регулярка с экспоненциальным backtracking, плотный цикл — всё это блокирует event loop. Латенси сервера сразу растёт, healthcheck начинает падать. Профилируйте через \`clinic.js\` или \`0x\` flame graph.',
+            'JSON.parse на мегабайтах, регулярное выражение с экспоненциальным backtracking, плотный цикл — всё это блокирует event loop. Задержки сервера сразу растут, healthcheck начинает падать. Для диагностики применяются \`clinic.js\` и \`0x\` (генератор flame graph из stack-sampling).',
         },
         { type: 'heading', content: 'Listener leak в EventEmitter' },
         {
           type: 'text',
           content:
-            'По умолчанию \`EventEmitter\` предупреждает при добавлении более 10 listener на одно событие. Если тысяча обработчиков добавляется в цикле и не снимается — память течёт. Решения: \`emitter.removeListener\`, \`once\` вместо \`on\`, \`emitter.setMaxListeners\` если действительно нужно много.',
+            'По умолчанию \`EventEmitter\` предупреждает при добавлении более 10 listener на одно событие. Если тысяча обработчиков добавляется в цикле и не снимается, расход памяти растёт. Решения: \`emitter.removeListener\`, \`once\` вместо \`on\`, \`emitter.setMaxListeners(n)\`, если действительно нужно много.',
         },
         { type: 'heading', content: 'setInterval с дрифтом времени' },
         {
@@ -351,7 +427,7 @@ async function fetchWithTimeout(url, ms) {
         {
           type: 'text',
           content:
-            '\`setInterval\` удерживает event loop активным, пока его не отменить через \`clearInterval\`. Если приложение завершается, но интервал висит — процесс не выйдет. Метод \`timer.unref()\` снимает интервал с подсчёта активных дескрипторов.',
+            '\`setInterval\` удерживает event loop активным, пока его не отменить через \`clearInterval\`. Если приложение завершается, но интервал висит, процесс не выйдет. Метод \`timer.unref()\` снимает интервал с подсчёта активных дескрипторов.',
         },
       ],
     },
@@ -386,14 +462,26 @@ sync → \`process.nextTick\` → microtasks → следующая фаза
 - Бесконечная цепочка \`Promise.then\` блокирует фазу poll
 - Чанкование тяжёлой работы — через \`setImmediate\`
 
+**libuv thread pool**
+- Размер по умолчанию 4, настраивается \`UV_THREADPOOL_SIZE\` (до 1024)
+- Используется: \`fs.*\`, \`dns.lookup\`, \`crypto.pbkdf2\` / \`scrypt\` / \`randomBytes\`, \`zlib.*\`
+- \`dns.resolve\` (через c-ares) не использует thread pool
+
 **CPU-bound**
 - \`worker_threads\` для параллельных вычислений
-- \`SharedArrayBuffer\` для нулевого копирования
-- Thread pool libuv: \`UV_THREADPOOL_SIZE\` (по умолчанию 4)
+- \`SharedArrayBuffer\` + \`Atomics\` для нулевого копирования
+- \`transferList\` для передачи ArrayBuffer без копирования
+- \`cluster\` — отдельные процессы; в k8s обычно вместо него — несколько подов
+
+**Графefully shutdown**
+- Слушать \`SIGTERM\` (k8s) и \`SIGINT\` (Ctrl+C)
+- \`server.close()\` + закрытие БД и очередей
+- Принудительный exit по таймауту (\`unref\`-ed setTimeout)
 
 **Профилирование**
-- \`perf_hooks.monitorEventLoopDelay\` — лаг loop
+- \`perf_hooks.monitorEventLoopDelay\` — задержка loop
 - \`clinic.js\`, \`0x\` — flame graph
+- \`AsyncLocalStorage\` — контекст запроса для логирования
 
 **Обработка ошибок**
 - \`process.on('unhandledRejection')\` — обязательно
@@ -409,7 +497,7 @@ sync → \`process.nextTick\` → microtasks → следующая фаза
     {
       slug: 'node-optimization',
       reason:
-        'После event loop логично разобрать прикладные приёмы оптимизации: LRU-кеш, батчинг, circuit breaker.',
+        'После event loop логично разобрать прикладные приёмы оптимизации: LRU-кеш, батчинг, circuit breaker, worker_threads.',
     },
   ],
 };

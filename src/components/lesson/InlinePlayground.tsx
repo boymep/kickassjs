@@ -3,7 +3,6 @@ import { Alert, Box, Button, Paper,  Typography, useTheme } from '@mui/material'
 import Stack from './Stack';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import HighlightOffIcon from '@mui/icons-material/HighlightOff';
 import CodeMirror from '@uiw/react-codemirror';
 import { javascript } from '@codemirror/lang-javascript';
@@ -129,16 +128,12 @@ export default function InlinePlayground({ playground }: InlinePlaygroundProps) 
             <Alert severity="error" icon={<HighlightOffIcon />}>
               <Box sx={{ fontFamily: 'monospace', fontSize: 13 }}>{result.error}</Box>
             </Alert>
-          ) : passed === true ? (
-            <Alert severity="success" icon={<CheckCircleIcon />}>
-              Вывод совпадает с ожидаемым.
-            </Alert>
           ) : passed === false ? (
             <Alert severity="warning" icon={<HighlightOffIcon />}>
               Вывод не совпадает с ожидаемым. Сравните строки внимательно.
             </Alert>
           ) : null}
-          <Typography variant="overline" color="text.secondary" sx={{ display: 'block', mt: 2, mb: 1 }}>
+          <Typography variant="overline" color="text.secondary" sx={{ display: 'block', mt: passed === true ? 0 : 2, mb: 1 }}>
             Вывод
           </Typography>
           <Box
