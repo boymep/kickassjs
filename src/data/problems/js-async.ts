@@ -1,4 +1,5 @@
 import type { Problem } from "../../types/problem";
+import { VIRTUAL_TIME_PRELUDE } from "./_virtualTime";
 
 export const jsAsyncProblems: Problem[] = [
   {
@@ -63,8 +64,20 @@ await myPromiseAll([
       },
     ],
     hints: [
-      "Как отследить, что все промисы завершились, если они могут завершаться в произвольном порядке?",
-      "Порядок результатов должен соответствовать порядку входных промисов — независимо от того, какой из них завершился быстрее.",
+      "Все промисы должны стартовать сразу, но итоговый результат собрать строго в порядке входа. Какое состояние нужно вести, чтобы понять, что все завершились?",
+      "Создайте новый промис, заранее заведите массив результатов и счётчик `completed`. Для каждого входного промиса подпишитесь и кладите значение по индексу `i`; когда счётчик достиг `promises.length` — резолвите. Любой реджект пробрасывайте в общий `reject` сразу.",
+      `Главное — **порядок результатов и быстрый провал**. Порядок гарантируется тем, что каждый результат пишется в \`results[i]\` по своему индексу, а не пушится в произвольном порядке завершения. Быстрый провал: любой первый \`reject\` сразу прокидывает ошибку наружу, не дожидаясь остальных — это семантика «всё или ничего». При этом остальные промисы продолжают выполняться, просто их результаты уже никого не интересуют — отменить уже запущенные промисы нативно нельзя.
+
+С чего начать:
+\`\`\`js
+function myPromiseAll(promises) {
+  return new Promise((resolve, reject) => {
+    const results = new Array(promises.length);
+    let completed = 0;
+    // ...
+  });
+}
+\`\`\``,
     ],
     solutionCode: `function myPromiseAll(promises) {
   return new Promise((resolve, reject) => {
@@ -153,8 +166,18 @@ await myPromiseRace([fast, slow]); // → 'fast'
       },
     ],
     hints: [
-      "Нужно «подписаться» на каждый промис — и как только любой завершится, завершить общий результат.",
-      "Что происходит, если resolve или reject вызвать несколько раз на одном промисе?",
+      "Создайте один общий промис и подпишитесь на все входные. Кто-нибудь завершится — мгновенно прокидываете его результат наружу. Что произойдёт с теми, кто завершится позже?",
+      "Внутри `new Promise((resolve, reject) => ...)` пройдитесь по `promises` и сделайте `Promise.resolve(p).then(resolve, reject)`. Все последующие вызовы `resolve`/`reject` после первого молча игнорируются — это и даёт семантику гонки.",
+      `Семантика гонки опирается на свойство промисов: **первый \`resolve\`/\`reject\` фиксирует состояние, все остальные молча игнорируются**. Поэтому даже не нужно явно отписываться или вести флаг «кто-то уже победил» — JS сам обработает повторные срабатывания как no-op. \`Promise.resolve(p)\` нужен, чтобы корректно работать с не-промисными значениями: число \`42\` в массиве должно вести себя как мгновенно зарезолвленный промис, а не падать с ошибкой.
+
+С чего начать:
+\`\`\`js
+function myPromiseRace(promises) {
+  return new Promise((resolve, reject) => {
+    // ...
+  });
+}
+\`\`\``,
     ],
     solutionCode: `function myPromiseRace(promises) {
   return new Promise((resolve, reject) => {
@@ -234,8 +257,19 @@ await fetchWithTimeout(slow, 1000); // → 'data'
       },
     ],
     hints: [
-      "Задача сводится к гонке: кто «финиширует» первым — оригинальный запрос или таймер?",
-      "Как создать промис, который автоматически отклоняется через заданное время?",
+      "Это гонка: либо запрос успеет, либо «звонит будильник» с ошибкой. Какой инструмент Promise разрешает такой сценарий — кто первый, тот и определяет результат?",
+      "Создайте «таймаут-промис» через `new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), ms))` и верните `Promise.race([promise, timeout])`. Если исходный реджектится раньше — его причина пробросится сама.",
+      `Это паттерн «гонка с будильником». Таймер обязан **режектить**, а не резолвить — иначе истёкшее время не отличить от валидного ответа. Важно понимать: исходный промис не отменяется, даже если таймаут сработал первым — в нативном \`fetch\` для настоящей отмены нужен \`AbortController\`, передаваемый в запрос отдельно. Здесь мы лишь перестаём ждать ответ, а сам HTTP-запрос продолжает уходить и тратить ресурсы клиента и сервера.
+
+С чего начать:
+\`\`\`js
+function fetchWithTimeout(promise, ms) {
+  const timeout = new Promise((_, reject) => {
+    // ...
+  });
+  return Promise.race([promise, timeout]);
+}
+\`\`\``,
     ],
     solutionCode: `function fetchWithTimeout(promise, ms) {
   const timeout = new Promise((_, reject) =>
@@ -321,8 +355,20 @@ await readAsync('bad.txt');   // → reject Error: not found
       },
     ],
     hints: [
-      "Node.js callback-конвенция: последний аргумент функции — это callback вида `(err, result)`.",
-      "Как превратить такой callback-вызов в промис?",
+      "Нужно вернуть функцию, которая принимает любые аргументы пользователя, добавляет к ним свой колбэк-«мост» и превращает его срабатывание в исход промиса. Как такой «мост» соотносится с `resolve`/`reject`?",
+      "Возвращаемая функция собирает аргументы через rest и оборачивает вызов в `new Promise`. В исполнителе вызовите `fn(...args, (err, result) => err ? reject(err) : resolve(result))`.",
+      `Главный момент — **колбэк добавляется в конец списка аргументов**. Это конвенция Node.js error-first: \`(err, result) => ...\`. Наша задача — превратить эти два пути (\`err\` или \`result\`) в \`reject\`/\`resolve\`. Тонкость: если оригинальная функция вызывает колбэк **синхронно** (что иногда бывает), исполнитель промиса успеет вызвать \`resolve\` ещё до возврата \`new Promise\` — это нормально и безопасно. А вот если функция использует не error-first соглашение, придётся писать собственную обёртку — универсального \`promisify\` для всех колбэк-стилей не бывает.
+
+С чего начать:
+\`\`\`js
+function promisify(fn) {
+  return function (...args) {
+    return new Promise((resolve, reject) => {
+      // ...
+    });
+  };
+}
+\`\`\``,
     ],
     solutionCode: `function promisify(fn) {
   return function(...args) {
@@ -409,8 +455,19 @@ await limitConcurrency(tasks, 3);
       },
     ],
     hints: [
-      "Как запустить не более limit задач одновременно, и стартовать новую только когда освобождается слот?",
-      "Порядок результатов должен соответствовать входному массиву — независимо от того, какая задача завершилась раньше.",
+      "Запускайте задачи по одной, но не ждите завершения каждой — добавляйте её в «пул активных» и, когда пул дорастает до `limit`, делайте паузу до момента, пока хоть одна не завершится. Какая операция Promise позволяет дождаться «любого первого»?",
+      "Заведите `Set` активных промисов. Для каждой задачи: запустите её, кладите результат в `results[i]`, после завершения удаляйте сама себя из множества. Если `size >= limit` — `await Promise.race(executing)`. После цикла — `await Promise.all(executing)`.",
+      `Ключевая тонкость — **самоудаление из пула**. Каждая активная задача должна сама вычеркнуться из \`executing\` по завершении, иначе \`Promise.race\` будет вечно возвращать уже завершённые промисы и цикл не двинется. Поэтому оборачиваем промис в \`.finally(() => executing.delete(...))\` и кладём в множество **именно эту обёртку**, а не оригинал. Ещё один момент: индекс \`i\` фиксируется в замыкании при запуске задачи, поэтому результат всегда ложится в правильную позицию, независимо от порядка завершения.
+
+С чего начать:
+\`\`\`js
+async function limitConcurrency(fns, limit) {
+  const results = new Array(fns.length);
+  const executing = new Set();
+  // ...
+  return results;
+}
+\`\`\``,
     ],
     solutionCode: `async function limitConcurrency(fns, limit) {
   const results = new Array(fns.length);
@@ -465,9 +522,7 @@ await limitConcurrency(tasks, 3);
     title: "Определи вывод: await, Promise.then и queueMicrotask",
     difficulty: "medium",
     isContextual: false,
-    description: `Перед вами смесь синхронного кода, \`async\`/\`await\`, \`Promise.then\` и \`queueMicrotask\`. Введите каждую напечатанную строку на отдельной строке поля ответа.
-
-**Подсказка:** \`await\` — это синтаксический сахар над \`Promise.then\`. Каждый \`await\` ставит продолжение в очередь микрозадач. \`queueMicrotask\` и \`Promise.resolve().then\` попадают в **ту же самую** очередь и выполняются в порядке постановки.`,
+    description: `Перед вами смесь синхронного кода, \`async\`/\`await\`, \`Promise.then\` и \`queueMicrotask\`. Введите каждую напечатанную строку на отдельной строке поля ответа.`,
     code: `async function run() {
   console.log('A');
   await Promise.resolve();
@@ -483,8 +538,9 @@ Promise.resolve().then(() => console.log('T'));
 console.log('2');`,
     expected: "1\nA\n2\nB\nQ\nT\nC",
     hints: [
-      "Определи, что успевает выполниться синхронно — до того, как движок начнёт обрабатывать очередь микрозадач.",
-      "Каждый `await` ставит продолжение в конец очереди микрозадач. Что уже лежит в очереди к моменту, когда `run()` доходит до второго `await`?",
+      "Шаг 1: синхронно выполнится `1`, начало `run()` до первого `await` (печатается `A`) и затем `2`. Первый `await` ставит «продолжение №1» (печать `B`) в очередь микрозадач.",
+      "Шаг 2: после `1`, `A`, `2` в очереди лежат: продолжение №1 (B), затем `queueMicrotask` (Q), затем `then` (T). Движок выполняет их по порядку. Когда печатается `B`, встречается второй `await` — он ставит «продолжение №2» (печать `C`) в конец очереди.",
+      "Шаг 3: после `B` очередь: Q, T, продолжение №2. Выполняются по порядку — печатается `Q`, `T`, `C`. Итог: `1`, `A`, `2`, `B`, `Q`, `T`, `C`.",
     ],
     solutionCode: `// 1 — синхронно
 // run() начинает выполняться: A — тоже синхронно, до первого await
@@ -540,8 +596,9 @@ console.log('2');`,
       },
     ],
     hints: [
-      "Что находится в массиве `fns` — это промисы или что-то другое?",
-      "Promise.all принимает промисы. Что нужно сделать с элементами массива, чтобы получить их?",
+      "Тест ожидает массив чисел, а возвращается что-то другое. Посмотрите, что вообще лежит в `fns` — это уже промисы или ещё нет?",
+      "В массиве лежат **функции**, которые надо вызвать, чтобы получить промисы. `Promise.all(fns)` просто пропускает функции как обычные значения. Преобразуйте сначала: `fns.map((fn) => fn())`.",
+      "Главный урок — `Promise.all` ждёт **итерируемое промисов (или значений)**, но **не функций**. Функция сама по себе — обычное значение, и `Promise.all` спокойно возвращает её как есть, не вызывая. Это типичный баг, когда смешивают «массив тасков» (функций, которые ещё не запущены) и «массив промисов» (уже запущенных операций). Разница принципиальная: функции запускаются явно, промисы — уже выполняются. Чтобы перейти от первого ко второму, нужен `.map(fn => fn())`.",
     ],
     solutionCode: `async function runAll(fns) {
   return await Promise.all(fns.map((fn) => fn()));
@@ -630,8 +687,16 @@ console.log('2');`,
       },
     ],
     hints: [
-      "Все запросы должны стартовать одновременно — как запустить их все, не ожидая каждого по очереди?",
-      "Как дождаться всех результатов сразу и получить их в порядке входного массива?",
+      "`for...of` с `await` тормозит на каждой итерации. Нужно сначала превратить все URL в массив уже запущенных промисов, и только потом дожидаться их всех вместе.",
+      "Используйте `urls.map((url) => fetcher(url))` — это сразу стартует все запросы и даёт массив промисов с сохранённым порядком. Затем `await Promise.all(...)` соберёт результаты в том же порядке.",
+      `Главное — понять, **в какой момент стартуют запросы**. \`urls.map(url => fetcher(url))\` синхронно вызывает все \`fetcher\`-ы, и каждый возвращает уже запущенный промис: к моменту, когда \`map\` завершится, все HTTP-запросы уже в полёте. \`await Promise.all(...)\` лишь дожидается их завершения. В версии с \`for...of + await\` запрос \`n+1\` физически не начинается, пока не завершился \`n\` — отсюда суммарная задержка вместо максимальной. Минус параллельной версии — нельзя ограничить одновременную нагрузку, нужны другие паттерны (\`asyncPool\`, очередь).
+
+С чего начать:
+\`\`\`js
+async function fetchAllParallel(urls, fetcher) {
+  // ...
+}
+\`\`\``,
     ],
     solutionCode: `async function fetchAllParallel(urls, fetcher) {
   return await Promise.all(urls.map((url) => fetcher(url)));
@@ -731,8 +796,20 @@ await myPromiseAny([
       },
     ],
     hints: [
-      "Нужна зеркальная логика к Promise.race: успех первого resolve «побеждает», а ошибка учитывается только если все отклонились.",
-      "Как сохранить ошибки всех промисов, сохраняя их порядок, и узнать, что все провалились?",
+      "Зеркально к `Promise.race`: успех — первый, кто разрешился; провал — только если ВСЕ отклонились. Что нужно вести, чтобы понять, что все провалились?",
+      "Заведите массив `errors` той же длины, что и `promises`, и счётчик `rejectedCount`. На каждом fulfilled — сразу `resolve(val)`. На rejected — пишите ошибку по индексу `i`; когда счётчик достиг длины массива — `reject(new AggregateError(errors, '...'))`. Пустой массив — реджектите сразу с `AggregateError([], ...)`.",
+      `\`Promise.any\` — это **зеркало** \`Promise.all\`. У \`all\` любая ошибка моментально валит весь результат, у \`any\` любой успех моментально его фиксирует; провал у \`any\` происходит только когда **все** упали. Ошибки собираются по индексам в массив, чтобы порядок в \`AggregateError.errors\` соответствовал порядку входа. Граничный случай — пустой массив: формально «все провалились» истинно по vacuous truth, поэтому реджектим сразу с \`AggregateError([])\`. Это редко полезно на практике, но соответствует поведению нативного \`Promise.any\`.
+
+С чего начать:
+\`\`\`js
+function myPromiseAny(promises) {
+  return new Promise((resolve, reject) => {
+    const errors = new Array(promises.length);
+    let rejectedCount = 0;
+    // ...
+  });
+}
+\`\`\``,
     ],
     solutionCode: `function myPromiseAny(promises) {
   return new Promise((resolve, reject) => {
@@ -827,8 +904,19 @@ const results = await asyncPool(2, [1, 2, 3, 4, 5],
       },
     ],
     hints: [
-      "Как отслеживать текущее количество параллельно выполняемых задач и «дождаться» освобождения слота?",
-      "Порядок результатов должен соответствовать порядку items, а не порядку завершения задач.",
+      "Идите по `items` в цикле и сразу запускайте задачу — но кладите её в `Set` активных. Как только их становится `>= concurrency`, дождитесь, пока любая завершится, и только потом стартуйте следующую.",
+      "Используйте `Set<Promise>` + `Promise.race(running)` для ожидания свободного слота. Чтобы порядок результатов совпадал с `items`, в обёртке записывайте `results[i] = await fn(items[i], i)`. После цикла дождитесь оставшихся через `Promise.all(running)`.",
+      `Главная ловушка — **порядок результатов** при произвольном порядке завершения. Если просто пушить в массив по мере готовности, порядок выхода будет соответствовать скорости задач, а не их месту во входном массиве. Решается фиксацией индекса при запуске: \`results[i] = await fn(items[i], i)\` — \`i\` захватывается замыканием. Ещё нюанс: после цикла обязательно \`await Promise.all(running)\` — иначе функция вернётся, пока последняя порция задач ещё в воздухе, и \`results\` будет неполным.
+
+С чего начать:
+\`\`\`js
+async function asyncPool(concurrency, items, fn) {
+  const results = new Array(items.length);
+  const running = new Set();
+  // ...
+  return results;
+}
+\`\`\``,
     ],
     solutionCode: `async function asyncPool(concurrency, items, fn) {
   const results = new Array(items.length);
@@ -900,9 +988,19 @@ const value = await poll(() => (++n >= 3 ? 'done' : null), 50, 1000);
       { id: 'jsa-m1-t4', inputDisplay: "async check тоже работает", inputArgs: ['async-check'], expected: 'async-ok' },
     ],
     hints: [
-      'Сделайте цикл: `await check()`, если truthy — резолв; иначе ждите `intervalMs` через `await new Promise(r => setTimeout(r, intervalMs))`.',
-      'Для таймаута: запомните время старта, и при каждом проходе проверяйте, не превысили ли мы `timeoutMs`. Либо используйте `Promise.race`.',
-      'Не забудьте: первая проверка — без задержки.',
+      "Опрос — это цикл «проверил → если не вышло, подождал → снова проверил». Первая попытка должна быть мгновенной, а общую длительность нужно ограничить. Какие два состояния нужно вести?",
+      "Запомните `start = Date.now()`. В бесконечном цикле: `val = await check()`, если truthy — `return val`. Если истекло время с момента старта (`Date.now() - start >= timeoutMs`) — бросьте `new Error('Timeout')`. Иначе подождите `intervalMs` через `await new Promise(r => setTimeout(r, intervalMs))`.",
+      `Главное — **первый вызов должен быть мгновенным**, а не через \`intervalMs\`. Часто полезное условие уже выполнено к моменту запуска (например, элемент уже на странице), и заставлять пользователя ждать первую паузу зря. Поэтому проверка делается **до** сна, а не после. Ещё один нюанс — \`await check()\` корректно работает и с синхронными, и с асинхронными \`check\`: если \`check\` вернула обычное значение, \`await\` просто прокидывает его дальше, оборачивая в промис. Также важно: \`timeoutMs\` отсчитывается от **начала** функции, а не от последней проверки — иначе при \`check\`, выполняющейся долго, общее время может неограниченно расти.
+
+С чего начать:
+\`\`\`js
+async function poll(check, intervalMs, timeoutMs) {
+  const start = Date.now();
+  while (true) {
+    // ...
+  }
+}
+\`\`\``,
     ],
     solutionCode: `async function poll(check, intervalMs, timeoutMs) {
   const start = Date.now();
@@ -971,9 +1069,20 @@ const value = await poll(() => (++n >= 3 ? 'done' : null), 50, 1000);
       { id: 'jsa-h3-t5', inputDisplay: "не-промисы в массиве как fulfilled", inputArgs: ['non-promises'], expected: [{ status: 'fulfilled', value: 42 }, { status: 'fulfilled', value: 'hi' }] },
     ],
     hints: [
-      'Создайте новый промис, в котором каждый input подпишется через `.then(value, reason)` и запишет результат по своему индексу.',
-      'Не забудьте: результаты должны сохранять порядок входного массива, даже если они завершаются в произвольном порядке.',
-      'Считайте число завершённых промисов; когда оно равно длине массива — резолвите итоговый массив.',
+      "В отличие от `Promise.all`, этот вариант **никогда не реджектится**: и успех, и ошибку каждого промиса нужно обернуть в объект-описатель и положить в массив на правильное место.",
+      "Используйте `Promise.resolve(p).then(onFulfilled, onRejected)` — два колбэка позволяют обработать оба исхода. В `onFulfilled` пишите `{ status: 'fulfilled', value }`, в `onRejected` — `{ status: 'rejected', reason }`. Считайте `done`; когда он равен длине массива — `resolve(results)`.",
+      `Главное отличие от \`Promise.all\` — \`allSettled\` **никогда не реджектится**. Ошибка любого промиса не «выпрыгивает» наружу, а оборачивается в дескриптор \`{ status: 'rejected', reason }\` и кладётся на своё место в массиве. Поэтому исполнителю не нужен параметр \`reject\` — он принципиально не используется. Тонкость: важно подписываться через **двухаргументный** \`.then(onFulfilled, onRejected)\`, а не через \`.then(...).catch(...)\` — в цепочке \`then().catch()\` ошибка из \`onFulfilled\` (например, при записи в \`results[i]\`) попадёт в \`catch\` и спутает учёт.
+
+С чего начать:
+\`\`\`js
+function myPromiseAllSettled(promises) {
+  return new Promise((resolve) => {
+    const results = new Array(promises.length);
+    let done = 0;
+    // ...
+  });
+}
+\`\`\``,
     ],
     solutionCode: `function myPromiseAllSettled(promises) {
   return new Promise((resolve) => {
@@ -1047,9 +1156,21 @@ API:
       { id: 'jsa-h4-t4', inputDisplay: "size отражает оставшиеся задачи", inputArgs: ['size-shrinks'], expected: true },
     ],
     hints: [
-      'Заведи внутри **цепочку из промисов** — переменную `chain`, к которой подвешиваете новые задачи через `chain = chain.then(() => taskFn())`.',
-      'Чтобы упавшая задача не ломала цепочку, подвешивай задачу через оба обработчика — `.then(taskFn, taskFn)` — или отдельно ловите ошибку через `.catch`. Тогда следующая задача стартует независимо от исхода предыдущей.',
-      '`add()` должен возвращать **новый** промис, привязанный к конкретной задаче — его `resolve`/`reject` не должны влиять на саму цепочку.',
+      "Главная идея — поддерживать одну общую «цепочку», к которой подвешиваются новые задачи. Тогда любая следующая задача стартует, только когда предыдущая в цепочке завершилась. Какое состояние и какие методы Promise тут пригодятся?",
+      "Заведите `let chain = Promise.resolve()`. В `add(taskFn)` подвесьте задачу через **оба** обработчика: `chain.then(taskFn, taskFn)` — так упавшая задача не сломает следующую. Возвращайте именно этот промис задачи, а в новую `chain` запишите обёртку, которая ловит и успех, и ошибку (иначе на цепочке появится «грязный» reject).",
+      `Самый тонкий момент — **разделение двух промисов**: того, что отдаётся вызывающему коду, и того, что становится новой «головой» цепочки. Если возвращать ту же цепочку, что и сохраняется в \`chain\`, то ошибка задачи моментально превратит всю очередь в реджектнутый промис, и следующие задачи в неё уже не подвесятся корректно. Решение — подвешивать \`taskFn\` через \`.then(taskFn, taskFn)\` (оба обработчика), чтобы предыдущая ошибка не блокировала запуск следующей. А во внутренней \`chain\` обязательно «съесть» возможный reject, иначе появятся unhandled rejection и цепочка отравится.
+
+С чего начать:
+\`\`\`js
+function createAsyncQueue() {
+  let chain = Promise.resolve();
+  return {
+    add(taskFn) {
+      // ...
+    },
+  };
+}
+\`\`\``,
     ],
     solutionCode: `function createAsyncQueue() {
   let chain = Promise.resolve();
@@ -1123,6 +1244,323 @@ API:
     const afterDone = q.size; // 0
     return afterAdd === 2 && afterDone === 0;
   }
+}`,
+  },
+  {
+    id: "jsa-m2",
+    topicId: "js-async",
+    title: "retryWithDelay — повтор с паузой",
+    difficulty: "medium",
+    isContextual: true,
+    description: `В продакшн-коде часто нужно повторить запрос при ошибке. Реализуйте функцию \`retryWithDelay(fn, retries, ms)\`:
+- Вызывает \`fn()\` (асинхронная функция, возвращает Promise)
+- При ошибке ждёт \`ms\` миллисекунд и повторяет
+- Если \`retries\` попыток исчерпаны — бросает последнюю ошибку
+- При успехе — возвращает результат
+
+Примеры:
+\`\`\`
+let attempt = 0;
+const unstable = () => {
+  attempt++;
+  if (attempt < 3) throw new Error('fail');
+  return 'success';
+};
+
+await retryWithDelay(unstable, 3, 0); // → 'success'
+// attempt = 3 (два провала, третья — успех)
+\`\`\``,
+    functionName: "retryWithDelay_test",
+    starterCode: `async function retryWithDelay(fn, retries, ms) {
+  // ваш код
+}`,
+    testCases: [
+      {
+        id: "jsa-m2-t1",
+        inputDisplay: 'fn падает 2 раза, 3-я успешна → "success"',
+        inputArgs: ["fail-2-then-ok"],
+        expected: "success",
+      },
+      {
+        id: "jsa-m2-t2",
+        inputDisplay: "fn всегда успешна → 1 попытка",
+        inputArgs: ["always-ok"],
+        expected: 42,
+      },
+      {
+        id: "jsa-m2-t3",
+        inputDisplay: "fn всегда падает → throws после retries попыток",
+        inputArgs: ["always-fail"],
+        expected: "Error: always-fail",
+      },
+      {
+        id: "jsa-m2-t4",
+        inputDisplay: "retries=1: одна попытка, при ошибке бросает",
+        inputArgs: ["retries-1"],
+        expected: "Error",
+      },
+      {
+        id: "jsa-m2-t5",
+        inputDisplay: "количество попыток ≤ retries",
+        inputArgs: ["attempt-count"],
+        expected: true,
+      },
+    ],
+    hints: [
+      "Логика типа «попробовал, не вышло — подождал, попробовал ещё раз, и так до тех пор, пока попытки не кончатся». Какие конструкции потребуются: чтобы ловить ошибку, чтобы повторять и чтобы делать паузу?",
+      "Цикл `for` от 0 до `retries`. Внутри — `try { return await fn(); } catch (err) { lastError = err; ... }`. На последней итерации не спите — просто выпадите из цикла и бросьте `lastError`. Между попытками — `await new Promise(r => setTimeout(r, ms))`.",
+      `Главный нюанс — не спать **после** последней попытки. Если поставить \`await sleep(ms)\` безусловно, после исчерпания попыток функция бессмысленно повисит на \`ms\` миллисекунд перед тем, как бросить ошибку. Проверка \`if (i < retries - 1)\` решает это. Ещё один частый промах — путаница «попыток» и «повторов»: при \`retries = 3\` функция делает **три** попытки всего, а не одну плюс три повтора. Документируйте семантику, чтобы вызывающий код не ошибся.
+
+С чего начать:
+\`\`\`js
+async function retryWithDelay(fn, retries, ms) {
+  let lastError;
+  for (let i = 0; i < retries; i++) {
+    // ...
+  }
+  throw lastError;
+}
+\`\`\``,
+    ],
+    solutionCode: `async function retryWithDelay(fn, retries, ms) {
+  let lastError;
+  for (let i = 0; i < retries; i++) {
+    try {
+      return await fn();
+    } catch (err) {
+      lastError = err;
+      if (i < retries - 1) {
+        await new Promise((r) => setTimeout(r, ms));
+      }
+    }
+  }
+  throw lastError;
+}`,
+    testHelperCode: `async function retryWithDelay_test(arg) {
+  if (arg === 'fail-2-then-ok') {
+    let attempt = 0;
+    const fn = async () => { attempt++; if (attempt < 3) throw new Error('fail'); return 'success'; };
+    return retryWithDelay(fn, 3, 0);
+  }
+  if (arg === 'always-ok') return retryWithDelay(async () => 42, 3, 0);
+  if (arg === 'always-fail') {
+    try { await retryWithDelay(async () => { throw new Error('always-fail'); }, 3, 0); }
+    catch (e) { return 'Error: ' + e.message; }
+  }
+  if (arg === 'retries-1') {
+    try { await retryWithDelay(async () => { throw new Error('fail'); }, 1, 0); }
+    catch (e) { return 'Error'; }
+  }
+  if (arg === 'attempt-count') {
+    let attempts = 0;
+    try { await retryWithDelay(async () => { attempts++; throw new Error('x'); }, 3, 0); } catch(e) {}
+    return attempts <= 3;
+  }
+}`,
+  },
+  {
+    id: "jsa-m3",
+    topicId: "js-async",
+    kind: "implement",
+    title: "asyncRetry — повтор с экспоненциальной задержкой",
+    difficulty: "hard",
+    isContextual: false,
+    description: `Реализуйте \`asyncRetry(fn, { retries, delay, factor })\` — обёртку, которая вызывает асинхронную функцию \`fn()\` и при отказе **повторяет** её с экспоненциальной задержкой:
+- \`retries\` — максимальное количество повторных попыток после первого вызова (например, retries=3 ⇒ всего 4 попытки).
+- \`delay\` — начальная задержка между попытками (мс).
+- \`factor\` — множитель задержки между попытками (например, factor=2 ⇒ \`delay\`, \`delay*2\`, \`delay*4\`, ...).
+
+Если \`fn()\` в итоге успешна — резолвится её результатом. Если все попытки исчерпаны — реджектится **последней** ошибкой.
+
+Классический сценарий для сетевых запросов: при сбое не «долбить» сервер с одинаковой паузой, а растягивать интервалы между попытками — это и называют **экспоненциальной задержкой** (exponential backoff).`,
+    functionName: 'asyncRetry_test',
+    starterCode: `function asyncRetry(fn, { retries, delay, factor }) {
+  // ваш код
+}`,
+    testCases: [
+      { id: "jsa-m3-t1", inputDisplay: "fn успешна с первого раза → 1 вызов", inputArgs: ['success-first'], expected: { result: 'ok', calls: 1 } },
+      { id: "jsa-m3-t2", inputDisplay: "fn успешна со 2-й попытки → 2 вызова", inputArgs: ['success-second'], expected: { result: 'ok', calls: 2 } },
+      { id: "jsa-m3-t3", inputDisplay: "fn падает все retries+1 раз → последняя ошибка", inputArgs: ['always-fail'], expected: 'Error: fail-3' },
+      { id: "jsa-m3-t4", inputDisplay: "retries=0 → ровно 1 попытка", inputArgs: ['no-retries'], expected: 'Error: only-once' },
+      { id: "jsa-m3-t5", inputDisplay: "задержки следуют delay * factor^i", inputArgs: ['exp-delay'], expected: true },
+    ],
+    hints: [
+      "Главное здесь — растущая пауза. Между попытками держите текущую задержку и после каждого провала умножайте её на `factor`. Сколько всего может быть попыток?",
+      "Цикл `for (attempt = 0; attempt <= retries; attempt++)` — итого `retries + 1` попыток. Внутри: `try { return await fn(); } catch (e) { lastErr = e; if (attempt === retries) break; await sleep(current); current *= factor; }`. После цикла — `throw lastErr`.",
+      `Главный смысл экспоненциальной задержки — **не положить сервер**: при массовом сбое тысячи клиентов, которые ретраятся через одинаковую паузу, бьют по сервису синхронно и не дают ему восстановиться. Растущие интервалы дают сервису пространство для дыхания. На практике к формуле часто добавляют **jitter** — случайный сдвиг в пределах интервала, чтобы клиенты не синхронизировались по фазе. В этой задаче jitter не требуется, но в продакшен-коде он почти всегда нужен.
+
+С чего начать:
+\`\`\`js
+async function asyncRetry(fn, { retries, delay, factor }) {
+  let current = delay;
+  let lastErr;
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    // ...
+  }
+  throw lastErr;
+}
+\`\`\``,
+    ],
+    solutionCode: `async function asyncRetry(fn, { retries, delay, factor }) {
+  let current = delay;
+  let lastErr;
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      return await fn();
+    } catch (e) {
+      lastErr = e;
+      if (attempt === retries) break;
+      await new Promise((r) => setTimeout(r, current));
+      current *= factor;
+    }
+  }
+  throw lastErr;
+}`,
+    testHelperCode: `${VIRTUAL_TIME_PRELUDE}
+async function asyncRetry_test(scenario) {
+  resetVirtualTime();
+
+  if (scenario === 'success-first') {
+    let calls = 0;
+    const fn = async () => { calls++; return 'ok'; };
+    const r = await settle(asyncRetry(fn, { retries: 3, delay: 10, factor: 2 }));
+    return { result: r.value, calls };
+  }
+  if (scenario === 'success-second') {
+    let calls = 0;
+    const fn = async () => {
+      calls++;
+      if (calls < 2) throw new Error('first-fail');
+      return 'ok';
+    };
+    const r = await settle(asyncRetry(fn, { retries: 3, delay: 10, factor: 2 }));
+    return { result: r.value, calls };
+  }
+  if (scenario === 'always-fail') {
+    let calls = 0;
+    const fn = async () => { calls++; throw new Error('fail-' + calls); };
+    const r = await settle(asyncRetry(fn, { retries: 2, delay: 10, factor: 2 }));
+    return r.ok ? 'no-throw' : 'Error: ' + r.reason;
+  }
+  if (scenario === 'no-retries') {
+    let calls = 0;
+    const fn = async () => { calls++; throw new Error('only-once'); };
+    const r = await settle(asyncRetry(fn, { retries: 0, delay: 10, factor: 2 }));
+    return r.ok ? 'no-throw' : 'Error: ' + r.reason;
+  }
+  if (scenario === 'exp-delay') {
+    const stamps = [];
+    let calls = 0;
+    const fn = async () => {
+      calls++;
+      stamps.push(getNow());
+      if (calls < 4) throw new Error('retry');
+      return 'ok';
+    };
+    await settle(asyncRetry(fn, { retries: 3, delay: 50, factor: 2 }));
+    return stamps.length === 4
+      && stamps[0] === 0
+      && stamps[1] === 50
+      && stamps[2] === 150
+      && stamps[3] === 350;
+  }
+}`,
+  },
+  {
+    id: "jsa-m4",
+    topicId: "js-async",
+    title: "runSequentially — последовательные промисы",
+    difficulty: "medium",
+    isContextual: false,
+    description: `Напишите функцию \`runSequentially(asyncFns)\`, которая принимает массив функций, каждая из которых возвращает Promise, и выполняет их **строго по очереди** — следующая запускается только после завершения предыдущей.
+
+Функция возвращает Promise с массивом результатов (в том же порядке, что и входной массив).
+
+Примеры:
+\`\`\`
+const delay = (ms) => new Promise(r => setTimeout(r, ms));
+const fns = [
+  () => delay(10).then(() => 1),
+  () => delay(10).then(() => 2),
+  () => delay(10).then(() => 3),
+];
+await runSequentially(fns); // → [1, 2, 3]
+// Общее время: ~30ms (последовательно, не параллельно)
+\`\`\``,
+    functionName: "runSequentially_test",
+    starterCode: `async function runSequentially(asyncFns) {
+  // ваш код
+}`,
+    testCases: [
+      {
+        id: "jsa-m4-t1",
+        inputDisplay: "[() => 1, () => 2, () => 3] → [1, 2, 3]",
+        inputArgs: ["simple-3"],
+        expected: [1, 2, 3],
+      },
+      {
+        id: "jsa-m4-t2",
+        inputDisplay: "пустой массив → []",
+        inputArgs: ["empty"],
+        expected: [],
+      },
+      {
+        id: "jsa-m4-t3",
+        inputDisplay: "выполняются строго последовательно (порядок сохранён)",
+        inputArgs: ["order"],
+        expected: ["a", "b", "c"],
+      },
+      {
+        id: "jsa-m4-t4",
+        inputDisplay: "[() => 42] → [42]",
+        inputArgs: ["single"],
+        expected: [42],
+      },
+      {
+        id: "jsa-m4-t5",
+        inputDisplay: "промисы с разными задержками — порядок не нарушается",
+        inputArgs: ["async-order"],
+        expected: [1, 2, 3],
+      },
+    ],
+    hints: [
+      "Главное отличие от `Promise.all` — следующая задача не должна стартовать, пока не закончилась предыдущая. Какая конструкция в async-функции обеспечивает такой шаг-за-шагом обход?",
+      "Объявите функцию `async`, идите по массиву обычным `for...of` и на каждой итерации делайте `await fn()`, кладя результат в массив. `for...of` сохраняет порядок, а `await` тормозит цикл.",
+      `Главная ловушка — случайно превратить последовательный обход в параллельный. Если использовать \`asyncFns.map(fn => fn())\` или \`forEach\` с \`async\`-колбэком, все промисы стартуют **одновременно**, и весь смысл «по очереди» теряется. \`for...of\` с \`await\` единственный из встроенных циклов, который реально приостанавливает обход на каждой итерации. Также важно: следующая \`fn\` вообще не запустится, если предыдущая зареджектится — это часто желаемое поведение, но если нужно «продолжать после ошибок», его придётся реализовать через \`try/catch\` внутри цикла.
+
+С чего начать:
+\`\`\`js
+async function runSequentially(asyncFns) {
+  const results = [];
+  for (const fn of asyncFns) {
+    // ...
+  }
+  return results;
+}
+\`\`\``,
+    ],
+    solutionCode: `async function runSequentially(asyncFns) {
+  const results = [];
+  for (const fn of asyncFns) {
+    results.push(await fn());
+  }
+  return results;
+}`,
+    testHelperCode: `async function runSequentially_test(arg) {
+  const delay = (ms) => new Promise(r => setTimeout(r, ms));
+  if (arg === 'simple-3') return runSequentially([() => 1, () => 2, () => 3]);
+  if (arg === 'empty') return runSequentially([]);
+  if (arg === 'order') return runSequentially([
+    () => Promise.resolve('a'),
+    () => Promise.resolve('b'),
+    () => Promise.resolve('c'),
+  ]);
+  if (arg === 'single') return runSequentially([() => 42]);
+  if (arg === 'async-order') return runSequentially([
+    () => delay(30).then(() => 1),
+    () => delay(10).then(() => 2),
+    () => delay(20).then(() => 3),
+  ]);
 }`,
   },
 ];

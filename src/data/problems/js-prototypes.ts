@@ -27,9 +27,9 @@ console.log(p.speak());
 console.log(p instanceof Animal);`,
     expected: "generic\ngeneric → woof\ngeneric → woof\ntrue",
     hints: [
-      "Поиск метода идёт по цепочке: p → Poodle.prototype → Dog.prototype → Animal.prototype.",
-      "Poodle не переопределяет speak, поэтому используется Dog.prototype.speak с super = Animal.prototype.speak.",
-      "instanceof проверяет всю цепочку прототипов до Object.prototype.",
+      "Шаг 1: при вызове `obj.speak()` JavaScript ищет метод сначала на самом объекте, потом поднимается вверх — куда именно?",
+      "Шаг 2: цепочка прототипов здесь такая — `p → Poodle.prototype → Dog.prototype → Animal.prototype → Object.prototype`. `instanceof X` отвечает `true`, если `X.prototype` встречается где-то в этой цепочке.",
+      "Шаг 3: `a.speak()` находит метод на `Animal.prototype` → `'generic'`. `d.speak()` берёт `Dog.prototype.speak`, внутри `super.speak()` поднимается до `Animal.prototype.speak` → `'generic → woof'`. `p.speak()` — у `Poodle.prototype` своего метода нет, поэтому используется тот же `Dog.prototype.speak` → `'generic → woof'`. `p instanceof Animal` → `true`, потому что `Animal.prototype` лежит выше по цепочке.",
     ],
     solutionCode: `// a.speak(): найдено на Animal.prototype → 'generic'.
 // d.speak(): найдено на Dog.prototype, super.speak() = 'generic' → 'generic → woof'.
@@ -95,9 +95,9 @@ Dog.prototype.bark = function () {
       },
     ],
     hints: [
-      "Наследование через прототипы настроено — но экземпляры ведут себя странно. Что именно не работает в тестах?",
-      "Когда вы заменяете весь Dog.prototype новым объектом — какое свойство при этом теряется?",
-      "Как убедиться, что это свойство правильно указывает на нужную функцию после настройки цепочки?",
+      "По умолчанию у любой функции `F` объект `F.prototype` содержит автоматически созданное свойство, которое ссылается обратно на саму функцию. Что произойдёт с этой ссылкой, если вы целиком замените `Dog.prototype` другим объектом?",
+      "Это поле называется `constructor`. После `Dog.prototype = Object.create(Animal.prototype)` оно начинает приходить из `Animal.prototype` и указывает на `Animal`, а не на `Dog`. Из-за этого `new Dog(...).constructor === Dog` ломается.",
+      "Тонкость: `instanceof` смотрит на цепочку прототипов и продолжит работать корректно — её мы не ломаем. Ломается только `.constructor`, потому что в JS это обычное перезаписываемое свойство, а не магическая связь. Поэтому достаточно вручную вернуть `Dog.prototype.constructor` на `Dog` сразу после переназначения прототипа — одна строка решает проблему.",
     ],
     solutionCode: `function Animal(name) {
   this.name = name;
@@ -135,9 +135,7 @@ Dog.prototype.bark = function () {
 Поведение должно остаться идентичным:
 - \`new Square(3).area()\` → \`9\`
 - \`new Square(3).describe()\` → \`'Фигура: square, площадь 9'\`
-- \`new Square(3) instanceof Shape\` → \`true\`
-
-Используйте \`class Shape\`, \`class Square extends Shape\` и \`super(...)\` в конструкторе.`,
+- \`new Square(3) instanceof Shape\` → \`true\``,
     functionName: "jsp_p8_test",
     starterCode: `function Shape(kind) {
   this.kind = kind;
@@ -191,9 +189,22 @@ Square.prototype.area = function () {
       },
     ],
     hints: [
-      "Что нужно сделать в конструкторе дочернего класса перед тем, как обращаться к `this`?",
-      "Как дочерний класс может иметь свою реализацию метода, не убирая его из родительского?",
-      "Метод `describe` в Shape использует `this.area()` — что произойдёт, если Square переопределит `area`?",
+      "Перенесите функции-конструкторы и их прототипные методы в формат, где конструктор и методы описаны вместе как единое определение типа.",
+      "Используйте `class`, `extends` и `super(...)`: вызов родительского конструктора через `super` должен идти первой строкой конструктора дочернего класса, до любого обращения к `this`. Методы пишутся сразу в теле класса, без `prototype`.",
+      `Главная ловушка перехода — порядок в дочернем конструкторе: до вызова \`super(...)\` обращение к \`this\` бросит \`ReferenceError\`. Поэтому \`super('square')\` обязательно идёт первой строкой, и только после него можно записывать \`this.side\`. Все методы в теле класса автоматически попадают на \`prototype\`, так что \`Square.prototype.area\` создавать руками уже не надо.
+
+С чего начать:
+\`\`\`js
+class Shape {
+  constructor(kind) { /* ... */ }
+}
+class Square extends Shape {
+  constructor(side) {
+    super('square');
+    // ...
+  }
+}
+\`\`\``,
     ],
     solutionCode: `class Shape {
   constructor(kind) {
@@ -279,9 +290,18 @@ myInstanceof(null, Object);   // → false
       },
     ],
     hints: [
-      "Как `instanceof` проверяет принадлежность? Что именно сравнивается в цепочке прототипов?",
-      "Как двигаться по цепочке прототипов от объекта вверх, шаг за шагом?",
-      "Когда нужно остановиться и вернуть `false`?",
+      "У каждого объекта есть «родительский» объект, у того — свой и так далее, пока цепочка не упрётся в `null`. `instanceof` отвечает «да», если где-то в этой цепочке встречается определённый объект — какой именно?",
+      "`instanceof` проверяет, есть ли `Constructor.prototype` в цепочке прототипов `obj`. Двигаться по цепочке можно через `Object.getPrototypeOf(obj)`. Не забудьте отдельно обработать `null`/`undefined` — у них нет прототипа.",
+      `Ключевая идея: \`instanceof\` — это не проверка типа, а именно поиск конкретного объекта (\`Constructor.prototype\`) в цепочке прототипов экземпляра. Поэтому \`[] instanceof Object\` истинно — \`Object.prototype\` лежит выше по цепочке. Граничный случай — \`null\`/\`undefined\`: у них нет прототипа, любая попытка \`Object.getPrototypeOf(null)\` бросит ошибку, поэтому проверку нужно сделать до цикла.
+
+С чего начать:
+\`\`\`js
+function myInstanceof(obj, Constructor) {
+  if (obj == null) return false;
+  let proto = Object.getPrototypeOf(obj);
+  // ...
+}
+\`\`\``,
     ],
     solutionCode: `function myInstanceof(obj, Constructor) {
   if (obj === null || obj === undefined) return false;
@@ -354,9 +374,18 @@ myInstanceof(null, Object);   // → false
       },
     ],
     hints: [
-      "Метод вызывается как `arr.myMap(fn)` — как изнутри метода получить доступ к исходному массиву?",
-      "Какую сигнатуру имеет callback у стандартного `Array.prototype.map`? Сколько аргументов он принимает?",
-      "Как корректно обработать разреженный массив — тот, в котором между индексами есть пустые ячейки?",
+      "Метод вызывается как `arr.myMap(fn)` — внутри обычной (не стрелочной) функции есть ссылка на исходный массив. Через что? И помните: callback `map` получает не только элемент.",
+      "Внутри метода `this` указывает на массив. У стандартного `map` callback принимает три аргумента: `(element, index, array)`. Для разреженного массива «дырки» нужно пропускать — проверяйте `Object.hasOwn(this, i)`.",
+      `Тонкий момент — разреженные массивы вроде \`[1, , 3]\`: у них \`length\` равен 3, но индекс \`1\` физически не существует. Нативный \`map\` такие «дырки» пропускает, не вызывая колбэк, и сохраняет дырку в результате. Если просто пройтись \`for\` по \`length\` и читать \`this[i]\`, в дырке вы получите \`undefined\` и зря вызовете колбэк — поэтому нужна явная проверка существования индекса.
+
+С чего начать:
+\`\`\`js
+Array.prototype.myMap = function (callback) {
+  const result = new Array(this.length);
+  // ...
+  return result;
+};
+\`\`\``,
     ],
     solutionCode: `Array.prototype.myMap = function(callback) {
   const result = new Array(this.length);
@@ -447,9 +476,19 @@ function Dog(name) {
       },
     ],
     hints: [
-      "Как вызвать логику конструктора-родителя внутри дочернего конструктора, не создавая новый объект?",
-      "Как настроить цепочку прототипов так, чтобы экземпляры Dog имели доступ к методам Animal?",
-      "После замены Dog.prototype одно важное свойство теряется. Какое?",
+      "Чтобы дочерний конструктор повторно использовал инициализацию родителя, нужно вызвать функцию-родитель так, чтобы `this` внутри неё указывал на уже создаваемый дочерний объект. Какой метод функции позволяет задать `this` явно?",
+      "Используйте `Parent.call(this, ...)` внутри дочернего конструктора. Для наследования методов настройте цепочку через `Object.create(Parent.prototype)`. После этого восстановите `Dog.prototype.constructor = Dog` — иначе ссылка на конструктор будет указывать на Animal.",
+      `Здесь два независимых механизма наследования, и оба нужны. \`Parent.call(this, ...)\` отвечает за **собственные** поля экземпляра (например, \`this.name\`) — без него у \`Dog\` просто не появится имени. А \`Object.create(Parent.prototype)\` строит цепочку прототипов для **методов** и для \`instanceof\`. Распространённая ошибка — присваивать \`Dog.prototype = Animal.prototype\` напрямую: тогда новые методы \`Dog\` потекут в \`Animal\` и сломают родителя.
+
+С чего начать:
+\`\`\`js
+function Animal(name) { /* ... */ }
+function Dog(name) {
+  Animal.call(this, name);
+}
+Dog.prototype = Object.create(Animal.prototype);
+// ...
+\`\`\``,
     ],
     solutionCode: `function Animal(name) {
   this.name = name;
@@ -532,9 +571,18 @@ Object.isFrozen(config.db); // → true
       },
     ],
     hints: [
-      "Как заморозить объект — и что происходит с его вложенными объектами при этом?",
-      "Что нужно сделать для каждого свойства, значение которого само является объектом?",
-      "Как защититься от зацикливания, если объект содержит циклические ссылки?",
+      "Стандартный «замораживатель» объектов работает только на верхнем уровне: вложенные объекты остаются изменяемыми. Как распространить заморозку вглубь?",
+      "После `Object.freeze(obj)` пройдитесь по `Object.getOwnPropertyNames(obj)`. Для каждого значения-объекта рекурсивно вызовите `deepFreeze`. Чтобы не зациклиться на циклических ссылках — пропускайте уже замороженные объекты через `Object.isFrozen`.",
+      `Главная ловушка — циклические ссылки: если \`a.self = a\`, наивная рекурсия зациклится и упадёт по стеку. Проверка \`Object.isFrozen\` спасает именно от этого: уже посещённый объект мы заморозили на входе, и при повторной встрече просто пропускаем. Ещё один нюанс — \`Object.freeze\` действует только в strict mode шумно (бросает \`TypeError\`), в нестрогом — молча игнорирует записи. Тесты должны это учитывать.
+
+С чего начать:
+\`\`\`js
+function deepFreeze(obj) {
+  Object.freeze(obj);
+  // ...
+  return obj;
+}
+\`\`\``,
     ],
     solutionCode: `function deepFreeze(obj) {
   Object.freeze(obj);
@@ -625,9 +673,18 @@ Object.getPrototypeOf(noProto); // → null
       },
     ],
     hints: [
-      "Что делает `Object.create(proto)` под капотом? Какой механизм языка позволяет «установить» прототип нового объекта?",
-      "Как создать объект и при этом сразу указать ему нужный прототип без использования Object.create?",
-      "Что особенного в случае, когда `proto === null`? Почему его нужно обработать отдельно?",
+      "Когда вы пишете `new F()`, новый объект получает в качестве прототипа значение `F.prototype`. Как использовать это, чтобы «привязать» любой нужный прототип к свежему объекту?",
+      "Создайте пустую функцию-конструктор, присвойте её `prototype` нужное значение и сделайте `new`. Для случая `proto === null` создайте объект буквально без прототипа — например, через литерал `{ __proto__: null }`.",
+      `Идея решения опирается на устройство \`new\`: оператор всегда создаёт объект, чей прототип равен \`F.prototype\` в момент вызова. Подставив нужный объект в \`F.prototype\`, мы получаем «настраиваемый» прототип. Отдельная ветка нужна для \`null\` — у объекта без прототипа нет даже \`toString\` и \`hasOwnProperty\`, поэтому такие словари обычно используют как чистые карты ключ-значение, без риска коллизий с методами \`Object.prototype\`.
+
+С чего начать:
+\`\`\`js
+function myObjectCreate(proto) {
+  if (proto === null) return { __proto__: null };
+  function F() {}
+  // ...
+}
+\`\`\``,
     ],
     solutionCode: `function myObjectCreate(proto) {
   if (proto === null) {
@@ -716,9 +773,18 @@ p instanceof Person  // → true
       },
     ],
     hints: [
-      "Оператор `new` делает несколько вещей: создаёт объект, вызывает функцию и устанавливает прототип. С чего начать?",
-      "Как вызвать конструктор так, чтобы `this` внутри него указывал на только что созданный объект?",
-      "Конструктор может явно вернуть объект — как `new` решает, что именно вернуть?",
+      "Под капотом `new Constructor(args)` выполняет три действия: создаёт новый объект с правильным прототипом, вызывает функцию с этим объектом в роли `this` и решает, что именно отдать наружу.",
+      "Создайте новый объект через `Object.create(Constructor.prototype)`, затем вызовите конструктор через `Constructor.apply(obj, args)`. Если результат вызова — объект, верните его; иначе верните созданный `obj`.",
+      `Самый неочевидный шаг — последний: спецификация \`new\` говорит, что если конструктор явно вернул **объект** (включая массив или функцию), наружу уходит именно он, и созданный с правильным прототипом \`obj\` отбрасывается. Если же возвращён примитив (число, строка, \`null\`, \`undefined\`) — он игнорируется, и наружу уходит \`obj\`. Именно поэтому \`null\` обрабатывается отдельно: у него \`typeof === 'object'\`, но по правилам \`new\` он считается «не объектом».
+
+С чего начать:
+\`\`\`js
+function myNew(Constructor, ...args) {
+  const obj = Object.create(Constructor.prototype);
+  const result = Constructor.apply(obj, args);
+  // ...
+}
+\`\`\``,
     ],
     solutionCode: `function myNew(Constructor, ...args) {
   const obj = Object.create(Constructor.prototype);
@@ -801,10 +867,19 @@ d instanceof Animal  // → true
         expected: "v2",
       },
     ],
-    hints: [
-      "Как добавить методы из нескольких источников в один класс, не используя наследование от каждого?",
-      "Какой инструмент позволяет скопировать свойства из одного объекта в другой?",
-      "Что произойдёт, если два миксина определяют метод с одним именем? Какой из них победит — и почему это важно для порядка применения?",
+      hints: [
+      "JS не поддерживает множественное наследование классов. Но можно создать пустой подкласс `Base`, а затем «подмешать» в его прототип методы из произвольного количества объектов-источников.",
+      "Используйте `Object.assign(Mixed.prototype, mixin)` для каждого миксина. Так как `Object.assign` перезаписывает свойства слева направо, более поздний миксин естественно перекроет более ранний.",
+      `Важно понимать ограничения такой «множественности». Цепочка прототипов остаётся **линейной**: \`instanceof\` работает только для \`Base\`, но не для миксинов — они не классы и в цепочке не лежат. Конфликты имён разрешаются «последний победил» — это упрощает поведение, но требует осознанного порядка аргументов. И ещё нюанс: миксины обычно содержат только методы; если положить туда поля (через \`this.something = ...\`), их придётся инициализировать вручную где-то ещё.
+
+С чего начать:
+\`\`\`js
+function applyMixins(Base, ...mixins) {
+  class Mixed extends Base {}
+  // ...
+  return Mixed;
+}
+\`\`\``,
     ],
     solutionCode: `function applyMixins(Base, ...mixins) {
   class Mixed extends Base {}
@@ -851,9 +926,7 @@ d instanceof Animal  // → true
     isContextual: false,
     description: `Объект \`child\` создан через \`Object.create(parent)\` — поэтому \`parent\` оказывается в его цепочке прототипов. У \`child\` есть собственное свойство \`own\`, у \`parent\` — свойство \`inherited\`.
 
-Что выведется?
-
-**Подсказка:** \`in\` смотрит **всю** цепочку прототипов; \`hasOwnProperty\` — только **собственные** свойства объекта.`,
+Что выведется?`,
     code: `const parent = { inherited: 1 };
 const child = Object.create(parent);
 child.own = 2;
@@ -864,9 +937,9 @@ console.log(child.hasOwnProperty('own'));
 console.log(child.hasOwnProperty('inherited'));`,
     expected: 'true\ntrue\ntrue\nfalse',
     hints: [
-      "'own' in child — да: own — собственное свойство.",
-      "'inherited' in child — да: in идёт вверх по прототипам.",
-      "hasOwnProperty('inherited') — нет: inherited лежит на parent, а не на child.",
+      "Шаг 1: оператор `in` отвечает на вопрос «доступно ли это свойство через объект?» — он смотрит и на сам объект, и вверх по цепочке прототипов. `hasOwnProperty` отвечает только на «лежит ли это свойство непосредственно на объекте?» — без подъёма по цепочке.",
+      "Шаг 2: `own` лежит прямо на `child` (`child.own = 2`), а `inherited` — на `parent`. `child` через `Object.create(parent)` имеет `parent` в цепочке прототипов.",
+      "Шаг 3: `'own' in child` → `true` (своё). `'inherited' in child` → `true` (`in` поднимается до `parent`). `child.hasOwnProperty('own')` → `true` (своё). `child.hasOwnProperty('inherited')` → `false` (свойство есть только у `parent`).",
     ],
     solutionCode: `// 'own' in child              → true  (собственное свойство)
 // 'inherited' in child        → true  (in проверяет всю цепочку прототипов)
@@ -907,9 +980,18 @@ console.log(child.hasOwnProperty('inherited'));`,
       { id: 'jsp-h3-t7', inputDisplay: "примитивы возвращаются как есть", inputArgs: ['primitives'], expected: [42, 'hi', null, true] },
     ],
     hints: [
-      'Заведи `Map<original, clone>`, чтобы не клонировать одно и то же значение дважды — заодно это поможет корректно отрабатывать циклы.',
-      'Чтобы сохранить прототип, создавай клон через `Object.create(Object.getPrototypeOf(value))`, а не через литерал `{}`.',
-      'Не забудьте про особые случаи: `null` (у него `typeof === "object"`), `Date` и `Array`.',
+      "Простой рекурсивный обход застрянет на циклической ссылке и потеряет тип объекта. Нужно: запомнить, что уже клонировали, создавать клон того же «вида», что и оригинал, и отдельно обработать примитивы и специальные типы.",
+      "Используйте `Map<original, clone>` для дедупликации и обработки циклов. Прототип сохраняйте через `Object.create(Object.getPrototypeOf(value))`. Для `Date` — `new Date(value.getTime())`, для массивов — `[]`. `null` отделите отдельной проверкой — у него `typeof === 'object'`.",
+      `Ключевой приём — занести клон в \`Map\` **до** того, как обходить вложенные ключи. Если сделать наоборот, рекурсия по циклической ссылке снова попадёт в тот же объект, увидит, что его в \`seen\` нет, и зациклится. Отдельная ловушка — \`Object.assign({}, original)\`: он теряет прототип (всегда даёт обычный \`Object\`) и не копирует не-перечисляемые свойства, поэтому для сохранения класса экземпляра без \`Object.create(proto)\` не обойтись.
+
+С чего начать:
+\`\`\`js
+function deepClone(value, seen = new Map()) {
+  if (value === null || typeof value !== 'object') return value;
+  if (seen.has(value)) return seen.get(value);
+  // ...
+}
+\`\`\``,
     ],
     solutionCode: `function deepClone(value, seen = new Map()) {
   if (value === null || typeof value !== 'object') return value;
@@ -1012,9 +1094,17 @@ d instanceof Animal; // → true
       { id: 'jsp-h4-t6', inputDisplay: "двойное наследование A → B → C работает", inputArgs: ['triple-chain'], expected: 'A.greet' },
     ],
     hints: [
-      '`Object.create(Parent.prototype)` создаёт объект с уже настроенной цепочкой прототипов.',
-      'Не присваивай `Child.prototype = Parent.prototype` напрямую — это будет один и тот же объект, и любые изменения в `Child.prototype` уедут и в `Parent.prototype`.',
-      'После настройки цепочки восстанови `Child.prototype.constructor = Child`.',
+      "Нужен новый объект для `Child.prototype`, который не равен `Parent.prototype`, но имеет `Parent.prototype` в своей цепочке прототипов. Так методы родителя будут доступны, но добавление методов в Child не повлияет на Parent.",
+      "Используйте `Object.create(Parent.prototype)` — он возвращает новый объект, унаследованный от `Parent.prototype`. После присваивания не забудьте восстановить `Child.prototype.constructor = Child` — без этой строки `new Child().constructor` будет указывать на `Parent`.",
+      `Почему именно \`Object.create(Parent.prototype)\`, а не \`Child.prototype = Parent.prototype\`? При прямом присваивании оба класса начинают делить **один и тот же** объект — добавление метода в \`Child.prototype\` тут же протекает в \`Parent.prototype\` и портит родителя. \`Object.create\` создаёт **новый** объект, у которого \`Parent.prototype\` находится выше по цепочке, — методы родителя доступны через делегирование, но не смешиваются. И, как и в более ранней задаче с constructor, при замене прототипа теряется ссылка на конструктор — её нужно восстановить вручную.
+
+С чего начать:
+\`\`\`js
+function inherit(Child, Parent) {
+  Child.prototype = Object.create(Parent.prototype);
+  // ...
+}
+\`\`\``,
     ],
     solutionCode: `function inherit(Child, Parent) {
   Child.prototype = Object.create(Parent.prototype);

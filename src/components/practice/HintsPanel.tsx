@@ -1,5 +1,6 @@
-import { Alert, Box, Button } from '@mui/material';
+import { Alert, AlertTitle, Box, Button } from '@mui/material';
 import LightbulbIcon from '@mui/icons-material/Lightbulb';
+import Markdown from '../lesson/Markdown';
 
 interface HintsButtonProps {
   hints: string[];
@@ -32,7 +33,8 @@ export function HintsDisplay({ hints, hintIndex }: HintsDisplayProps) {
     <Box sx={{ mb: 3 }}>
       {hints.slice(0, hintIndex + 1).map((hint, i) => (
         <Alert key={i} severity="info" sx={{ mb: 1, '&:last-child': { mb: 0 } }}>
-          Подсказка {i + 1}: {hint}
+          <AlertTitle>Подсказка {i + 1}</AlertTitle>
+          <Markdown compact>{hint}</Markdown>
         </Alert>
       ))}
     </Box>

@@ -82,9 +82,20 @@ ee.emit('end'); // ничего
       },
     ],
     hints: [
-      "Как хранить список обработчиков по имени события, и как эффективно их добавлять и удалять?",
-      "once должен сработать только раз. Как автоматически снять подписку после первого вызова?",
-      "Что произойдёт, если обработчик вызывает off во время emit? Как защититься?",
+      "Подумайте, как сопоставить каждому имени события свой набор обработчиков и быстро добавлять, удалять и перебирать их.",
+      "Удобно держать `Map` (или объект) вида `event → handler[]`. Для `once` оберните обработчик в функцию-обёртку, которая первым делом снимает подписку, а затем зовёт оригинал. В `emit` итерируйтесь по копии массива — иначе `off` внутри обработчика поломает обход.",
+      `Тонкий момент — \`emit\` должен итерироваться по **копии** массива подписчиков. Иначе если внутри обработчика кто-то вызовет \`off\` (или сработает \`once\`, который снимает сам себя) — реальный массив изменится в середине обхода, индексы поплывут, и часть подписчиков будет пропущена. Для \`once\` важно зарегистрировать именно обёртку через \`on\`, а не оригинал — иначе её не получится отписать после первого вызова.
+
+С чего начать:
+\`\`\`js
+class EventEmitter {
+  constructor() {
+    this.listeners = new Map();
+  }
+  on(event, handler) { /* ... */ }
+  emit(event, ...args) { /* ... */ }
+}
+\`\`\``,
     ],
     solutionCode: `class EventEmitter {
   constructor() {
@@ -181,8 +192,21 @@ const result = await processChunked(
       },
     ],
     hints: [
-      "Как разбить синхронный цикл на части, отдавая управление event loop между ними?",
-      "Как сигнализировать вызывающему коду о завершении асинхронной обработки?",
+      "Обработка одной большой пачкой блокирует поток. Поделите работу на маленькие порции и между ними отдавайте управление планировщику.",
+      "Заверните всё в `new Promise`. Внутри функции `processNext` обработайте один чанк, затем — если массив не закончился — поставьте следующий шаг через `setTimeout(processNext, 0)`. Когда дошли до конца — вызовите `resolve(results)`.",
+      `\`setTimeout(fn, 0)\` — это макрозадача, и между двумя её вызовами event loop успевает прогнать всю очередь микрозадач и обработать I/O. То есть пока вы режете большой массив на чанки, входящие HTTP-запросы и таймеры не голодают. Если же использовать \`queueMicrotask\` или \`process.nextTick\` — это будет работать как обычный цикл: микрозадачи опустошатся целиком перед любой I/O, и блокировка вернётся.
+
+С чего начать:
+\`\`\`js
+function processChunked(arr, chunkSize, processor) {
+  return new Promise((resolve) => {
+    const results = [];
+    let index = 0;
+    function processNext() { /* ... */ }
+    processNext();
+  });
+}
+\`\`\``,
     ],
     solutionCode: `function processChunked(arr, chunkSize, processor) {
   return new Promise((resolve) => {
@@ -217,103 +241,6 @@ const result = await processChunked(
   };
   const fn = procs[kind] || ((x) => x);
   return await processChunked(arr, chunkSize, fn);
-}`,
-  },
-  {
-    id: "nodel-p3",
-    topicId: "node-event-loop",
-    title: "AsyncQueue — очередь задач с concurrency",
-    difficulty: "medium",
-    isContextual: true,
-    description: `Реализуйте класс \`AsyncQueue\`:
-- \`constructor(concurrency)\` — максимальное количество одновременных задач
-- \`push(asyncFn)\` — добавить задачу в очередь, возвращает Promise с результатом
-- Задачи выполняются не более \`concurrency\` одновременно
-
-Примеры:
-\`\`\`
-const queue = new AsyncQueue(2); // max 2 параллельно
-
-const results = await Promise.all([
-  queue.push(() => delay(100).then(() => 1)),
-  queue.push(() => delay(100).then(() => 2)),
-  queue.push(() => delay(100).then(() => 3)), // ждёт свободного слота
-]);
-// → [1, 2, 3]
-\`\`\``,
-    functionName: "AsyncQueue",
-    starterCode: `class AsyncQueue {
-  constructor(concurrency) {
-    // ваш код
-  }
-
-  push(asyncFn) {
-    // ваш код — возвращает Promise
-  }
-}`,
-    testCases: [
-      {
-        id: "nodel-p3-t1",
-        inputDisplay: "3 задачи, concurrency=2 → все выполняются",
-        inputArgs: ["all-complete"],
-        expected: [1, 2, 3],
-      },
-      {
-        id: "nodel-p3-t2",
-        inputDisplay: "push возвращает Promise",
-        inputArgs: ["returns-promise"],
-        expected: true,
-      },
-      {
-        id: "nodel-p3-t3",
-        inputDisplay: "concurrency=1 → последовательно",
-        inputArgs: ["sequential"],
-        expected: [1, 2, 3],
-      },
-      {
-        id: "nodel-p3-t4",
-        inputDisplay: "ошибка в задаче → reject промиса push",
-        inputArgs: ["error"],
-        expected: "Error: task-error",
-      },
-      {
-        id: "nodel-p3-t5",
-        inputDisplay: "одновременно не более concurrency задач",
-        inputArgs: ["max-concurrent"],
-        expected: true,
-      },
-    ],
-    hints: [
-      "Что нужно знать очереди, чтобы решить — запустить задачу немедленно или поставить в ожидание?",
-      "Когда задача завершается — кто должен запустить следующую из очереди?",
-      "push возвращает Promise. Как «связать» этот промис с результатом asyncFn, которая ещё не запустилась?",
-    ],
-    solutionCode: `class AsyncQueue {
-  constructor(concurrency) {
-    this.concurrency = concurrency;
-    this.running = 0;
-    this.queue = [];
-  }
-
-  push(asyncFn) {
-    return new Promise((resolve, reject) => {
-      this.queue.push({ asyncFn, resolve, reject });
-      this._run();
-    });
-  }
-
-  _run() {
-    while (this.running < this.concurrency && this.queue.length > 0) {
-      const { asyncFn, resolve, reject } = this.queue.shift();
-      this.running++;
-      asyncFn()
-        .then(resolve, reject)
-        .finally(() => {
-          this.running--;
-          this._run();
-        });
-    }
-  }
 }`,
   },
   {
@@ -394,8 +321,20 @@ pq.dequeue(); // → 'low' (приоритет 3)
       },
     ],
     hints: [
-      "Как хранить задачи вместе с их приоритетом и извлекать наиболее приоритетную?",
-      "Есть несколько подходов — с разными компромиссами по сложности реализации и производительности.",
+      "Нужно хранить задачи вместе с их приоритетом так, чтобы можно было быстро находить самую приоритетную.",
+      "Простой вариант для собеседования: массив объектов `{ task, priority }`, после каждого `enqueue` — сортировка по `priority`. Это `O(n log n)` на вставку, зато `dequeue` — это `shift()` с минимальным приоритетом в начале. Для production обычно берут бинарную кучу с `O(log n)`.",
+      `Граничный случай — задачи с одинаковым приоритетом. Стабильность \`Array.prototype.sort\` гарантирована стандартом только с ES2019; в более старых движках при равных приоритетах порядок мог меняться, и FIFO внутри одного приоритета ломался. Если стабильность важна — храните счётчик вставки и сортируйте по паре \`(priority, seq)\`. В кучной реализации это решается ровно так же — секцией сравнения.
+
+С чего начать:
+\`\`\`js
+class PriorityQueue {
+  constructor() {
+    this.items = [];
+  }
+  enqueue(task, priority) { /* ... */ }
+  dequeue() { /* ... */ }
+}
+\`\`\``,
     ],
     solutionCode: `class PriorityQueue {
   constructor() {
@@ -421,104 +360,13 @@ pq.dequeue(); // → 'low' (приоритет 3)
 }`,
   },
   {
-    id: "nodel-p5",
-    topicId: "node-event-loop",
-    title: "withTimeout — таймаут для промиса",
-    difficulty: "easy",
-    isContextual: true,
-    description: `Реализуйте функцию \`withTimeout(asyncFn, ms, fallback)\`:
-- Вызывает \`asyncFn()\`
-- Если промис не завершается за \`ms\` — возвращает \`fallback\` (не бросает ошибку)
-- Если завершается вовремя — возвращает результат
-
-Примеры:
-\`\`\`
-const slow = () => new Promise(r => setTimeout(() => r('data'), 500));
-
-await withTimeout(slow, 100, 'default'); // → 'default' (timeout)
-await withTimeout(slow, 1000, 'default'); // → 'data' (вовремя)
-\`\`\`
-
-В тестах \`withTimeout\` вызывается через хелпер \`nodel_p5_test\`.`,
-    functionName: "nodel_p5_test",
-    starterCode: `async function withTimeout(asyncFn, ms, fallback) {
-  // ваш код
-}`,
-    testCases: [
-      {
-        id: "nodel-p5-t1",
-        inputDisplay: "промис вовремя → его результат",
-        inputArgs: ["in-time"],
-        expected: "result",
-      },
-      {
-        id: "nodel-p5-t2",
-        inputDisplay: "таймаут → fallback",
-        inputArgs: ["timeout"],
-        expected: "default",
-      },
-      {
-        id: "nodel-p5-t3",
-        inputDisplay: "fallback = null",
-        inputArgs: ["null-fallback"],
-        expected: null,
-      },
-      {
-        id: "nodel-p5-t4",
-        inputDisplay: "fallback = 0",
-        inputArgs: ["zero-fallback"],
-        expected: 0,
-      },
-      {
-        id: "nodel-p5-t5",
-        inputDisplay: "не бросает ошибку при таймауте",
-        inputArgs: ["no-throw"],
-        expected: true,
-      },
-    ],
-    hints: [
-      "Задача сводится к гонке: кто «финишировал» первым — оригинальная функция или таймер?",
-      "В случае таймаута нужно вернуть fallback, а не бросить ошибку. Как построить промис-таймер, который резолвится (а не реджектится)?",
-    ],
-    solutionCode: `async function withTimeout(asyncFn, ms, fallback) {
-  const timer = new Promise((resolve) => setTimeout(() => resolve(fallback), ms));
-  return Promise.race([asyncFn(), timer]);
-}`,
-    testHelperCode: `async function nodel_p5_test(kind) {
-  const fast = () => new Promise((r) => setTimeout(() => r('result'), 5));
-  const slow = () => new Promise((r) => setTimeout(() => r('data'), 200));
-  if (kind === 'in-time') {
-    return await withTimeout(fast, 100, 'default');
-  }
-  if (kind === 'timeout') {
-    return await withTimeout(slow, 20, 'default');
-  }
-  if (kind === 'null-fallback') {
-    return await withTimeout(slow, 20, null);
-  }
-  if (kind === 'zero-fallback') {
-    return await withTimeout(slow, 20, 0);
-  }
-  if (kind === 'no-throw') {
-    try {
-      await withTimeout(slow, 20, 'fallback');
-      return true;
-    } catch {
-      return false;
-    }
-  }
-}`,
-  },
-  {
     kind: "predict-output",
     id: "nodel-p6",
     topicId: "node-event-loop",
     title: "Определи вывод: микрозадачи и таймер",
     difficulty: "medium",
     isContextual: false,
-    description: `Что выведет этот код в среде, где доступны \`queueMicrotask\`, \`Promise\` и \`setTimeout\`? Запишите каждое значение на отдельной строке в порядке вывода.
-
-Подсказка: микрозадачи опустошаются полностью **перед** следующей макрозадачей. В Node.js перед \`queueMicrotask\` ещё проходит очередь \`process.nextTick\` — здесь её нет, но логика та же.`,
+    description: `Что выведет этот код в среде, где доступны \`queueMicrotask\`, \`Promise\` и \`setTimeout\`? Запишите каждое значение на отдельной строке в порядке вывода.`,
     code: `console.log('A');
 
 setTimeout(() => console.log('B'), 0);
@@ -533,9 +381,13 @@ Promise.resolve().then(() => console.log('E'));
 console.log('F');`,
     expected: "A\nF\nC\nE\nD\nB",
     hints: [
-      "Сначала выполняется весь синхронный код — это «A» и «F».",
-      "Затем движок полностью опустошает очередь микрозадач — включая те, что были добавлены изнутри других микрозадач.",
-      "setTimeout — макрозадача и выполняется после всех микрозадач.",
+      "Прежде всего вспомните общий порядок: текущий синхронный код выполняется до конца, и только после этого начинают разбираться отложенные обработчики разных типов.",
+      "Очерёдность такая: весь синхронный код → полностью опустошается очередь микрозадач (`queueMicrotask`, `Promise.then`) → одна макрозадача (`setTimeout`). Микрозадача, добавленная изнутри микрозадачи, обрабатывается в той же пачке — макрозадача ждёт.",
+      `Пошагово:
+- стек: \`'A'\`, ставим setTimeout (макро), ставим микро-1 (печатает 'C' и ставит микро-3), ставим микро-2 (печатает 'E'), \`'F'\`.
+- очередь микро: [C, E]. Запускаем C → печатает 'C', добавляет в очередь микро D. Запускаем E → печатает 'E'. Запускаем D → 'D'. Микроочередь пуста.
+- макроочередь: [B]. Запускаем → 'B'.
+- Итого: A, F, C, E, D, B.`,
     ],
     solutionCode: `// Порядок:
 // 1. 'A'  — синхронный console.log.
@@ -607,8 +459,9 @@ console.log('F');`,
       },
     ],
     hints: [
-      "Найдите ветку, которая выполняется при пустой очереди. Что должна делать функция в этом случае — продолжать работу или завершаться?",
-      "Что конкретно мешает промису когда-либо зарезолвиться?",
+      "Посмотрите, что происходит, когда обрабатывать уже нечего. Функция должна сигнализировать «всё готово», а не зацикливаться.",
+      "В ветке `queue.length === 0` сейчас стоит `queueMicrotask(step)` — это бесконечная самопланировка, которая никогда не уступает место таймерам. Здесь нужен `resolve(results)`.",
+      "Это классическая «голодовка» (starvation) event loop: микрозадачи имеют приоритет над таймерами и I/O, и пока их очередь не опустеет, фаза `timers` не получит управления. Бесконечная самоподписка через `queueMicrotask` (или `process.nextTick`) создаёт ровно такую ситуацию — процесс выглядит «живым», но не отвечает на сеть и не двигает таймеры. Поэтому базовое правило: микрозадача должна либо сделать конечный шаг, либо передать управление макрозадаче.",
     ],
     solutionCode: `function runWithDelay(initialQueue, work) {
   const queue = [...initialQueue];
@@ -718,8 +571,9 @@ console.log('F');`,
       maxMs: 200,
     },
     hints: [
-      "Как часто вычисляется каждое значение `arr[i] * arr[i]`? Нужно ли для этого отдельный вспомогательный массив?",
-      "Есть ли лишняя работа, которую алгоритм делает на каждой итерации?",
+      "Внимательно прочитайте код и подумайте, какая часть работы делается без пользы для итогового результата.",
+      "Внутренний цикл по `j` копит `prefix`, но `prefix` влияет на ответ только тестом `if (prefix < 0)`. Для положительных чисел префикс никогда не отрицательный — этот блок можно убрать. Остаётся обычная линейная сумма квадратов.",
+      "Это типовой паттерн «лишний труд внутри горячего цикла»: код вычисляет величину, которая на ответ не влияет. На 50 000 элементов внутренний цикл делает порядка 1.25 миллиарда сложений — Node блокируется на сотни миллисекунд, и все остальные клиенты ждут. После того как вы выкинете мёртвую ветку, V8 ещё и хорошо инлайнит простой проход — никаких `reduce` с замыканием для производительности здесь не нужно, обычный `for` быстрее.",
     ],
     solutionCode: `function sumOfSquares(arr) {
   let total = 0;
@@ -745,9 +599,14 @@ process.nextTick(() => console.log(3));
 console.log(4);`,
     expected: "4\n3\n1\n2",
     hints: [
-      'Синхронный код выполняется первым: console.log(4) → "4".',
-      'process.nextTick — очередь nextTick, выполняется сразу после текущей операции, до I/O фаз: → "3".',
-      'setTimeout(0) и setImmediate: в Node.js при вызове из основного модуля порядок не детерминирован, но обычно setTimeout → setImmediate. В большинстве сред: "1", затем "2".',
+      "Сначала прокручивается весь синхронный код, потом начинают разбираться отложенные задачи разных приоритетов.",
+      "В Node.js приоритет такой: синхронно → очередь `process.nextTick` (выше остальных) → таймеры (`setTimeout`) → фаза check (`setImmediate`). При вызове из основного модуля порядок `setTimeout(0)` и `setImmediate` не строго детерминирован, но чаще всего таймер успевает первым.",
+      `Пошагово:
+- Синхронно: \`console.log(4)\` → '4'.
+- nextTick-очередь до I/O: '3'.
+- Фаза timers: '1'.
+- Фаза check: '2'.
+- Итого: 4, 3, 1, 2.`,
     ],
     solutionCode: `// 1. Синхронно: console.log(4) → "4"
 // 2. nextTick очередь (приоритет выше timers): → "3"
@@ -780,10 +639,16 @@ setImmediate(() => console.log(5));
 console.log(6);`,
     expected: "6\n3\n4\n1\n2\n5",
     hints: [
-      'Синхронно: "6". nextTick-очередь выполняется до microtask-очереди в Node.js.',
-      'nextTick: "3". nextTick внутри nextTick добавляется в конец той же очереди: "4".',
-      'Теперь microtasks (Promise.then): "1". process.nextTick внутри .then добавляется в nextTick-очередь, которая опустошается ПЕРЕД следующей microtask: "2".',
-      'setImmediate — check фаза после всех микрозадач: "5".',
+      "Здесь две очереди отложенных задач разного приоритета и одна макрозадача. Сначала вспомните общий порядок: синхронно, потом особые очереди Node.js, потом макрозадачи.",
+      "В Node.js приоритет такой: синхронно → `process.nextTick` (отдельная очередь, опустошается полностью) → микрозадачи (`Promise.then`) → `setImmediate` (фаза check). Если `nextTick` запланирован изнутри микрозадачи или другого `nextTick`, он добавляется в ту же `nextTick`-очередь и обрабатывается до следующей микрозадачи.",
+      "Между microtask-фазами Node.js снова заглядывает в `nextTick`-очередь — поэтому `nextTick`, запланированный внутри `.then`, выполняется ДО того, как Node перейдёт к `setImmediate`.",
+      `Пошагово:
+- Синхронно: '6'.
+- nextTick-очередь: '3', вложенный nextTick(4) попадает в конец → '4'.
+- Microtasks: '1'; внутри неё запланирован nextTick(2) — он встаёт в nextTick-очередь.
+- Дренаж nextTick перед следующей фазой: '2'.
+- Фаза check: '5'.
+- Итого: 6, 3, 4, 1, 2, 5.`,
     ],
     solutionCode: `// 1. Синхронно: "6"
 // 2. nextTick очередь (приоритет выше Promise): "3"
@@ -859,8 +724,21 @@ q.push(async () => 'result'); // вернёт Promise<'result'>
       },
     ],
     hints: [
-      "Кроме лимита параллелизма, нужно контролировать паузу. Что нужно проверять перед запуском следующей задачи?",
-      "pause() и resume() меняют состояние. Что должен делать resume(), помимо снятия паузы?",
+      "Очередь должна решать: сейчас можно ли запустить новую задачу? На это влияет и текущий уровень параллелизма, и состояние «на паузе или нет».",
+      "Держите поля `active`, `concurrency`, `queue` и булев флаг `paused`. Метод `push` ставит `{ task, resolve, reject }` в очередь и зовёт диспетчер `_tick`. `_tick` запускает столько задач, сколько позволяет лимит и при `paused === false`. `resume()` снимает флаг и снова дёргает `_tick`, чтобы накопившиеся задачи стартовали.",
+      `Главный подвох — где именно учитывать \`paused\`. Логика должна быть «не стартуем новые», а не «не пушим в очередь»: \`push\` во время паузы должен корректно класть задачу и возвращать ждущий промис, иначе вызывающий код потеряет результат. Также не забудьте про \`_tick\` внутри \`.finally\` — без него после завершения одной задачи следующая не возьмётся из очереди, даже если есть свободные слоты.
+
+С чего начать:
+\`\`\`js
+class AsyncQueue {
+  constructor(concurrency) {
+    this.concurrency = concurrency;
+    this.queue = [];
+    this.paused = false;
+  }
+  push(task) { /* ... */ }
+}
+\`\`\``,
     ],
     solutionCode: `class AsyncQueue {
   constructor(concurrency) {
@@ -974,8 +852,8 @@ const result = await d.promise;
       { id: 'nodel-e2-t4', inputDisplay: "повторный resolve игнорируется", inputArgs: ['double-resolve'], expected: 'first' },
     ],
     hints: [
-      'Создайте Promise с колбэком, в котором "перехватите" функции resolve/reject в переменные внешней области.',
-      'Эти функции — захваченные в замыкании ссылки на внутренние resolve/reject промиса.',
+      "Промис «живёт» внутри своего executor, и наружу обычно ничего не торчит. Подумайте, как «вытащить» внутренние функции наружу, чтобы вызывать их откуда угодно.",
+      "Объявите `let resolve, reject` снаружи, создайте `new Promise((res, rej) => { resolve = res; reject = rej; })` и верните `{ promise, resolve, reject }`. Повторный вызов `resolve` промис автоматически игнорирует — это поведение самого промиса, дополнительной защиты не нужно.",
     ],
     solutionCode: `function deferred() {
   let resolve, reject;
@@ -1019,9 +897,7 @@ const result = await d.promise;
     isContextual: false,
     description: `Перед вами фрагмент с тремя источниками логов: синхронные \`console.log\`, два \`queueMicrotask\`, один \`Promise.resolve().then\` и один \`setTimeout(..., 0)\`.
 
-Какой будет порядок вывода?
-
-Подсказка: все микротаски (queueMicrotask и Promise.then) обслуживаются в порядке регистрации **до** следующего setTimeout.`,
+Какой будет порядок вывода?`,
     code: `console.log('start');
 
 setTimeout(() => console.log('timeout'), 0);
@@ -1032,9 +908,13 @@ queueMicrotask(() => console.log('micro2'));
 console.log('end');`,
     expected: 'start\nend\nmicro1\npromise\nmicro2\ntimeout',
     hints: [
-      'Сначала исполняется весь синхронный код: "start", затем "end".',
-      'Микротаски (queueMicrotask и Promise.then) обрабатываются в порядке регистрации: micro1, promise, micro2.',
-      'Только потом — следующая итерация event loop и timeout.',
+      "Сначала выполняется весь синхронный код, и только потом движок разбирается с отложенными задачами.",
+      "`queueMicrotask` и `Promise.resolve().then` попадают в одну общую очередь микрозадач и выполняются строго в порядке регистрации. `setTimeout` — макрозадача, ждёт пока вся очередь микрозадач не опустеет.",
+      `Пошагово:
+- Синхронно: 'start' → 'end'.
+- Очередь микро в порядке регистрации: 'micro1' → 'promise' → 'micro2'.
+- Макрозадача: 'timeout'.
+- Итого: start, end, micro1, promise, micro2, timeout.`,
     ],
     solutionCode: `// 1. 'start'    — синхронно.
 // 2. setTimeout, queueMicrotask×2, Promise.then — все запланированы.
@@ -1080,9 +960,20 @@ runInWaterfall([
       { id: 'nodel-h3-t5', inputDisplay: "результат предыдущей доступен", inputArgs: ['accumulate'], expected: [1, 2, 3] },
     ],
     hints: [
-      'Используйте for...of (или reduce) + await: на каждой итерации вызывайте `task(prev)` и обновляйте prev.',
-      'Если task бросает — естественно прокинется через async-функцию как reject.',
-      'Самое простое решение: цикл с накоплением промежуточного результата.',
+      "Конвейер — это передача значения от шага к шагу. Главное — не запустить шаги параллельно, а дождаться предыдущего, прежде чем брать следующий.",
+      "Перебирайте `tasks` через `for...of` и на каждой итерации делайте `value = await task(value)`. Если задача упадёт — `await` сам бросит, а async-функция вернёт реджектнутый промис, и следующие задачи не запустятся.",
+      `Соблазнительно собрать это через \`tasks.reduce((p, t) => p.then(t), Promise.resolve(initialValue))\` — и это сработает, но потеряет stack-trace при ошибке и хуже читается в отладчике. \`for...of\` с \`await\` в async-функции даёт прозрачный async stack: при падении посередине вы увидите номер шага. Параллельный вариант через \`Promise.all(tasks.map(...))\` здесь категорически не подходит — нарушается зависимость «следующий шаг получает результат предыдущего».
+
+С чего начать:
+\`\`\`js
+async function runInWaterfall(tasks, initialValue) {
+  let value = initialValue;
+  for (const task of tasks) {
+    // ...
+  }
+  return value;
+}
+\`\`\``,
     ],
     solutionCode: `async function runInWaterfall(tasks, initialValue) {
   let value = initialValue;
@@ -1168,9 +1059,20 @@ async function critical() {
       { id: 'nodel-h4-t4', inputDisplay: "свободный mutex даёт acquire без ожидания", inputArgs: ['immediate'], expected: true },
     ],
     hints: [
-      'Внутри храните флаг `locked` и очередь pending-резолверов.',
-      'При `acquire`: если не залочено — выдайте release и заблокируйте. Иначе — поставьте резолвер в очередь.',
-      '`release`: если в очереди есть pending — снимите первого и зарезолвите его новым release. Иначе — снимите блокировку.',
+      "Мьютекс — это «один пропуск» на критическую секцию. Нужно понимать, занят ли он сейчас, и уметь поставить желающих в очередь.",
+      "Держите флаг `locked` и массив `queue` функций-резолверов. `acquire`: если не залочено — лочим и возвращаем `Promise.resolve(release)`. Иначе кладём `resolve` в очередь и возвращаем pending-промис. `release`: если в очереди есть ждущий — извлекаем и зовём его, передав ему ту же функцию `release` (чтобы он, закончив, мог разблокировать следующего). Если очередь пуста — снимаем `locked`.",
+      `Самая частая ошибка — не передавать \`release\` в очередь, а сбрасывать \`locked = false\` и надеяться, что следующий \`acquire\` сам себя залочит. Тогда между \`locked = false\` и моментом, когда ждущий промис проснётся (микрозадача!), может проскочить новый \`acquire\` из синхронного кода и нарушить FIFO. Безопаснее держать «эстафетную палочку»: \`release\` либо разбудит первого ждущего, отдав ему свою же функцию \`release\`, либо снимет лок. Так инвариант «лок занят, пока живёт цепочка release» не нарушается.
+
+С чего начать:
+\`\`\`js
+function createMutex() {
+  let locked = false;
+  const queue = [];
+  function release() { /* ... */ }
+  function acquire() { /* ... */ }
+  return { acquire };
+}
+\`\`\``,
     ],
     solutionCode: `function createMutex() {
   let locked = false;
