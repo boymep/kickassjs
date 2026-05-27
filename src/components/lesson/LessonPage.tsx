@@ -187,7 +187,7 @@ function IntroPage({ lesson }: { lesson: Lesson }) {
         <Box
           sx={{
             mt: 3,
-            p: 2.5,
+            p: 2,
             borderRadius: 2,
             borderLeft: 3,
             borderColor: 'primary.main',
@@ -195,10 +195,10 @@ function IntroPage({ lesson }: { lesson: Lesson }) {
               t.palette.mode === 'dark' ? 'rgba(0,122,255,0.08)' : 'rgba(0,122,255,0.05)',
           }}
         >
-          <Typography variant="overline" color="primary" sx={{ display: 'block', mb: 1 }}>
+          <Typography variant="overline" color="primary" sx={{ display: 'block', lineHeight: 1, mb: 1.25, letterSpacing: '0.06em', fontWeight: 700 }}>
             На собеседовании
           </Typography>
-          <Typography variant="body1" sx={{ lineHeight: 1.6 }}>
+          <Typography variant="body1" sx={{ lineHeight: 1.35 }}>
             {lesson.intro.interviewAngle}
           </Typography>
         </Box>

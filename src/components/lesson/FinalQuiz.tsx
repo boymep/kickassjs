@@ -111,7 +111,7 @@ export default function FinalQuiz({ questions }: FinalQuizProps) {
           />
         </Box>
 
-        <Stack direction='row' spacing={2} justifyContent='center'>
+        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} justifyContent='center'>
           {wrongCount > 0 && (
             <Button
               variant='contained'

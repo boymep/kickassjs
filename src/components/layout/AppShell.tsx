@@ -12,6 +12,7 @@ import {
 import MenuIcon from "@mui/icons-material/Menu";
 import DarkModeIcon from "@mui/icons-material/DarkMode";
 import LightModeIcon from "@mui/icons-material/LightMode";
+import SportsMartialArtsIcon from "@mui/icons-material/SportsMartialArts";
 import { Outlet } from "react-router-dom";
 import Sidebar from "./Sidebar";
 import { useColorMode } from "../../App";
@@ -27,69 +28,83 @@ export default function AppShell() {
 
   return (
     <ProgressProvider>
-    <Box sx={{ display: "flex", minHeight: "100vh" }}>
-      <AppBar position='fixed' sx={{ zIndex: theme.zIndex.drawer + 1 }}>
-        <Toolbar>
-          {isMobile && (
-            <IconButton
-              color='inherit'
-              edge='start'
-              onClick={() => setOpen(true)}
-              sx={{ mr: 2 }}
+      <Box sx={{ display: "flex", minHeight: "100vh" }}>
+        <AppBar position='fixed' sx={{ zIndex: theme.zIndex.drawer + 1 }}>
+          <Toolbar>
+            {isMobile && (
+              <IconButton
+                color='inherit'
+                edge='start'
+                onClick={() => setOpen(true)}
+                sx={{ mr: 2 }}
+              >
+                <MenuIcon />
+              </IconButton>
+            )}
+            <Typography
+              variant='h6'
+              noWrap
+              sx={{
+                flexGrow: 1,
+                display: "flex",
+                alignItems: "center",
+                gap: 1,
+              }}
             >
-              <MenuIcon />
+              <SportsMartialArtsIcon sx={{ color: "#FFD700" }} />
+              {'<KickAss JS />'}
+            </Typography>
+            <IconButton color='inherit' onClick={toggleColorMode} size='small'>
+              {theme.palette.mode === "dark" ? (
+                <LightModeIcon />
+              ) : (
+                <DarkModeIcon />
+              )}
             </IconButton>
-          )}
-          <Typography variant='h6' noWrap sx={{ flexGrow: 1 }}>
-            Prepare JS ✅
-          </Typography>
-          <IconButton color='inherit' onClick={toggleColorMode} size='small'>
-            {theme.palette.mode === 'dark' ? <LightModeIcon /> : <DarkModeIcon />}
-          </IconButton>
-        </Toolbar>
-      </AppBar>
+          </Toolbar>
+        </AppBar>
 
-      {isMobile ? (
-        <Drawer
-          open={open}
-          onClose={() => setOpen(false)}
-          sx={{ "& .MuiDrawer-paper": { width: DRAWER_WIDTH } }}
-        >
-          <Toolbar />
-          <Sidebar onClose={() => setOpen(false)} />
-        </Drawer>
-      ) : (
-        <Drawer
-          variant='permanent'
-          sx={{
-            width: DRAWER_WIDTH,
-            flexShrink: 0,
-            "& .MuiDrawer-paper": {
+        {isMobile ? (
+          <Drawer
+            open={open}
+            onClose={() => setOpen(false)}
+            sx={{ "& .MuiDrawer-paper": { width: DRAWER_WIDTH } }}
+          >
+            <Toolbar />
+            <Sidebar onClose={() => setOpen(false)} />
+          </Drawer>
+        ) : (
+          <Drawer
+            variant='permanent'
+            sx={{
               width: DRAWER_WIDTH,
-              boxSizing: "border-box",
-            },
+              flexShrink: 0,
+              "& .MuiDrawer-paper": {
+                width: DRAWER_WIDTH,
+                boxSizing: "border-box",
+              },
+            }}
+          >
+            <Toolbar />
+            <Sidebar />
+          </Drawer>
+        )}
+
+        <Box
+          component='main'
+          sx={{
+            flexGrow: 1,
+            minWidth: 0,
+            px: { xs: 2, md: 5 },
+            py: { xs: 3, md: 4 },
+            mt: 10,
+            maxWidth: 1140,
+            mx: "auto",
           }}
         >
-          <Toolbar />
-          <Sidebar />
-        </Drawer>
-      )}
-
-      <Box
-        component='main'
-        sx={{
-          flexGrow: 1,
-          minWidth: 0,
-          px: { xs: 3, md: 5 },
-          py: { xs: 3, md: 4 },
-          mt: 10,
-          maxWidth: 1140,
-          mx: "auto",
-        }}
-      >
-        <Outlet />
+          <Outlet />
+        </Box>
       </Box>
-    </Box>
     </ProgressProvider>
   );
 }

@@ -48,7 +48,7 @@ export default function ProblemView() {
         startIcon={<ArrowBackIcon />}
         onClick={() => navigate(`/topic/${slug}/practice`)}
       >
-        К списку
+        <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>К списку</Box>
       </Button>
       <Box sx={{ flex: 1 }} />
       <Button
@@ -57,7 +57,7 @@ export default function ProblemView() {
         onClick={() => prev && goTo(prev.id)}
         size="small"
       >
-        Предыдущая
+        <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>Предыдущая</Box>
       </Button>
       <Typography variant="body2" color="text.secondary" sx={{ px: 0.5 }}>
         {idx + 1} / {problems.length}
@@ -68,7 +68,7 @@ export default function ProblemView() {
         onClick={() => next && goTo(next.id)}
         size="small"
       >
-        Следующая
+        <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>Следующая</Box>
       </Button>
     </Box>
   );

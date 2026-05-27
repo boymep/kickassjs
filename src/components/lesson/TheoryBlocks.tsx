@@ -100,7 +100,7 @@ export default function TheoryBlocks({ blocks }: TheoryBlocksProps) {
                 sx={{
                   mb: 2,
                   whiteSpace: 'pre-line',
-                  lineHeight: 1.75,
+                  lineHeight: 1.35,
                   color: 'text.primary',
                 }}
               >
@@ -124,7 +124,7 @@ export default function TheoryBlocks({ blocks }: TheoryBlocksProps) {
                   listStyle: 'none',
                   display: 'flex',
                   flexDirection: 'column',
-                  gap: 0.75,
+                  gap: 0.35,
                 }}
               >
                 {block.content.split('\n').map((item, i) => (
@@ -146,7 +146,7 @@ export default function TheoryBlocks({ blocks }: TheoryBlocksProps) {
                       },
                     }}
                   >
-                    <Typography variant="body1" sx={{ lineHeight: 1.7 }}>
+                    <Typography variant="body1" sx={{ lineHeight: 1.35 }}>
                       {ri(stripListPrefix(item))}
                     </Typography>
                   </Box>
@@ -180,13 +180,13 @@ export default function TheoryBlocks({ blocks }: TheoryBlocksProps) {
                       color: style.color,
                       fontWeight: 700,
                       lineHeight: 1,
-                      mb: 0.5,
+                      mb: 1.25,
                       letterSpacing: '0.06em',
                     }}
                   >
                     {style.label}
                   </Typography>
-                  <Typography variant="body2" sx={{ lineHeight: 1.65, color: 'text.primary' }}>
+                  <Typography variant="body2" sx={{ lineHeight: '1.35 !important', color: 'text.primary' }}>
                     {ri(block.content)}
                   </Typography>
                 </Box>

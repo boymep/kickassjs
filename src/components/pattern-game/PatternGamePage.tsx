@@ -190,7 +190,7 @@ export default function PatternGamePage() {
 
   if (finished) {
     return (
-      <Paper sx={{ p: 4, textAlign: 'center' }}>
+      <Paper sx={{ p: { xs: 3, md: 4 }, textAlign: 'center' }}>
         <Typography variant="h4" gutterBottom>
           Результат
         </Typography>

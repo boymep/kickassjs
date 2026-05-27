@@ -152,6 +152,8 @@ export default function CheatsheetPage() {
       <Tabs
         value={tab}
         onChange={(_, v) => setTab(v)}
+        variant="scrollable"
+        scrollButtons="auto"
         sx={{ mb: 3, borderBottom: 1, borderColor: 'divider' }}
       >
         <Tab label={`Шпаргалки по темам (${totalEntries})`} />

@@ -44,6 +44,8 @@ export default function TopicLayout() {
           const target = tabs[v]?.path ?? '';
           navigate(`/topic/${slug}${target ? `/${target}` : ''}`);
         }}
+        variant="scrollable"
+        scrollButtons="auto"
         sx={{ mb: 3, borderBottom: 1, borderColor: 'divider' }}
       >
         {tabs.map((t) => (

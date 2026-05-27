@@ -1,4 +1,4 @@
-import { Box } from '@mui/material';
+import { Box, useMediaQuery } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import CodeMirror from '@uiw/react-codemirror';
 import { javascript } from '@codemirror/lang-javascript';
@@ -13,6 +13,7 @@ const extensions = [javascript()];
 export default function CodeEditor({ value, onChange }: Props) {
   const theme = useTheme();
   const isDark = theme.palette.mode === 'dark';
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   return (
     <Box
@@ -38,7 +39,7 @@ export default function CodeEditor({ value, onChange }: Props) {
         value={value}
         onChange={onChange}
         extensions={extensions}
-        height="400px"
+        height={isMobile ? '260px' : '400px'}
         theme={isDark ? 'dark' : 'light'}
         basicSetup={{
           lineNumbers: true,

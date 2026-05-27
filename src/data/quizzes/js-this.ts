@@ -76,7 +76,9 @@ sayAge.call(person2);`,
       type: 'output',
       id: 'jst-q5',
       description: 'this внутри forEach. Что выведет код?',
-      code: `const obj = {
+      code: `'use strict';
+
+const obj = {
   values: [1, 2, 3],
   sum: 0,
   calculate() {
@@ -89,9 +91,9 @@ sayAge.call(person2);`,
 
 console.log(obj.calculate());`,
       options: ['6', '0', 'NaN', 'TypeError'],
-      correctIndex: 2,
+      correctIndex: 3,
       explanation:
-        'Внутри `forEach` callback (обычная функция) `this` теряется — в non-strict mode это `window`, у которого `sum = undefined`. `undefined += 1` → `NaN`. В strict mode — TypeError, т.к. `this = undefined`. Решение: стрелочная функция, `thisArg` как второй аргумент forEach, или `const self = this`.',
+        'В strict mode `this` внутри обычной функции-callback — `undefined`, поэтому обращение к `this.sum` бросает TypeError. В non-strict mode было бы `NaN` (`this` стало бы `window`). Решение: стрелочная функция, `thisArg` как второй аргумент forEach, или `const self = this`.',
     },
     {
       type: 'output',

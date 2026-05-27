@@ -107,7 +107,7 @@ export default function MatchPairsQuestion({ question, onAnswer, answered }: Pro
       <Typography variant="body1" sx={{ mb: 2 }}>
         <Inline>{question.description}</Inline>
       </Typography>
-      <Box sx={{ display: 'flex', gap: 2 }}>
+      <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 2 }}>
         <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 1 }}>
             {question.pairs.map((pair, leftIdx) => {
               const color = getLeftColor(leftIdx);

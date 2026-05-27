@@ -29,8 +29,8 @@ export function createAppTheme(mode: 'light' | 'dark') {
       h4: { fontWeight: 700, letterSpacing: '-0.02em' },
       h5: { fontWeight: 600, letterSpacing: '-0.01em' },
       h6: { fontWeight: 600 },
-      body1: { fontSize: '0.9375rem', lineHeight: 1.6 },
-      body2: { fontSize: '0.875rem', lineHeight: 1.5 },
+      body1: { fontSize: '0.9375rem', lineHeight: 1.15 },
+      body2: { fontSize: '0.875rem', lineHeight: 1.1 },
     },
     components: {
       MuiCssBaseline: {

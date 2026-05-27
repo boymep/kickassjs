@@ -314,7 +314,7 @@ export default function JsPitfallsPage() {
 
           <Typography
             variant="subtitle2"
-            sx={{ color: 'success.main', mb: 0.5, fontWeight: 700 }}
+            sx={{ color: 'success.main', mb: 0.5, mt: 2, fontWeight: 700 }}
           >
             Хорошо:
           </Typography>

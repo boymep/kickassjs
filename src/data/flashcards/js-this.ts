@@ -56,7 +56,7 @@ fn.bind(obj)();           // 'Alice' ✅`,
       ],
       code: `class Timer {
   start() {
-    // ✅ this из start() сохраняется в стрелке
+    // ✅ this из start() сохраняется в стрелочной функции
     setInterval(() => this.tick(), 1000);
   }
 }

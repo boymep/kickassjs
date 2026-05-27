@@ -149,7 +149,7 @@ function FinalScreen({
 }) {
   return (
     <Box>
-      <Paper sx={{ p: 4, textAlign: 'center', mb: 3 }}>
+      <Paper sx={{ p: { xs: 3, md: 4 }, textAlign: 'center', mb: 3 }}>
         <BugReportIcon color="primary" sx={{ fontSize: 56, mb: 1 }} />
         <Typography variant="h4" gutterBottom>
           Все баги пройдены
@@ -453,7 +453,7 @@ function ReadOnlyItem({
               color="success"
               startIcon={<CheckCircleIcon />}
               onClick={() => onAdvance('found')}
-              sx={{ flex: 1, textTransform: 'none', py: 1.5, minWidth: 200 }}
+              sx={{ flex: 1, textTransform: 'none', py: 1.5, minWidth: { xs: 120, sm: 200 } }}
             >
               <Box>
                 <Box sx={{ fontWeight: 700 }}>Нашёл сам</Box>
@@ -465,7 +465,7 @@ function ReadOnlyItem({
               color="error"
               startIcon={<HighlightOffIcon />}
               onClick={() => onAdvance('missed')}
-              sx={{ flex: 1, textTransform: 'none', py: 1.5, minWidth: 200 }}
+              sx={{ flex: 1, textTransform: 'none', py: 1.5, minWidth: { xs: 120, sm: 200 } }}
             >
               <Box>
                 <Box sx={{ fontWeight: 700 }}>Пропустил</Box>

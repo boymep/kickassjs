@@ -31,9 +31,9 @@ export default function Markdown({ children, compact = false }: MarkdownProps) {
           h3: ({ children }) => <Typography variant="subtitle1" sx={{ mt: 2, mb: 1, fontWeight: 700 }}>{children}</Typography>,
           p: ({ children }) =>
             compact ? (
-              <Typography variant="body2" sx={{ mb: 1, lineHeight: 1.65 }}>{children}</Typography>
+              <Typography variant="body2" sx={{ mb: 1, lineHeight: 1.3 }}>{children}</Typography>
             ) : (
-              <Typography variant="body1" sx={{ mb: 1.5, lineHeight: 1.7 }}>{children}</Typography>
+              <Typography variant="body1" sx={{ mb: 1.5, lineHeight: 1.35 }}>{children}</Typography>
             ),
           ul: ({ children }) => <Box component="ul" sx={{ pl: 3, mb: 1.5 }}>{children}</Box>,
           ol: ({ children }) => <Box component="ol" sx={{ pl: 3, mb: 1.5 }}>{children}</Box>,

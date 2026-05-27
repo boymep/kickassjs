@@ -78,6 +78,8 @@ export default function PracticePage() {
             p.description.slice(0, 110) +
             (p.description.length > 110 ? "…" : "")
           }
+          secondaryTypographyProps={{ sx: { display: { xs: 'none', sm: 'block' } } }}
+          sx={{ '& .MuiListItemText-secondary': { mt: 0.75 } }}
         />
         <Box sx={{ display: "flex", gap: 1, ml: 2, flexShrink: 0, flexWrap: "wrap" }}>
           {kind !== "implement" && (
