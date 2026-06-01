@@ -900,7 +900,7 @@ maxSlidingWindow([9,11], 2)                 // → [11]
 maxSlidingWindow([4,-2], 2)                 // → [4]
 \`\`\`
 
-**Идея**: монотонный deque, в котором хранятся индексы — голова всегда указывает на текущий максимум окна. Это **LeetCode 239** — классическая hard-задача на скользящее окно с дополнительной структурой.`,
+Это **LeetCode 239** — классическая hard-задача на скользящее окно с дополнительной структурой.`,
     functionName: "maxSlidingWindow",
     starterCode: `function maxSlidingWindow(nums, k) {
   // ваш код — O(n)
@@ -967,8 +967,6 @@ subarraysWithKDistinct([1,2,1,3,4], 3)   // → 3
 subarraysWithKDistinct([1,2], 1)         // → 2
 subarraysWithKDistinct([1,2,1,2,3], 1)   // → 3
 \`\`\`
-
-**Ключевая идея**: задача «ровно k» часто сводится к разности \`atMost(k) - atMost(k-1)\`, где \`atMost(k)\` — число подмассивов с **не более чем k** различными. \`atMost\` решается классическим sliding window за O(n).
 
 Это **LeetCode 992** — известная hard-задача, где удачное преобразование сводит трудный подсчёт к двум обычным проходам по массиву.`,
     functionName: "subarraysWithKDistinct",

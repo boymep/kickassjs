@@ -101,11 +101,11 @@ export default function PredictOutputView({ problem }: PredictOutputViewProps) {
       {submitted && (
         <Box sx={{ mb: 3 }}>
           {isCorrect ? (
-            <Alert severity="success" icon={<CheckCircleIcon />}>
+            <Alert severity="success" icon={<CheckCircleIcon />} sx={{ alignItems: 'center' }}>
               Верно. Это и есть фактический вывод.
             </Alert>
           ) : (
-            <Alert severity="warning" icon={<HighlightOffIcon />}>
+            <Alert severity="warning" icon={<HighlightOffIcon />} sx={{ alignItems: 'center' }}>
               Не совпадает. Обратите внимание на пробелы, переводы строк и порядок вывода.
             </Alert>
           )}
